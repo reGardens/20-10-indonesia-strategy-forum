@@ -1,0 +1,25 @@
+{
+  "id": "",
+  "weddingSlug": "",
+  "groom": {
+    "fullName": "",
+    "nickname": "",
+    "photo": "",
+    "fatherName": "",
+    "motherName": "",
+    "instagramUrl": "",
+    "childOrder": ""
+  },
+  "bride": {
+    "fullName": "",
+    "nickname": "",
+    "photo": "",
+    "fatherName": "",
+    "motherName": "",
+    "instagramUrl": "",
+    "childOrder": ""
+  },
+  "musicUrl": "",
+  "createdAt": "",
+  "updatedAt": ""
+}

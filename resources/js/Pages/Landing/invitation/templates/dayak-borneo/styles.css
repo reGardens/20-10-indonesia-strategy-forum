@@ -1,0 +1,138 @@
+/* Dayak Borneo Template — Motif tribal Dayak dengan hutan tropis */
+
+@import url("https://fonts.googleapis.com/css2?family=Josefin+Serif:ital,wght@0,400;0,600;0,700;1,400&display=swap");
+
+:root {
+  --dayak-primary: #2C1A0E;
+  --dayak-secondary: #8B4A1A;
+  --dayak-accent: #E8A020;
+  --dayak-green: #1A4A1A;
+}
+
+/* ───── Base ───── */
+.dayak-borneo-template {
+  font-family: "Josefin Serif", "Georgia", serif;
+  color: #1a0e05;
+  background: linear-gradient(160deg, #1a0e05 0%, #2c1a08 40%, #3a2210 80%, #2c1a08 100%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ───── Tribal pattern overlay ───── */
+.dayak-borneo-template::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(232,160,32,0.04) 40px, rgba(232,160,32,0.04) 41px),
+    repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(232,160,32,0.04) 40px, rgba(232,160,32,0.04) 41px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ───── Cover ───── */
+.dayak-cover {
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(44,26,14,0.7) 0%, rgba(26,14,5,0.95) 100%),
+    linear-gradient(180deg, #0d0602 0%, #1a0e05 100%);
+  min-height: 100vh;
+  color: #f5e8c0;
+}
+
+/* ───── Typography ───── */
+.dayak-title {
+  color: #f5e8c0;
+  font-weight: 700;
+  text-shadow: 0 0 40px rgba(232,160,32,0.4), 0 2px 20px rgba(0,0,0,0.8);
+  letter-spacing: 0.03em;
+}
+
+.dayak-ampersand {
+  color: var(--dayak-accent);
+  text-shadow: 0 0 30px rgba(232,160,32,0.6);
+}
+
+/* ───── Animations ───── */
+@keyframes fireGlow {
+  0%, 100% { opacity: 0.7; transform: scaleY(1); }
+  50% { opacity: 1; transform: scaleY(1.05); }
+}
+
+@keyframes tribeFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes hornAnimateDayak {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+.dayak-glow { animation: fireGlow 2s ease-in-out infinite; }
+.dayak-float { animation: tribeFloat 5s ease-in-out infinite; }
+
+/* ───── Decorations ───── */
+.dayak-tribal-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+}
+
+.dayak-tribal-top svg { width: 100%; }
+
+.dayak-hornbill-left {
+  position: absolute;
+  left: 2%;
+  top: 20%;
+  pointer-events: none;
+  animation: hornAnimateDayak 4s ease-in-out infinite;
+}
+
+.dayak-hornbill-right {
+  position: absolute;
+  right: 2%;
+  top: 20%;
+  pointer-events: none;
+  animation: hornAnimateDayak 4s ease-in-out infinite;
+  animation-delay: -2s;
+}
+
+.dayak-fire-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* ───── Button ───── */
+.buka-undangan-btn {
+  background: linear-gradient(135deg, var(--dayak-accent) 0%, #B07010 100%);
+  color: #1a0e05;
+  border: 2px solid var(--dayak-accent);
+  border-radius: 0;
+  letter-spacing: 0.2em;
+  font-weight: 700;
+  box-shadow: 0 0 20px rgba(232,160,32,0.4), 0 4px 20px rgba(0,0,0,0.5);
+  transition: all 0.3s ease;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+}
+
+.buka-undangan-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 40px rgba(232,160,32,0.7), 0 8px 30px rgba(0,0,0,0.6);
+}
+
+.buka-undangan-btn:active { transform: scale(0.97); }
+
+/* ───── Section ───── */
+.dayak-borneo-template section {
+  position: relative;
+  color: #f0e0c0;
+}
+
+.dayak-borneo-template h2 {
+  color: var(--dayak-accent);
+}

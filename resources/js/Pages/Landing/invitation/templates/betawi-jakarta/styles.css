@@ -1,0 +1,133 @@
+/* Betawi Jakarta Template — Ondel-ondel & kebudayaan Betawi yang ceria */
+
+@import url("https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Nunito:wght@400;600;700&display=swap");
+
+:root {
+  --betawi-primary: #CC2200;
+  --betawi-secondary: #FF6633;
+  --betawi-accent: #FFD100;
+  --betawi-blue: #0055AA;
+}
+
+/* ───── Base ───── */
+.betawi-jakarta-template {
+  font-family: "Nunito", "Arial", sans-serif;
+  color: #1a0505;
+  background: linear-gradient(160deg, #FFF8E1 0%, #FFECB3 40%, #FFE082 80%, #FFD54F 100%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ───── Cover ───── */
+.betawi-cover {
+  background:
+    radial-gradient(ellipse at 30% 50%, rgba(204,34,0,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 50%, rgba(0,85,170,0.1) 0%, transparent 60%),
+    linear-gradient(180deg, #FFF8E1 0%, #FFECB3 60%, #FFD54F 100%);
+  min-height: 100vh;
+}
+
+/* ───── Typography ───── */
+.betawi-title {
+  font-family: "Abril Fatface", serif;
+  color: var(--betawi-primary);
+  text-shadow: 3px 3px 0 rgba(204,34,0,0.2);
+  letter-spacing: -0.02em;
+}
+
+.betawi-ampersand {
+  color: var(--betawi-blue);
+  text-shadow: 2px 2px 0 rgba(0,85,170,0.2);
+}
+
+/* ───── Animations ───── */
+@keyframes ondelBounce {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  25% { transform: translateY(-15px) rotate(3deg); }
+  75% { transform: translateY(-8px) rotate(-1deg); }
+}
+
+@keyframes betawiSpin {
+  0%, 100% { transform: rotate(-5deg) scale(1); }
+  50% { transform: rotate(5deg) scale(1.05); }
+}
+
+@keyframes colorPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.ondel-bounce { animation: ondelBounce 3s ease-in-out infinite; }
+.betawi-spin { animation: betawiSpin 4s ease-in-out infinite; }
+.color-pulse { animation: colorPulse 2s ease-in-out infinite; }
+
+/* ───── Decorations ───── */
+.betawi-ondel-left {
+  position: absolute;
+  left: 2%;
+  bottom: 10%;
+  pointer-events: none;
+}
+
+.betawi-ondel-right {
+  position: absolute;
+  right: 2%;
+  bottom: 10%;
+  pointer-events: none;
+  animation-delay: -1.5s;
+}
+
+.betawi-umbrella-top {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: betawiSpin 6s ease-in-out infinite;
+}
+
+.betawi-lantern-left {
+  position: absolute;
+  left: 25%;
+  top: 8%;
+  pointer-events: none;
+  animation: colorPulse 2.5s ease-in-out infinite;
+}
+
+.betawi-lantern-right {
+  position: absolute;
+  right: 25%;
+  top: 8%;
+  pointer-events: none;
+  animation: colorPulse 2.5s ease-in-out infinite;
+  animation-delay: -1.25s;
+}
+
+/* ───── Button ───── */
+.buka-undangan-btn {
+  background: linear-gradient(135deg, var(--betawi-primary) 0%, var(--betawi-secondary) 100%);
+  color: var(--betawi-accent);
+  border: 3px solid var(--betawi-accent);
+  border-radius: 8px;
+  letter-spacing: 0.1em;
+  font-family: "Abril Fatface", serif;
+  font-size: 1rem;
+  box-shadow: 4px 4px 0 var(--betawi-primary);
+  transition: all 0.2s ease;
+}
+
+.buka-undangan-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--betawi-primary);
+}
+
+.buka-undangan-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--betawi-primary);
+}
+
+/* ───── Section ───── */
+.betawi-jakarta-template h2 {
+  font-family: "Abril Fatface", serif;
+  color: var(--betawi-primary);
+}

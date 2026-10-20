@@ -1,0 +1,159 @@
+/* Batik Elegance Template — Motif batik kontemporer dengan estetika premium */
+
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@300;400;500;600;700&display=swap");
+
+:root {
+  --batik-primary: #1A0A2E;
+  --batik-secondary: #3D1A78;
+  --batik-accent: #C9A64A;
+  --batik-rose: #E0A0A0;
+}
+
+/* ───── Base ───── */
+.batik-elegance-template {
+  font-family: "Cormorant SC", "Georgia", serif;
+  color: #f5f0ff;
+  background: linear-gradient(160deg, #0d0520 0%, #1a0a2e 40%, #2d1560 80%, #1a0a2e 100%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ───── Batik pattern overlay ───── */
+.batik-elegance-template::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 25% 25%, rgba(201,166,74,0.06) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(201,166,74,0.04) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ───── Cover ───── */
+.batik-cover {
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(61,26,120,0.6) 0%, rgba(13,5,32,0.95) 70%),
+    linear-gradient(160deg, #0d0520 0%, #1a0a2e 100%);
+  min-height: 100vh;
+}
+
+/* ───── Typography ───── */
+.batik-title {
+  color: #f5f0ff;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 40px rgba(201,166,74,0.3);
+}
+
+.batik-ampersand {
+  color: var(--batik-accent);
+  text-shadow: 0 0 30px rgba(201,166,74,0.5);
+  font-style: italic;
+}
+
+/* ───── Animations ───── */
+@keyframes batikRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes goldPulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+
+@keyframes batikFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-12px) rotate(10deg); }
+}
+
+.batik-spin { animation: batikRotate 20s linear infinite; }
+.batik-pulse { animation: goldPulse 3s ease-in-out infinite; }
+.batik-float { animation: batikFloat 6s ease-in-out infinite; }
+
+/* ───── Decorations ───── */
+.batik-mandala-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0.08;
+}
+
+.batik-mandala-center svg { width: 500px; height: 500px; }
+
+.batik-diamond-tl {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  pointer-events: none;
+}
+
+.batik-diamond-tr {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  pointer-events: none;
+}
+
+.batik-diamond-bl {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  pointer-events: none;
+}
+
+.batik-diamond-br {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  pointer-events: none;
+}
+
+/* ───── Button ───── */
+.buka-undangan-btn {
+  background: transparent;
+  color: var(--batik-accent);
+  border: 1px solid var(--batik-accent);
+  border-radius: 0;
+  letter-spacing: 0.25em;
+  font-size: 0.7rem;
+  box-shadow: 0 0 15px rgba(201,166,74,0.2), inset 0 0 15px rgba(201,166,74,0.05);
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.buka-undangan-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--batik-accent);
+  transform: translateX(-100%);
+  transition: transform 0.4s ease;
+  z-index: -1;
+}
+
+.buka-undangan-btn:hover {
+  color: var(--batik-primary);
+  box-shadow: 0 0 30px rgba(201,166,74,0.5);
+}
+
+.buka-undangan-btn:hover::before {
+  transform: translateX(0);
+}
+
+.buka-undangan-btn:active { transform: scale(0.97); }
+
+/* ───── Sections ───── */
+.batik-elegance-template section {
+  position: relative;
+  color: #f0ecff;
+}
+
+.batik-elegance-template h2 {
+  color: var(--batik-accent);
+  letter-spacing: 0.1em;
+}

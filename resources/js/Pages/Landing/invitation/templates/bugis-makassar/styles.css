@@ -1,0 +1,123 @@
+/* Bugis Makassar Template — Layar perahu phinisi & keberanian Bugis */
+
+@import url("https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap");
+
+:root {
+  --bugis-primary: #003366;
+  --bugis-secondary: #0055AA;
+  --bugis-accent: #FFD700;
+  --bugis-sea: #006699;
+}
+
+/* ───── Base ───── */
+.bugis-makassar-template {
+  font-family: "Raleway", "Arial", sans-serif;
+  color: #f0f8ff;
+  background: linear-gradient(160deg, #001833 0%, #003366 40%, #004488 80%, #003366 100%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ───── Cover ───── */
+.bugis-cover {
+  background:
+    radial-gradient(ellipse at 50% 100%, rgba(0,102,153,0.5) 0%, transparent 60%),
+    linear-gradient(180deg, #001122 0%, #003366 50%, #004d8a 100%);
+  min-height: 100vh;
+}
+
+/* ───── Typography ───── */
+.bugis-title {
+  color: #f0f8ff;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 30px rgba(255,215,0,0.3), 0 2px 15px rgba(0,0,0,0.5);
+}
+
+.bugis-ampersand {
+  color: var(--bugis-accent);
+  text-shadow: 0 0 25px rgba(255,215,0,0.5);
+}
+
+/* ───── Animations ───── */
+@keyframes sailRock {
+  0%, 100% { transform: rotate(-2deg) translateY(0); }
+  50% { transform: rotate(2deg) translateY(-8px); }
+}
+
+@keyframes waveFlow {
+  0% { transform: translateX(-100px); }
+  100% { transform: translateX(100px); }
+}
+
+@keyframes starTwinkle {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.sail-rock { animation: sailRock 4s ease-in-out infinite; }
+.wave-flow { animation: waveFlow 6s ease-in-out infinite alternate; }
+.star-twinkle { animation: starTwinkle 2s ease-in-out infinite; }
+
+/* ───── Decorations ───── */
+.bugis-phinisi {
+  position: absolute;
+  bottom: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.bugis-stars {
+  position: absolute;
+  top: 5%;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+}
+
+.bugis-waves {
+  position: absolute;
+  bottom: 0;
+  left: -100px;
+  width: calc(100% + 200px);
+  pointer-events: none;
+  animation: waveFlow 8s ease-in-out infinite alternate;
+}
+
+.bugis-compass {
+  position: absolute;
+  top: 15%;
+  right: 5%;
+  pointer-events: none;
+  animation: sailRock 5s ease-in-out infinite;
+}
+
+/* ───── Button ───── */
+.buka-undangan-btn {
+  background: linear-gradient(135deg, var(--bugis-accent) 0%, #CC9900 100%);
+  color: var(--bugis-primary);
+  border: 2px solid var(--bugis-accent);
+  border-radius: 4px;
+  letter-spacing: 0.2em;
+  font-weight: 700;
+  box-shadow: 0 0 25px rgba(255,215,0,0.35), 0 4px 20px rgba(0,0,0,0.4);
+  transition: all 0.3s ease;
+}
+
+.buka-undangan-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 40px rgba(255,215,0,0.6), 0 8px 30px rgba(0,0,0,0.5);
+}
+
+.buka-undangan-btn:active { transform: scale(0.97); }
+
+/* ───── Section ───── */
+.bugis-makassar-template section {
+  color: #f0f8ff;
+}
+
+.bugis-makassar-template h2 {
+  color: var(--bugis-accent);
+  letter-spacing: 0.08em;
+}

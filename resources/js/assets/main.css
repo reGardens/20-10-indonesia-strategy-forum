@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Helper to completely hide scrollbar / scroll indicator */
+.hide-scrollbar,
+.hide-scrollbar * {
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE/Edge */
+}
+.hide-scrollbar::-webkit-scrollbar,
+.hide-scrollbar *::-webkit-scrollbar {
+    display: none !important; /* Chrome, Safari, Edge */
+}
+
+/* Scroll-locking wrapper for cover-page state */
+html.invitation-locked,
+body.invitation-locked {
+    overflow: hidden !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+}
+
+/* Disable native snapping to let JS snapping run cleanly */
+html, body {
+    scroll-behavior: smooth !important;
+    scroll-snap-type: none !important;
+}
+
+/* ── Invitation Layout — sections fill viewport ─────────────────────────────── */
+.invitation-layout section,
+.invitation-layout footer {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    min-height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    /* Make sections transparent so the template's fixed background shows through */
+    background: transparent !important;
+    overflow-y: auto !important;
+    scroll-behavior: smooth !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+.invitation-layout section::-webkit-scrollbar,
+.invitation-layout footer::-webkit-scrollbar {
+    display: none !important;
+}
+
+/* Demo view — subtract header height */
+.invitation-view.pt-\[52px\] section,
+.invitation-view.pt-\[52px\] footer {
+    height: calc(100vh - 52px) !important;
+    max-height: calc(100vh - 52px) !important;
+    min-height: calc(100vh - 52px) !important;
+}
+
+/* ── Template wrapper — fixed background spans all sections ─────────────────── */
+/* The template div sets background-color/gradient.
+   This makes the background persist as a fixed viewport layer behind all sections. */
+.invitation-layout > * {
+    position: relative;
+}
+
+/* ── Watermark ───────────────────────────────────────────────────────────────── */
+.invitation-watermark {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 50 !important;
+    padding: 0.5rem 0 !important;
+    pointer-events: none;
+    user-select: none;
+    background: transparent !important;
+}
+
+/* ── White cards inside sections — translucent not solid ────────────────────── */
+.invitation-layout .rounded-xl {
+    background-color: rgba(255, 255, 255, 0.18) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}

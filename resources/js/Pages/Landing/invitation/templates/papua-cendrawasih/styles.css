@@ -1,0 +1,139 @@
+/* Papua Cendrawasih Template — Burung Cendrawasih & alam Papua yang eksotis */
+
+@import url("https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400;1,600&display=swap");
+
+:root {
+  --papua-primary: #1A0A2E;
+  --papua-secondary: #4A1580;
+  --papua-accent: #FF6B35;
+  --papua-teal: #00C9A7;
+  --papua-yellow: #FFD60A;
+}
+
+/* ───── Base ───── */
+.papua-cendrawasih-template {
+  font-family: "Spectral", "Georgia", serif;
+  color: #fff0e0;
+  background: linear-gradient(160deg, #0a0515 0%, #1a0a2e 40%, #0f1a35 80%, #0a0515 100%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ───── Cover ───── */
+.papua-cover {
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(74,21,128,0.5) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 50%, rgba(0,201,167,0.3) 0%, transparent 50%),
+    linear-gradient(180deg, #050210 0%, #1a0a2e 100%);
+  min-height: 100vh;
+}
+
+/* ───── Typography ───── */
+.papua-title {
+  color: #fff8f0;
+  font-weight: 600;
+  font-style: italic;
+  text-shadow:
+    0 0 40px rgba(255,107,53,0.4),
+    0 2px 20px rgba(0,0,0,0.8);
+}
+
+.papua-ampersand {
+  color: var(--papua-teal);
+  text-shadow: 0 0 30px rgba(0,201,167,0.6);
+  font-style: normal;
+}
+
+/* ───── Animations ───── */
+@keyframes birdSoar {
+  0% { transform: translateX(-30px) translateY(0) rotate(-10deg); }
+  50% { transform: translateX(0) translateY(-20px) rotate(5deg); }
+  100% { transform: translateX(30px) translateY(0) rotate(-5deg); }
+}
+
+@keyfunction tropicalGlow {
+  0%, 100% { opacity: 0.5; filter: drop-shadow(0 0 5px var(--papua-teal)); }
+  50% { opacity: 1; filter: drop-shadow(0 0 20px var(--papua-teal)); }
+}
+
+@keyframes tropicalGlow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@keyframes neonPulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+.bird-soar { animation: birdSoar 6s ease-in-out infinite alternate; }
+.tropical-glow { animation: tropicalGlow 3s ease-in-out infinite; }
+.neon-pulse { animation: neonPulse 2.5s ease-in-out infinite; }
+
+/* ───── Decorations ───── */
+.papua-cendrawasih-bird {
+  position: absolute;
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: birdSoar 7s ease-in-out infinite alternate;
+}
+
+.papua-tropical-left {
+  position: absolute;
+  left: 0;
+  bottom: 15%;
+  pointer-events: none;
+  animation: tropicalGlow 4s ease-in-out infinite;
+}
+
+.papua-tropical-right {
+  position: absolute;
+  right: 0;
+  bottom: 15%;
+  pointer-events: none;
+  animation: tropicalGlow 4s ease-in-out infinite;
+  animation-delay: -2s;
+}
+
+.papua-stars-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* ───── Button ───── */
+.buka-undangan-btn {
+  background: linear-gradient(135deg, var(--papua-accent) 0%, var(--papua-secondary) 100%);
+  color: #fff;
+  border: 2px solid var(--papua-teal);
+  border-radius: 50px;
+  letter-spacing: 0.15em;
+  box-shadow:
+    0 0 20px rgba(255,107,53,0.4),
+    0 0 40px rgba(0,201,167,0.2),
+    0 4px 20px rgba(0,0,0,0.4);
+  transition: all 0.35s ease;
+}
+
+.buka-undangan-btn:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow:
+    0 0 40px rgba(255,107,53,0.6),
+    0 0 60px rgba(0,201,167,0.3),
+    0 10px 40px rgba(0,0,0,0.5);
+}
+
+.buka-undangan-btn:active { transform: scale(0.97); }
+
+/* ───── Section ───── */
+.papua-cendrawasih-template section {
+  color: #fff0e0;
+}
+
+.papua-cendrawasih-template h2 {
+  color: var(--papua-teal);
+  font-style: italic;
+}

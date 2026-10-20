@@ -1,0 +1,311 @@
+/* Font Montserrat */
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    img {
+        display: block;
+        vertical-align: top;
+    }
+}
+
+@layer base {
+    :root {
+        /* Light Theme - Blue identity */
+        --background: 0 0% 100%;
+        --foreground: 198 84% 4%;
+
+        --card: 0 0% 100%;
+        --card-foreground: 198 84% 4%;
+
+        --popover: 0 0% 100%;
+        --popover-foreground: 198 84% 4%;
+
+        /* Primary = Blue #3AB0E5 (approx HSL 198, 76%, 63%) */
+        --primary: 198 76% 63%;
+        --primary-foreground: 0 0% 100%;
+
+        --secondary: 198 76% 95%;
+        --secondary-foreground: 198 84% 20%;
+
+        --muted: 198 16% 96%;
+        --muted-foreground: 198 8% 45%;
+
+        --accent: 198 76% 95%;
+        --accent-foreground: 198 76% 40%;
+
+        --destructive: 0 84% 60%;
+        --destructive-foreground: 0 0% 100%;
+
+        --border: 198 16% 90%;
+        --input: 198 16% 90%;
+        --ring: 198 76% 63%;
+
+        --radius: 0.5rem;
+    }
+
+    .dark {
+        /* Dark Theme - Emerald identity */
+        --background: 160 30% 6%;
+        --foreground: 150 16% 96%;
+
+        --card: 160 25% 9%;
+        --card-foreground: 150 16% 96%;
+
+        --popover: 160 25% 9%;
+        --popover-foreground: 150 16% 96%;
+
+        /* Primary = Emerald 400 (lebih cerah untuk dark mode) */
+        --primary: 158 64% 52%;
+        --primary-foreground: 160 84% 8%;
+
+        --secondary: 160 25% 14%;
+        --secondary-foreground: 150 16% 96%;
+
+        --muted: 160 25% 14%;
+        --muted-foreground: 150 8% 65%;
+
+        --accent: 160 25% 14%;
+        --accent-foreground: 158 64% 60%;
+
+        --destructive: 0 62% 40%;
+        --destructive-foreground: 150 16% 96%;
+
+        --border: 160 25% 16%;
+        --input: 160 25% 16%;
+        --ring: 158 64% 52%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    html,
+    body {
+        @apply bg-background text-foreground;
+        font-family: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+
+        /* Enable smooth scroll for a premium cushioned feel */
+        scroll-behavior: smooth;
+
+        /* Hide native scrollbar */
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE/Edge */
+    }
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar {
+        display: none; /* Chrome/Safari/Opera */
+    }
+    /* Ensure RichTextEditor output renders correctly everywhere */
+    strong,
+    b {
+        font-weight: 700 !important;
+    }
+    em,
+    i {
+        font-style: italic !important;
+    }
+    sup {
+        vertical-align: baseline;
+        font-size: 75%;
+        line-height: 0;
+        position: relative;
+        top: -0.4em;
+    }
+}
+
+/* Native Snapping - Ultra Responsive */
+html.snap-active {
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    height: 100%;
+}
+
+body {
+    height: 100%;
+}
+
+/* Pastikan semua section terdeteksi sebagai snap target */
+.snap-container [data-scroll-section],
+footer[data-scroll-section] {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    scroll-margin-top: 64px;
+}
+
+/* Khusus footer terakhir agar bisa discroll sampai mentok bawah */
+footer[data-scroll-section] {
+    scroll-snap-align: end;
+}
+
+/* Custom CTA Sweep: Top to Bottom (Global) */
+.cta-sweep-custom {
+    position: relative;
+    overflow: hidden;
+    z-index: 0;
+    background-color: #3ab0e5; /* Primary */
+    color: white;
+    border: 2px solid #3ab0e5;
+    transition: all 0.4s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cta-sweep-custom::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 0;
+    background: linear-gradient(
+        to bottom,
+        #e6f7ff,
+        #ffffff
+    ); /* Blue at top, white at bottom */
+    z-index: -1;
+    transition: all 0.4s ease-out;
+}
+
+.cta-sweep-custom:hover {
+    color: #3ab0e5 !important;
+    border-color: #3ab0e5 !important;
+}
+
+.cta-sweep-custom:hover::after {
+    height: 100%;
+}
+
+/* Respect prefers-reduced-motion globally */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    [data-aos] {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+    }
+}
+
+/* ==========================================================================
+   CMS Content — Global styling for RichTextEditor output (v-html containers)
+   Usage: Add class "cms-content" to any element that renders RichTextEditor HTML
+   ========================================================================== */
+.cms-content p {
+    margin: 0;
+}
+.cms-content .font-light {
+    font-weight: 300 !important;
+}
+.cms-content .font-medium {
+    font-weight: 500 !important;
+}
+.cms-content .font-bold {
+    font-weight: 700 !important;
+}
+.cms-content strong,
+.cms-content b {
+    font-weight: 700 !important;
+}
+.cms-content em,
+.cms-content i {
+    font-style: italic !important;
+}
+.cms-content sup {
+    vertical-align: baseline;
+    font-size: 60%;
+    line-height: 0;
+    position: relative;
+    top: -0.4em;
+}
+.cms-content sup mark,
+.cms-content sup span {
+    font-size: inherit;
+    padding: 0.45em 2px 0.35em 0 !important;
+    margin: 0 !important;
+    vertical-align: baseline !important;
+    position: static !important;
+    border-radius: 0 2px 2px 0;
+}
+.cms-content mark {
+    padding: 4px 8px;
+    border-radius: 2px 0 0 2px;
+    font-weight: 700;
+    font-style: normal;
+    display: inline;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+/* When mark is NOT followed by sup (standalone highlight), use full border-radius */
+.cms-content mark:last-child,
+.cms-content mark + :not(sup) {
+    border-radius: 2px;
+}
+.cms-content ul {
+    list-style-type: disc;
+    padding-left: 1.5em;
+    margin: 0.5em 0;
+}
+.cms-content ol {
+    list-style-type: decimal;
+    padding-left: 1.5em;
+    margin: 0.5em 0;
+}
+.cms-content li {
+    margin: 0.25em 0;
+}
+.cms-content blockquote {
+    border-left: 4px solid #3ab0e5;
+    padding-left: 1rem;
+    margin: 1rem 0;
+    font-style: italic;
+}
+.cms-content a {
+    color: #3ab0e5;
+    text-decoration: underline;
+}
+.cms-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+}
+.cms-content hr {
+    border: none;
+    border-top: 1px solid #e5e7eb;
+    margin: 1.5rem 0;
+}
+
+/* Variant: Blue highlight (for section titles) */
+.cms-content-title mark {
+    background-color: #3ab0e5;
+    color: white;
+}
+
+/* Variant: Yellow highlight (for article body) */
+.cms-content-body mark {
+    background-color: #fef08a;
+    color: inherit;
+}
+
+/* Hide scroll indicator (scrollbar) on the invitation pages */
+.invitation-layout,
+.invitation-layout * {
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE/Edge */
+}
+.invitation-layout::-webkit-scrollbar,
+.invitation-layout *::-webkit-scrollbar {
+    display: none !important; /* Chrome, Safari, Edge */
+}

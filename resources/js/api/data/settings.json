@@ -1,0 +1,26 @@
+{
+  "id": "",
+  "templateId": "batik-elegance",
+  "themeColors": {
+    "primary": "#8B4513",
+    "secondary": "#D2691E",
+    "accent": "#FFD700"
+  },
+  "galleryLayout": "masonry",
+  "moderationEnabled": true,
+  "passwordProtected": false,
+  "password": "",
+  "showWatermark": true,
+  "customDomain": "",
+  "healthProtocol": "",
+  "liveStreamUrl": "",
+  "shippingAddress": "",
+  "seoMeta": {
+    "title": "",
+    "description": "",
+    "image": ""
+  },
+  "qrisImageUrl": "",
+  "createdAt": "",
+  "updatedAt": ""
+}

@@ -1,0 +1,141 @@
+/* Toraja Sulawesi Template — Rumah Tongkonan & tradisi Toraja yang sakral */
+
+@import url("https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400;1,600&display=swap");
+
+:root {
+  --toraja-primary: #1A0800;
+  --toraja-secondary: #4A1500;
+  --toraja-accent: #CC4400;
+  --toraja-gold: #B8860B;
+  --toraja-black: #0D0600;
+}
+
+/* ───── Base ───── */
+.toraja-sulawesi-template {
+  font-family: "Crimson Pro", "Georgia", serif;
+  color: #fff5e8;
+  background: linear-gradient(160deg, #0d0600 0%, #1a0800 40%, #250c00 80%, #1a0800 100%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ───── Tongkonan pattern ───── */
+.toraja-sulawesi-template::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(90deg, transparent, transparent 30px, rgba(204,68,0,0.04) 30px, rgba(204,68,0,0.04) 31px),
+    repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(184,134,11,0.03) 30px, rgba(184,134,11,0.03) 31px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ───── Cover ───── */
+.toraja-cover {
+  background:
+    radial-gradient(ellipse at 50% 100%, rgba(74,21,0,0.7) 0%, transparent 60%),
+    linear-gradient(180deg, #060300 0%, #1a0800 60%, #2d1200 100%);
+  min-height: 100vh;
+}
+
+/* ───── Typography ───── */
+.toraja-title {
+  color: #fff5e8;
+  font-weight: 600;
+  font-style: italic;
+  text-shadow: 0 0 30px rgba(204,68,0,0.35), 0 2px 15px rgba(0,0,0,0.8);
+}
+
+.toraja-ampersand {
+  color: var(--toraja-accent);
+  text-shadow: 0 0 25px rgba(204,68,0,0.5);
+  font-style: normal;
+}
+
+/* ───── Animations ───── */
+@keyframes tongkonanBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes torajaFirelight {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.85; }
+}
+
+@keyframes buffaloHorn {
+  0%, 100% { transform: rotate(-3deg) scale(1); }
+  50% { transform: rotate(3deg) scale(1.03); }
+}
+
+.tongkonan-bob { animation: tongkonanBob 5s ease-in-out infinite; }
+.toraja-firelight { animation: torajaFirelight 2.5s ease-in-out infinite; }
+.buffalo-horn { animation: buffaloHorn 4s ease-in-out infinite; }
+
+/* ───── Decorations ───── */
+.toraja-tongkonan {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(450px, 90%);
+  pointer-events: none;
+  animation: tongkonanBob 6s ease-in-out infinite;
+}
+
+.toraja-buffalo-left {
+  position: absolute;
+  left: 5%;
+  bottom: 15%;
+  pointer-events: none;
+  animation: buffaloHorn 5s ease-in-out infinite;
+}
+
+.toraja-buffalo-right {
+  position: absolute;
+  right: 5%;
+  bottom: 15%;
+  pointer-events: none;
+  animation: buffaloHorn 5s ease-in-out infinite;
+  animation-delay: -2.5s;
+}
+
+.toraja-pa-barre {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: torajaFirelight 4s ease-in-out infinite;
+}
+
+/* ───── Button ───── */
+.buka-undangan-btn {
+  background: linear-gradient(135deg, var(--toraja-accent) 0%, #992200 100%);
+  color: #fff5e8;
+  border: 2px solid var(--toraja-gold);
+  border-radius: 0;
+  letter-spacing: 0.18em;
+  font-size: 0.85rem;
+  box-shadow: 0 0 20px rgba(204,68,0,0.35), 0 4px 20px rgba(0,0,0,0.5);
+  transition: all 0.3s ease;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+}
+
+.buka-undangan-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 40px rgba(204,68,0,0.6), 0 8px 30px rgba(0,0,0,0.6);
+}
+
+.buka-undangan-btn:active { transform: scale(0.97); }
+
+/* ───── Section ───── */
+.toraja-sulawesi-template section {
+  color: #fff5e8;
+}
+
+.toraja-sulawesi-template h2 {
+  font-style: italic;
+  color: var(--toraja-accent);
+}

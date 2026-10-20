@@ -1,0 +1,63 @@
+{
+  "app": {
+    "name": "Wedding Invitation CMS",
+    "loading": "Memuat...",
+    "error": "Terjadi kesalahan",
+    "retry": "Coba Lagi",
+    "save": "Simpan",
+    "cancel": "Batal",
+    "delete": "Hapus",
+    "edit": "Edit",
+    "add": "Tambah",
+    "search": "Cari",
+    "export": "Ekspor",
+    "import": "Impor",
+    "confirm": "Konfirmasi",
+    "back": "Kembali",
+    "close": "Tutup",
+    "yes": "Ya",
+    "no": "Tidak"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "undangan_digital": "Undangan Digital",
+    "rsvp_online": "RSVP Online",
+    "informasi_acara": "Informasi Acara",
+    "love_story": "Love Story & Timeline",
+    "manajemen_tamu": "Manajemen Tamu",
+    "amplop_digital": "Amplop Digital",
+    "galeri": "Galeri Foto & Video",
+    "countdown": "Countdown Wedding",
+    "qr_checkin": "QR Check-In Tamu",
+    "live_streaming": "Live Streaming",
+    "ucapan_doa": "Ucapan & Doa",
+    "wishlist": "Wishlist / Registry"
+  },
+  "validation": {
+    "required": "{field} wajib diisi",
+    "invalidCoordinate": "Koordinat {type} harus antara {min} dan {max}",
+    "pastDate": "Peringatan: Tanggal acara sudah lewat",
+    "invalidFileType": "Hanya file format {format} yang didukung",
+    "fileTooLarge": "Ukuran file maksimal {size}",
+    "invalidFormat": "Format tidak valid"
+  },
+  "rsvp": {
+    "attending": "Hadir",
+    "notAttending": "Tidak Hadir",
+    "maybe": "Mungkin"
+  },
+  "checkin": {
+    "guestNotFound": "Tamu tidak ditemukan",
+    "alreadyCheckedIn": "Tamu sudah tercatat hadir sebelumnya",
+    "checkInSuccess": "Check-in berhasil"
+  },
+  "invitation": {
+    "dearGuest": "Kepada Yth",
+    "defaultGreeting": "Tamu Undangan",
+    "wrongPassword": "Password salah",
+    "enterPassword": "Masukkan password untuk melihat undangan",
+    "addToCalendar": "Tambah ke Kalender",
+    "copyAccountNumber": "Salin Nomor Rekening",
+    "copied": "Tersalin!"
+  }
+}

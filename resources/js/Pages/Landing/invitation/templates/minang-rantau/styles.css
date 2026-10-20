@@ -1,0 +1,116 @@
+/* Minang Rantau Template — Rumah Gadang & Songket Minangkabau */
+
+@import url("https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&display=swap");
+
+:root {
+  --minang-primary: #7B1020;
+  --minang-secondary: #A51C30;
+  --minang-accent: #DAA520;
+}
+
+/* ───── Base ───── */
+.minang-rantau-template {
+  font-family: "IM Fell English", "Georgia", serif;
+  color: #2d0a0a;
+  background: linear-gradient(160deg, #fff5e8 0%, #fce8d0 40%, #f5d5b8 80%, #edcaa5 100%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ───── Cover ───── */
+.minang-cover {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(123,16,32,0.15) 0%, transparent 60%),
+    linear-gradient(180deg, #fff0e0 0%, #f5d5b0 55%, #e5c09a 100%);
+  min-height: 100vh;
+}
+
+/* ───── Typography ───── */
+.minang-title {
+  color: var(--minang-primary);
+  font-weight: 700;
+  text-shadow: 0 3px 15px rgba(123,16,32,0.18);
+}
+
+.minang-ampersand {
+  color: var(--minang-accent);
+  font-style: italic;
+}
+
+/* ───── Animations ───── */
+@keyframes minangFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  33% { transform: translateY(-10px) rotate(5deg); }
+  66% { transform: translateY(-5px) rotate(-3deg); }
+}
+
+@keyframes songketShimmer {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.35; }
+}
+
+.minang-float {
+  animation: minangFloat 5s ease-in-out infinite;
+}
+
+/* ───── Decorations ───── */
+.rumah-gadang {
+  position: absolute;
+  bottom: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(500px, 90%);
+  pointer-events: none;
+}
+
+.minang-songket-left {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  pointer-events: none;
+  animation: songketShimmer 4s ease-in-out infinite;
+}
+
+.minang-songket-right {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  pointer-events: none;
+  animation: songketShimmer 4s ease-in-out infinite;
+  animation-delay: -2s;
+}
+
+.minang-flower {
+  position: absolute;
+  pointer-events: none;
+}
+
+.minang-flower-1 { left: 8%; top: 25%; }
+.minang-flower-2 { right: 8%; top: 20%; }
+
+/* ───── Button ───── */
+.buka-undangan-btn {
+  background: linear-gradient(135deg, var(--minang-primary) 0%, var(--minang-secondary) 100%);
+  color: #fff8e0;
+  border: 2px solid var(--minang-accent);
+  border-radius: 0;
+  letter-spacing: 0.18em;
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  box-shadow: 0 4px 20px rgba(123,16,32,0.35);
+  transition: all 0.3s ease;
+  padding: 14px 36px;
+}
+
+.buka-undangan-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(123,16,32,0.5), 0 0 0 3px rgba(218,165,32,0.3);
+}
+
+.buka-undangan-btn:active { transform: scale(0.97); }
+
+/* ───── Section ───── */
+.minang-rantau-template section {
+  position: relative;
+}

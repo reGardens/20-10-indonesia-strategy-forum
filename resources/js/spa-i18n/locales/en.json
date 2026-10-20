@@ -1,0 +1,63 @@
+{
+  "app": {
+    "name": "Wedding Invitation CMS",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "export": "Export",
+    "import": "Import",
+    "confirm": "Confirm",
+    "back": "Back",
+    "close": "Close",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "undangan_digital": "Digital Invitation",
+    "rsvp_online": "Online RSVP",
+    "informasi_acara": "Event Details",
+    "love_story": "Love Story & Timeline",
+    "manajemen_tamu": "Guest Management",
+    "amplop_digital": "Digital Envelope / Gift",
+    "galeri": "Photo & Video Gallery",
+    "countdown": "Wedding Countdown",
+    "qr_checkin": "Guest QR Check-In",
+    "live_streaming": "Live Streaming",
+    "ucapan_doa": "Wishes & Greetings",
+    "wishlist": "Wishlist & Registry"
+  },
+  "validation": {
+    "required": "{field} is required",
+    "invalidCoordinate": "Coordinate {type} must be between {min} and {max}",
+    "pastDate": "Warning: Event date has passed",
+    "invalidFileType": "Only {format} files are supported",
+    "fileTooLarge": "Max file size is {size}",
+    "invalidFormat": "Invalid format"
+  },
+  "rsvp": {
+    "attending": "Attending",
+    "notAttending": "Not Attending",
+    "maybe": "Maybe"
+  },
+  "checkin": {
+    "guestNotFound": "Guest not found",
+    "alreadyCheckedIn": "Guest is already checked in",
+    "checkInSuccess": "Check-in success"
+  },
+  "invitation": {
+    "dearGuest": "Dear",
+    "defaultGreeting": "Our Guest",
+    "wrongPassword": "Wrong password",
+    "enterPassword": "Enter password to view invitation",
+    "addToCalendar": "Add to Calendar",
+    "copyAccountNumber": "Copy Account Number",
+    "copied": "Copied!"
+  }
+}

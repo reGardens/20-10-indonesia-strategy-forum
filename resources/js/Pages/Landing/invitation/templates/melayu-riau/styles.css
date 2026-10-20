@@ -1,0 +1,125 @@
+/* Melayu Riau Template — Budaya Melayu dengan songket emas dan perak */
+
+@import url("https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap");
+
+:root {
+  --melayu-primary: #1A4A2E;
+  --melayu-secondary: #2D7A4F;
+  --melayu-accent: #B8972A;
+  --melayu-gold: #D4AF37;
+}
+
+/* ───── Base ───── */
+.melayu-riau-template {
+  font-family: "Libre Baskerville", "Georgia", serif;
+  color: #0d2010;
+  background: linear-gradient(160deg, #f0faf0 0%, #e0f5e8 40%, #d0eedd 80%, #c0e8d0 100%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ───── Cover ───── */
+.melayu-cover {
+  background:
+    linear-gradient(180deg, #1a3a25 0%, #1a4a2e 50%, #245c38 100%);
+  min-height: 100vh;
+  color: #f0ffe8;
+}
+
+/* ───── Geometric songket overlay ───── */
+.melayu-riau-template .melayu-cover::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(45deg, transparent, transparent 25px, rgba(212,175,55,0.07) 25px, rgba(212,175,55,0.07) 26px),
+    repeating-linear-gradient(-45deg, transparent, transparent 25px, rgba(212,175,55,0.05) 25px, rgba(212,175,55,0.05) 26px);
+  pointer-events: none;
+}
+
+/* ───── Typography ───── */
+.melayu-title {
+  color: #f0ffe8;
+  font-weight: 700;
+  text-shadow: 0 2px 20px rgba(184,151,42,0.4);
+  font-style: italic;
+}
+
+.melayu-ampersand {
+  color: var(--melayu-gold);
+  text-shadow: 0 0 20px rgba(212,175,55,0.5);
+}
+
+/* ───── Animations ───── */
+@keyframes melayuFloat {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-10px) rotate(2deg); }
+}
+
+@keyframes goldShimmer {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+.melayu-float { animation: melayuFloat 5s ease-in-out infinite; }
+.gold-shimmer { animation: goldShimmer 3s ease-in-out infinite; }
+
+/* ───── Decorations ───── */
+.melayu-masjid {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(400px, 80%);
+  pointer-events: none;
+  animation: goldShimmer 6s ease-in-out infinite;
+}
+
+.melayu-star-left {
+  position: absolute;
+  left: 5%;
+  top: 15%;
+  pointer-events: none;
+}
+
+.melayu-star-right {
+  position: absolute;
+  right: 5%;
+  top: 15%;
+  pointer-events: none;
+  animation-delay: -1.5s;
+}
+
+.melayu-crescent {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: melayuFloat 7s ease-in-out infinite;
+}
+
+/* ───── Button ───── */
+.buka-undangan-btn {
+  background: linear-gradient(135deg, var(--melayu-accent) 0%, var(--melayu-gold) 100%);
+  color: #0d2010;
+  border: none;
+  border-radius: 4px;
+  letter-spacing: 0.15em;
+  font-weight: 700;
+  box-shadow: 0 0 20px rgba(212,175,55,0.4), 0 4px 20px rgba(0,0,0,0.3);
+  transition: all 0.3s ease;
+}
+
+.buka-undangan-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 40px rgba(212,175,55,0.6), 0 8px 30px rgba(0,0,0,0.4);
+}
+
+.buka-undangan-btn:active { transform: scale(0.97); }
+
+/* ───── Section ───── */
+.melayu-riau-template h2 {
+  font-style: italic;
+  color: var(--melayu-primary);
+}

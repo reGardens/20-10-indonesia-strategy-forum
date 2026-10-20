@@ -1,0 +1,124 @@
+/* Universal Template — Modern minimalist yang bisa adaptasi ke semua tema */
+
+@import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap");
+
+:root {
+  --uni-primary: #1A1A2E;
+  --uni-secondary: #16213E;
+  --uni-accent: #E94560;
+  --uni-light: #F5F5F5;
+}
+
+/* ───── Base ───── */
+.universal-template {
+  font-family: "DM Sans", "Arial", sans-serif;
+  color: #1a1a2e;
+  background: linear-gradient(160deg, #fafafa 0%, #f5f5ff 40%, #eeefff 80%, #f0f0ff 100%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ───── Cover ───── */
+.universal-cover {
+  background: linear-gradient(135deg, #1A1A2E 0%, #16213E 50%, #0F3460 100%);
+  min-height: 100vh;
+}
+
+/* ───── Typography ───── */
+.universal-title {
+  font-family: "DM Serif Display", serif;
+  color: #fff;
+  font-weight: normal;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 30px rgba(233,69,96,0.3);
+}
+
+.universal-ampersand {
+  color: var(--uni-accent);
+  font-style: italic;
+  text-shadow: 0 0 20px rgba(233,69,96,0.4);
+}
+
+/* ───── Animations ───── */
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes morphBlob {
+  0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+  33% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+  66% { border-radius: 50% 60% 40% 50% / 40% 50% 60% 40%; }
+}
+
+@keyframes floatCircle {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-15px) scale(1.05); }
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.blob-morph { animation: morphBlob 8s ease-in-out infinite; }
+.float-circle { animation: floatCircle 6s ease-in-out infinite; }
+
+/* ───── Decorations ───── */
+.universal-blob-1 {
+  position: absolute;
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(233,69,96,0.15) 0%, transparent 70%);
+  top: -50px;
+  right: -50px;
+  pointer-events: none;
+  animation: morphBlob 8s ease-in-out infinite, floatCircle 6s ease-in-out infinite;
+}
+
+.universal-blob-2 {
+  position: absolute;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(80,80,255,0.12) 0%, transparent 70%);
+  bottom: 50px;
+  left: -30px;
+  pointer-events: none;
+  animation: morphBlob 10s ease-in-out infinite reverse, floatCircle 8s ease-in-out infinite;
+  animation-delay: -4s;
+}
+
+.universal-line-ornament {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  opacity: 0.06;
+}
+
+/* ───── Button ───── */
+.buka-undangan-btn {
+  background: linear-gradient(135deg, var(--uni-accent) 0%, #C23152 100%);
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  letter-spacing: 0.1em;
+  font-family: "DM Sans", sans-serif;
+  font-weight: 600;
+  box-shadow: 0 4px 20px rgba(233,69,96,0.4), 0 8px 40px rgba(0,0,0,0.2);
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.buka-undangan-btn:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 8px 40px rgba(233,69,96,0.6), 0 16px 60px rgba(0,0,0,0.3);
+}
+
+.buka-undangan-btn:active { transform: scale(0.97); }
+
+/* ───── Section ───── */
+.universal-template h2 {
+  font-family: "DM Serif Display", serif;
+}
