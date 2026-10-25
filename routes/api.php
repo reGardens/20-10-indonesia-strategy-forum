@@ -1,105 +1,47 @@
 <?php
 
+use App\Http\Controllers\Api\Isf\Cms\AlertController;
+use App\Http\Controllers\Api\Isf\Cms\ArticleController;
+use App\Http\Controllers\Api\Isf\Cms\BriefingController;
+use App\Http\Controllers\Api\Isf\Cms\ChartController;
+use App\Http\Controllers\Api\Isf\Cms\InfographicController;
+use App\Http\Controllers\Api\Isf\Cms\IsuController;
+use App\Http\Controllers\Api\Isf\Cms\SettingController;
+use App\Http\Controllers\Api\Isf\Cms\TokohController;
+use App\Http\Controllers\Api\Isf\PublicContentController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\WeddingApiController;
-use App\Http\Controllers\Api\CoupleApiController;
-use App\Http\Controllers\Api\EventApiController;
-use App\Http\Controllers\Api\GuestApiController;
-use App\Http\Controllers\Api\MediaApiController;
-use App\Http\Controllers\Api\PaymentApiController;
-use App\Http\Controllers\Api\RsvpApiController;
-use App\Http\Controllers\Api\SettingApiController;
-use App\Http\Controllers\Api\WishApiController;
 
-// Public API Routes (accessible by guests & frontend router)
-Route::middleware(['web'])->group(function () {
-    Route::get('/templates', function () {
-        $templates = \App\Models\CustomTemplate::all()->map(function ($t) {
-            return [
-                'id' => $t->slug,
-                'name' => $t->name,
-                'description' => $t->description,
-                'thumbnail_url' => $t->thumbnail_url ?: '/templates/default-custom.png',
-                'is_custom' => (bool) $t->is_custom,
-                'config' => $t->config,
-            ];
-        })->toArray();
-
-        return response()->json($templates);
-    });
-
-    Route::get('/wedding/registry/exists/{slug}', [WeddingApiController::class, 'exists']);
-    
-    Route::prefix('/wedding/{slug}')->group(function () {
-        Route::get('/couple', [CoupleApiController::class, 'show']);
-        Route::get('/events', [EventApiController::class, 'index']);
-        Route::get('/media', [MediaApiController::class, 'index']);
-        Route::get('/payments', [PaymentApiController::class, 'show']);
-        Route::get('/wishes', [WishApiController::class, 'index']);
-        Route::post('/wishes', [WishApiController::class, 'store']);
-        Route::post('/rsvp', [RsvpApiController::class, 'store']);
-    });
+// Public ISF content API (read-only, published content only)
+Route::middleware(['web'])->prefix('isf')->group(function () {
+    Route::get('/beranda', [PublicContentController::class, 'beranda'])->name('api.isf.beranda');
+    Route::get('/tokoh/{slug}', [PublicContentController::class, 'tokoh'])->name('api.isf.tokoh');
+    Route::get('/isu/{slug}', [PublicContentController::class, 'isu'])->name('api.isf.isu');
+    Route::get('/anggota', [PublicContentController::class, 'anggota'])->name('api.isf.anggota');
 });
 
-// Protected CMS API Routes (authenticated session required)
-Route::middleware(['web', 'auth'])->group(function () {
-    Route::get('/user/profile', function () {
-        $user = auth()->user();
-        return response()->json([
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'allowed_features' => $user->allowed_features ?? [
-                "undangan_digital",
-                "rsvp_online",
-                "informasi_acara",
-                "love_story",
-                "manajemen_tamu",
-                "amplop_digital",
-                "galeri",
-                "countdown",
-                "qr_checkin",
-                "live_streaming",
-                "ucapan_doa",
-                "wishlist"
-            ]
-        ]);
-    });
+// ISF CMS API (authenticated session + per-module feature access)
+Route::middleware(['web', 'auth'])->prefix('cms')->name('api.cms.')->group(function () {
+    Route::apiResource('artikel', ArticleController::class)
+        ->parameters(['artikel' => 'article'])->middleware('feature:artikel');
+    Route::apiResource('infografik', InfographicController::class)
+        ->parameters(['infografik' => 'infographic'])->middleware('feature:infografik');
+    Route::apiResource('tokoh', TokohController::class)
+        ->parameters(['tokoh' => 'tokoh'])->middleware('feature:tokoh');
+    Route::apiResource('isu', IsuController::class)
+        ->parameters(['isu' => 'isu'])->middleware('feature:isu');
+    Route::apiResource('data-grafik', ChartController::class)
+        ->parameters(['data-grafik' => 'chart'])->middleware('feature:data_grafik');
+    Route::apiResource('alert', AlertController::class)
+        ->parameters(['alert' => 'alert'])->middleware('feature:alert');
+    Route::apiResource('email-briefing', BriefingController::class)
+        ->parameters(['email-briefing' => 'briefing'])->middleware('feature:email_briefing');
 
-    Route::get('/wedding/registry', [WeddingApiController::class, 'index']);
-    Route::get('/wedding/registry/{slug}', [WeddingApiController::class, 'show']);
-    Route::post('/wedding/registry', [WeddingApiController::class, 'store']);
-    Route::delete('/wedding/registry/{slug}', [WeddingApiController::class, 'destroy']);
+    Route::get('/pengaturan-halaman', [SettingController::class, 'show'])
+        ->middleware('feature:pengaturan_halaman')->name('pengaturan-halaman.show');
+    Route::put('/pengaturan-halaman', [SettingController::class, 'update'])
+        ->middleware('feature:pengaturan_halaman')->name('pengaturan-halaman.update');
 
-    Route::prefix('/wedding/{slug}')->group(function () {
-        Route::post('/couple', [CoupleApiController::class, 'store']);
-
-        Route::post('/events', [EventApiController::class, 'store']);
-        Route::get('/events/{id}', [EventApiController::class, 'show']);
-        Route::put('/events/{id}', [EventApiController::class, 'update']);
-        Route::delete('/events/{id}', [EventApiController::class, 'destroy']);
-
-        Route::get('/guests', [GuestApiController::class, 'index']);
-        Route::post('/guests', [GuestApiController::class, 'store']);
-        Route::post('/guests/batch', [GuestApiController::class, 'batchStore']);
-        Route::get('/guests/{id}', [GuestApiController::class, 'show']);
-        Route::put('/guests/{id}', [GuestApiController::class, 'update']);
-        Route::delete('/guests/{id}', [GuestApiController::class, 'destroy']);
-        Route::post('/guests/{id}/checkin', [GuestApiController::class, 'checkin']);
-
-        Route::post('/media', [MediaApiController::class, 'store']);
-        Route::delete('/media/{id}', [MediaApiController::class, 'destroy']);
-
-        Route::post('/payments', [PaymentApiController::class, 'store']);
-
-        Route::get('/rsvp', [RsvpApiController::class, 'index']);
-        Route::put('/rsvp/{id}/status', [RsvpApiController::class, 'updateStatus']);
-        Route::get('/rsvp/summary', [RsvpApiController::class, 'summary']);
-
-        Route::get('/settings', [SettingApiController::class, 'show']);
-        Route::post('/settings', [SettingApiController::class, 'store']);
-
-        Route::put('/wishes/{id}/status', [WishApiController::class, 'updateStatus']);
-        Route::delete('/wishes/{id}', [WishApiController::class, 'destroy']);
-    });
+    // Chart picker for the isu "02 Visual Kunci" field
+    Route::get('/options/charts', [ChartController::class, 'options'])
+        ->middleware('feature:isu')->name('options.charts');
 });

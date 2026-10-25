@@ -58,7 +58,7 @@ export async function confirmAction({
         text,
         icon,
         showCancelButton: true,
-        confirmButtonColor: '#059669', // emerald-600
+        confirmButtonColor: '#E10600', // ISF red (white text 4.98:1)
         cancelButtonColor: '#6b7280', // gray-500
         confirmButtonText: confirmText,
         cancelButtonText: cancelText,

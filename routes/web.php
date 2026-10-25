@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Cms\IsfPageController;
+use App\Http\Controllers\Isf\BriefingPreviewController;
 use App\Http\Controllers\SpaController;
 use Illuminate\Support\Facades\Route;
 
@@ -10,13 +12,14 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// Root redirect to Dashboard
-Route::get('/', function () {
-    return redirect('/cms/dashboard');
-});
-
-// Public Invitation Page (loads the Vue SPA)
-Route::get('/wedding/{slug}', [SpaController::class, 'index'])->name('wedding.invitation');
+// ISF (Indonesia Strategy Forum) public pages — Vue SPA, content from the public API (/api/isf/*)
+Route::get('/', [SpaController::class, 'index'])->name('isf.home');
+Route::get('/beranda', [SpaController::class, 'index'])->name('isf.beranda');
+Route::get('/tokoh/{slug}', [SpaController::class, 'index'])->name('isf.tokoh.show');
+Route::get('/isu/{slug}', [SpaController::class, 'index'])->name('isf.isu.show');
+// ISF member portal (B2B) — NOT protected by auth yet (UI preview only)
+Route::get('/anggota', [SpaController::class, 'index'])->name('isf.anggota.dashboard');
+Route::get('/anggota/briefing/preview', [BriefingPreviewController::class, 'show'])->name('isf.anggota.briefing.preview');
 
 // Guest Authentication Routes (using the template's Inertia authentication system)
 Route::middleware('guest')->group(function () {
@@ -26,18 +29,6 @@ Route::middleware('guest')->group(function () {
 
 // Authenticated Admin Routes (super-admin only)
 Route::middleware(['auth', 'role:super-admin'])->group(function () {
-
-    // Templates CRUD (Admin Write Actions)
-    Route::prefix('cms/templates')->group(function () {
-        Route::get('/create', [\App\Http\Controllers\Admin\TemplateController::class, 'create'])->name('cms.templates.create');
-        Route::post('/', [\App\Http\Controllers\Admin\TemplateController::class, 'store'])->name('cms.templates.store');
-        Route::post('/quick-create', [\App\Http\Controllers\Admin\TemplateController::class, 'quickCreate'])->name('cms.templates.quick-create');
-        Route::get('/{template}/developer', [\App\Http\Controllers\Admin\TemplateController::class, 'developerStatus'])->name('cms.templates.developer-status');
-        Route::put('/{template}/release', [\App\Http\Controllers\Admin\TemplateController::class, 'release'])->name('cms.templates.release');
-        Route::get('/{template}/edit', [\App\Http\Controllers\Admin\TemplateController::class, 'edit'])->name('cms.templates.edit');
-        Route::put('/{template}', [\App\Http\Controllers\Admin\TemplateController::class, 'update'])->name('cms.templates.update');
-        Route::delete('/{template}', [\App\Http\Controllers\Admin\TemplateController::class, 'destroy'])->name('cms.templates.destroy');
-    });
 
     // Roles CRUD
     Route::prefix('cms/roles')->group(function () {
@@ -68,18 +59,37 @@ Route::middleware(['auth', 'role:super-admin'])->group(function () {
 
 // Authenticated General Routes (Accessible by all roles)
 Route::middleware('auth')->group(function () {
-    // Dashboard (accessible to all — data is filtered server-side by role)
+    // Dashboard (accessible to all — data is filtered server-side by feature access)
     Route::get('/cms/dashboard', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])->name('cms.dashboard');
-    Route::get('/cms/templates', [\App\Http\Controllers\Admin\TemplateController::class, 'index'])->name('cms.templates.index');
 
     // /cms root redirects to dashboard
     Route::get('/cms', function () {
         return redirect('/cms/dashboard');
     });
-});
 
-// Authenticated CMS Wildcard Route (loads the Vue SPA for CMS)
-Route::middleware('auth')->group(function () {
+    // ISF content modules (Inertia page shells; data via /api/cms/*), gated per feature (ACL)
+    $isfModules = [
+        'artikel' => 'artikel',
+        'infografik' => 'infografik',
+        'tokoh' => 'tokoh',
+        'isu' => 'isu',
+        'data-grafik' => 'data_grafik',
+        'alert' => 'alert',
+        'email-briefing' => 'email_briefing',
+    ];
+    foreach ($isfModules as $segment => $feature) {
+        Route::middleware("feature:{$feature}")->prefix("cms/{$segment}")->group(function () use ($segment) {
+            Route::get('/', [IsfPageController::class, 'index'])->defaults('module', $segment)->name("cms.isf.{$segment}.index");
+            Route::get('/create', [IsfPageController::class, 'create'])->defaults('module', $segment)->name("cms.isf.{$segment}.create");
+            Route::get('/{id}/edit', [IsfPageController::class, 'edit'])->defaults('module', $segment)->whereNumber('id')->name("cms.isf.{$segment}.edit");
+        });
+    }
+
+    Route::get('/cms/email-briefing/{briefing}/preview', [BriefingPreviewController::class, 'cmsPreview'])
+        ->middleware('feature:email_briefing')->whereNumber('briefing')->name('cms.isf.email-briefing.preview');
+
+    Route::get('/cms/pengaturan-halaman', [IsfPageController::class, 'settings'])
+        ->middleware('feature:pengaturan_halaman')->name('cms.isf.pengaturan-halaman');
+
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
-    Route::get('/cms/{any?}', [SpaController::class, 'index'])->where('any', '.*')->name('cms');
 });

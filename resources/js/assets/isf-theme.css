@@ -1,0 +1,327 @@
+/* Scoped wire-service theme for the public ISF SPA. */
+.isf-theme {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 2 100% 44%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 10%;
+    --destructive: 2 100% 44%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 78%;
+    --input: 0 0% 72%;
+    --ring: 2 100% 44%;
+    --radius: 0;
+    color: hsl(var(--foreground));
+    background-color: hsl(var(--background));
+    font-family: "Roboto", Arial, sans-serif;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+/* The layout root is a column flexbox. Its direct children must be allowed
+ * to shrink below the nav's intrinsic width so only the nav itself scrolls. */
+.isf-theme > :where(header, main, footer) {
+    min-width: 0;
+    max-width: 100%;
+}
+
+/* Keep full-width cards and media inside their padded parent boxes. */
+.isf-theme,
+.isf-theme *,
+.isf-theme *::before,
+.isf-theme *::after {
+    box-sizing: border-box;
+}
+
+/* Deck/summary serif (the only serif on landing pages). */
+.isf-theme :where(.font-serif) {
+    font-family: "Source Serif 4", Georgia, serif;
+}
+
+/* Small sans for nav, labels, kickers and bylines. */
+.isf-theme :where(.font-ui) {
+    font-family: "Barlow", Arial, sans-serif;
+}
+
+/* Bold grotesque for headlines and the wordmark. */
+.isf-theme :where(.font-headline) {
+    font-family: "Barlow", Arial, sans-serif;
+}
+
+.isf-theme :where(.font-body) {
+    font-family: "Roboto", Arial, sans-serif;
+}
+
+/* Shared Politico-style editorial treatments. */
+
+/* Column/section label: "○ TOP NEWS" (red outlined circle + dark caps). */
+.isf-theme .isf-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-family: "Barlow", Arial, sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    color: #171717;
+}
+
+.isf-theme .isf-label::before {
+    width: 0.625rem;
+    height: 0.625rem;
+    flex: 0 0 auto;
+    border: 2px solid #e10600;
+    border-radius: 9999px;
+    content: "";
+}
+
+/* Red category kicker above headlines ("HUKUM", like Politico's "EXCLUSIVE"). */
+.isf-theme .isf-kicker {
+    display: inline-block;
+    font-family: "Barlow", Arial, sans-serif;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    color: #e10600;
+}
+
+/* Tiny gray uppercase byline: "OLEH <strong>NAMA</strong>". */
+.isf-theme .isf-byline {
+    font-family: "Barlow", Arial, sans-serif;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    line-height: 1.35;
+    text-transform: uppercase;
+    color: #737373;
+}
+
+.isf-theme .isf-byline strong {
+    font-weight: 700;
+    color: #404040;
+}
+
+/* Column-header row cell with a hairline beneath. */
+.isf-theme .isf-col-head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 2.75rem;
+    border-bottom: 1px solid #d4d4d4;
+}
+
+.isf-theme .isf-no-scrollbar {
+    scrollbar-width: none;
+}
+
+.isf-theme .isf-no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.isf-theme .isf-hairline {
+    border-color: #d4d4d4;
+}
+
+.isf-theme .isf-hairline-top {
+    border-top: 1px solid #d4d4d4;
+}
+
+.isf-theme .isf-hairline-bottom {
+    border-bottom: 1px solid #d4d4d4;
+}
+
+.isf-theme .isf-editorial-card {
+    border: 1px solid #d4d4d4;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.isf-theme .isf-editorial-compact {
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.isf-theme .isf-editorial-columns > * + * {
+    border-color: #d4d4d4;
+}
+
+.isf-theme .isf-headline {
+    font-family: "Barlow", Arial, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+    color: #0a0a0a;
+    text-transform: none;
+}
+
+.isf-theme .isf-editorial-rule {
+    border-top: 3px solid #e10600;
+}
+
+/* Editorial blocks use rules and square corners rather than floating panels. */
+.isf-theme
+    :where(
+        .rounded,
+        .rounded-sm,
+        .rounded-md,
+        .rounded-lg,
+        .rounded-xl,
+        .rounded-full
+    ) {
+    border-radius: 0;
+}
+
+.isf-theme :where(.grid > *) {
+    min-width: 0;
+}
+.isf-theme :where(.overflow-x-auto) {
+    max-width: 100%;
+}
+.isf-theme :where(img, svg, video, canvas, iframe) {
+    max-width: 100%;
+}
+/* Zero specificity so Tailwind padding utilities on these elements still win. */
+:where(.isf-theme) :where(h1, h2, h3, h4, p, a, li, td, th) {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-width: 100%;
+    padding-right: 1px;
+}
+
+@media (max-width: 1023.98px) {
+    /* Keep landing modules fluid through the full mobile and tablet range.
+       The only intentional mobile overflows remain nav and data-table wrappers. */
+    .isf-theme {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        contain: inline-size;
+    }
+
+    .isf-theme > :where(header, main, footer),
+    .isf-theme > div,
+    .isf-theme > main > *,
+    .isf-theme header > div {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .isf-theme main :where(.flex, .grid),
+    .isf-theme main :where(.flex, .grid) > * {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .isf-theme main > *,
+    .isf-theme main :where(article, aside, section, figure) {
+        inline-size: 100%;
+        max-inline-size: 100%;
+    }
+
+    .isf-theme main h2.flex {
+        flex-wrap: wrap;
+    }
+
+    .isf-theme main :where(.isf-headline.text-4xl) {
+        font-size: 1.875rem;
+        line-height: 1.1;
+    }
+
+    .isf-theme .isf-stack-table {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        border: 0;
+    }
+
+    .isf-theme .isf-stack-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+
+    .isf-theme .isf-stack-table tbody,
+    .isf-theme .isf-stack-table tr,
+    .isf-theme .isf-stack-table th,
+    .isf-theme .isf-stack-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .isf-theme .isf-stack-table tbody tr {
+        border: 1px solid #c7c3bd;
+        border-radius: 0;
+        background-color: #fff;
+        padding: 0.75rem 1rem;
+    }
+
+    .isf-theme .isf-stack-table tbody tr + tr {
+        margin-top: 0.75rem;
+    }
+
+    .isf-theme .isf-stack-table tbody th,
+    .isf-theme .isf-stack-table tbody td {
+        height: auto;
+        padding: 0.25rem 0;
+        text-align: left;
+        white-space: normal;
+    }
+
+    .isf-theme .isf-stack-table [data-label]::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 0.125rem;
+        font-family: "Barlow", Arial, sans-serif;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #525252;
+    }
+
+    .isf-theme .isf-stack-table .isf-stack-inline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    .isf-theme .isf-stack-table .isf-stack-inline::before {
+        margin-bottom: 0;
+    }
+    .isf-theme .isf-stack-table .isf-stack-inline > * {
+        margin: 0;
+    }
+}
+
+@media (max-width: 390px) {
+    .isf-theme :where(header, main, footer) .isf-mobile-gutter {
+        padding-right: 1rem;
+        padding-left: 1rem;
+    }
+
+    .isf-theme :where(.isf-editorial-card, .isf-editorial-compact) {
+        max-width: 100%;
+    }
+
+    .isf-theme .isf-kicker {
+        font-size: 0.6875rem;
+        letter-spacing: 0.1em;
+    }
+}

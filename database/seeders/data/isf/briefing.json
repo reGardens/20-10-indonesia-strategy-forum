@@ -1,0 +1,40 @@
+{
+    "tanggal": "2026-10-15",
+    "penerima": "Anindya Putri",
+    "organisasi": "PT Contoh Nusantara",
+    "ringkasan": {
+        "judul": "Ringkasan Data Anggota Pekan Ini",
+        "catatan": "Jumlah alert yang relevan dengan sektor pantauan organisasi Anda (Keuangan, Energi) selama 7 hari terakhir. Data contoh.",
+        "data": [
+            { "label": "Prioritas Tinggi", "nilai": 3 },
+            { "label": "Perlu Dipantau", "nilai": 5 },
+            { "label": "Isu Baru", "nilai": 2 }
+        ]
+    },
+    "pembuka": "Berikut poin-poin utama regulasi dan kebijakan yang perlu menjadi perhatian organisasi Anda pekan ini.",
+    "poin": [
+        {
+            "judul": "Aturan turunan pidana korporasi masuk tahap finalisasi",
+            "deskripsi": "Draf aturan pelaksana KUHP untuk korporasi dijadwalkan dibahas pekan depan dan berdampak langsung pada kebijakan kepatuhan direksi.",
+            "url": "/isu/kuhp-baru-pelaku-usaha"
+        },
+        {
+            "judul": "RUU Perampasan Aset dijadwalkan Pembahasan Tingkat I",
+            "deskripsi": "Komisi III menjadwalkan rapat kerja; ketentuan perampasan aset tanpa pemidanaan perlu dicermati oleh sektor keuangan.",
+            "url": "/isu/kuhp-baru-pelaku-usaha"
+        },
+        {
+            "judul": "Kewajiban pelaporan emisi diperluas ke sektor energi",
+            "deskripsi": "Draf peraturan menteri memperluas cakupan pelaporan emisi dengan usulan tenggat kepatuhan awal 2027.",
+            "url": "/isu/kuhp-baru-pelaku-usaha"
+        }
+    ],
+    "penutup": "Lihat dasbor anggota untuk daftar lengkap alert dan filter berdasarkan prioritas.",
+    "ctaUrl": "/anggota",
+    "tautan": [
+        { "label": "Beranda ISF", "url": "/beranda" },
+        { "label": "Dasbor Anggota", "url": "/anggota" },
+        { "label": "Anatomi Isu Pekan Ini", "url": "/isu/kuhp-baru-pelaku-usaha" },
+        { "label": "Profil Tokoh Pekan Ini", "url": "/tokoh/budi-santoso" }
+    ]
+}

@@ -4,11 +4,22 @@ import store from '@/store/index.js'
 
 const CmsLayout = () => import('../Pages/Cms/layouts/CmsLayout.vue')
 const InvitationLayout = () => import('../Pages/Landing/invitation/layouts/InvitationLayout.vue')
+const IsfPublicLayout = () => import('../Layouts/IsfPublicLayout.vue')
+const IsfMemberLayout = () => import('../Layouts/IsfMemberLayout.vue')
+const BerandaView = () => import('../Pages/Isf/views/BerandaView.vue')
 
 const routes = [
   {
     path: '/',
-    redirect: '/cms/dashboard'
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-home',
+        component: BerandaView,
+        meta: { title: 'Beranda · Indonesia Strategy Forum' }
+      }
+    ]
   },
   {
     path: '/cms',
@@ -143,6 +154,54 @@ const routes = [
         path: 'settings',
         name: 'cms-settings',
         component: () => import('../Pages/Cms/views/SettingsView.vue')
+      }
+    ]
+  },
+  {
+    path: '/beranda',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-beranda',
+        component: BerandaView,
+        meta: { title: 'Beranda · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
+    path: '/tokoh/:slug',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-tokoh',
+        component: () => import('../Pages/Isf/views/TokohProfileView.vue'),
+        meta: { title: 'Profil & Tokoh Pekan Ini · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
+    path: '/isu/:slug',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-isu',
+        component: () => import('../Pages/Isf/views/IsuDetailView.vue'),
+        meta: { title: 'Anatomi Isu Mingguan · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
+    path: '/anggota',
+    component: IsfMemberLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-anggota',
+        component: () => import('../Pages/Isf/views/AnggotaDashboardView.vue'),
+        meta: { title: 'Dasbor Peringatan Dini · Portal Anggota ISF' }
       }
     ]
   },

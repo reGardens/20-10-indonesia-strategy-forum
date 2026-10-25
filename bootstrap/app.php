@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
             'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+            'feature' => \App\Http\Middleware\CheckFeature::class,
         ]);
 
         $middleware->redirectGuestsTo('/login');

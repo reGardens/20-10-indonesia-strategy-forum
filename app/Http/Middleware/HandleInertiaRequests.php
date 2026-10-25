@@ -38,6 +38,8 @@ class HandleInertiaRequests extends Middleware
                     'email' => $request->user()->email,
                     'roles' => $request->user()->getRoleNames(),
                     'permissions' => $request->user()->getAllPermissions()->pluck('name'),
+                    // ISF CMS modules this user can open (ACL); used by the sidebar
+                    'features' => $request->user()->features(),
                 ] : null,
             ],
             'flash' => [
