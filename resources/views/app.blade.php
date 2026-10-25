@@ -7,6 +7,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title inertia>{{ config('app.name', 'CMS Landing') }}</title>
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/isf/logo-isf.jpeg') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/isf/logo-isf.jpeg') }}">
+    <meta name="theme-color" content="#0B1220">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,30 +23,20 @@
 </head>
 
 <body class="font-sans antialiased">
-    @if (request()->is('/') || request()->is('landing'))
-        <!-- Instant Splash Screen for Homepage -->
-        <div id="splash-screen"
-            style="position: fixed; inset: 0; z-index: 99999; background: white; display: flex; align-items: center; justify-content: center; transition: opacity 0.8s ease-in-out;">
-            <video autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover;">
-                <source src="/assets/embed/intro.mp4" type="video/mp4">
-            </video>
+    <!-- Standard loading splash (ISF navy + red spinner) -->
+    <div id="splash-screen"
+        style="position: fixed; inset: 0; z-index: 99999; background: #0B1220; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s ease-in-out;">
+        <div
+            style="width: 50px; height: 50px; border: 4px solid #E10600; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;">
         </div>
-    @else
-        <!-- Standard Loading for other pages -->
-        <div id="splash-screen"
-            style="position: fixed; inset: 0; z-index: 99999; background: white; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s ease-in-out;">
-            <div
-                style="width: 50px; height: 50px; border: 4px solid #3AB0E5; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;">
-            </div>
-            <style>
-                @keyframes spin {
-                    to {
-                        transform: rotate(360deg);
-                    }
+        <style>
+            @keyframes spin {
+                to {
+                    transform: rotate(360deg);
                 }
-            </style>
-        </div>
-    @endif
+            }
+        </style>
+    </div>
 
     <script>
         document.body.style.overflow = 'hidden';
@@ -71,8 +64,8 @@
             }
         }
 
-        // 1. Min Intro Time (2.5s)
-        var introDuration = {{ request()->is('/') || request()->is('landing') ? 2500 : 500 }};
+        // 1. Min splash time (0.5s)
+        var introDuration = 500;
         setTimeout(function () {
             minTimePassed = true;
             hideSplashScreen();

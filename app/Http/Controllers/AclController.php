@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -22,20 +23,7 @@ class AclController extends Controller
                     'id' => $u->id,
                     'name' => $u->name,
                     'email' => $u->email,
-                    'allowed_features' => $u->allowed_features ?? [
-                        "undangan_digital",
-                        "rsvp_online",
-                        "informasi_acara",
-                        "love_story",
-                        "manajemen_tamu",
-                        "amplop_digital",
-                        "galeri",
-                        "countdown",
-                        "qr_checkin",
-                        "live_streaming",
-                        "ucapan_doa",
-                        "wishlist"
-                    ],
+                    'allowed_features' => $u->allowed_features ?? User::defaultFeatures(),
                 ];
             });
 
@@ -50,24 +38,11 @@ class AclController extends Controller
     public function toggle(Request $request, User $user)
     {
         $request->validate([
-            'feature' => ['required', 'string'],
+            'feature' => ['required', 'string', Rule::in(User::ISF_FEATURES)],
         ]);
 
         $feature = $request->input('feature');
-        $features = $user->allowed_features ?? [
-            "undangan_digital",
-            "rsvp_online",
-            "informasi_acara",
-            "love_story",
-            "manajemen_tamu",
-            "amplop_digital",
-            "galeri",
-            "countdown",
-            "qr_checkin",
-            "live_streaming",
-            "ucapan_doa",
-            "wishlist"
-        ];
+        $features = $user->allowed_features ?? User::defaultFeatures();
 
         if (in_array($feature, $features)) {
             // Remove the feature

@@ -1,6 +1,6 @@
 /**
  * Formatting helpers using Bahasa Indonesia locale (id-ID).
- * Used throughout the CMS and invitation app for consistent
+ * Used throughout the CMS and the ISF public pages for consistent
  * date, time, and currency display.
  */
 

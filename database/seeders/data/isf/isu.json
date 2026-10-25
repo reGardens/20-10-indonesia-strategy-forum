@@ -1,0 +1,119 @@
+{
+    "slug": "kuhp-baru-pelaku-usaha",
+    "category": "hukum",
+    "minggu": "2026-10-15",
+    "title": "Apa yang berubah bagi pelaku usaha setelah KUHP baru berlaku",
+    "summary": "Anatomi isu pekan ini membedah dampak KUHP nasional terhadap korporasi: siapa yang berwenang, risiko apa yang muncul, dan kewajiban apa yang perlu disiapkan.",
+    "publishedAt": "2026-10-15",
+    "author": "Redaksi ISF",
+    "frameworks": {
+        "ringkasan": "KUHP nasional berlaku sejak 2 Januari 2026 dan menempatkan korporasi sebagai subjek tindak pidana. Pelaku usaha perlu memetakan ulang tanggung jawab direksi, prosedur kepatuhan, serta dokumentasi pengambilan keputusan. Aturan turunan masih disusun, sehingga pemantauan tahap berikutnya menjadi penting.",
+        "visualKunci": {
+            "imageAlt": "Visual kunci: diagram alur pertanggungjawaban pidana korporasi menurut KUHP baru",
+            "title": "Perkiraan kesiapan kepatuhan per sektor",
+            "description": "Persentase responden yang menyatakan sudah memperbarui kebijakan kepatuhan (data contoh).",
+            "unit": "%",
+            "data": [
+                { "label": "Keuangan", "value": 64 },
+                { "label": "Energi", "value": 48 },
+                { "label": "Manufaktur", "value": 37 },
+                { "label": "Ritel", "value": 22 }
+            ],
+            "sourceTitle": "Data contoh redaksi ISF",
+            "sourceUrl": ""
+        },
+        "faktaKunci": [
+            {
+                "claim": "KUHP nasional (UU No. 1 Tahun 2023) mulai berlaku tiga tahun sejak diundangkan, yaitu pada 2 Januari 2026.",
+                "sourceUrl": "https://peraturan.bpk.go.id/",
+                "sourceTitle": "UU No. 1 Tahun 2023 tentang Kitab Undang-Undang Hukum Pidana — Database Peraturan JDIH BPK",
+                "sourceDate": "2023-01-02"
+            },
+            {
+                "claim": "Korporasi diakui sebagai subjek tindak pidana dan dapat dimintai pertanggungjawaban pidana.",
+                "sourceUrl": "https://peraturan.bpk.go.id/",
+                "sourceTitle": "UU No. 1 Tahun 2023 tentang Kitab Undang-Undang Hukum Pidana — Database Peraturan JDIH BPK",
+                "sourceDate": "2023-01-02"
+            },
+            {
+                "claim": "RUU KUHP disetujui menjadi undang-undang dalam Rapat Paripurna DPR RI pada 6 Desember 2022.",
+                "sourceUrl": "https://www.dpr.go.id/",
+                "sourceTitle": "Dewan Perwakilan Rakyat Republik Indonesia — Rapat Paripurna",
+                "sourceDate": "2022-12-06"
+            }
+        ],
+        "linimasa": [
+            { "date": "2022-12-06", "label": "RUU KUHP disetujui dalam Rapat Paripurna DPR" },
+            { "date": "2023-01-02", "label": "UU No. 1 Tahun 2023 diundangkan" },
+            { "date": "2026-01-02", "label": "KUHP nasional mulai berlaku" },
+            { "date": "2026-10-14", "label": "RDP aturan turunan pidana korporasi (contoh)" }
+        ],
+        "aktor": [
+            { "name": "Budi Santoso", "role": "Anggota Komisi III DPR RI (contoh)", "stance": "Mendukung", "to": "/tokoh/budi-santoso" },
+            { "name": "Asosiasi Pengusaha (contoh)", "role": "Perwakilan dunia usaha", "stance": "Meminta masa transisi" },
+            { "name": "Koalisi Masyarakat Sipil (contoh)", "role": "Pemantau legislasi", "stance": "Mempertanyakan" }
+        ],
+        "grc": {
+            "governance": "Penegakan dilakukan aparat penegak hukum sesuai KUHP; pemerintah dan DPR menyusun aturan turunan. Di internal perusahaan, direksi dan dewan komisaris bertanggung jawab atas kebijakan kepatuhan.",
+            "risk": {
+                "level": "Tinggi",
+                "description": "Risiko pidana korporasi meningkat bila keputusan bisnis tidak terdokumentasi dan pengawasan internal lemah."
+            },
+            "compliance": [
+                { "kewajiban": "Perbarui kode etik dan kebijakan anti-korupsi", "tenggat": "2026-12-31", "regulasi": "UU No. 1 Tahun 2023" },
+                { "kewajiban": "Tetapkan penanggung jawab kepatuhan di tingkat direksi", "tenggat": "2026-11-30", "regulasi": "UU No. 1 Tahun 2023" },
+                { "kewajiban": "Dokumentasikan proses pengambilan keputusan strategis", "tenggat": "2027-01-31", "regulasi": "Kebijakan internal (contoh)" }
+            ]
+        },
+        "dampak": {
+            "sektoral": [
+                { "sektor": "Keuangan", "dampak": "Penguatan fungsi kepatuhan dan pelaporan transaksi." },
+                { "sektor": "Energi", "dampak": "Peninjauan ulang izin dan tanggung jawab lingkungan." },
+                { "sektor": "Manufaktur", "dampak": "Audit rantai pasok dan keselamatan kerja." }
+            ],
+            "reaksi": [
+                { "pihak": "Asosiasi pengusaha (contoh)", "reaksi": "Meminta sosialisasi dan pedoman teknis yang jelas." },
+                { "pihak": "Akademisi hukum (contoh)", "reaksi": "Menilai aturan turunan krusial untuk kepastian hukum." }
+            ]
+        },
+        "selanjutnya": {
+            "tahapan": [
+                { "date": "2026-10-22", "label": "Pembahasan lanjutan aturan turunan (contoh)" },
+                { "date": "2026-11-15", "label": "Konsultasi publik pedoman kepatuhan (contoh)" },
+                { "date": "2026-12-10", "label": "Target penetapan aturan turunan (contoh)" }
+            ],
+            "pantau": [
+                { "label": "Profil Budi Santoso", "to": "/tokoh/budi-santoso" },
+                { "label": "Aturan turunan KUHP" },
+                { "label": "Pidana korporasi" }
+            ]
+        }
+    },
+    "populer": [
+        { "title": "Apa yang berubah bagi pelaku usaha setelah KUHP baru berlaku", "to": "/isu/kuhp-baru-pelaku-usaha" },
+        { "title": "RUU Perampasan Aset masuk pembahasan tingkat I" },
+        { "title": "Pedoman kepatuhan UMKM: apa saja kewajibannya" },
+        { "title": "Arah kebijakan suku bunga hingga akhir 2026" },
+        { "title": "Peta jalan legislasi prioritas DPR" }
+    ],
+    "metodologi": {
+        "text": "Isu mingguan dipilih dari sinyal yang terukur, lalu diverifikasi oleh redaksi sebelum diterbitkan.",
+        "signals": [
+            "Jumlah dokumen primer baru",
+            "Tahapan RUU",
+            "Skor relevansi AI",
+            "Keputusan redaksi"
+        ]
+    },
+    "faq": [
+        { "question": "Kapan KUHP baru mulai berlaku?", "answer": "KUHP nasional (UU No. 1 Tahun 2023) mulai berlaku pada 2 Januari 2026, tiga tahun setelah diundangkan." },
+        { "question": "Apakah korporasi dapat dipidana?", "answer": "Ya. KUHP baru mengakui korporasi sebagai subjek tindak pidana yang dapat dimintai pertanggungjawaban." },
+        { "question": "Apa langkah awal yang perlu dilakukan perusahaan?", "answer": "Mulai dari pemetaan risiko, pembaruan kebijakan kepatuhan, dan penunjukan penanggung jawab di tingkat direksi." },
+        { "question": "Di mana teks resmi undang-undangnya dapat dibaca?", "answer": "Teks resmi dapat ditelusuri melalui database peraturan JDIH BPK (peraturan.bpk.go.id) dan JDIH Sekretariat Negara (jdih.setneg.go.id)." }
+    ],
+    "related": [
+        { "title": "Profil & Tokoh Pekan Ini: Budi Santoso", "to": "/tokoh/budi-santoso", "publishedAt": "2026-10-15" },
+        { "title": "Pemerintah siapkan aturan turunan KUHP untuk pidana korporasi", "publishedAt": "2026-10-18" },
+        { "title": "Kementerian terbitkan pedoman kepatuhan bagi UMKM", "publishedAt": "2026-10-15" }
+    ]
+}

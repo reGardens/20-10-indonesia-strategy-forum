@@ -1,0 +1,84 @@
+{
+    "topBar": {
+        "badge": "Sorotan",
+        "announcement": "KUHP baru resmi berlaku sejak 2 Januari 2026 — simak dampaknya bagi dunia usaha.",
+        "info": "Edisi Pekan Ini"
+    },
+    "hero": {
+        "slug": "kuhp-baru-pelaku-usaha",
+        "to": "/isu/kuhp-baru-pelaku-usaha",
+        "category": "hukum",
+        "publishedAt": "2026-10-15",
+        "title": "Apa yang berubah bagi pelaku usaha setelah KUHP baru berlaku",
+        "summary": "KUHP nasional (UU No. 1 Tahun 2023) kini berlaku penuh. Korporasi dapat dimintai pertanggungjawaban pidana secara langsung, sehingga tata kelola, manajemen risiko, dan kepatuhan perusahaan perlu ditinjau ulang.",
+        "author": {
+            "name": "Redaksi ISF",
+            "role": "Tim Analis Kebijakan"
+        },
+        "readingMinutes": 6,
+        "infographicAlt": "Infografik: ringkasan perubahan utama KUHP baru yang berdampak pada pelaku usaha"
+    },
+    "factBlocks": [
+        {
+            "claim": "KUHP nasional (UU No. 1 Tahun 2023) mulai berlaku tiga tahun sejak diundangkan, yaitu pada 2 Januari 2026.",
+            "sourceUrl": "https://peraturan.bpk.go.id/",
+            "sourceTitle": "UU No. 1 Tahun 2023 tentang Kitab Undang-Undang Hukum Pidana — Database Peraturan JDIH BPK",
+            "sourceDate": "2023-01-02"
+        },
+        {
+            "claim": "KUHP baru menempatkan korporasi sebagai subjek tindak pidana yang dapat dimintai pertanggungjawaban.",
+            "sourceUrl": "https://peraturan.bpk.go.id/",
+            "sourceTitle": "UU No. 1 Tahun 2023 tentang Kitab Undang-Undang Hukum Pidana — Database Peraturan JDIH BPK",
+            "sourceDate": "2023-01-02"
+        }
+    ],
+    "chart": {
+        "title": "Topik KUHP yang paling banyak ditanyakan pelaku usaha",
+        "description": "Jumlah pertanyaan anggota per topik selama September 2026 (data contoh).",
+        "unit": "",
+        "data": [
+            { "label": "Pidana korporasi", "value": 48 },
+            { "label": "Tanggung jawab direksi", "value": 36 },
+            { "label": "Kepatuhan & pelaporan", "value": 29 },
+            { "label": "Pidana lingkungan", "value": 17 },
+            { "label": "Lainnya", "value": 9 }
+        ],
+        "sourceTitle": "Data contoh redaksi ISF",
+        "sourceUrl": ""
+    },
+    "terkini": [
+        { "title": "DPR jadwalkan rapat kerja lanjutan RUU Perampasan Aset", "category": "ruu", "publishedAt": "2026-10-19" },
+        { "title": "Pemerintah siapkan aturan turunan KUHP untuk pidana korporasi", "category": "hukum", "publishedAt": "2026-10-18" },
+        { "title": "Inflasi September terkendali, BI tahan suku bunga acuan", "category": "ekonomi", "publishedAt": "2026-10-17" },
+        { "title": "Koalisi partai bahas peta jalan legislasi akhir tahun", "category": "politik", "publishedAt": "2026-10-16" },
+        { "title": "Kementerian terbitkan pedoman kepatuhan bagi UMKM", "category": "kebijakan", "publishedAt": "2026-10-15" },
+        { "title": "Asosiasi pengusaha minta masa transisi sanksi administratif", "category": "ekonomi", "publishedAt": "2026-10-14" }
+    ],
+    "infografik": [
+        { "title": "Linimasa berlakunya KUHP nasional", "category": "hukum", "publishedAt": "2026-10-15", "alt": "Infografik linimasa berlakunya KUHP nasional dari 2023 hingga 2026" },
+        { "title": "Peta tahapan RUU prioritas 2026", "category": "ruu", "publishedAt": "2026-10-12", "alt": "Infografik peta tahapan RUU prioritas tahun 2026" },
+        { "title": "Sektor usaha paling terdampak regulasi baru", "category": "ekonomi", "publishedAt": "2026-10-09", "alt": "Infografik sektor usaha yang paling terdampak regulasi baru" },
+        { "title": "Siapa berwenang dalam penegakan pidana korporasi", "category": "kebijakan", "publishedAt": "2026-10-06", "alt": "Infografik pembagian kewenangan lembaga dalam penegakan pidana korporasi" }
+    ],
+    "pekanIni": {
+        "dateStart": "2026-10-15",
+        "dateEnd": "2026-10-21",
+        "label": "15–21 Okt 2026",
+        "items": [
+            {
+                "type": "isu",
+                "typeLabel": "Anatomi Isu",
+                "title": "Apa yang berubah bagi pelaku usaha setelah KUHP baru berlaku",
+                "summary": "Tujuh kerangka baku: dari ringkasan isu, Lensa GRC, hingga apa yang perlu dipantau selanjutnya.",
+                "to": "/isu/kuhp-baru-pelaku-usaha"
+            },
+            {
+                "type": "tokoh",
+                "typeLabel": "Tokoh Pekan Ini",
+                "title": "Budi Santoso",
+                "summary": "Profil, Skor Sorotan, dan jejak keterlibatan dalam pembahasan RUU pekan ini.",
+                "to": "/tokoh/budi-santoso"
+            }
+        ]
+    }
+}

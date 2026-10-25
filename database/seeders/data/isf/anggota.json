@@ -1,0 +1,81 @@
+{
+    "user": {
+        "name": "Anindya Putri",
+        "role": "Analis Regulasi",
+        "organization": "PT Contoh Nusantara",
+        "plan": "Anggota B2B (Beta)",
+        "sektor": ["Keuangan", "Energi"]
+    },
+    "alerts": [
+        {
+            "id": "al-001",
+            "priority": "merah",
+            "title": "Aturan turunan pidana korporasi masuk tahap finalisasi",
+            "summary": "Draf aturan pelaksana KUHP untuk korporasi dijadwalkan dibahas pekan depan; berdampak langsung pada kebijakan kepatuhan direksi.",
+            "date": "2026-10-19",
+            "sektor": "Keuangan"
+        },
+        {
+            "id": "al-002",
+            "priority": "kuning",
+            "title": "Konsultasi publik pedoman kepatuhan UMKM dibuka",
+            "summary": "Kementerian membuka masukan publik atas pedoman kepatuhan; relevan bagi mitra rantai pasok.",
+            "date": "2026-10-18",
+            "sektor": "Ritel"
+        },
+        {
+            "id": "al-003",
+            "priority": "merah",
+            "title": "RUU Perampasan Aset dijadwalkan Pembahasan Tingkat I",
+            "summary": "Komisi III menjadwalkan rapat kerja; ketentuan perampasan aset tanpa pemidanaan perlu dicermati.",
+            "date": "2026-10-17",
+            "sektor": "Keuangan"
+        },
+        {
+            "id": "al-004",
+            "priority": "kuning",
+            "title": "Revisi tarif royalti mineral dibahas dengan asosiasi",
+            "summary": "Pemerintah mengundang asosiasi tambang untuk membahas usulan revisi tarif; belum ada jadwal penetapan.",
+            "date": "2026-10-16",
+            "sektor": "Energi"
+        },
+        {
+            "id": "al-005",
+            "priority": "merah",
+            "title": "Kewajiban pelaporan emisi diperluas ke sektor energi",
+            "summary": "Draf peraturan menteri memperluas cakupan pelaporan emisi; tenggat kepatuhan diusulkan awal 2027.",
+            "date": "2026-10-15",
+            "sektor": "Energi"
+        },
+        {
+            "id": "al-006",
+            "priority": "kuning",
+            "title": "OJK uji publik ketentuan tata kelola fintech",
+            "summary": "Rancangan ketentuan mengatur komposisi direksi dan fungsi kepatuhan penyelenggara fintech.",
+            "date": "2026-10-14",
+            "sektor": "Keuangan"
+        },
+        {
+            "id": "al-007",
+            "priority": "kuning",
+            "title": "DPR jadwalkan RDP soal perlindungan data pribadi",
+            "summary": "Rapat dengar pendapat akan mengevaluasi implementasi kewajiban pengendali data.",
+            "date": "2026-10-12",
+            "sektor": "Keuangan"
+        },
+        {
+            "id": "al-008",
+            "priority": "kuning",
+            "title": "Insentif fiskal kendaraan listrik dievaluasi",
+            "summary": "Kementerian Keuangan meninjau efektivitas insentif; potensi perubahan pada tahun anggaran berikutnya.",
+            "date": "2026-10-10",
+            "sektor": "Energi"
+        }
+    ],
+    "tautanLangsung": [
+        { "label": "Pratinjau Email Briefing", "href": "/anggota/briefing/preview", "type": "external" },
+        { "label": "Anatomi Isu Pekan Ini", "to": "/isu/kuhp-baru-pelaku-usaha" },
+        { "label": "Profil Tokoh Pekan Ini", "to": "/tokoh/budi-santoso" },
+        { "label": "Beranda ISF", "to": "/beranda" }
+    ]
+}

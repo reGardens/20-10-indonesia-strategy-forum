@@ -3,8 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use App\Models\CustomTemplate;
-use App\Models\Wedding;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -44,16 +42,12 @@ class AdminManagementTest extends TestCase
     }
 
     /**
-     * Test super admin can access admin dashboard, templates, roles, users, and ACL pages.
+     * Test super admin can access admin dashboard, roles, users, and ACL pages.
      */
     public function test_super_admin_can_access_admin_pages(): void
     {
         $response = $this->actingAs($this->superAdmin)
             ->get(route('cms.dashboard'));
-        $response->assertStatus(200);
-
-        $response = $this->actingAs($this->superAdmin)
-            ->get(route('cms.templates.index'));
         $response->assertStatus(200);
 
         $response = $this->actingAs($this->superAdmin)
@@ -79,10 +73,6 @@ class AdminManagementTest extends TestCase
         $response->assertStatus(403);
 
         $response = $this->actingAs($this->standardUser)
-            ->get(route('cms.templates.index'));
-        $response->assertStatus(403);
-
-        $response = $this->actingAs($this->standardUser)
             ->get(route('cms.roles.index'));
         $response->assertStatus(403);
 
@@ -93,61 +83,6 @@ class AdminManagementTest extends TestCase
         $response = $this->actingAs($this->standardUser)
             ->get(route('cms.acl.index'));
         $response->assertStatus(403);
-    }
-
-    /**
-     * Test custom templates CRUD operations.
-     */
-    public function test_super_admin_can_crud_templates(): void
-    {
-        $templateData = [
-            'name' => 'Custom Gothic',
-            'slug' => 'custom-gothic-' . uniqid(),
-            'description' => 'Dark gothic theme',
-            'config' => [
-                'primary_color' => '#1a1a1a',
-                'secondary_color' => '#800000',
-                'accent_color' => '#ffd700',
-                'font_family' => 'Playfair Display',
-                'animation_style' => 'fade-in',
-                'custom_css' => 'body { background-color: #000; }',
-            ],
-        ];
-
-        // Store
-        $response = $this->actingAs($this->superAdmin)
-            ->post(route('cms.templates.store'), $templateData);
-
-        $response->assertRedirect(route('cms.templates.index'));
-        $this->assertDatabaseHas('custom_templates', [
-            'slug' => $templateData['slug'],
-            'name' => 'Custom Gothic',
-        ]);
-
-        $template = CustomTemplate::where('slug', $templateData['slug'])->firstOrFail();
-
-        // Update
-        $updatedData = $templateData;
-        $updatedData['name'] = 'Custom Gothic Dark';
-        $updatedData['config']['primary_color'] = '#000000';
-
-        $response = $this->actingAs($this->superAdmin)
-            ->put(route('cms.templates.update', $template), $updatedData);
-
-        $response->assertRedirect(route('cms.templates.index'));
-        $this->assertDatabaseHas('custom_templates', [
-            'id' => $template->id,
-            'name' => 'Custom Gothic Dark',
-        ]);
-
-        // Destroy
-        $response = $this->actingAs($this->superAdmin)
-            ->delete(route('cms.templates.destroy', $template));
-
-        $response->assertRedirect(route('cms.templates.index'));
-        $this->assertDatabaseMissing('custom_templates', [
-            'id' => $template->id,
-        ]);
     }
 
     /**
@@ -282,112 +217,26 @@ class AdminManagementTest extends TestCase
     public function test_super_admin_can_toggle_user_features(): void
     {
         // Initial state: standard user should have default features
-        $this->assertTrue($this->standardUser->hasFeature('live_streaming'));
+        $this->assertTrue($this->standardUser->hasFeature('artikel'));
 
-        // Toggle 'live_streaming' off
+        // Toggle 'artikel' off
         $response = $this->actingAs($this->superAdmin)
             ->post(route('cms.acl.toggle', $this->standardUser), [
-                'feature' => 'live_streaming'
+                'feature' => 'artikel'
             ]);
 
         $response->assertRedirect(route('cms.acl.index'));
         $this->standardUser->refresh();
-        $this->assertFalse($this->standardUser->hasFeature('live_streaming'));
+        $this->assertFalse($this->standardUser->hasFeature('artikel'));
 
-        // Toggle 'live_streaming' back on
+        // Toggle 'artikel' back on
         $response = $this->actingAs($this->superAdmin)
             ->post(route('cms.acl.toggle', $this->standardUser), [
-                'feature' => 'live_streaming'
+                'feature' => 'artikel'
             ]);
 
         $this->standardUser->refresh();
-        $this->assertTrue($this->standardUser->hasFeature('live_streaming'));
+        $this->assertTrue($this->standardUser->hasFeature('artikel'));
     }
 
-    /**
-     * Test templates API endpoint listing custom and default templates.
-     */
-    public function test_templates_api_returns_correct_response(): void
-    {
-        $customTemplate = CustomTemplate::create([
-            'name' => 'Custom Elegant',
-            'slug' => 'custom-elegant-' . uniqid(),
-            'description' => 'Fine line art',
-            'config' => [
-                'primary_color' => '#ffffff',
-                'secondary_color' => '#000000',
-                'accent_color' => '#e5c158',
-                'font_family' => 'Cinzel',
-                'animation_style' => 'fade-in',
-            ],
-        ]);
-
-        $response = $this->getJson('/api/templates');
-
-        $response->assertStatus(200);
-        $response->assertJsonFragment([
-            'id' => $customTemplate->slug,
-            'name' => 'Custom Elegant',
-            'is_custom' => true,
-        ]);
-
-        $response->assertJsonFragment([
-            'id' => 'jawa-klasik',
-            'name' => 'Jawa Klasik',
-            'is_custom' => false,
-        ]);
-    }
-
-    /**
-     * Test user profile API.
-     */
-    public function test_user_profile_api_returns_correct_data(): void
-    {
-        $response = $this->actingAs($this->standardUser)
-            ->getJson('/api/user/profile');
-
-        $response->assertStatus(200);
-        $response->assertJsonFragment([
-            'email' => $this->standardUser->email
-        ]);
-        $response->assertJsonStructure([
-            'allowed_features'
-        ]);
-    }
-
-    /**
-     * Test user only sees their own weddings in the registry.
-     */
-    public function test_user_only_sees_their_own_weddings(): void
-    {
-        // Wedding for super admin
-        $weddingAdmin = Wedding::create([
-            'slug' => 'wedding-admin-' . uniqid(),
-            'label' => 'Wedding Admin',
-            'user_id' => $this->superAdmin->id,
-        ]);
-
-        // Wedding for standard user
-        $weddingUser = Wedding::create([
-            'slug' => 'wedding-user-' . uniqid(),
-            'label' => 'Wedding User',
-            'user_id' => $this->standardUser->id,
-        ]);
-
-        // Standard user fetches registry
-        $response = $this->actingAs($this->standardUser)
-            ->getJson('/api/wedding/registry');
-
-        $response->assertStatus(200);
-        $response->assertJsonFragment(['slug' => $weddingUser->slug]);
-        $response->assertJsonMissing(['slug' => $weddingAdmin->slug]);
-
-        // Super admin fetches registry (sees all)
-        $response = $this->actingAs($this->superAdmin)
-            ->getJson('/api/wedding/registry');
-
-        $response->assertStatus(200);
-        $response->assertJsonFragment(['slug' => $weddingUser->slug]);
-        $response->assertJsonFragment(['slug' => $weddingAdmin->slug]);
-    }
 }

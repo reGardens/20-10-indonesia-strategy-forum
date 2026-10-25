@@ -1,0 +1,43 @@
+{
+    "slug": "budi-santoso",
+    "name": "Budi Santoso",
+    "position": "Anggota Komisi III DPR RI (contoh)",
+    "photoAlt": "Foto profil Budi Santoso (placeholder)",
+    "stats": [
+        { "label": "RUU Diusulkan", "value": 12 },
+        { "label": "RUU Dibahas", "value": 34 },
+        { "label": "Artikel Menyebut", "value": 263 },
+        { "label": "Putusan Terkait", "value": 5 }
+    ],
+    "skorSorotan": {
+        "value": 50,
+        "period": "30 hari terakhir",
+        "explanation": "Dihitung dari keterlibatan dalam RUU dan dampak kebijakan, bukan sentimen media sosial."
+    },
+    "policyMatrix": {
+        "columns": ["Aktif/Pengusul", "Anggota", "Menolak/Mempertanyakan"],
+        "rows": [
+            { "kebijakan": "RUU Perampasan Aset", "tahap": "Pembahasan Tingkat I", "involvement": [true, false, false] },
+            { "kebijakan": "RUU Hukum Acara Pidana", "tahap": "Harmonisasi", "involvement": [false, true, false] },
+            { "kebijakan": "Aturan turunan KUHP (pidana korporasi)", "tahap": "Rapat Dengar Pendapat", "involvement": [false, true, true] },
+            { "kebijakan": "RUU Penyesuaian Pidana", "tahap": "Pembahasan Tingkat II", "involvement": [true, true, false] },
+            { "kebijakan": "RUU Perlindungan Saksi dan Korban", "tahap": "Penyusunan", "involvement": [false, false, true] }
+        ]
+    },
+    "relatedArticles": [
+        { "title": "Apa yang berubah bagi pelaku usaha setelah KUHP baru berlaku", "to": "/isu/kuhp-baru-pelaku-usaha", "publishedAt": "2026-10-15", "relativeLabel": "5 hari lalu" },
+        { "title": "Komisi III gelar RDP soal aturan turunan pidana korporasi", "to": "/beranda", "publishedAt": "2026-09-02", "relativeLabel": "1 bulan lalu" },
+        { "title": "Peta dukungan fraksi terhadap RUU Perampasan Aset", "to": "/beranda", "publishedAt": "2026-08-11", "relativeLabel": "2 bulan lalu" },
+        { "title": "Catatan pembahasan RUU Hukum Acara Pidana tingkat I", "to": "/beranda", "publishedAt": "2026-07-20", "relativeLabel": "3 bulan lalu" }
+    ],
+    "calendar": {
+        "year": 2026,
+        "month": 10,
+        "events": [
+            { "date": "2026-10-06", "title": "Rapat kerja Komisi III dengan Kementerian Hukum" },
+            { "date": "2026-10-14", "title": "RDP aturan turunan KUHP" },
+            { "date": "2026-10-22", "title": "Pembahasan Tingkat I RUU Perampasan Aset" },
+            { "date": "2026-10-28", "title": "Kunjungan kerja daerah pemilihan" }
+        ]
+    }
+}

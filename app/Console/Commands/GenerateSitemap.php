@@ -2,63 +2,48 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Isf\Isu;
+use App\Models\Isf\Tokoh;
 use Illuminate\Console\Command;
-use Spatie\Sitemap\SitemapGenerator;
+use Spatie\Sitemap\Sitemap;
+use Spatie\Sitemap\Tags\Url;
 
 class GenerateSitemap extends Command
 {
     protected $signature = 'sitemap:generate';
 
-    protected $description = 'Generate sitemap.xml';
+    protected $description = 'Generate sitemap.xml for the public ISF pages';
 
     public function handle()
     {
-        // Create manual programmatic sitemap
-        $sitemap = \Spatie\Sitemap\Sitemap::create();
+        $sitemap = Sitemap::create();
 
-        // 1. Static Pages
-        $sitemap->add(\Spatie\Sitemap\Tags\Url::create('/')
+        // 1. Static public pages
+        $sitemap->add(Url::create('/')
             ->setPriority(1.0)
-            ->setChangeFrequency(\Spatie\Sitemap\Tags\Url::CHANGE_FREQUENCY_DAILY));
+            ->setChangeFrequency(Url::CHANGE_FREQUENCY_DAILY));
+        $sitemap->add(Url::create('/beranda')
+            ->setPriority(0.9)
+            ->setChangeFrequency(Url::CHANGE_FREQUENCY_DAILY));
 
-        $sitemap->add(\Spatie\Sitemap\Tags\Url::create('/product')
-            ->setPriority(0.8)
-            ->setChangeFrequency(\Spatie\Sitemap\Tags\Url::CHANGE_FREQUENCY_WEEKLY));
+        // 2. Published tokoh profiles
+        foreach (Tokoh::query()->terbit()->get(['slug', 'updated_at']) as $tokoh) {
+            $sitemap->add(Url::create("/tokoh/{$tokoh->slug}")
+                ->setPriority(0.7)
+                ->setLastModificationDate($tokoh->updated_at)
+                ->setChangeFrequency(Url::CHANGE_FREQUENCY_WEEKLY));
+        }
 
-        $sitemap->add(\Spatie\Sitemap\Tags\Url::create('/article')
-            ->setPriority(0.8)
-            ->setChangeFrequency(\Spatie\Sitemap\Tags\Url::CHANGE_FREQUENCY_WEEKLY));
-
-        // 2. Active Products
-        $products = \App\Models\Product::where('is_active', true)->get();
-        foreach ($products as $product) {
-            $sitemap->add(\Spatie\Sitemap\Tags\Url::create("/product/{$product->slug}")
+        // 3. Published isu (Anatomi Isu Mingguan)
+        foreach (Isu::query()->terbit()->get(['slug', 'updated_at']) as $isu) {
+            $sitemap->add(Url::create("/isu/{$isu->slug}")
                 ->setPriority(0.8)
-                ->setLastModificationDate($product->updated_at)
-                ->setChangeFrequency(\Spatie\Sitemap\Tags\Url::CHANGE_FREQUENCY_WEEKLY));
+                ->setLastModificationDate($isu->updated_at)
+                ->setChangeFrequency(Url::CHANGE_FREQUENCY_WEEKLY));
         }
 
-        // 3. Active Articles
-        $articles = \App\Models\Article::where('is_active', true)->get();
-        foreach ($articles as $article) {
-            $sitemap->add(\Spatie\Sitemap\Tags\Url::create("/article/{$article->slug}")
-                ->setPriority(0.7)
-                ->setLastModificationDate($article->updated_at)
-                ->setChangeFrequency(\Spatie\Sitemap\Tags\Url::CHANGE_FREQUENCY_WEEKLY));
-        }
-
-        // 4. Active Skin Problems (mapped to /{slug})
-        $skinProblems = \App\Models\SkinProblem::where('is_active', true)->get();
-        foreach ($skinProblems as $skin) {
-            $sitemap->add(\Spatie\Sitemap\Tags\Url::create("/{$skin->slug}")
-                ->setPriority(0.7)
-                ->setLastModificationDate($skin->updated_at)
-                ->setChangeFrequency(\Spatie\Sitemap\Tags\Url::CHANGE_FREQUENCY_WEEKLY));
-        }
-
-        // Write sitemap to file
         $sitemap->writeToFile(public_path('sitemap.xml'));
 
-        $this->info('Sitemap generated programmatically with all URLs!');
+        $this->info('Sitemap generated with the published ISF URLs.');
     }
 }
