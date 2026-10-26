@@ -11,6 +11,7 @@ use App\Http\Resources\Isf\IsuResource;
 use App\Http\Resources\Isf\TokohResource;
 use App\Models\Isf\Alert;
 use App\Models\Isf\Article;
+use App\Models\Isf\Banner;
 use App\Models\Isf\Briefing;
 use App\Models\Isf\Chart;
 use App\Models\Isf\Infographic;
@@ -36,6 +37,20 @@ class PublicContentController extends Controller
             'pekanIni' => ['dateStart' => null, 'dateEnd' => null],
         ]);
 
+        $banners = Banner::query()->terbit()
+            ->orderBy('order', 'asc')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (Banner $b) => [
+                'id' => (string) $b->id,
+                'kicker' => $b->kicker,
+                'title' => $b->title,
+                'deck' => $b->deck,
+                'to' => $b->to ?: '#',
+                'imageUrl' => $b->image_url,
+                'imageLabel' => $b->image_label ?: $b->title,
+            ]);
+
         $hero = Article::currentHero();
 
         $terkini = Article::query()->terbit()->where('show_in_terkini', true)
@@ -56,6 +71,7 @@ class PublicContentController extends Controller
 
         return response()->json([
             'topBar' => $settings['topBar'] ?? null,
+            'banners' => $banners,
             'hero' => $hero ? (new ArticleResource($hero))->hero() : null,
             'factBlocks' => $hero?->fact_blocks ?? [],
             'chart' => $chart ? (new ChartResource($chart))->resolve($request) : null,

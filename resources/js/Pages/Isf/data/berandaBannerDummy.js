@@ -1,4 +1,4 @@
-// DATA DUMMY SEMENTARA: banner statis untuk pratinjau desain; belum terhubung ke CMS/API.
+// Banner default fallback jika data dari API/CMS sedang dimuat atau kosong.
 export const BERANDA_BANNER_DUMMY = [
     {
         id: "banner-anatomi-isu",
@@ -6,6 +6,7 @@ export const BERANDA_BANNER_DUMMY = [
         title: "KUHP baru dan pelaku usaha",
         deck: "Tujuh kerangka baku untuk memahami dampak pidana korporasi bagi tata kelola perusahaan.",
         to: "#",
+        imageUrl: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1600&auto=format&fit=crop",
         imageLabel: "Ilustrasi banner: Anatomi Isu KUHP baru dan pelaku usaha",
     },
     {
@@ -14,6 +15,7 @@ export const BERANDA_BANNER_DUMMY = [
         title: "Budi Santoso",
         deck: "Profil, Skor Sorotan, dan jejak keterlibatan dalam pembahasan RUU pekan ini.",
         to: "#",
+        imageUrl: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=1600&auto=format&fit=crop",
         imageLabel: "Ilustrasi banner: Tokoh Pekan Ini Budi Santoso",
     },
     {
@@ -22,6 +24,7 @@ export const BERANDA_BANNER_DUMMY = [
         title: "Feed peringatan dini regulasi",
         deck: "Pantau perubahan regulasi prioritas tinggi untuk sektor usaha Anda dalam satu dasbor.",
         to: "#",
+        imageUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1600&auto=format&fit=crop",
         imageLabel:
             "Ilustrasi banner: Portal Anggota feed peringatan dini regulasi",
     },

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Isf\Alert;
 use App\Models\Isf\Article;
+use App\Models\Isf\Banner;
 use App\Models\Isf\Briefing;
 use App\Models\Isf\Chart;
 use App\Models\Isf\Infographic;
@@ -23,6 +24,7 @@ class AdminDashboardController extends Controller
      * feature => [label, model, URL segment, icon, title column]
      */
     private const MODULES = [
+        'banner' => ['Banner Sorotan', Banner::class, 'banner', 'Slideshow', 'title'],
         'artikel' => ['Artikel', Article::class, 'artikel', 'Article', 'title'],
         'infografik' => ['Infografik', Infographic::class, 'infografik', 'ChartInfographic', 'title'],
         'tokoh' => ['Tokoh', Tokoh::class, 'tokoh', 'UserStar', 'name'],

@@ -17,6 +17,7 @@ class User extends Authenticatable
      * the `feature:<key>` middleware and the CMS sidebar.
      */
     public const ISF_FEATURES = [
+        'banner',
         'artikel',
         'infografik',
         'tokoh',

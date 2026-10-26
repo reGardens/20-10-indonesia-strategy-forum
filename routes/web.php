@@ -69,6 +69,7 @@ Route::middleware('auth')->group(function () {
 
     // ISF content modules (Inertia page shells; data via /api/cms/*), gated per feature (ACL)
     $isfModules = [
+        'banner' => 'banner',
         'artikel' => 'artikel',
         'infografik' => 'infografik',
         'tokoh' => 'tokoh',

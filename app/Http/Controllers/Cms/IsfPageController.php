@@ -18,6 +18,7 @@ class IsfPageController extends Controller
      * URL segment => Inertia page folder under Pages/Cms/Isf/.
      */
     private const MODULES = [
+        'banner' => 'Banner',
         'artikel' => 'Artikel',
         'infografik' => 'Infografik',
         'tokoh' => 'Tokoh',

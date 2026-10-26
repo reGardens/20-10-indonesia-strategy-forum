@@ -22,6 +22,7 @@ export function createCmsResource(path) {
 }
 
 export const cmsResources = {
+  banner: createCmsResource('banner'),
   artikel: createCmsResource('artikel'),
   infografik: createCmsResource('infografik'),
   tokoh: createCmsResource('tokoh'),
