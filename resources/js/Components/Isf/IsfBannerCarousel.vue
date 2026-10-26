@@ -1,6 +1,6 @@
 <script setup>
 /**
- * IsfBannerCarousel — static banner carousel (plain Vue, no library).
+ * IsfBannerCarousel — dynamic banner carousel (plain Vue, no library).
  * - prev/next buttons, slide dots, Left/Right arrow keys while focus is inside
  * - auto-advance every `interval` ms; pauses on hover/focus and via the
  *   pause/play button; never auto-advances under prefers-reduced-motion
@@ -102,7 +102,7 @@ const buttonClass =
     <section
         :class="
             cn(
-                'isf-banner-carousel relative border border-neutral-300 bg-white',
+                'isf-banner-carousel relative border border-neutral-300 bg-white overflow-hidden',
                 props.class,
             )
         "
@@ -122,7 +122,7 @@ const buttonClass =
         "
     >
         <div class="relative" :aria-live="running ? 'off' : 'polite'">
-            <!-- Compact band: 3:2 image at 1/3 (md) or 1/4 (lg) width, text beside it -->
+            <!-- Full banner image with overlay editorial card on desktop -->
             <div
                 v-for="(slide, i) in slides"
                 v-show="i === active"
@@ -131,30 +131,34 @@ const buttonClass =
                 aria-roledescription="slide"
                 :aria-label="`${i + 1} dari ${slides.length}`"
                 :aria-hidden="i === active ? undefined : 'true'"
-                class="md:flex md:items-stretch"
+                class="relative md:min-h-0"
             >
                 <ImagePlaceholder
-                    :label="slide.imageLabel"
+                    :label="slide.imageLabel || slide.title"
                     :src="slide.imageUrl || ''"
-                    aspect="photo"
+                    aspect="banner"
                     bare
-                    class="md:flex md:w-1/3 md:shrink-0 md:items-center md:self-stretch md:bg-neutral-200 lg:w-1/4"
+                    class="w-full"
                 />
+
                 <div
-                    class="min-w-0 border-t border-neutral-300 p-4 md:flex-1 md:border-l md:border-t-0 md:px-6 md:pb-16 md:pt-5"
+                    class="border-t border-neutral-300 bg-white p-4 sm:p-5 md:absolute md:bottom-5 md:left-5 md:max-w-[36rem] md:border md:bg-white md:p-6 lg:bottom-6 lg:left-6 lg:max-w-[42rem] shadow-sm"
                 >
-                    <p class="isf-kicker">{{ slide.kicker }}</p>
+                    <p class="isf-kicker text-isf-red font-bold uppercase tracking-wider text-[11px] sm:text-xs">
+                        {{ slide.kicker }}
+                    </p>
                     <h2
-                        class="isf-headline mt-1.5 text-[22px] leading-[1.1] sm:text-[24px] lg:text-[28px]"
+                        class="isf-headline mt-1.5 text-[22px] leading-[1.15] sm:text-[26px] lg:text-[30px]"
                     >
                         <IsfLink
-                            :to="slide.to"
+                            :to="slide.to || '#'"
                             class="hover:text-isf-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red focus-visible:ring-offset-2"
                             >{{ slide.title }}</IsfLink
                         >
                     </h2>
                     <p
-                        class="mt-2 max-w-[44rem] font-serif text-[15px] leading-[1.5] text-neutral-600 sm:text-[17px]"
+                        v-if="slide.deck"
+                        class="mt-2 max-w-[40rem] font-serif text-[15px] leading-[1.5] text-neutral-600 sm:text-[16px] lg:text-[17px]"
                     >
                         {{ slide.deck }}
                     </p>
@@ -162,67 +166,71 @@ const buttonClass =
             </div>
         </div>
 
-        <!-- Controls: own row on mobile; inline at the bottom-right of the text panel from md -->
+        <!-- Controls: full width row at bottom -->
         <div
             v-if="canRotate"
-            class="flex items-center justify-between gap-3 border-t border-neutral-300 px-3 py-2 md:absolute md:bottom-2 md:right-3 md:justify-end md:border-t-0 md:p-0"
+            class="flex items-center justify-between gap-3 border-t border-neutral-300 bg-white px-3 py-2 sm:px-4"
         >
-            <button
-                type="button"
-                :class="buttonClass"
-                :aria-label="
-                    userPaused ? 'Putar otomatis' : 'Jeda putar otomatis'
-                "
-                @click="togglePlay"
-            >
-                <svg
-                    v-if="userPaused"
-                    class="h-4 w-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.75"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                >
-                    <path d="M7 5v14l12-7z" />
-                </svg>
-                <svg
-                    v-else
-                    class="h-4 w-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.75"
-                    aria-hidden="true"
-                >
-                    <path d="M8 5v14M16 5v14" />
-                </svg>
-            </button>
-            <div class="flex items-center gap-1">
+            <div class="flex items-center gap-2">
                 <button
-                    v-for="(slide, i) in slides"
-                    :key="slide.id"
                     type="button"
-                    class="group p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red focus-visible:ring-offset-2"
-                    :aria-label="`Tampilkan slide ${i + 1}`"
-                    :aria-current="i === active ? 'true' : undefined"
-                    @click="
-                        go(i);
-                        sync();
+                    :class="buttonClass"
+                    :aria-label="
+                        userPaused ? 'Putar otomatis' : 'Jeda putar otomatis'
                     "
+                    @click="togglePlay"
                 >
-                    <span
+                    <svg
+                        v-if="userPaused"
+                        class="h-4 w-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.75"
+                        stroke-linejoin="round"
                         aria-hidden="true"
-                        :class="[
-                            'block h-1.5 w-6',
-                            i === active
-                                ? 'bg-isf-red'
-                                : 'bg-neutral-300 group-hover:bg-neutral-500',
-                        ]"
-                    ></span>
+                    >
+                        <path d="M7 5v14l12-7z" />
+                    </svg>
+                    <svg
+                        v-else
+                        class="h-4 w-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.75"
+                        aria-hidden="true"
+                    >
+                        <path d="M8 5v14M16 5v14" />
+                    </svg>
                 </button>
+
+                <div class="flex items-center gap-1.5">
+                    <button
+                        v-for="(slide, i) in slides"
+                        :key="slide.id"
+                        type="button"
+                        class="group p-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red focus-visible:ring-offset-2"
+                        :aria-label="`Tampilkan slide ${i + 1}`"
+                        :aria-current="i === active ? 'true' : undefined"
+                        @click="
+                            go(i);
+                            sync();
+                        "
+                    >
+                        <span
+                            aria-hidden="true"
+                            :class="[
+                                'block h-1.5 w-6 transition-colors',
+                                i === active
+                                    ? 'bg-isf-red'
+                                    : 'bg-neutral-300 group-hover:bg-neutral-500',
+                            ]"
+                        ></span>
+                    </button>
+                </div>
             </div>
+
             <div class="flex items-center gap-2">
                 <button
                     type="button"

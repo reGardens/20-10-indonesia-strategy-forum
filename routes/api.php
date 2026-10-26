@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Isf\Cms\AlertController;
 use App\Http\Controllers\Api\Isf\Cms\ArticleController;
+use App\Http\Controllers\Api\Isf\Cms\BannerController;
 use App\Http\Controllers\Api\Isf\Cms\BriefingController;
 use App\Http\Controllers\Api\Isf\Cms\ChartController;
 use App\Http\Controllers\Api\Isf\Cms\InfographicController;
@@ -21,6 +22,8 @@ Route::middleware(['web'])->prefix('isf')->group(function () {
 
 // ISF CMS API (authenticated session + per-module feature access)
 Route::middleware(['web', 'auth'])->prefix('cms')->name('api.cms.')->group(function () {
+    Route::apiResource('banner', BannerController::class)
+        ->parameters(['banner' => 'banner'])->middleware('feature:banner');
     Route::apiResource('artikel', ArticleController::class)
         ->parameters(['artikel' => 'article'])->middleware('feature:artikel');
     Route::apiResource('infografik', InfographicController::class)

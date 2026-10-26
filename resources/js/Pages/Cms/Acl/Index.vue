@@ -30,18 +30,15 @@ function selectUser(user) {
 }
 
 const features = [
-    { key: "undangan_digital", label: "Undangan Digital", desc: "Template tema wedding, Nama tamu otomatis, Share via WhatsApp, QR Code undangan" },
-    { key: "rsvp_online", label: "RSVP Online", desc: "Hadir / Tidak Hadir, Jumlah tamu pendamping, Konfirmasi kehadiran real-time, Reminder otomatis" },
-    { key: "informasi_acara", label: "Informasi Acara", desc: "Tanggal & waktu, Lokasi acara, Google Maps, Dress code, Rundown acara" },
-    { key: "love_story", label: "Love Story / Timeline", desc: "Cerita perkenalan, Foto prewedding, Timeline hubungan" },
-    { key: "manajemen_tamu", label: "Manajemen Tamu", desc: "Import tamu Excel, Kategori tamu (keluarga, teman, kantor), Tracking dibuka, Tracking RSVP" },
-    { key: "amplop_digital", label: "Amplop Digital", desc: "Transfer bank, E-wallet (DANA, OVO, GoPay), Konfirmasi hadiah" },
-    { key: "galeri", label: "Galeri Foto & Video", desc: "Prewedding, Dokumentasi acara, Upload foto oleh tamu" },
-    { key: "countdown", label: "Countdown Wedding", desc: "Hitung mundur menuju hari H" },
-    { key: "qr_checkin", label: "QR Check-In Tamu", desc: "Scan saat datang, Monitoring jumlah hadir, Buku tamu digital" },
-    { key: "live_streaming", label: "Live Streaming", desc: "YouTube, Zoom, Embedded player" },
-    { key: "ucapan_doa", label: "Ucapan & Doa", desc: "Guestbook digital, Komentar tamu" },
-    { key: "wishlist", label: "Wishlist / Registry", desc: "Daftar hadiah, Cash gift, Honeymoon fund" }
+    { key: "banner", label: "Banner Sorotan", desc: "Kelola carousel banner sorotan di bagian atas beranda publik (judul, kicker, gambar, dan urutan)" },
+    { key: "artikel", label: "Artikel", desc: "Hero beranda, artikel terkini, isu terpopuler, dan konten editorial analitis" },
+    { key: "infografik", label: "Infografik", desc: "Grafik data visual, infografik terbaru, dan aset publikasi" },
+    { key: "tokoh", label: "Tokoh", desc: "Profil tokoh pekan ini, skor sorotan, jejak legislasi, dan jejaring relasi" },
+    { key: "isu", label: "Isu Mingguan", desc: "Anatomi isu pekan ini, kerangka baku 01-07, visual kunci, dan analisis regulasi" },
+    { key: "data_grafik", label: "Data Grafik", desc: "Polling, survei, data visual beranda, dan grafik visual isu" },
+    { key: "alert", label: "Alert Peringatan Dini", desc: "Feed peringatan dini regulasi, tingkat urgensi, dan status kepatuhan B2B" },
+    { key: "email_briefing", label: "Email Briefing", desc: "Briefing eksklusif anggota, ringkasan eksekutif, dan pratinjau newsletter" },
+    { key: "pengaturan_halaman", label: "Pengaturan Halaman", desc: "Baris sorotan (topBar), teks pengumuman, dan rentang tanggal pekan ini" }
 ];
 
 function toggleFeature(featureKey) {

@@ -110,9 +110,12 @@ function logout() {
                     <div
                         class="flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-600 shadow-sm shadow-emerald-600/30"
                     >
-                        <span class="text-white text-lg font-bold">C</span>
+                        <span class="text-white text-xs font-black tracking-wider">ISF</span>
                     </div>
-                    <span class="text-lg tracking-tight">CMS</span>
+                    <div class="flex flex-col">
+                        <span class="text-xs font-extrabold tracking-tight text-foreground leading-none">Indonesia Strategy</span>
+                        <span class="text-[10px] tracking-wider uppercase font-semibold text-emerald-500 mt-0.5">Forum CMS</span>
+                    </div>
                 </Link>
                 <button
                     class="ml-auto lg:hidden"
@@ -139,7 +142,10 @@ function logout() {
                 >
                     <IconComponent name="Menu2" class="h-5 w-5" />
                 </button>
-                <span class="text-lg font-bold lg:hidden">CMS</span>
+                <div class="flex items-center gap-2 lg:hidden">
+                    <div class="flex items-center justify-center w-7 h-7 rounded bg-emerald-600 text-white text-[10px] font-bold">ISF</div>
+                    <span class="text-sm font-bold">ISF CMS</span>
+                </div>
 
                 <div class="flex-1" />
 

@@ -15,41 +15,88 @@ function hasRole(role) {
 }
 
 function isActive(path) {
-    // Exact match for template list page, startsWith for others
-    if (path === "/cms/templates") {
-        return page.url === "/cms/templates" || page.url.startsWith("/cms/templates?");
-    }
     return page.url === path || page.url.startsWith(path + "/");
 }
 
-// Expandable menu state
-const expandedMenus = ref({
-    homepage: true,
-});
-
-function toggleMenu(key) {
-    expandedMenus.value[key] = !expandedMenus.value[key];
+const userFeatures = computed(() => auth.value?.user?.features || []);
+function hasFeature(feature) {
+    if (hasRole("super-admin")) return true;
+    return userFeatures.value.includes(feature);
 }
 
-/**
- * Menu structure with labels (groups) and items.
- * Sub-menus are items with 'children' array.
- */
 const menuGroups = computed(() => [
     {
         label: locale.value === "id" ? "Navigasi Utama" : "Main Navigation",
         items: [
             {
-                label: t("nav.dashboard"),
+                label: t("nav.dashboard") || "Dasbor",
                 href: "/cms/dashboard",
                 icon: "LayoutDashboard",
                 visible: true,
             },
+        ],
+    },
+    {
+        label: locale.value === "id" ? "Konten Publik" : "Public Content",
+        items: [
             {
-                label: locale.value === "id" ? "Template Kustom" : "Custom Templates",
-                href: "/cms/templates",
-                icon: "Template",
-                visible: true,
+                label: "Banner Sorotan",
+                href: "/cms/banner",
+                icon: "Slideshow",
+                visible: hasFeature("banner"),
+            },
+            {
+                label: "Artikel",
+                href: "/cms/artikel",
+                icon: "Article",
+                visible: hasFeature("artikel"),
+            },
+            {
+                label: "Infografik",
+                href: "/cms/infografik",
+                icon: "ChartInfographic",
+                visible: hasFeature("infografik"),
+            },
+            {
+                label: "Tokoh",
+                href: "/cms/tokoh",
+                icon: "UserStar",
+                visible: hasFeature("tokoh"),
+            },
+            {
+                label: "Isu Mingguan",
+                href: "/cms/isu",
+                icon: "Bulb",
+                visible: hasFeature("isu"),
+            },
+            {
+                label: "Data Grafik",
+                href: "/cms/data-grafik",
+                icon: "ChartBar",
+                visible: hasFeature("data_grafik"),
+            },
+            {
+                label: "Pengaturan Halaman",
+                href: "/cms/pengaturan-halaman",
+                icon: "Settings",
+                visible: hasFeature("pengaturan_halaman"),
+            },
+        ],
+    },
+    {
+        label: locale.value === "id" ? "Portal Anggota" : "Member Portal",
+        items: [
+            {
+                label: "Alert Peringatan Dini",
+                href: "/cms/alert",
+                icon: "AlertTriangle",
+                visible: hasFeature("alert"),
+            },
+            {
+                label: "Email Briefing",
+                href: "/cms/email-briefing",
+                icon: "Mail",
+                visible: hasFeature("email_briefing"),
             },
         ],
     },
@@ -77,12 +124,19 @@ const menuGroups = computed(() => [
         ],
     },
     {
-        label: locale.value === "id" ? "Aplikasi Undangan" : "Wedding App",
+        label: locale.value === "id" ? "Situs Publik" : "Public Sites",
         items: [
             {
-                label: locale.value === "id" ? "Kembali ke Undangan" : "Back to Weddings",
-                href: "/cms",
-                icon: "Heart",
+                label: "Beranda ISF",
+                href: "/",
+                icon: "World",
+                visible: true,
+                external: true,
+            },
+            {
+                label: "Dasbor Anggota",
+                href: "/anggota",
+                icon: "Shield",
                 visible: true,
                 external: true,
             },
@@ -111,80 +165,30 @@ const visibleGroups = computed(() =>
             </p>
 
             <template v-for="item in group.items" :key="item.href || item.key">
-                <!-- Item with children (expandable sub-menu) -->
-                <template v-if="item.children">
-                    <button
-                        @click="toggleMenu(item.key)"
-                        :class="[
-                            'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all w-full text-left',
-                            item.children.some((c) => isChildActive(c))
-                                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                                : 'text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400',
-                        ]"
-                    >
-                        <IconComponent
-                            :name="item.icon"
-                            class="h-4 w-4 flex-shrink-0"
-                        />
-                        <span class="truncate flex-1">{{ item.label }}</span>
-                        <IconComponent
-                            v-if="expandedMenus[item.key]"
-                            name="ChevronDown"
-                            class="h-3.5 w-3.5 opacity-50"
-                        />
-                        <IconComponent
-                            v-else
-                            name="ChevronRight"
-                            class="h-3.5 w-3.5 opacity-50"
-                        />
-                    </button>
-
-                    <!-- Sub-menu items -->
-                    <div
-                        v-if="expandedMenus[item.key]"
-                        class="ml-4 pl-3 border-l border-border/50 space-y-0.5 mt-0.5"
-                    >
-                        <Link
-                            v-for="child in item.children"
-                            :key="child.href"
-                            :href="child.href"
-                            :class="[
-                                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all',
-                                isChildActive(child)
-                                    ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30 dark:bg-emerald-500'
-                                    : 'text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400',
-                            ]"
-                        >
-                            <IconComponent
-                                :name="child.icon"
-                                class="h-3.5 w-3.5 flex-shrink-0"
-                            />
-                            <span class="truncate">{{ child.label }}</span>
-                        </Link>
-                    </div>
-                </template>
-
-                <!-- Regular item (no children) -->
+                <!-- External link -->
                 <a
-                    v-else-if="item.external"
+                    v-if="item.external"
                     :href="item.href"
-                    :class="[
-                        'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400',
-                    ]"
+                    target="_blank"
+                    class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400"
                 >
                     <IconComponent
                         :name="item.icon"
                         class="h-4 w-4 flex-shrink-0"
                     />
-                    <span class="truncate">{{ item.label }}</span>
+                    <span class="truncate flex-1">{{ item.label }}</span>
+                    <IconComponent
+                        name="ExternalLink"
+                        class="h-3 w-3 opacity-40"
+                    />
                 </a>
+
+                <!-- Internal Inertia Link -->
                 <Link
                     v-else
                     :href="item.href"
-                    :method="item.method || 'get'"
-                    :as="item.as || 'a'"
                     :class="[
-                        'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all w-full text-left',
+                        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all w-full text-left',
                         isActive(item.href)
                             ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30 dark:bg-emerald-500'
                             : 'text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400',

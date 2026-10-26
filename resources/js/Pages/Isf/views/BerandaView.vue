@@ -29,6 +29,9 @@ const latestNews = computed(() => terkini.value.slice(0, 3));
 const secondaryStories = computed(() => terkini.value.slice(3));
 const infografik = computed(() => data.value?.infografik || []);
 const pekanIni = computed(() => data.value?.pekanIni || { items: [] });
+const bannerSlides = computed(() =>
+    data.value?.banners?.length ? data.value.banners : BERANDA_BANNER_DUMMY,
+);
 const linkClass =
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red focus-visible:ring-offset-2";
 // Inner padding of every module cell (Politico keeps text ~30px inside the rules).
@@ -77,7 +80,7 @@ const cellPad = "lg:px-4 xl:px-[30px]";
                 </div>
 
                 <IsfBannerCarousel
-                    :slides="BERANDA_BANNER_DUMMY"
+                    :slides="bannerSlides"
                     label="Banner sorotan"
                     class="mt-4"
                 />
