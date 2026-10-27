@@ -26,6 +26,7 @@ class User extends Authenticatable
         'alert',
         'email_briefing',
         'pengaturan_halaman',
+        'kategori',
     ];
 
     /**

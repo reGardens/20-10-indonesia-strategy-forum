@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('isf_banners', function (Blueprint $table) {
             $table->id();
-            $table->string('kicker');
+            $table->string('kicker')->nullable()->default('Sorotan');
             $table->string('title');
             $table->text('deck')->nullable();
             $table->string('to')->nullable();

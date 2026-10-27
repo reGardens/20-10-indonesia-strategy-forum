@@ -10,7 +10,8 @@ const props = defineProps({
   min: { type: Number, default: 0 },
   max: { type: Number, default: 50 },
   legend: { type: String, default: '' },
-  description: { type: String, default: '' }
+  description: { type: String, default: '' },
+  error: { type: String, default: '' }
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -77,6 +78,9 @@ function updateField(rowIndex, key, value) {
         </legend>
         <p v-if="description" class="text-xs text-muted-foreground mt-0.5 px-1">
           {{ description }}
+        </p>
+        <p v-if="error" class="text-xs text-red-500 font-medium mt-1 px-1">
+          {{ error }}
         </p>
       </div>
       <Button

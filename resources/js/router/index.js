@@ -170,6 +170,18 @@ const routes = [
     ]
   },
   {
+    path: '/infografik',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-infografik',
+        component: () => import('../Pages/Isf/views/InfografikView.vue'),
+        meta: { title: 'Infografik Kebijakan & Regulasi · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
     path: '/tokoh/:slug',
     component: IsfPublicLayout,
     children: [

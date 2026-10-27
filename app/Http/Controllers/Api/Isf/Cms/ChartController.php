@@ -14,9 +14,9 @@ class ChartController extends CmsResourceController
 {
     protected string $model = Chart::class;
 
-    protected array $listColumns = ['id', 'title', 'unit', 'is_beranda', 'status', 'updated_at'];
+    protected array $listColumns = ['id', 'title', 'author_name', 'unit', 'order', 'is_beranda', 'status', 'updated_at'];
 
-    protected array $searchColumns = ['title'];
+    protected array $searchColumns = ['title', 'author_name'];
 
     protected array $order = ['id' => 'desc'];
 

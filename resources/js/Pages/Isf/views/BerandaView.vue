@@ -2,10 +2,12 @@
 /** Public front page driven by GET /api/isf/beranda (Politico-style 3-column module). */
 import { computed, onMounted } from "vue";
 import {
+    BerandaSkeleton,
     CategoryLabel,
     FactBlock,
     ImagePlaceholder,
     IsfBannerCarousel,
+    IsfInsightSlider,
     IsfLink,
     SectionHeading,
     SimpleBarChart,
@@ -13,6 +15,7 @@ import {
 import LoadingIndicator from "@/Pages/Cms/components/shared/LoadingIndicator.vue";
 import ErrorMessage from "@/Pages/Cms/components/shared/ErrorMessage.vue";
 import { BERANDA_BANNER_DUMMY } from "@/Pages/Isf/data/berandaBannerDummy";
+import { BERANDA_INSIGHT_DUMMY } from "@/Pages/Isf/data/berandaInsightDummy";
 import { formatDate } from "@/Utils/formatters";
 import { getBeranda } from "@/api/services/isfPublicService";
 import { useIsfContent } from "@/Composables/useIsfContent";
@@ -20,18 +23,61 @@ import { useIsfContent } from "@/Composables/useIsfContent";
 const { data, status, load } = useIsfContent(getBeranda);
 onMounted(load);
 const topBar = computed(() => data.value?.topBar);
-const showTopBar = computed(() => Boolean(topBar.value?.announcement));
+const topBars = computed(() => {
+    if (Array.isArray(data.value?.topBars) && data.value.topBars.length > 0) {
+        return data.value.topBars;
+    }
+    return topBar.value?.announcement ? [topBar.value] : [];
+});
+const showTopBar = computed(() => topBars.value.length > 0);
 const hero = computed(() => data.value?.hero);
 const factBlocks = computed(() => data.value?.factBlocks || []);
 const chart = computed(() => data.value?.chart);
 const terkini = computed(() => data.value?.terkini || []);
 const latestNews = computed(() => terkini.value.slice(0, 3));
-const secondaryStories = computed(() => terkini.value.slice(3));
+const mediaSorotan = computed(() => {
+    if (data.value?.mediaSorotan?.length) {
+        return data.value.mediaSorotan.slice(0, 2);
+    }
+    return [
+        {
+            id: 1,
+            title: 'Diskusi Panel: Transformasi Digital dan Kepatuhan Regulasi Perbankan',
+            imageUrl: '/images/isf/ruu-kuhp.jpeg',
+            mediaUrl: 'https://www.youtube.com',
+            category: 'YouTube',
+            publishedAt: '2026-10-20',
+        },
+        {
+            id: 2,
+            title: 'Sorotan Visual: Implikasi UU Energi Terbarukan bagi Sektor Industri',
+            imageUrl: '/images/isf/ruu-energi.jpeg',
+            mediaUrl: 'https://www.instagram.com',
+            category: 'Instagram',
+            publishedAt: '2026-10-18',
+        },
+    ];
+});
 const infografik = computed(() => data.value?.infografik || []);
 const pekanIni = computed(() => data.value?.pekanIni || { items: [] });
 const bannerSlides = computed(() =>
     data.value?.banners?.length ? data.value.banners : BERANDA_BANNER_DUMMY,
 );
+const insightList = computed(() => {
+    if (Array.isArray(data.value?.charts) && data.value.charts.length > 0) {
+        return data.value.charts.map((c) => ({
+            ...c,
+            readMoreUrl: c.readMoreUrl || '/isu/kuhp-baru-pelaku-usaha',
+        }));
+    }
+    if (data.value?.chart && data.value.chart.data?.length) {
+        return [{
+            ...data.value.chart,
+            readMoreUrl: data.value.chart.readMoreUrl || '/isu/kuhp-baru-pelaku-usaha',
+        }];
+    }
+    return BERANDA_INSIGHT_DUMMY;
+});
 const linkClass =
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red focus-visible:ring-offset-2";
 // Inner padding of every module cell (Politico keeps text ~30px inside the rules).
@@ -40,9 +86,7 @@ const cellPad = "lg:px-4 xl:px-[30px]";
 
 <template>
     <div>
-        <div v-if="status === 'loading'" class="py-24">
-            <LoadingIndicator text="Memuat beranda…" />
-        </div>
+        <BerandaSkeleton v-if="status === 'loading'" />
         <div
             v-else-if="status !== 'ready'"
             class="mx-auto max-w-3xl px-4 py-16"
@@ -57,26 +101,40 @@ const cellPad = "lg:px-4 xl:px-[30px]";
             <div
                 class="isf-mobile-gutter mx-auto w-full max-w-[1400px] px-4 pb-10 pt-2 lg:px-6 lg:pt-3"
             >
-                <!-- Sorotan (CMS topBar): slim single line, no gray band -->
+                <!-- Sorotan (CMS topBar): Running text marquee -->
                 <div
                     v-if="showTopBar"
                     data-testid="sorotan-line"
-                    class="flex min-w-0 items-baseline gap-x-3 gap-y-1 border-b border-neutral-300 py-2.5 max-sm:flex-wrap"
+                    class="relative flex items-center border-b border-neutral-300 py-2.5 overflow-hidden group select-none"
                 >
-                    <p class="isf-label shrink-0">
-                        {{ topBar.badge || "Sorotan" }}
-                    </p>
-                    <p
-                        class="min-w-0 font-ui text-[14px] font-medium leading-snug text-neutral-900 sm:truncate"
-                    >
-                        {{ topBar.announcement }}
-                    </p>
-                    <p
-                        v-if="topBar.info"
-                        class="isf-byline ml-auto hidden shrink-0 sm:block"
-                    >
-                        {{ topBar.info }}
-                    </p>
+                    <div class="z-10 flex items-center bg-[#fbf9f4] pr-3 shrink-0">
+                        <span class="isf-label uppercase tracking-widest text-isf-red font-bold">
+                            {{ topBars[0]?.badge || "Sorotan" }}
+                        </span>
+                        <span class="ml-3 h-3 w-px bg-neutral-300"></span>
+                    </div>
+
+                    <!-- Marquee Track -->
+                    <div class="overflow-hidden flex-1 relative">
+                        <div class="isf-marquee-track flex whitespace-nowrap gap-10 font-ui text-[13.5px] font-medium text-neutral-900">
+                            <!-- Repeat items to form seamless scroll -->
+                            <div
+                                v-for="(item, idx) in [...topBars, ...topBars]"
+                                :key="idx"
+                                class="flex items-center gap-2.5 shrink-0"
+                            >
+                                <span
+                                    v-if="item.badge && item.badge !== topBars[0]?.badge"
+                                    class="px-1.5 py-0.5 rounded text-[10px] uppercase font-bold bg-neutral-200 text-neutral-800"
+                                >
+                                    {{ item.badge }}
+                                </span>
+                                <span>{{ item.announcement }}</span>
+                                <span v-if="item.info" class="text-neutral-500 text-xs font-normal">({{ item.info }})</span>
+                                <span class="text-neutral-400 mx-2 select-none">•</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <IsfBannerCarousel
@@ -193,49 +251,78 @@ const cellPad = "lg:px-4 xl:px-[30px]";
                                     id="secondary-stories-title"
                                     class="sr-only"
                                 >
-                                    Berita Lainnya
+                                    Media Sorotan
                                 </h2>
                                 <ol class="divide-y divide-neutral-300">
                                     <li
-                                        v-for="item in secondaryStories"
-                                        :key="item.title"
+                                        v-for="item in mediaSorotan"
+                                        :key="item.id || item.title"
                                         class="py-4 lg:py-5"
                                     >
-                                        <ImagePlaceholder
-                                            :label="item.title"
-                                            aspect="card"
-                                            bare
-                                        />
-                                        <CategoryLabel
-                                            :category="item.category"
-                                            class="mt-3"
-                                        />
-                                        <h3
-                                            class="isf-headline mt-1 text-[17px] leading-[1.2] xl:text-[20px]"
+                                        <!-- Thumbnail with Video/Instagram badge & play overlay -->
+                                        <a
+                                            :href="item.mediaUrl"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            class="group relative block aspect-[16/10] overflow-hidden rounded-xs bg-neutral-100 border border-neutral-300 shadow-2xs"
                                         >
-                                            <IsfLink
-                                                :to="item.to || '#'"
-                                                :class="[
-                                                    linkClass,
-                                                    'hover:text-isf-red',
-                                                ]"
-                                                >{{ item.title }}</IsfLink
+                                            <img
+                                                v-if="item.imageUrl"
+                                                :src="item.imageUrl"
+                                                :alt="item.title"
+                                                class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                                loading="lazy"
+                                            />
+                                            <ImagePlaceholder
+                                                v-else
+                                                :label="item.title"
+                                                aspect="card"
+                                                bare
+                                                class="h-full w-full"
+                                            />
+                                            <div class="absolute inset-0 bg-black/25 group-hover:bg-black/15 transition-colors flex items-center justify-center">
+                                                <div class="flex h-11 w-11 items-center justify-center rounded-full bg-isf-red/90 text-white shadow-md transition-transform duration-200 group-hover:scale-110">
+                                                    <svg v-if="(item.category || '').toLowerCase().includes('instagram')" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                                                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                                                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                                                    </svg>
+                                                    <svg v-else class="h-5 w-5 translate-x-0.5" viewBox="0 0 24 24" fill="currentColor">
+                                                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            <span class="absolute bottom-2 left-2 rounded bg-black/75 px-1.5 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider backdrop-blur-xs">
+                                                {{ item.category || 'Video' }}
+                                            </span>
+                                        </a>
+
+                                        <div class="mt-3">
+                                            <h3 class="isf-headline text-[16px] leading-[1.25] xl:text-[18px]">
+                                                <a
+                                                    :href="item.mediaUrl"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    class="hover:text-isf-red transition-colors"
+                                                >
+                                                    {{ item.title }}
+                                                </a>
+                                            </h3>
+                                            <time
+                                                v-if="item.publishedAt"
+                                                :datetime="item.publishedAt"
+                                                class="isf-byline mt-1.5 block text-neutral-500"
                                             >
-                                        </h3>
-                                        <time
-                                            :datetime="item.publishedAt"
-                                            class="isf-byline mt-2 block"
-                                            >{{
-                                                formatDate(item.publishedAt)
-                                            }}</time
-                                        >
+                                                {{ formatDate(item.publishedAt) }}
+                                            </time>
+                                        </div>
                                     </li>
                                 </ol>
                                 <p
-                                    v-if="secondaryStories.length === 0"
+                                    v-if="mediaSorotan.length === 0"
                                     class="py-4 text-sm text-neutral-600"
                                 >
-                                    Belum ada artikel lainnya.
+                                    Belum ada media sorotan.
                                 </p>
                             </section>
                         </div>
@@ -245,24 +332,10 @@ const cellPad = "lg:px-4 xl:px-[30px]";
                             aria-labelledby="insight-title"
                             class="order-3 min-w-0 border-t border-neutral-300 lg:order-1 lg:border-t-0"
                         >
-                            <div :class="['isf-col-head', cellPad]">
-                                <p id="insight-title" class="isf-label">
-                                    ISF Insight
-                                </p>
-                            </div>
-                            <div :class="['py-4', cellPad]">
-                                <SimpleBarChart
-                                    v-if="chart && chart.data.length"
-                                    data-testid="insight-chart"
-                                    :title="chart.title"
-                                    :description="chart.description"
-                                    :data="chart.data"
-                                    :unit="chart.unit"
-                                    :source-title="chart.sourceTitle"
-                                    :source-url="chart.sourceUrl"
-                                    compact
-                                />
-                            </div>
+                            <IsfInsightSlider
+                                :insights="insightList"
+                                :cell-pad="cellPad"
+                            />
                             <section
                                 aria-labelledby="terkini-title"
                                 class="border-t border-neutral-300"
@@ -339,7 +412,7 @@ const cellPad = "lg:px-4 xl:px-[30px]";
                             :class="cellPad"
                             ><template #action
                                 ><IsfLink
-                                    to="#"
+                                    to="/infografik"
                                     :class="[
                                         linkClass,
                                         'font-ui text-[12px] font-bold uppercase tracking-[0.12em] text-isf-red hover:text-isf-red-dark',

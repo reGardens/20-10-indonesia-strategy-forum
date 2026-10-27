@@ -98,22 +98,22 @@ onMounted(() => {
 <template>
   <Head title="Kelola Data Grafik — Indonesia Strategy Forum" />
 
-  <div class="p-6 space-y-6 max-w-7xl mx-auto">
+  <div class="p-6 space-y-6 w-full">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
       <div>
         <h1 class="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-          <span>Kelola Data Grafik</span>
-          <Badge class="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs">
+          <span>Kelola ISF Insight & Data Grafik</span>
+          <Badge class="bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 text-xs">
             {{ meta.total }} Total
           </Badge>
         </h1>
         <p class="text-sm text-muted-foreground mt-1">
-          Kelola dataset grafik batang interaktif untuk Beranda publik dan Visual Kunci Anatomi Isu.
+          Kelola dataset grafik interaktif untuk slider ISF Insight di Beranda publik dan Visual Kunci Anatomi Isu.
         </p>
       </div>
       <Link href="/cms/data-grafik/create">
-        <Button class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm shadow-sm inline-flex items-center gap-1.5">
+        <Button class="bg-red-600 hover:bg-red-700 text-white font-medium text-sm shadow-sm inline-flex items-center gap-1.5">
           <IconComponent name="Plus" :size="16" />
           <span>Tambah Grafik Baru</span>
         </Button>
@@ -136,37 +136,46 @@ onMounted(() => {
         />
       </div>
 
-      <div class="flex items-center gap-2 w-full sm:w-auto">
-        <button
-          type="button"
-          @click="onStatusChange('')"
-          :class="[
-            'px-3 py-1.5 rounded-lg text-xs font-medium transition',
-            statusFilter === '' ? 'bg-primary text-primary-foreground' : 'bg-card text-muted-foreground hover:bg-accent border border-border'
-          ]"
-        >
-          Semua
-        </button>
-        <button
-          type="button"
-          @click="onStatusChange('terbit')"
-          :class="[
-            'px-3 py-1.5 rounded-lg text-xs font-medium transition',
-            statusFilter === 'terbit' ? 'bg-emerald-600 text-white' : 'bg-card text-muted-foreground hover:bg-accent border border-border'
-          ]"
-        >
-          Terbit
-        </button>
-        <button
-          type="button"
-          @click="onStatusChange('draf')"
-          :class="[
-            'px-3 py-1.5 rounded-lg text-xs font-medium transition',
-            statusFilter === 'draf' ? 'bg-slate-700 text-white' : 'bg-card text-muted-foreground hover:bg-accent border border-border'
-          ]"
-        >
-          Draf
-        </button>
+      <div class="flex items-center gap-2 overflow-x-auto">
+        <span class="text-xs text-muted-foreground whitespace-nowrap">Status:</span>
+        <div class="flex gap-1">
+          <button
+            type="button"
+            @click="onStatusChange('')"
+            :class="[
+              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+              statusFilter === ''
+                ? 'bg-red-600 text-white'
+                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+            ]"
+          >
+            Semua
+          </button>
+          <button
+            type="button"
+            @click="onStatusChange('terbit')"
+            :class="[
+              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+              statusFilter === 'terbit'
+                ? 'bg-emerald-600 text-white'
+                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+            ]"
+          >
+            Terbit
+          </button>
+          <button
+            type="button"
+            @click="onStatusChange('draf')"
+            :class="[
+              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+              statusFilter === 'draf'
+                ? 'bg-amber-600 text-white'
+                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+            ]"
+          >
+            Draf
+          </button>
+        </div>
       </div>
     </div>
 
@@ -179,16 +188,17 @@ onMounted(() => {
       <Table>
         <TableHeader>
           <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
-            <TableHead class="w-[45%]">Judul Grafik</TableHead>
-            <TableHead>Satuan Unit</TableHead>
+            <TableHead class="w-[40%]">Judul Grafik & Analis</TableHead>
+            <TableHead>Satuan</TableHead>
+            <TableHead class="text-center">Urutan</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Tampil di Beranda</TableHead>
+            <TableHead>Slider Beranda</TableHead>
             <TableHead class="text-right">Aksi</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow v-if="items.length === 0">
-            <TableCell colspan="5" class="text-center py-10 text-muted-foreground text-sm">
+            <TableCell colspan="6" class="text-center py-10 text-muted-foreground text-sm">
               Tidak ada dataset grafik ditemukan.
             </TableCell>
           </TableRow>
@@ -197,41 +207,59 @@ onMounted(() => {
             :key="item.id"
             class="hover:bg-muted/30 transition border-b border-border/50"
           >
-            <TableCell class="py-3 font-semibold text-foreground text-sm">
-              {{ item.title }}
+            <TableCell class="py-3 text-foreground text-sm">
+              <div class="font-semibold">{{ item.title }}</div>
+              <div v-if="item.author_name" class="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                <span class="text-neutral-400">Analis:</span>
+                <span class="font-medium text-foreground/80">{{ item.author_name }}</span>
+              </div>
             </TableCell>
             <TableCell class="text-xs text-muted-foreground font-mono">
               {{ item.unit || '-' }}
+            </TableCell>
+            <TableCell class="text-xs text-center font-mono">
+              <span class="inline-block px-2 py-0.5 rounded bg-muted text-muted-foreground">
+                {{ item.order ?? 0 }}
+              </span>
             </TableCell>
             <TableCell>
               <StatusBadge :status="item.status" />
             </TableCell>
             <TableCell>
-              <LiveBadge v-if="item.id === liveId" label="Beranda Tayang" />
+              <span
+                v-if="item.is_beranda && item.status === 'terbit'"
+                class="inline-flex items-center gap-1.5 text-[9.5px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+              >
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                Slider Beranda (#{{ item.order ?? 0 }})
+              </span>
               <span
                 v-else-if="item.is_beranda"
-                class="text-[11px] px-2 py-0.5 rounded bg-muted text-muted-foreground"
+                class="inline-flex items-center gap-1.5 text-[9.5px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
               >
-                Flag Beranda
+                <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                Slider (Status: {{ item.status }})
               </span>
               <span v-else class="text-xs text-muted-foreground">-</span>
             </TableCell>
-            <TableCell class="text-right space-x-1">
-              <Link :href="`/cms/data-grafik/${item.id}/edit`">
-                <Button variant="outline" size="sm" class="h-8 text-xs hover:bg-emerald-500/10 hover:text-emerald-500 hover:border-emerald-500">
-                  <IconComponent name="Edit" :size="14" class="mr-1" />
-                  Edit
+            <TableCell class="text-right">
+              <div class="flex items-center justify-end gap-1.5">
+                <Link :href="`/cms/data-grafik/${item.id}/edit`">
+                  <Button variant="outline" size="sm" class="h-8 px-2.5 text-xs font-medium hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center">
+                    <IconComponent name="Edit" :size="14" class="mr-1" />
+                    Edit
+                  </Button>
+                </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="h-8 px-2.5 text-xs font-medium text-red-500 border-red-500/30 hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center"
+                  @click="handleDelete(item)"
+                >
+                  <IconComponent name="Trash" :size="14" class="mr-1" />
+                  Hapus
                 </Button>
-              </Link>
-              <Button
-                variant="destructive"
-                size="sm"
-                class="h-8 text-xs"
-                @click="handleDelete(item)"
-              >
-                <IconComponent name="Trash" :size="14" class="mr-1" />
-                Hapus
-              </Button>
+              </div>
             </TableCell>
           </TableRow>
         </TableBody>

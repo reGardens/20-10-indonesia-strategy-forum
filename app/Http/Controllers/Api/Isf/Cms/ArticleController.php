@@ -21,7 +21,7 @@ class ArticleController extends CmsResourceController
 
     protected array $searchColumns = ['title', 'slug'];
 
-    protected array $order = ['published_at' => 'desc', 'id' => 'desc'];
+    protected array $order = ['id' => 'desc'];
 
     /** Beranda hero currently shown on the public page. */
     protected function liveId(): ?int
@@ -42,6 +42,22 @@ class ArticleController extends CmsResourceController
     public function update(ArticleRequest $request, Article $article): JsonResponse
     {
         return $this->updateModel($article, $request->validated());
+    }
+
+    public function setHero(Article $article): JsonResponse
+    {
+        Article::query()->where('id', '!=', $article->id)->update(['is_hero' => false]);
+        $article->update([
+            'is_hero' => true,
+            'status' => 'terbit',
+            'published_at' => now()->format('Y-m-d'),
+        ]);
+
+        return response()->json([
+            'message' => 'Artikel berhasil ditayangkan sebagai Hero Beranda.',
+            'live_id' => $article->id,
+            'data' => $article->fresh(),
+        ]);
     }
 
     public function destroy(Article $article): Response

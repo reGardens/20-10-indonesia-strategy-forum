@@ -18,7 +18,7 @@ class BannerController extends CmsResourceController
 
     protected array $searchColumns = ['title', 'kicker', 'deck'];
 
-    protected array $order = ['order' => 'asc', 'id' => 'desc'];
+    protected array $order = ['id' => 'desc'];
 
     public function show(Banner $banner): JsonResponse
     {
@@ -27,12 +27,20 @@ class BannerController extends CmsResourceController
 
     public function store(BannerRequest $request): JsonResponse
     {
-        return $this->storeModel($request->validated());
+        $data = $request->validated();
+        if (empty($data['kicker'])) {
+            $data['kicker'] = 'Sorotan';
+        }
+        return $this->storeModel($data);
     }
 
     public function update(BannerRequest $request, Banner $banner): JsonResponse
     {
-        return $this->updateModel($banner, $request->validated());
+        $data = $request->validated();
+        if (empty($data['kicker'])) {
+            $data['kicker'] = $banner->kicker ?: 'Sorotan';
+        }
+        return $this->updateModel($banner, $data);
     }
 
     public function destroy(Banner $banner): Response

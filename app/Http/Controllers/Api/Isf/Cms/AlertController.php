@@ -18,7 +18,7 @@ class AlertController extends CmsResourceController
 
     protected array $searchColumns = ['title', 'sektor'];
 
-    protected array $order = ['date' => 'desc', 'id' => 'desc'];
+    protected array $order = ['id' => 'desc'];
 
     public function show(Alert $alert): JsonResponse
     {

@@ -26,3 +26,6 @@ Thumbs.db
 !/bootstrap/cache/.gitignore
 !/bootstrap/cache/.gitkeep
 vite.config.js.timestamp-*
+*.zip
+*.sql
+create_staging_zip.py

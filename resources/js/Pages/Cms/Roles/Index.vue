@@ -58,7 +58,7 @@ function deleteRole() {
             </h1>
             <Link href="/cms/roles/create">
                 <Button
-                    class="bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-emerald-500 dark:hover:bg-emerald-600"
+                    class="bg-red-600 hover:bg-red-700 text-white dark:bg-red-600 dark:hover:bg-red-700"
                 >
                     {{ t("role.add_role") }}
                 </Button>

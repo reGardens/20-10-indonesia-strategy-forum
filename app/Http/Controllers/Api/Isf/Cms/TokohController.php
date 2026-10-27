@@ -18,7 +18,7 @@ class TokohController extends CmsResourceController
 
     protected array $searchColumns = ['name', 'slug'];
 
-    protected array $order = ['name' => 'asc', 'id' => 'asc'];
+    protected array $order = ['id' => 'desc'];
 
     /** "Tokoh Pekan Ini" currently shown on the public pages. */
     protected function liveId(): ?int

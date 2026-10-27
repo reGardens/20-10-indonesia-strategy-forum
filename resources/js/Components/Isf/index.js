@@ -8,3 +8,5 @@ export { default as ImagePlaceholder } from './ImagePlaceholder.vue';
 export { default as IsfLogo } from './IsfLogo.vue';
 export { default as IsfLink } from './IsfLink.vue';
 export { default as IsfBannerCarousel } from './IsfBannerCarousel.vue';
+export { default as BerandaSkeleton } from './BerandaSkeleton.vue';
+export { default as IsfInsightSlider } from './IsfInsightSlider.vue';

@@ -86,10 +86,20 @@ onBeforeUnmount(() => {
                     class="block min-w-0 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red focus-visible:ring-offset-2"
                 >
                     <span
-                        class="isf-wordmark block text-balance font-headline text-[20px] font-extrabold uppercase leading-[0.95] tracking-[-0.01em] text-neutral-950 sm:text-[26px] lg:text-[30px]"
-                        ><span class="text-isf-red">ISF</span> Indonesia
-                        Strategy Forum</span
+                        class="isf-wordmark mx-auto flex items-center justify-center min-w-0 text-center leading-none"
                     >
+                        <span class="inline-flex items-stretch justify-center gap-x-2 sm:gap-x-2.5">
+                            <img
+                                src="/images/isf/logo-isf.jpeg"
+                                alt="ISF Logo"
+                                class="isf-masthead-icon w-auto self-stretch rounded-[5px] object-cover shrink-0 border border-neutral-300/80 shadow-xs"
+                                width="38"
+                                height="38"
+                            />
+                            <span class="sr-only">ISF </span>
+                            <span class="isf-script text-neutral-950 text-[26px] sm:text-[32px] lg:text-[38px] leading-none">Indonesia Strategy Forum</span>
+                        </span>
+                    </span>
                     <span class="isf-byline mt-1 block">Portal Anggota</span>
                 </router-link>
                 <div class="flex items-center gap-2 justify-self-end">

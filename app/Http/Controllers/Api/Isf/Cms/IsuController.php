@@ -18,7 +18,7 @@ class IsuController extends CmsResourceController
 
     protected array $searchColumns = ['title', 'slug'];
 
-    protected array $order = ['published_at' => 'desc', 'id' => 'desc'];
+    protected array $order = ['id' => 'desc'];
 
     /** "Anatomi Isu" of the week currently shown on the public pages. */
     protected function liveId(): ?int

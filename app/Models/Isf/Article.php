@@ -54,6 +54,6 @@ class Article extends Model
     public static function currentHero(): ?self
     {
         return static::query()->terbit()->where('is_hero', true)
-            ->orderByDesc('published_at')->orderByDesc('id')->first();
+            ->orderByDesc('updated_at')->orderByDesc('published_at')->orderByDesc('id')->first();
     }
 }

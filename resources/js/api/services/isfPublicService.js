@@ -36,9 +36,13 @@ export function getAnggota() {
   return get('/isf/anggota')
 }
 
+export function getInfografik() {
+  return get('/isf/infografik')
+}
+
 /** True when the error is an API "not found" (missing or unpublished content). */
 export function isNotFound(error) {
   return error?.response?.status === 404
 }
 
-export default { getBeranda, getTokoh, getIsu, getAnggota, isNotFound }
+export default { getBeranda, getTokoh, getIsu, getAnggota, getInfografik, isNotFound }

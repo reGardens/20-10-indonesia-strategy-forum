@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 // ISF (Indonesia Strategy Forum) public pages — Vue SPA, content from the public API (/api/isf/*)
 Route::get('/', [SpaController::class, 'index'])->name('isf.home');
 Route::get('/beranda', [SpaController::class, 'index'])->name('isf.beranda');
+Route::get('/infografik', [SpaController::class, 'index'])->name('isf.infografik');
 Route::get('/tokoh/{slug}', [SpaController::class, 'index'])->name('isf.tokoh.show');
 Route::get('/isu/{slug}', [SpaController::class, 'index'])->name('isf.isu.show');
 // ISF member portal (B2B) — NOT protected by auth yet (UI preview only)
@@ -77,6 +78,7 @@ Route::middleware('auth')->group(function () {
         'data-grafik' => 'data_grafik',
         'alert' => 'alert',
         'email-briefing' => 'email_briefing',
+        'kategori' => 'kategori',
     ];
     foreach ($isfModules as $segment => $feature) {
         Route::middleware("feature:{$feature}")->prefix("cms/{$segment}")->group(function () use ($segment) {
@@ -89,8 +91,20 @@ Route::middleware('auth')->group(function () {
     Route::get('/cms/email-briefing/{briefing}/preview', [BriefingPreviewController::class, 'cmsPreview'])
         ->middleware('feature:email_briefing')->whereNumber('briefing')->name('cms.isf.email-briefing.preview');
 
-    Route::get('/cms/pengaturan-halaman', [IsfPageController::class, 'settings'])
-        ->middleware('feature:pengaturan_halaman')->name('cms.isf.pengaturan-halaman');
+    Route::prefix('cms/running-text')->group(function () {
+        Route::get('/', [IsfPageController::class, 'index'])->defaults('module', 'running-text')->name('cms.isf.running-text.index');
+        Route::get('/create', [IsfPageController::class, 'create'])->defaults('module', 'running-text')->name('cms.isf.running-text.create');
+        Route::get('/{id}/edit', [IsfPageController::class, 'edit'])->defaults('module', 'running-text')->whereNumber('id')->name('cms.isf.running-text.edit');
+    });
+
+    Route::prefix('cms/media-sorotan')->group(function () {
+        Route::get('/', [IsfPageController::class, 'index'])->defaults('module', 'media-sorotan')->name('cms.isf.media-sorotan.index');
+        Route::get('/create', [IsfPageController::class, 'create'])->defaults('module', 'media-sorotan')->name('cms.isf.media-sorotan.create');
+        Route::get('/{id}/edit', [IsfPageController::class, 'edit'])->defaults('module', 'media-sorotan')->whereNumber('id')->name('cms.isf.media-sorotan.edit');
+    });
+
+    Route::get('/cms/pengaturan-halaman', fn () => redirect()->route('cms.isf.running-text.index'))
+        ->name('cms.isf.pengaturan-halaman');
 
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 });
