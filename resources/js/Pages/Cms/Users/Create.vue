@@ -39,11 +39,28 @@ async function submit() {
     <Head :title="t('users.add_user')" />
 
     <div class="p-6 space-y-6">
-        <h1 class="text-2xl font-bold tracking-tight">
-            {{ t("users.add_user") }}
-        </h1>
+        <div class="flex items-center justify-between pb-4 border-b border-border">
+            <h1 class="text-2xl font-bold tracking-tight">
+                {{ t("users.add_user") }}
+            </h1>
+            <div class="flex items-center gap-2">
+                <Link href="/cms/users">
+                    <Button type="button" variant="outline" size="sm" class="h-9 text-xs">
+                        {{ t("common.cancel") }}
+                    </Button>
+                </Link>
+                <Button
+                    type="button"
+                    @click="submit"
+                    :disabled="form.processing"
+                    class="h-9 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-4 shadow-sm"
+                >
+                    {{ t("common.save") }}
+                </Button>
+            </div>
+        </div>
 
-        <div class="max-w-lg">
+        <div class="w-full">
             <form @submit.prevent="submit" class="space-y-5">
                 <div class="space-y-2">
                     <Label for="name">{{ t("users.name") }}</Label>
@@ -87,40 +104,6 @@ async function submit() {
                     >
                         {{ form.errors.password }}
                     </p>
-                </div>
-
-                <!-- <div class="space-y-2">
-                    <Label for="role">{{ t("users.role") }}</Label>
-                    <Select v-model="form.role">
-                        <SelectTrigger
-                            ><SelectValue placeholder="Pilih role"
-                        /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem
-                                v-for="role in roles"
-                                :key="role.id"
-                                :value="role.name"
-                                >{{ role.name }}</SelectItem
-                            >
-                        </SelectContent>
-                    </Select>
-                    <p v-if="form.errors.role" class="text-sm text-destructive">
-                        {{ form.errors.role }}
-                    </p>
-                </div> -->
-
-                <div class="flex items-center gap-4 pt-2">
-                    <Button
-                        type="submit"
-                        :disabled="form.processing"
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-emerald-500 dark:hover:bg-emerald-600"
-                        >{{ t("common.save") }}</Button
-                    >
-                    <Link href="/cms/users"
-                        ><Button type="button" variant="outline">{{
-                            t("common.cancel")
-                        }}</Button></Link
-                    >
                 </div>
             </form>
         </div>

@@ -14,12 +14,98 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Email Briefing Anggota · Indonesia Strategy Forum</title>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: #ffffff !important; }
+        }
+        .action-bar {
+            background: #0B1220;
+            color: #ffffff;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #E10600;
+            position: sticky;
+            top: 0;
+            z-index: 9999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .action-bar button, .action-bar a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 7px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: 1px solid transparent;
+        }
+        .btn-copy {
+            background: #1f2937;
+            color: #f9fafb;
+            border-color: #374151 !important;
+        }
+        .btn-copy:hover {
+            background: #374151;
+        }
+        .btn-print {
+            background: #1f2937;
+            color: #f9fafb;
+            border-color: #374151 !important;
+        }
+        .btn-print:hover {
+            background: #374151;
+        }
+        .btn-send {
+            background: #E10600;
+            color: #ffffff;
+        }
+        .btn-send:hover {
+            background: #b90500;
+        }
+        .btn-back {
+            background: transparent;
+            color: #9ca3af;
+            border-color: #374151 !important;
+        }
+        .btn-back:hover {
+            color: #ffffff;
+            background: #1f2937;
+        }
+    </style>
 </head>
 <body style="margin:0;padding:0;background:#f3f4f6;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f3f4f6;">
+    <div class="action-bar no-print">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <a href="/cms/email-briefing" class="btn-back">
+                ← Kembali ke CMS
+            </a>
+            <span style="font-size:14px;font-weight:bold;color:#f9fafb;">Pratinjau Email Briefing Eksekutif</span>
+            <span style="font-size:11px;background:#374151;color:#d1d5db;padding:3px 8px;border-radius:9999px;">Siap Kirim</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+            <button type="button" class="btn-copy" onclick="copyEmailHtml()">
+                📋 Salin HTML Surel
+            </button>
+            <button type="button" class="btn-print" onclick="window.print()">
+                🖨️ Cetak / Unduh PDF
+            </button>
+            <button type="button" class="btn-send" onclick="sendTestBriefing()">
+                🚀 Kirim Uji Coba Email
+            </button>
+        </div>
+    </div>
+
+    <table id="email-table-container" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f3f4f6;">
         <tr>
             <td align="center" style="padding:24px 12px;">
-                <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;{{ $font }}color:#171717;">
+                <table id="email-content" role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;{{ $font }}color:#171717;">
 
                     {{-- (1) Header --}}
                     <tr>
@@ -144,5 +230,24 @@
             </td>
         </tr>
     </table>
+
+    <script>
+        function copyEmailHtml() {
+            var emailTable = document.getElementById('email-content');
+            if (!emailTable) return;
+            var html = emailTable.outerHTML;
+            navigator.clipboard.writeText(html).then(function() {
+                alert('Kode HTML Surel berhasil disalin ke clipboard! Anda dapat menempelkannya (paste) ke platform email marketing seperti Mailchimp, Brevo, atau Outlook.');
+            }).catch(function(err) {
+                alert('Gagal menyalin HTML: ' + err);
+            });
+        }
+        function sendTestBriefing() {
+            var email = prompt('Masukkan alamat email tujuan untuk uji coba pengiriman briefing:', 'analis@indonesiastrategyforum.co.id');
+            if (email && email.trim()) {
+                alert('Simulasi Pengiriman Sukses!\n\nEmail Briefing eksekutif telah disimulasikan terkirim ke: ' + email + '.\nKonfigurasi SMTP siap disambungkan via mail provider produksi.');
+            }
+        }
+    </script>
 </body>
 </html>

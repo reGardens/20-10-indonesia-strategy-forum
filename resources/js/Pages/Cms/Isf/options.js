@@ -1,6 +1,10 @@
+import { ref } from 'vue'
+import http from '@/api/http'
+
 /**
- * Fixed option lists for ISF CMS forms and filters.
- * Mirrors App\Support\IsfOptions on the backend.
+ * Option lists for ISF CMS forms and filters.
+ * Initialized with default categories (Politik, Ekonomi, Kebijakan, Hukum, RUU)
+ * and can be dynamically refreshed from the database.
  */
 
 export const CATEGORIES = [
@@ -10,6 +14,25 @@ export const CATEGORIES = [
   { value: 'hukum', label: 'Hukum' },
   { value: 'ruu', label: 'RUU' }
 ]
+
+export const activeCategories = ref([...CATEGORIES])
+
+/**
+ * Fetch latest categories from database (/api/cms/options/categories)
+ */
+export async function loadCategories() {
+  try {
+    const res = await http.get('/cms/options/categories')
+    const list = res?.data?.data || []
+    if (Array.isArray(list) && list.length > 0) {
+      activeCategories.value = list
+      return list
+    }
+  } catch (err) {
+    // fallback to initial static categories if API fails
+  }
+  return activeCategories.value
+}
 
 export const PRIORITIES = [
   { value: 'merah', label: 'Prioritas Tinggi (Merah)' },
@@ -22,7 +45,8 @@ export const STATUSES = [
 ]
 
 export function categoryLabel(value) {
-  return CATEGORIES.find((c) => c.value === value)?.label || value || '-'
+  const found = activeCategories.value.find((c) => c.value === value) || CATEGORIES.find((c) => c.value === value)
+  return found?.label || found?.name || value || '-'
 }
 
 export function priorityLabel(value) {

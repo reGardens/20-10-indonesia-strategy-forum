@@ -18,7 +18,7 @@ class BannerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'kicker' => $this->textRules(true, 100),
+            'kicker' => $this->textRules(false, 100),
             'title' => $this->textRules(true, 255),
             'deck' => $this->textRules(false, 1000),
             'to' => $this->linkRules(false),

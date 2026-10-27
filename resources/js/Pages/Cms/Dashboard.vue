@@ -34,7 +34,7 @@ function formatDate(dateString) {
 <template>
     <Head title="Dasbor — Indonesia Strategy Forum" />
 
-    <div class="p-6 space-y-8 max-w-7xl mx-auto">
+    <div class="p-6 space-y-8 w-full">
         <!-- Welcoming Header (from plan.md & screenshot) -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-border">
             <div>
@@ -51,7 +51,7 @@ function formatDate(dateString) {
                 <a
                     href="/"
                     target="_blank"
-                    class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-sm"
+                    class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold bg-red-600 hover:bg-red-700 text-white transition shadow-sm"
                 >
                     <IconComponent name="World" :size="15" />
                     <span>Beranda ISF</span>
@@ -74,11 +74,11 @@ function formatDate(dateString) {
             <!-- Super Admin Card -->
             <div
                 v-if="isSuperAdmin"
-                class="p-5 rounded-xl border border-border bg-card flex flex-col justify-between shadow-xs transition hover:border-emerald-500/40"
+                class="p-5 rounded-xl border border-border bg-card flex flex-col justify-between shadow-xs transition hover:border-red-500/40"
             >
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Pengguna</span>
-                    <span class="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">
+                    <span class="p-2 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400">
                         <IconComponent name="Users" :size="18" />
                     </span>
                 </div>
@@ -87,7 +87,7 @@ function formatDate(dateString) {
                     <div class="text-xs text-muted-foreground mt-1">User terdaftar di sistem</div>
                 </div>
                 <div class="mt-4 pt-3 border-t border-border flex items-center justify-between">
-                    <Link href="/cms/users" class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">
+                    <Link href="/cms/users" class="text-xs font-semibold text-red-600 dark:text-red-400 hover:underline">
                         Kelola Pengguna &rarr;
                     </Link>
                     <span class="text-[11px] text-muted-foreground font-medium">{{ totalRoles }} Peran</span>
@@ -98,24 +98,24 @@ function formatDate(dateString) {
             <div
                 v-for="stat in contentStats"
                 :key="stat.key"
-                class="p-5 rounded-xl border border-border bg-card flex flex-col justify-between shadow-xs transition hover:border-emerald-500/40"
+                class="p-5 rounded-xl border border-border bg-card flex flex-col justify-between shadow-xs transition hover:border-red-500/40"
             >
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">{{ stat.label }}</span>
-                    <span class="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">
+                    <span class="p-2 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400">
                         <IconComponent :name="stat.icon || 'Article'" :size="18" />
                     </span>
                 </div>
                 <div class="mt-3">
                     <div class="text-3xl font-extrabold text-foreground">{{ stat.total }}</div>
                     <div class="flex items-center gap-2 mt-1 text-xs">
-                        <span class="text-emerald-600 dark:text-emerald-400 font-semibold">{{ stat.terbit }} Terbit</span>
+                        <span class="text-red-600 dark:text-red-400 font-semibold">{{ stat.terbit }} Terbit</span>
                         <span class="text-muted-foreground/60">•</span>
                         <span class="text-muted-foreground">{{ stat.draf }} Draf</span>
                     </div>
                 </div>
                 <div class="mt-4 pt-3 border-t border-border flex items-center justify-between">
-                    <Link :href="stat.href" class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">
+                    <Link :href="stat.href" class="text-xs font-semibold text-red-600 dark:text-red-400 hover:underline">
                         Buka Daftar &rarr;
                     </Link>
                     <Link :href="`${stat.href}/create`" class="text-[11px] text-muted-foreground hover:text-foreground">
@@ -134,7 +134,7 @@ function formatDate(dateString) {
                         <h2 class="text-sm font-bold text-foreground">Konten Terbaru Diperbarui</h2>
                         <p class="text-xs text-muted-foreground mt-0.5">8 data editorial dan peringatan intelijen terkini.</p>
                     </div>
-                    <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                    <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20">
                         Live Data
                     </span>
                 </div>
@@ -177,7 +177,7 @@ function formatDate(dateString) {
                                 <td class="px-4 py-3 text-right">
                                     <Link
                                         :href="item.href"
-                                        class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
+                                        class="text-xs font-semibold text-red-600 dark:text-red-400 hover:underline"
                                     >
                                         Edit
                                     </Link>
@@ -201,9 +201,9 @@ function formatDate(dateString) {
                         :key="link.href"
                         :href="link.href"
                         target="_blank"
-                        class="flex items-center justify-between p-3 rounded-lg border border-border hover:border-emerald-500/50 hover:bg-muted/30 transition text-xs font-medium group"
+                        class="flex items-center justify-between p-3 rounded-lg border border-border hover:border-red-500/50 hover:bg-muted/30 transition text-xs font-medium group"
                     >
-                        <span class="text-foreground group-hover:text-emerald-500 transition">{{ link.label }}</span>
+                        <span class="text-foreground group-hover:text-red-600 transition">{{ link.label }}</span>
                         <IconComponent name="ChevronRight" :size="14" class="text-muted-foreground group-hover:translate-x-0.5 transition" />
                     </a>
                 </div>

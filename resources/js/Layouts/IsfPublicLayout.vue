@@ -78,10 +78,33 @@ watch(
     },
 );
 
+function handleGlobalKeydown(e) {
+    const targetTag = e.target?.tagName?.toLowerCase();
+    const isTyping = targetTag === "input" || targetTag === "textarea" || e.target?.isContentEditable;
+
+    if ((e.key === "k" && (e.ctrlKey || e.metaKey)) || (e.key === "/" && !isTyping)) {
+        e.preventDefault();
+        if (!searchOpen.value) {
+            toggleSearch();
+        } else {
+            searchInput.value?.$el?.focus();
+        }
+    } else if (e.key === "Escape") {
+        if (searchOpen.value) {
+            searchOpen.value = false;
+            searchPending.value = false;
+        }
+        if (menuOpen.value) {
+            closeMenu();
+        }
+    }
+}
+
 let previousTitle = "";
 onMounted(() => {
     previousTitle = document.title;
     if (route.meta.title) document.title = route.meta.title;
+    window.addEventListener("keydown", handleGlobalKeydown);
 });
 watch(
     () => route.meta.title,
@@ -91,6 +114,7 @@ watch(
 );
 onBeforeUnmount(() => {
     if (previousTitle) document.title = previousTitle;
+    window.removeEventListener("keydown", handleGlobalKeydown);
 });
 </script>
 
@@ -143,12 +167,24 @@ onBeforeUnmount(() => {
                     <router-link
                         to="/beranda"
                         :class="[
-                            'isf-wordmark block min-w-0 text-balance text-center font-headline text-[22px] font-extrabold uppercase leading-[0.95] tracking-[-0.01em] text-neutral-950 sm:text-[28px] lg:text-[34px] xl:text-[38px]',
+                            'isf-wordmark mx-auto flex items-center justify-center min-w-0 text-center leading-none',
                             focusRing,
                         ]"
-                        ><span class="text-isf-red">ISF</span> Indonesia
-                        Strategy Forum</router-link
                     >
+                        <span class="inline-flex items-stretch justify-center gap-x-2.5 sm:gap-x-3.5">
+                            <img
+                                src="/images/isf/logo-isf.jpeg"
+                                alt="ISF Logo"
+                                class="isf-masthead-icon w-auto self-stretch rounded-[7px] object-cover shrink-0 border border-neutral-300/80 shadow-xs"
+                                width="50"
+                                height="50"
+                            />
+                            <span class="sr-only">ISF </span>
+                            <span class="isf-script text-neutral-950 text-[30px] sm:text-[38px] lg:text-[46px] xl:text-[50px] leading-none">
+                                Indonesia Strategy Forum
+                            </span>
+                        </span>
+                    </router-link>
 
                     <div class="flex items-center gap-4 justify-self-end">
                         <router-link
@@ -163,6 +199,7 @@ onBeforeUnmount(() => {
                         <button
                             type="button"
                             aria-label="Buka pencarian"
+                            title="Buka pencarian (Ctrl+K atau /)"
                             :aria-expanded="searchOpen ? 'true' : 'false'"
                             :aria-controls="searchId"
                             :class="[
@@ -336,24 +373,56 @@ onBeforeUnmount(() => {
             <router-view />
         </main>
 
-        <footer class="mt-8 border-t border-neutral-300 bg-white">
-            <div
-                class="isf-mobile-gutter mx-auto max-w-[1400px] px-4 py-6 text-sm text-neutral-600 lg:px-6"
-            >
-                <p
-                    class="font-headline text-lg font-extrabold uppercase tracking-[-0.01em] text-neutral-950"
-                >
-                    <span class="text-isf-red">ISF</span> Indonesia Strategy
-                    Forum
-                </p>
-                <p class="mt-2">
-                    © 2026 Indonesia Strategy Forum ·
-                    indonesiastrategyforum.co.id
-                </p>
-                <p class="mt-1">
-                    Seluruh data pada halaman ini adalah data contoh untuk
-                    pratinjau desain.
-                </p>
+        <footer class="mt-8 border-t border-neutral-800 bg-neutral-950 text-neutral-400">
+            <!-- Row 1: Main nav links -->
+            <div class="isf-mobile-gutter mx-auto max-w-[1400px] px-4 py-4 lg:px-6">
+                <div class="flex flex-wrap items-center justify-between gap-y-2">
+                    <nav aria-label="Footer utama" class="flex flex-wrap items-center gap-x-0 text-[11px]">
+                        <router-link to="/tentang-isf"
+                            class="px-2 py-1 text-neutral-400 hover:text-white transition-colors first:pl-0">
+                            Tentang ISF
+                        </router-link>
+                        <span class="text-neutral-700 select-none">|</span>
+                        <router-link to="/dewan-pakar"
+                            class="px-2 py-1 text-neutral-400 hover:text-white transition-colors">
+                            Dewan Pakar
+                        </router-link>
+                        <span class="text-neutral-700 select-none">|</span>
+                        <router-link to="/event"
+                            class="px-2 py-1 text-neutral-400 hover:text-white transition-colors">
+                            Event
+                        </router-link>
+                        <span class="text-neutral-700 select-none">|</span>
+                        <router-link to="/kontak"
+                            class="px-2 py-1 text-neutral-400 hover:text-white transition-colors">
+                            Kontak
+                        </router-link>
+                    </nav>
+                    <p class="text-[11px] text-neutral-500">
+                        © {{ new Date().getFullYear() }} Indonesia Strategy Forum
+                    </p>
+                </div>
+            </div>
+            <!-- Row 2: Legal links -->
+            <div class="border-t border-neutral-800">
+                <div class="isf-mobile-gutter mx-auto max-w-[1400px] px-4 py-3 lg:px-6">
+                    <nav aria-label="Footer legal" class="flex flex-wrap items-center gap-x-0 text-[11px]">
+                        <router-link to="/syarat-ketentuan"
+                            class="px-2 py-0.5 text-neutral-500 hover:text-white transition-colors first:pl-0">
+                            Syarat &amp; Ketentuan
+                        </router-link>
+                        <span class="text-neutral-700 select-none">|</span>
+                        <router-link to="/privacy-policy"
+                            class="px-2 py-0.5 text-neutral-500 hover:text-white transition-colors">
+                            Privacy Policy
+                        </router-link>
+                        <span class="text-neutral-700 select-none">|</span>
+                        <router-link to="/cookie-policy"
+                            class="px-2 py-0.5 text-neutral-500 hover:text-white transition-colors">
+                            Cookie Policy
+                        </router-link>
+                    </nav>
+                </div>
             </div>
         </footer>
     </div>

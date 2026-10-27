@@ -46,6 +46,24 @@ const menuGroups = computed(() => [
                 visible: hasFeature("banner"),
             },
             {
+                label: "Running Text",
+                href: "/cms/running-text",
+                icon: "Speakerphone",
+                visible: true,
+            },
+            {
+                label: "Media Sorotan",
+                href: "/cms/media-sorotan",
+                icon: "Video",
+                visible: true,
+            },
+            {
+                label: "Kategori",
+                href: "/cms/kategori",
+                icon: "Category",
+                visible: true,
+            },
+            {
                 label: "Artikel",
                 href: "/cms/artikel",
                 icon: "Article",
@@ -70,16 +88,10 @@ const menuGroups = computed(() => [
                 visible: hasFeature("isu"),
             },
             {
-                label: "Data Grafik",
+                label: "ISF Insight (Grafik)",
                 href: "/cms/data-grafik",
                 icon: "ChartBar",
                 visible: hasFeature("data_grafik"),
-            },
-            {
-                label: "Pengaturan Halaman",
-                href: "/cms/pengaturan-halaman",
-                icon: "Settings",
-                visible: hasFeature("pengaturan_halaman"),
             },
         ],
     },
@@ -170,7 +182,7 @@ const visibleGroups = computed(() =>
                     v-if="item.external"
                     :href="item.href"
                     target="_blank"
-                    class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400"
+                    class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all text-muted-foreground hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40 dark:hover:text-red-400"
                 >
                     <IconComponent
                         :name="item.icon"
@@ -190,8 +202,8 @@ const visibleGroups = computed(() =>
                     :class="[
                         'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all w-full text-left',
                         isActive(item.href)
-                            ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30 dark:bg-emerald-500'
-                            : 'text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400',
+                            ? 'bg-red-600 text-white shadow-sm shadow-red-600/30 dark:bg-red-600'
+                            : 'text-muted-foreground hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40 dark:hover:text-red-400',
                     ]"
                 >
                     <IconComponent

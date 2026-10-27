@@ -25,4 +25,19 @@ export default defineConfig({
             '@': '/resources/js',
         },
     },
+    build: {
+        chunkSizeWarningLimit: 1000,
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    if (id.includes('node_modules/xlsx')) {
+                        return 'vendor-xlsx';
+                    }
+                    if (id.includes('node_modules/jspdf') || id.includes('node_modules/html2canvas')) {
+                        return 'vendor-pdf';
+                    }
+                },
+            },
+        },
+    },
 });

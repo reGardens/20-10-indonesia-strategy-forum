@@ -95,21 +95,21 @@ onMounted(() => {
 <template>
   <Head title="Kelola Banner Sorotan — Indonesia Strategy Forum" />
 
-  <div class="p-6 space-y-6 max-w-7xl mx-auto">
+  <div class="p-6 space-y-6 w-full">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
       <div>
         <h1 class="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-          <IconComponent name="Slideshow" :size="24" class="text-emerald-500" />
+          <IconComponent name="Slideshow" :size="24" class="text-red-500" />
           Kelola Banner Sorotan
         </h1>
         <p class="text-xs text-muted-foreground mt-0.5">
-          Atur carousel banner utama di bagian atas Beranda publik ISF (judul, kicker, gambar, dan urutan rotasi).
+          Atur carousel banner utama di bagian atas Beranda publik ISF (nama, gambar, tautan tujuan, dan urutan rotasi).
         </p>
       </div>
       <div>
         <Link href="/cms/banner/create">
-          <Button class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold h-9 px-4 shadow-sm">
+          <Button class="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold h-9 px-4 shadow-sm">
             <IconComponent name="Plus" :size="16" class="mr-1.5" />
             Tambah Banner
           </Button>
@@ -124,7 +124,7 @@ onMounted(() => {
         <Input
           v-model="search"
           @input="onSearchInput"
-          placeholder="Cari judul, kicker, isi..."
+          placeholder="Cari nama banner, tautan..."
           class="pl-9 h-9 text-xs bg-card/60"
         />
       </div>
@@ -138,7 +138,7 @@ onMounted(() => {
             :class="[
               'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
               statusFilter === ''
-                ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/40'
+                ? 'bg-red-600/20 text-red-400 border border-red-500/40'
                 : 'bg-card text-muted-foreground hover:bg-muted/40 border border-border'
             ]"
           >
@@ -150,7 +150,7 @@ onMounted(() => {
             :class="[
               'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
               statusFilter === 'terbit'
-                ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/40'
+                ? 'bg-red-600/20 text-red-400 border border-red-500/40'
                 : 'bg-card text-muted-foreground hover:bg-muted/40 border border-border'
             ]"
           >
@@ -183,7 +183,7 @@ onMounted(() => {
           <TableRow>
             <TableHead class="w-14 text-center">Urutan</TableHead>
             <TableHead class="w-32">Gambar</TableHead>
-            <TableHead>Kicker & Judul</TableHead>
+            <TableHead>Nama Banner & Tautan</TableHead>
             <TableHead class="w-32">Status</TableHead>
             <TableHead class="w-32 text-right">Aksi</TableHead>
           </TableRow>
@@ -217,15 +217,12 @@ onMounted(() => {
             </TableCell>
 
             <TableCell>
-              <div class="space-y-1">
-                <span class="inline-block text-[11px] font-bold uppercase tracking-wider text-red-500">
-                  {{ item.kicker || 'Sorotan' }}
-                </span>
+              <div class="space-y-0.5">
                 <p class="font-semibold text-sm text-foreground line-clamp-1">
                   {{ item.title }}
                 </p>
-                <p v-if="item.deck" class="text-xs text-muted-foreground line-clamp-1">
-                  {{ item.deck }}
+                <p v-if="item.to" class="text-xs text-muted-foreground font-mono line-clamp-1">
+                  {{ item.to }}
                 </p>
               </div>
             </TableCell>
@@ -237,18 +234,19 @@ onMounted(() => {
             <TableCell class="text-right">
               <div class="flex items-center justify-end gap-1.5">
                 <Link :href="`/cms/banner/${item.id}/edit`">
-                  <Button variant="ghost" size="sm" class="h-8 px-2 text-xs hover:text-emerald-400">
+                  <Button variant="outline" size="sm" class="h-8 px-2.5 text-xs font-medium hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center">
                     <IconComponent name="Edit" :size="14" class="mr-1" />
                     Edit
                   </Button>
                 </Link>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  class="h-8 px-2 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                  class="h-8 px-2.5 text-xs font-medium text-red-500 border-red-500/30 hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center"
                   @click="handleDelete(item)"
                 >
-                  <IconComponent name="Trash" :size="14" />
+                  <IconComponent name="Trash" :size="14" class="mr-1" />
+                  Hapus
                 </Button>
               </div>
             </TableCell>

@@ -90,7 +90,7 @@ function hasFeature(user, featureKey) {
                         :class="[
                             'p-4 cursor-pointer transition-colors flex items-center justify-between',
                             selectedUser && selectedUser.id === u.id
-                                ? 'bg-emerald-500/10 dark:bg-emerald-950/30 border-l-4 border-emerald-600 dark:border-emerald-500'
+                                ? 'bg-red-500/10 dark:bg-red-950/30 border-l-4 border-red-600 dark:border-red-500'
                                 : 'hover:bg-muted/40 border-l-4 border-transparent'
                         ]"
                     >
@@ -98,7 +98,7 @@ function hasFeature(user, featureKey) {
                             <p class="font-semibold text-sm text-foreground">{{ u.name }}</p>
                             <p class="text-xs text-muted-foreground">{{ u.email }}</p>
                         </div>
-                        <Badge class="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-[10px]">
+                        <Badge class="bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 text-[10px]">
                             {{ u.allowed_features ? u.allowed_features.length : 0 }} Fitur
                         </Badge>
                     </div>
@@ -114,7 +114,7 @@ function hasFeature(user, featureKey) {
                 <div v-if="selectedUser" class="flex-1 flex flex-col">
                     <div class="p-4 border-b border-border bg-muted/20 flex items-center justify-between">
                         <div>
-                            <h2 class="font-semibold text-sm">Konfigurasi Fitur: <span class="text-emerald-600 dark:text-emerald-400">{{ selectedUser.name }}</span></h2>
+                            <h2 class="font-semibold text-sm">Konfigurasi Fitur: <span class="text-red-600 dark:text-red-400">{{ selectedUser.name }}</span></h2>
                             <p class="text-xs text-muted-foreground mt-0.5">{{ selectedUser.email }}</p>
                         </div>
                     </div>
@@ -132,8 +132,8 @@ function hasFeature(user, featureKey) {
                                         :class="[
                                             'text-[9px] px-1 py-0.5 rounded',
                                             hasFeature(selectedUser, feat.key)
-                                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                                                : 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300'
+                                                ? 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300'
+                                                : 'bg-muted text-muted-foreground'
                                         ]"
                                     >
                                         {{ hasFeature(selectedUser, feat.key) ? 'Aktif' : 'Non-aktif' }}
@@ -148,7 +148,7 @@ function hasFeature(user, featureKey) {
                                 :class="[
                                     'relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none shrink-0',
                                     hasFeature(selectedUser, feat.key)
-                                        ? 'bg-emerald-600 dark:bg-emerald-500'
+                                        ? 'bg-red-600 dark:bg-red-500'
                                         : 'bg-gray-300 dark:bg-gray-700',
                                 ]"
                                 role="switch"

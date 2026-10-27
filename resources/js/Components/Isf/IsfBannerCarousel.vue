@@ -122,7 +122,7 @@ const buttonClass =
         "
     >
         <div class="relative" :aria-live="running ? 'off' : 'polite'">
-            <!-- Full banner image with overlay editorial card on desktop -->
+            <!-- Clean banner slides: full clickable banner image optimized for SEO -->
             <div
                 v-for="(slide, i) in slides"
                 v-show="i === active"
@@ -133,36 +133,21 @@ const buttonClass =
                 :aria-hidden="i === active ? undefined : 'true'"
                 class="relative md:min-h-0"
             >
-                <ImagePlaceholder
-                    :label="slide.imageLabel || slide.title"
-                    :src="slide.imageUrl || ''"
-                    aspect="banner"
-                    bare
-                    class="w-full"
-                />
-
-                <div
-                    class="border-t border-neutral-300 bg-white p-4 sm:p-5 md:absolute md:bottom-5 md:left-5 md:max-w-[36rem] md:border md:bg-white md:p-6 lg:bottom-6 lg:left-6 lg:max-w-[42rem] shadow-sm"
+                <IsfLink
+                    :to="slide.to || '#'"
+                    :title="slide.imageLabel || slide.title || 'Buka tautan banner'"
+                    :aria-label="`Buka banner: ${slide.imageLabel || slide.title || 'Banner Sorotan'}`"
+                    class="group block relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red focus-visible:ring-offset-2"
                 >
-                    <p class="isf-kicker text-isf-red font-bold uppercase tracking-wider text-[11px] sm:text-xs">
-                        {{ slide.kicker }}
-                    </p>
-                    <h2
-                        class="isf-headline mt-1.5 text-[22px] leading-[1.15] sm:text-[26px] lg:text-[30px]"
-                    >
-                        <IsfLink
-                            :to="slide.to || '#'"
-                            class="hover:text-isf-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red focus-visible:ring-offset-2"
-                            >{{ slide.title }}</IsfLink
-                        >
-                    </h2>
-                    <p
-                        v-if="slide.deck"
-                        class="mt-2 max-w-[40rem] font-serif text-[15px] leading-[1.5] text-neutral-600 sm:text-[16px] lg:text-[17px]"
-                    >
-                        {{ slide.deck }}
-                    </p>
-                </div>
+                    <ImagePlaceholder
+                        :label="slide.imageLabel || slide.title || 'Banner Sorotan'"
+                        :src="slide.imageUrl || ''"
+                        :priority="i === 0"
+                        aspect="banner"
+                        bare
+                        class="w-full transition-transform duration-300 ease-out group-hover:scale-[1.008]"
+                    />
+                </IsfLink>
             </div>
         </div>
 

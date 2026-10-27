@@ -31,13 +31,47 @@ export default {
                     "sans-serif",
                 ],
                 montserrat: ["Montserrat", "sans-serif"],
-                // Tipografi editorial ISF untuk landing page (gaya Politico):
-                // judul bold sans (Barlow), deck serif abu-abu, body Roboto,
-                // label/nav/byline sans kecil (Barlow).
-                headline: ["Barlow", "Arial", "sans-serif"],
-                serif: ["Source Serif 4", "Georgia", "serif"],
-                body: ["Roboto", "Arial", "sans-serif"],
-                ui: ["Barlow", "Arial", "sans-serif"],
+                // Tipografi editorial ISF (Gaya Monocle / Antiqua):
+                // Script / Tulisan Sambung Latin Klasik:
+                script: ["'Pinyon Script'", "cursive"],
+                // Masthead / Wordmark koran klasik:
+                masthead: [
+                    "Playfair Display",
+                    "Newsreader",
+                    "Plantin",
+                    "Georgia",
+                    "serif",
+                ],
+                // Headline & Serif: Antiqua / Plantin (Newsreader / Georgia)
+                // Body & UI: Neo-Grotesque (Inter / Helvetica Neue)
+                headline: [
+                    "Newsreader",
+                    "Plantin",
+                    "Georgia",
+                    "serif",
+                ],
+                serif: [
+                    "Newsreader",
+                    "Plantin",
+                    "Georgia",
+                    "serif",
+                ],
+                body: [
+                    "Inter",
+                    "-apple-system",
+                    "BlinkMacSystemFont",
+                    "Helvetica Neue",
+                    "Arial",
+                    "sans-serif",
+                ],
+                ui: [
+                    "Inter",
+                    "-apple-system",
+                    "BlinkMacSystemFont",
+                    "Helvetica Neue",
+                    "Barlow",
+                    "sans-serif",
+                ],
             },
             colors: {
                 // ISF brand identity (from the ISF logo)

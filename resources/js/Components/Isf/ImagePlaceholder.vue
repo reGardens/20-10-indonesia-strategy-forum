@@ -36,6 +36,10 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    priority: {
+        type: Boolean,
+        default: false,
+    },
     class: {
         type: String,
         default: "",
@@ -84,7 +88,9 @@ const imageClasses = computed(() =>
             :src="src"
             :alt="label"
             :class="imageClasses"
-            loading="lazy"
+            :loading="priority ? 'eager' : 'lazy'"
+            :fetchpriority="priority ? 'high' : 'auto'"
+            decoding="async"
         />
         <div v-else role="img" :aria-label="label" :class="boxClasses">
             <IconPhoto

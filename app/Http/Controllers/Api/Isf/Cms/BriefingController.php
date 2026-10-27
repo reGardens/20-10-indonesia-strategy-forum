@@ -18,7 +18,7 @@ class BriefingController extends CmsResourceController
 
     protected array $searchColumns = ['ringkasan_judul', 'penerima', 'organisasi'];
 
-    protected array $order = ['tanggal' => 'desc', 'id' => 'desc'];
+    protected array $order = ['id' => 'desc'];
 
     public function show(Briefing $briefing): JsonResponse
     {

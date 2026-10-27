@@ -119,16 +119,15 @@ const headlineLinkClass =
                         </CardHeader>
 
                         <CardContent class="px-0 pb-0 pt-0">
-                            <!-- 01 Ringkasan Isu -->
+                            <!-- Ringkasan Isu -->
                             <section
                                 aria-labelledby="fw-01"
                                 class="isf-hairline-top space-y-3 py-7"
                             >
                                 <h2
                                     id="fw-01"
-                                    class="isf-headline flex items-baseline gap-3 font-headline text-[24px] leading-[1.15]"
+                                    class="isf-headline font-headline text-[24px] leading-[1.15]"
                                 >
-                                    <span class="isf-kicker">01</span>
                                     Ringkasan Isu
                                 </h2>
                                 <p
@@ -138,16 +137,15 @@ const headlineLinkClass =
                                 </p>
                             </section>
 
-                            <!-- 02 Visual Kunci -->
+                            <!-- Visual Kunci -->
                             <section
                                 aria-labelledby="fw-02"
                                 class="isf-hairline-top space-y-4 py-7"
                             >
                                 <h2
                                     id="fw-02"
-                                    class="isf-headline flex items-baseline gap-3 font-headline text-[24px] leading-[1.15]"
+                                    class="isf-headline font-headline text-[24px] leading-[1.15]"
                                 >
-                                    <span class="isf-kicker">02</span>
                                     Visual Kunci
                                 </h2>
                                 <template v-if="fw.visualKunci">
@@ -185,16 +183,15 @@ const headlineLinkClass =
                                 </p>
                             </section>
 
-                            <!-- 03 Fakta Kunci & Linimasa -->
+                            <!-- Fakta Kunci & Linimasa -->
                             <section
                                 aria-labelledby="fw-03"
                                 class="isf-hairline-top space-y-4 py-7"
                             >
                                 <h2
                                     id="fw-03"
-                                    class="isf-headline flex items-baseline gap-3 font-headline text-[24px] leading-[1.15]"
+                                    class="isf-headline font-headline text-[24px] leading-[1.15]"
                                 >
-                                    <span class="isf-kicker">03</span>
                                     Fakta Kunci &amp; Linimasa
                                 </h2>
                                 <FactBlock
@@ -231,16 +228,15 @@ const headlineLinkClass =
                                 </ol>
                             </section>
 
-                            <!-- 04 Aktor & Posisi -->
+                            <!-- Aktor & Posisi -->
                             <section
                                 aria-labelledby="fw-04"
                                 class="isf-hairline-top space-y-4 py-7"
                             >
                                 <h2
                                     id="fw-04"
-                                    class="isf-headline flex items-baseline gap-3 font-headline text-[24px] leading-[1.15]"
+                                    class="isf-headline font-headline text-[24px] leading-[1.15]"
                                 >
-                                    <span class="isf-kicker">04</span>
                                     Aktor &amp; Posisi
                                 </h2>
                                 <ul
@@ -293,16 +289,15 @@ const headlineLinkClass =
                                 </ul>
                             </section>
 
-                            <!-- 05 Lensa GRC -->
+                            <!-- Lensa GRC -->
                             <section
                                 aria-labelledby="fw-05"
                                 class="isf-hairline-top space-y-5 py-7"
                             >
                                 <h2
                                     id="fw-05"
-                                    class="isf-headline flex items-baseline gap-3 font-headline text-[24px] leading-[1.15]"
+                                    class="isf-headline font-headline text-[24px] leading-[1.15]"
                                 >
-                                    <span class="isf-kicker">05</span>
                                     Lensa GRC
                                 </h2>
                                 <div class="space-y-2">
@@ -396,16 +391,15 @@ const headlineLinkClass =
                                 </div>
                             </section>
 
-                            <!-- 06 Dampak & Reaksi -->
+                            <!-- Dampak & Reaksi -->
                             <section
                                 aria-labelledby="fw-06"
                                 class="isf-hairline-top space-y-4 py-7"
                             >
                                 <h2
                                     id="fw-06"
-                                    class="isf-headline flex items-baseline gap-3 font-headline text-[24px] leading-[1.15]"
+                                    class="isf-headline font-headline text-[24px] leading-[1.15]"
                                 >
-                                    <span class="isf-kicker">06</span>
                                     Dampak &amp; Reaksi
                                 </h2>
                                 <h3 class="font-semibold">Dampak sektoral</h3>
@@ -441,16 +435,15 @@ const headlineLinkClass =
                                 </ul>
                             </section>
 
-                            <!-- 07 Apa Selanjutnya -->
+                            <!-- Apa Selanjutnya -->
                             <section
                                 aria-labelledby="fw-07"
                                 class="isf-hairline-top space-y-4 py-7"
                             >
                                 <h2
                                     id="fw-07"
-                                    class="isf-headline flex items-baseline gap-3 font-headline text-[24px] leading-[1.15]"
+                                    class="isf-headline font-headline text-[24px] leading-[1.15]"
                                 >
-                                    <span class="isf-kicker">07</span>
                                     Apa Selanjutnya
                                 </h2>
                                 <ol class="space-y-3">

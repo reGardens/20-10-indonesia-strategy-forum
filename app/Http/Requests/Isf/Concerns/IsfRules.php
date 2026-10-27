@@ -55,10 +55,16 @@ trait IsfRules
         ];
     }
 
-    /** Absolute http(s) URL (sources, images). */
+    /** Absolute http(s) URL or in-site storage path ("/storage/...") for images/sources. */
     protected function urlRules(bool $required = false): array
     {
-        return [$required ? 'required' : 'nullable', 'string', 'max:255', 'url:http,https'];
+        return [
+            $required ? 'required' : 'nullable',
+            'string',
+            'max:500',
+            'starts_with:/,https://,http://',
+            'not_regex:/^\/\//',
+        ];
     }
 
     /** Plain text value. */

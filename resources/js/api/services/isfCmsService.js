@@ -23,24 +23,48 @@ export function createCmsResource(path) {
 
 export const cmsResources = {
   banner: createCmsResource('banner'),
-  artikel: createCmsResource('artikel'),
+  artikel: {
+    ...createCmsResource('artikel'),
+    setHero: (id) => http.post(`/cms/artikel/${id}/hero`).then((r) => r.data)
+  },
   infografik: createCmsResource('infografik'),
   tokoh: createCmsResource('tokoh'),
   isu: createCmsResource('isu'),
   dataGrafik: createCmsResource('data-grafik'),
   alert: createCmsResource('alert'),
-  emailBriefing: createCmsResource('email-briefing')
+  emailBriefing: createCmsResource('email-briefing'),
+  runningText: createCmsResource('running-text'),
+  mediaSorotan: createCmsResource('media-sorotan'),
+  kategori: createCmsResource('kategori')
 }
 
 /** Pengaturan Halaman (singleton): { beranda, anggota } */
 export const settings = {
   get: () => http.get('/cms/pengaturan-halaman').then((r) => r.data.data),
-  put: (data) => http.put('/cms/pengaturan-halaman', data).then((r) => r.data.data)
+  put: (data) => http.put('/cms/pengaturan-halaman', data).then((r) => r.data.data),
+  update: (data) => http.put('/cms/pengaturan-halaman', data).then((r) => r.data.data)
+}
+
+/** Running Text (Teks Sorotan) standalone service */
+export const runningTextService = {
+  ...cmsResources.runningText,
+  saveAll: (items) => http.put('/cms/running-text', { items }).then((r) => r.data.data)
+}
+
+/** Media Sorotan standalone service */
+export const mediaSorotanService = {
+  ...cmsResources.mediaSorotan,
+  saveAll: (items) => http.put('/cms/media-sorotan', { items }).then((r) => r.data.data)
 }
 
 /** Data Grafik options for the isu "Visual Kunci" select: [{ id, title, status }] */
 export function chartOptions() {
   return http.get('/cms/options/charts').then((r) => r.data.data)
+}
+
+/** Category options for dropdown pickers across CMS modules: [{ id, value, label, color }] */
+export function categoryOptions() {
+  return http.get('/cms/options/categories').then((r) => r.data.data)
 }
 
 /** First readable message from an API error. */

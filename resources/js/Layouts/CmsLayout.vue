@@ -107,15 +107,14 @@ function logout() {
                     href="/cms/dashboard"
                     class="flex items-center gap-2.5 font-bold"
                 >
-                    <div
-                        class="flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-600 shadow-sm shadow-emerald-600/30"
-                    >
-                        <span class="text-white text-xs font-black tracking-wider">ISF</span>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="text-xs font-extrabold tracking-tight text-foreground leading-none">Indonesia Strategy</span>
-                        <span class="text-[10px] tracking-wider uppercase font-semibold text-emerald-500 mt-0.5">Forum CMS</span>
-                    </div>
+                    <img
+                        src="/images/isf/logo-isf.jpeg"
+                        alt="ISF Logo"
+                        class="w-9 h-9 rounded-lg object-cover shadow-sm border border-neutral-700/60 shrink-0"
+                        width="36"
+                        height="36"
+                    />
+                    <span class="text-xs font-bold tracking-tight text-foreground leading-snug">Indonesia Strategy Forum</span>
                 </Link>
                 <button
                     class="ml-auto lg:hidden"
@@ -143,8 +142,14 @@ function logout() {
                     <IconComponent name="Menu2" class="h-5 w-5" />
                 </button>
                 <div class="flex items-center gap-2 lg:hidden">
-                    <div class="flex items-center justify-center w-7 h-7 rounded bg-emerald-600 text-white text-[10px] font-bold">ISF</div>
-                    <span class="text-sm font-bold">ISF CMS</span>
+                    <img
+                        src="/images/isf/logo-isf.jpeg"
+                        alt="ISF Logo"
+                        class="w-7 h-7 rounded object-cover shadow-sm border border-neutral-700/60 shrink-0"
+                        width="28"
+                        height="28"
+                    />
+                    <span class="text-xs font-bold">Indonesia Strategy Forum</span>
                 </div>
 
                 <div class="flex-1" />
@@ -183,11 +188,11 @@ function logout() {
                         class="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-accent transition-colors"
                     >
                         <div
-                            class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center"
+                            class="w-8 h-8 rounded-full bg-red-100 dark:bg-red-950/60 flex items-center justify-center border border-red-500/20"
                         >
                             <IconComponent
                                 name="User"
-                                class="h-4 w-4 text-emerald-600 dark:text-emerald-400"
+                                class="h-4 w-4 text-red-600 dark:text-red-400"
                             />
                         </div>
                         <div class="hidden sm:flex sm:flex-col sm:items-start">
@@ -227,7 +232,7 @@ function logout() {
                                     {{ user?.email }}
                                 </p>
                                 <p
-                                    class="text-xs text-emerald-600 dark:text-emerald-400 capitalize mt-0.5"
+                                    class="text-xs text-red-600 dark:text-red-400 capitalize mt-0.5"
                                 >
                                     {{ userRole }}
                                 </p>
@@ -271,10 +276,10 @@ function logout() {
     background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(16, 185, 129, 0.2);
+    background: rgba(220, 38, 38, 0.2);
     border-radius: 10px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(16, 185, 129, 0.4);
+    background: rgba(220, 38, 38, 0.4);
 }
 </style>

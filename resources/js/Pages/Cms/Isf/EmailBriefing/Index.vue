@@ -104,13 +104,13 @@ onMounted(() => {
 <template>
   <Head title="Kelola Email Briefing — Indonesia Strategy Forum" />
 
-  <div class="p-6 space-y-6 max-w-7xl mx-auto">
+  <div class="p-6 space-y-6 w-full">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
       <div>
         <h1 class="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
           <span>Kelola Email Briefing</span>
-          <Badge class="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs">
+          <Badge class="bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 text-xs">
             {{ meta.total }} Total
           </Badge>
         </h1>
@@ -119,7 +119,7 @@ onMounted(() => {
         </p>
       </div>
       <Link href="/cms/email-briefing/create">
-        <Button class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm shadow-sm inline-flex items-center gap-1.5">
+        <Button class="bg-red-600 hover:bg-red-700 text-white font-medium text-sm shadow-sm inline-flex items-center gap-1.5">
           <IconComponent name="Plus" :size="16" />
           <span>Buat Briefing Baru</span>
         </Button>
@@ -142,37 +142,46 @@ onMounted(() => {
         />
       </div>
 
-      <div class="flex items-center gap-2 w-full sm:w-auto">
-        <button
-          type="button"
-          @click="onStatusChange('')"
-          :class="[
-            'px-3 py-1.5 rounded-lg text-xs font-medium transition',
-            statusFilter === '' ? 'bg-primary text-primary-foreground' : 'bg-card text-muted-foreground hover:bg-accent border border-border'
-          ]"
-        >
-          Semua
-        </button>
-        <button
-          type="button"
-          @click="onStatusChange('terbit')"
-          :class="[
-            'px-3 py-1.5 rounded-lg text-xs font-medium transition',
-            statusFilter === 'terbit' ? 'bg-emerald-600 text-white' : 'bg-card text-muted-foreground hover:bg-accent border border-border'
-          ]"
-        >
-          Terbit
-        </button>
-        <button
-          type="button"
-          @click="onStatusChange('draf')"
-          :class="[
-            'px-3 py-1.5 rounded-lg text-xs font-medium transition',
-            statusFilter === 'draf' ? 'bg-slate-700 text-white' : 'bg-card text-muted-foreground hover:bg-accent border border-border'
-          ]"
-        >
-          Draf
-        </button>
+      <div class="flex items-center gap-2 overflow-x-auto">
+        <span class="text-xs text-muted-foreground whitespace-nowrap">Status:</span>
+        <div class="flex gap-1">
+          <button
+            type="button"
+            @click="onStatusChange('')"
+            :class="[
+              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+              statusFilter === ''
+                ? 'bg-red-600 text-white'
+                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+            ]"
+          >
+            Semua
+          </button>
+          <button
+            type="button"
+            @click="onStatusChange('terbit')"
+            :class="[
+              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+              statusFilter === 'terbit'
+                ? 'bg-emerald-600 text-white'
+                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+            ]"
+          >
+            Terbit
+          </button>
+          <button
+            type="button"
+            @click="onStatusChange('draf')"
+            :class="[
+              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+              statusFilter === 'draf'
+                ? 'bg-amber-600 text-white'
+                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+            ]"
+          >
+            Draf
+          </button>
+        </div>
       </div>
     </div>
 
@@ -219,31 +228,33 @@ onMounted(() => {
             <TableCell class="text-xs text-muted-foreground">
               {{ formatDate(item.tanggal) }}
             </TableCell>
-            <TableCell class="text-right space-x-1">
-              <a
-                :href="`/cms/email-briefing/${item.id}/preview`"
-                target="_blank"
-                class="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs border border-border bg-card text-foreground hover:bg-accent transition"
-                title="Buka pratinjau surel di tab baru"
-              >
-                <IconComponent name="ExternalLink" :size="12" />
-                <span>Pratinjau</span>
-              </a>
-              <Link :href="`/cms/email-briefing/${item.id}/edit`">
-                <Button variant="outline" size="sm" class="h-8 text-xs hover:bg-emerald-500/10 hover:text-emerald-500 hover:border-emerald-500">
-                  <IconComponent name="Edit" :size="14" class="mr-1" />
-                  Edit
+            <TableCell class="text-right">
+              <div class="flex items-center justify-end gap-1.5">
+                <a
+                  :href="`/cms/email-briefing/${item.id}/preview`"
+                  target="_blank"
+                  class="h-8 px-2.5 inline-flex items-center gap-1 rounded-md text-xs font-medium border border-border bg-card text-foreground hover:bg-accent transition"
+                  title="Buka pratinjau surel di tab baru"
+                >
+                  <IconComponent name="ExternalLink" :size="13" />
+                  <span>Pratinjau</span>
+                </a>
+                <Link :href="`/cms/email-briefing/${item.id}/edit`">
+                  <Button variant="outline" size="sm" class="h-8 px-2.5 text-xs font-medium hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center">
+                    <IconComponent name="Edit" :size="14" class="mr-1" />
+                    Edit
+                  </Button>
+                </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="h-8 px-2.5 text-xs font-medium text-red-500 border-red-500/30 hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center"
+                  @click="handleDelete(item)"
+                >
+                  <IconComponent name="Trash" :size="14" class="mr-1" />
+                  Hapus
                 </Button>
-              </Link>
-              <Button
-                variant="destructive"
-                size="sm"
-                class="h-8 text-xs"
-                @click="handleDelete(item)"
-              >
-                <IconComponent name="Trash" :size="14" class="mr-1" />
-                Hapus
-              </Button>
+              </div>
             </TableCell>
           </TableRow>
         </TableBody>

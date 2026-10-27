@@ -20,6 +20,10 @@ class ChartRequest extends FormRequest
         return [
             'title' => $this->textRules(),
             'description' => $this->textRules(false, 1000),
+            'author_name' => $this->textRules(false, 100),
+            'author_role' => $this->textRules(false, 100),
+            'author_avatar' => ['nullable', 'string', 'max:1000'],
+            'read_more_url' => $this->linkRules(),
             'unit' => $this->textRules(false, 20),
             'data' => ['required', 'array', 'min:1', 'max:30'],
             'data.*.label' => $this->textRules(true, 100),
@@ -27,6 +31,7 @@ class ChartRequest extends FormRequest
             'source_title' => $this->textRules(false),
             'source_url' => $this->urlRules(),
             'is_beranda' => ['boolean'],
+            'order' => ['nullable', 'integer'],
             'status' => $this->statusRules(),
         ];
     }

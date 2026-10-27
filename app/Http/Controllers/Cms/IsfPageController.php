@@ -26,6 +26,9 @@ class IsfPageController extends Controller
         'data-grafik' => 'DataGrafik',
         'alert' => 'Alert',
         'email-briefing' => 'EmailBriefing',
+        'running-text' => 'RunningText',
+        'media-sorotan' => 'MediaSorotan',
+        'kategori' => 'Kategori',
     ];
 
     public function index(Request $request): Response
@@ -47,7 +50,17 @@ class IsfPageController extends Controller
 
     public function settings(): Response
     {
-        return Inertia::render('Cms/Isf/PengaturanHalaman/Index');
+        return Inertia::render('Cms/Isf/RunningText/Index');
+    }
+
+    public function runningText(): Response
+    {
+        return Inertia::render('Cms/Isf/RunningText/Index');
+    }
+
+    public function mediaSorotan(): Response
+    {
+        return Inertia::render('Cms/Isf/MediaSorotan/Index');
     }
 
     /**

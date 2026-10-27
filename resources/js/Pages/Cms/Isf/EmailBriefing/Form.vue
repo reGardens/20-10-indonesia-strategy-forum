@@ -8,6 +8,7 @@ import { STATUSES } from '@/Pages/Cms/Isf/options'
 import RepeatableRows from '@/Pages/Cms/components/shared/RepeatableRows.vue'
 import LoadingIndicator from '@/Pages/Cms/components/shared/LoadingIndicator.vue'
 import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
+import StatusSelectWithBadge from '@/Components/Cms/StatusSelectWithBadge.vue'
 import {
   Button,
   Input,
@@ -16,7 +17,8 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardContent
+  CardContent,
+  DatePicker
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -78,7 +80,7 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
 <template>
   <Head :title="(isEdit ? 'Edit Email Briefing' : 'Buat Email Briefing') + ' — Indonesia Strategy Forum'" />
 
-  <div class="p-6 space-y-6 max-w-5xl mx-auto">
+  <div class="p-6 space-y-6 w-full">
     <!-- Header -->
     <div class="flex items-center justify-between pb-4 border-b border-border">
       <div class="flex items-center gap-3">
@@ -115,7 +117,7 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
           type="button"
           @click="save"
           :disabled="saving"
-          class="h-9 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 shadow-sm"
+          class="h-9 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-4 shadow-sm"
         >
           <IconComponent v-if="saving" name="Refresh" :size="14" class="mr-1.5 animate-spin" />
           <IconComponent v-else name="Check" :size="14" class="mr-1.5" />
@@ -150,11 +152,9 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="space-y-1.5">
               <Label for="tanggal" class="text-xs font-medium">Tanggal Briefing <span class="text-red-500">*</span></Label>
-              <Input
+              <DatePicker
                 id="tanggal"
-                type="date"
                 v-model="form.tanggal"
-                class="h-9 text-xs"
               />
             </div>
 
@@ -168,18 +168,12 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
               />
             </div>
 
-            <div class="space-y-1.5">
-              <Label for="status" class="text-xs font-medium">Status <span class="text-red-500">*</span></Label>
-              <select
-                id="status"
-                v-model="form.status"
-                class="w-full h-9 rounded-md border border-input bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring font-medium"
-              >
-                <option v-for="st in STATUSES" :key="st.value" :value="st.value">
-                  {{ st.label }}
-                </option>
-              </select>
-            </div>
+            <StatusSelectWithBadge
+              id="status-briefing"
+              v-model="form.status"
+              label="Status"
+              :required="true"
+            />
           </div>
 
           <div class="space-y-1.5">
@@ -273,23 +267,7 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
         :max="10"
       />
 
-      <div class="flex items-center justify-end gap-3 pt-2">
-        <Link href="/cms/email-briefing">
-          <Button variant="outline" size="sm" class="h-9 text-xs">
-            Batal
-          </Button>
-        </Link>
-        <Button
-          type="button"
-          @click="save"
-          :disabled="saving"
-          class="h-9 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-5 shadow-sm"
-        >
-          <IconComponent v-if="saving" name="Refresh" :size="14" class="mr-1.5 animate-spin" />
-          <IconComponent v-else name="Check" :size="14" class="mr-1.5" />
-          {{ saving ? 'Menyimpan...' : 'Simpan Briefing' }}
-        </Button>
-      </div>
+      <!-- Bottom buttons removed per requirement (top bar only) -->
     </form>
   </div>
 </template>

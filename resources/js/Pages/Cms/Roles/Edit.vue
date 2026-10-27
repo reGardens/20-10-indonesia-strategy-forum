@@ -23,11 +23,28 @@ function submit() {
     <Head :title="t('role.edit_role')" />
 
     <div class="p-6 space-y-6">
-        <h1 class="text-2xl font-bold tracking-tight">
-            {{ t("role.edit_role") }}
-        </h1>
+        <div class="flex items-center justify-between pb-4 border-b border-border">
+            <h1 class="text-2xl font-bold tracking-tight">
+                {{ t("role.edit_role") }}
+            </h1>
+            <div class="flex items-center gap-2">
+                <Link href="/cms/roles">
+                    <Button type="button" variant="outline" size="sm" class="h-9 text-xs">
+                        {{ t("common.cancel") }}
+                    </Button>
+                </Link>
+                <Button
+                    type="button"
+                    @click="submit"
+                    :disabled="form.processing"
+                    class="h-9 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-4 shadow-sm"
+                >
+                    {{ t("common.save") }}
+                </Button>
+            </div>
+        </div>
 
-        <div class="max-w-md">
+        <div class="w-full">
             <form @submit.prevent="submit" class="space-y-5">
                 <div class="space-y-2">
                     <Label for="name">{{ t("role.name") }}</Label>
@@ -39,21 +56,6 @@ function submit() {
                     <p v-if="form.errors.name" class="text-sm text-destructive">
                         {{ form.errors.name }}
                     </p>
-                </div>
-
-                <div class="flex items-center gap-4">
-                    <Button
-                        type="submit"
-                        :disabled="form.processing"
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-emerald-500 dark:hover:bg-emerald-600"
-                    >
-                        {{ t("common.save") }}
-                    </Button>
-                    <Link href="/cms/roles">
-                        <Button type="button" variant="outline">{{
-                            t("common.cancel")
-                        }}</Button>
-                    </Link>
                 </div>
             </form>
         </div>

@@ -7,6 +7,7 @@ import { useCmsForm } from '@/Composables/useCmsForm'
 import { PRIORITIES, STATUSES } from '@/Pages/Cms/Isf/options'
 import LoadingIndicator from '@/Pages/Cms/components/shared/LoadingIndicator.vue'
 import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
+import StatusSelectWithBadge from '@/Components/Cms/StatusSelectWithBadge.vue'
 import {
   Button,
   Input,
@@ -15,7 +16,8 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardContent
+  CardContent,
+  DatePicker
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -46,7 +48,7 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
 <template>
   <Head :title="(isEdit ? 'Edit Alert' : 'Tambah Alert Baru') + ' — Indonesia Strategy Forum'" />
 
-  <div class="p-6 space-y-6 max-w-4xl mx-auto">
+  <div class="p-6 space-y-6 w-full">
     <!-- Header -->
     <div class="flex items-center justify-between pb-4 border-b border-border">
       <div class="flex items-center gap-3">
@@ -74,7 +76,7 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
           type="button"
           @click="save"
           :disabled="saving"
-          class="h-9 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 shadow-sm"
+          class="h-9 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-4 shadow-sm"
         >
           <IconComponent v-if="saving" name="Refresh" :size="14" class="mr-1.5 animate-spin" />
           <IconComponent v-else name="Check" :size="14" class="mr-1.5" />
@@ -109,15 +111,22 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="space-y-1.5">
               <Label for="priority" class="text-xs font-medium">Tingkat Prioritas <span class="text-red-500">*</span></Label>
-              <select
-                id="priority"
-                v-model="form.priority"
-                class="w-full h-9 rounded-md border border-input bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring font-medium"
-              >
-                <option v-for="p in PRIORITIES" :key="p.value" :value="p.value">
-                  {{ p.label }}
-                </option>
-              </select>
+              <div class="relative">
+                <select
+                  id="priority"
+                  v-model="form.priority"
+                  class="w-full h-9 rounded-md border border-input bg-background pl-3 pr-9 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring font-medium appearance-none"
+                >
+                  <option v-for="p in PRIORITIES" :key="p.value" :value="p.value">
+                    {{ p.label }}
+                  </option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground">
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
             </div>
 
             <div class="space-y-1.5">
@@ -133,11 +142,9 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
 
             <div class="space-y-1.5">
               <Label for="date" class="text-xs font-medium">Tanggal Alert <span class="text-red-500">*</span></Label>
-              <Input
+              <DatePicker
                 id="date"
-                type="date"
                 v-model="form.date"
-                class="h-9 text-xs"
               />
             </div>
           </div>
@@ -166,39 +173,17 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
               <p class="text-[11px] text-muted-foreground">Tautan detail rujukan analisis atau dokumen primer.</p>
             </div>
 
-            <div class="space-y-1.5">
-              <Label for="status" class="text-xs font-medium">Status <span class="text-red-500">*</span></Label>
-              <select
-                id="status"
-                v-model="form.status"
-                class="w-full h-9 rounded-md border border-input bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring font-medium"
-              >
-                <option v-for="st in STATUSES" :key="st.value" :value="st.value">
-                  {{ st.label }}
-                </option>
-              </select>
-            </div>
+            <StatusSelectWithBadge
+              id="status-alert"
+              v-model="form.status"
+              label="Status"
+              :required="true"
+            />
           </div>
         </CardContent>
       </Card>
 
-      <div class="flex items-center justify-end gap-3 pt-2">
-        <Link href="/cms/alert">
-          <Button variant="outline" size="sm" class="h-9 text-xs">
-            Batal
-          </Button>
-        </Link>
-        <Button
-          type="button"
-          @click="save"
-          :disabled="saving"
-          class="h-9 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-5 shadow-sm"
-        >
-          <IconComponent v-if="saving" name="Refresh" :size="14" class="mr-1.5 animate-spin" />
-          <IconComponent v-else name="Check" :size="14" class="mr-1.5" />
-          {{ saving ? 'Menyimpan...' : 'Simpan Alert' }}
-        </Button>
-      </div>
+      <!-- Bottom buttons removed per requirement (top bar only) -->
     </form>
   </div>
 </template>

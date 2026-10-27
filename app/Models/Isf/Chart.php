@@ -17,11 +17,16 @@ class Chart extends Model
     protected $fillable = [
         'title',
         'description',
+        'author_name',
+        'author_role',
+        'author_avatar',
+        'read_more_url',
         'unit',
         'data',
         'source_title',
         'source_url',
         'is_beranda',
+        'order',
         'status',
     ];
 

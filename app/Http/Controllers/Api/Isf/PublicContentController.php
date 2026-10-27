@@ -36,6 +36,34 @@ class PublicContentController extends Controller
             'topBar' => ['badge' => '', 'announcement' => '', 'info' => ''],
             'pekanIni' => ['dateStart' => null, 'dateEnd' => null],
         ]);
+        $topBar = $settings['topBar'] ?? ['badge' => 'Sorotan', 'announcement' => '', 'info' => ''];
+        $topBars = $settings['topBars'] ?? null;
+        if ($topBars === null) {
+            $topBars = [
+                [
+                    'badge' => !empty($topBar['badge']) ? $topBar['badge'] : 'Sorotan',
+                    'announcement' => !empty($topBar['announcement']) ? $topBar['announcement'] : 'KUHP baru resmi berlaku sejak 2 Januari 2026 — simak dampaknya bagi dunia usaha.',
+                    'info' => !empty($topBar['info']) ? $topBar['info'] : 'Edisi Pekan Ini',
+                    'status' => 'terbit',
+                ],
+                [
+                    'badge' => 'Regulasi',
+                    'announcement' => 'DPR jadwalkan rapat kerja lanjutan pembahasan RUU Perampasan Aset bersama pemerintah.',
+                    'info' => 'Pembaruan Terkini',
+                    'status' => 'terbit',
+                ],
+                [
+                    'badge' => 'Kebijakan',
+                    'announcement' => 'Pedoman tata kelola dan kepatuhan ESG korporasi mulai diimplementasikan bertahap.',
+                    'info' => 'Sorotan Industri',
+                    'status' => 'terbit',
+                ],
+            ];
+        }
+        $activeTopBars = array_values(array_filter($topBars, fn ($item) => ($item['status'] ?? 'terbit') === 'terbit'));
+        if (empty($activeTopBars) && !empty($topBar['announcement'])) {
+            $activeTopBars = [$topBar];
+        }
 
         $banners = Banner::query()->terbit()
             ->orderBy('order', 'asc')
@@ -59,7 +87,13 @@ class PublicContentController extends Controller
         $infografik = Infographic::query()->terbit()
             ->orderByDesc('published_at')->orderByDesc('id')->limit(4)->get();
 
-        $chart = Chart::currentBeranda();
+        $charts = Chart::query()->terbit()
+            ->orderByDesc('is_beranda')
+            ->orderBy('order')
+            ->orderByDesc('updated_at')
+            ->orderByDesc('id')
+            ->get();
+        $chart = $charts->first();
 
         $pekanIniItems = [];
         if ($isu = Isu::currentWeekly()) {
@@ -69,12 +103,44 @@ class PublicContentController extends Controller
             $pekanIniItems[] = (new TokohResource($tokoh))->pekanIniItem();
         }
 
+        $mediaSorotan = $settings['mediaSorotan'] ?? [];
+        $activeMedia = array_values(array_filter($mediaSorotan, fn ($item) => ($item['status'] ?? 'terbit') === 'terbit'));
+        if (empty($activeMedia)) {
+            $activeMedia = [
+                [
+                    'id' => 1,
+                    'title' => 'Diskusi Panel: Transformasi Digital dan Kepatuhan Regulasi Perbankan',
+                    'imageUrl' => '/images/isf/ruu-kuhp.jpeg',
+                    'mediaUrl' => 'https://www.youtube.com',
+                    'category' => 'YouTube',
+                    'publishedAt' => '2026-10-20',
+                    'order' => 1,
+                    'status' => 'terbit',
+                ],
+                [
+                    'id' => 2,
+                    'title' => 'Sorotan Visual: Implikasi UU Energi Terbarukan bagi Sektor Industri',
+                    'imageUrl' => '/images/isf/ruu-energi.jpeg',
+                    'mediaUrl' => 'https://www.instagram.com',
+                    'category' => 'Instagram',
+                    'publishedAt' => '2026-10-18',
+                    'order' => 2,
+                    'status' => 'terbit',
+                ],
+            ];
+        }
+        usort($activeMedia, fn ($a, $b) => ($a['order'] ?? 0) <=> ($b['order'] ?? 0));
+        $mediaSorotan2 = array_slice($activeMedia, 0, 2);
+
         return response()->json([
             'topBar' => $settings['topBar'] ?? null,
+            'topBars' => $activeTopBars,
             'banners' => $banners,
             'hero' => $hero ? (new ArticleResource($hero))->hero() : null,
             'factBlocks' => $hero?->fact_blocks ?? [],
             'chart' => $chart ? (new ChartResource($chart))->resolve($request) : null,
+            'charts' => ChartResource::collection($charts)->resolve($request),
+            'mediaSorotan' => $mediaSorotan2,
             'terkini' => ArticleResource::collection($terkini)->resolve($request),
             'infografik' => InfographicResource::collection($infografik)->resolve($request),
             'pekanIni' => [
@@ -82,6 +148,19 @@ class PublicContentController extends Controller
                 'dateEnd' => $settings['pekanIni']['dateEnd'] ?? null,
                 'items' => $pekanIniItems,
             ],
+        ]);
+    }
+
+    /**
+     * GET /api/isf/infografik
+     */
+    public function infografik(Request $request): JsonResponse
+    {
+        $infografik = Infographic::query()->terbit()
+            ->orderByDesc('published_at')->orderByDesc('id')->get();
+
+        return response()->json([
+            'data' => InfographicResource::collection($infografik)->resolve($request),
         ]);
     }
 

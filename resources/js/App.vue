@@ -32,6 +32,7 @@ function handleRetry() {
   hasError.value = false;
   errorMessage.value = "";
 }
+
 </script>
 
 <style scoped>

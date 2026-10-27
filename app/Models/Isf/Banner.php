@@ -25,6 +25,12 @@ class Banner extends Model
         'status',
     ];
 
+    protected $attributes = [
+        'kicker' => 'Sorotan',
+        'status' => 'draf',
+        'order' => 0,
+    ];
+
     protected function casts(): array
     {
         return [

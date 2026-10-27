@@ -1,14 +1,15 @@
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { Head, Link } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
 import { cmsResources } from '@/api/services/isfCmsService'
 import { useCmsForm } from '@/Composables/useCmsForm'
-import { STATUSES } from '@/Pages/Cms/Isf/options'
 import RepeatableRows from '@/Pages/Cms/components/shared/RepeatableRows.vue'
 import StringListEditor from '@/Pages/Cms/components/shared/StringListEditor.vue'
 import LoadingIndicator from '@/Pages/Cms/components/shared/LoadingIndicator.vue'
 import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
+import ImageUploadTab from '@/Components/Cms/ImageUploadTab.vue'
+import StatusSelectWithBadge from '@/Components/Cms/StatusSelectWithBadge.vue'
 import {
   Button,
   Input,
@@ -77,14 +78,47 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
   }
 })
 
+const slugCustomized = ref(false)
+
+function generateSlug(val) {
+  if (!val) return ''
+  return val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
+}
+
 function onNameInput(e) {
-  if (!isEdit.value && !form.slug) {
-    form.slug = e.target.value
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)+/g, '')
+  const val = e.target.value
+  if (!val || !val.trim()) {
+    form.slug = ''
+    slugCustomized.value = false
+    return
+  }
+  if (!slugCustomized.value) {
+    form.slug = generateSlug(val)
   }
 }
+
+function onSlugInput(e) {
+  if (!e.target.value || !e.target.value.trim()) {
+    slugCustomized.value = false
+    form.slug = form.name ? generateSlug(form.name) : ''
+  } else {
+    slugCustomized.value = form.slug !== generateSlug(form.name)
+  }
+}
+
+watch(
+  () => form.name,
+  (newVal) => {
+    if (!newVal || !newVal.trim()) {
+      form.slug = ''
+      slugCustomized.value = false
+      return
+    }
+    if (!slugCustomized.value || !form.slug) {
+      form.slug = generateSlug(newVal)
+    }
+  }
+)
 
 function addMatrixRow() {
   const involvement = form.matrix_columns.map(() => false)
@@ -112,7 +146,7 @@ function onMatrixColumnsChange(newColumns) {
 <template>
   <Head :title="(isEdit ? 'Edit Tokoh' : 'Tambah Tokoh') + ' — Indonesia Strategy Forum'" />
 
-  <div class="p-6 space-y-6 max-w-5xl mx-auto">
+  <div class="p-6 space-y-6 w-full">
     <!-- Header -->
     <div class="flex items-center justify-between pb-4 border-b border-border">
       <div class="flex items-center gap-3">
@@ -140,7 +174,7 @@ function onMatrixColumnsChange(newColumns) {
           type="button"
           @click="save"
           :disabled="saving"
-          class="h-9 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 shadow-sm"
+          class="h-9 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-4 shadow-sm"
         >
           <IconComponent v-if="saving" name="Refresh" :size="14" class="mr-1.5 animate-spin" />
           <IconComponent v-else name="Check" :size="14" class="mr-1.5" />
@@ -180,9 +214,11 @@ function onMatrixColumnsChange(newColumns) {
               <Input
                 id="slug"
                 v-model="form.slug"
-                placeholder="budi-santoso"
+                @input="onSlugInput"
+                placeholder="Dibuat otomatis dari nama lengkap & gelar..."
                 class="h-9 font-mono text-xs"
               />
+              <p class="text-[11px] text-muted-foreground">Otomatis mengikuti nama lengkap & gelar. Bisa disesuaikan manual.</p>
               <p v-if="err('slug')" class="text-xs text-red-500 font-medium">{{ err('slug') }}</p>
             </div>
           </div>
@@ -199,29 +235,21 @@ function onMatrixColumnsChange(newColumns) {
               <p v-if="err('position')" class="text-xs text-red-500 font-medium">{{ err('position') }}</p>
             </div>
 
-            <div class="space-y-1.5">
-              <Label for="status" class="text-xs font-medium">Status Publikasi <span class="text-red-500">*</span></Label>
-              <select
-                id="status"
-                v-model="form.status"
-                class="w-full h-9 rounded-md border border-input bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring font-medium"
-              >
-                <option v-for="st in STATUSES" :key="st.value" :value="st.value">
-                  {{ st.label }}
-                </option>
-              </select>
-              <p v-if="err('status')" class="text-xs text-red-500 font-medium">{{ err('status') }}</p>
-            </div>
+            <StatusSelectWithBadge
+              id="status-tokoh"
+              v-model="form.status"
+              label="Status Publikasi"
+              :required="true"
+            />
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="space-y-1.5">
-              <Label for="photo_url" class="text-xs font-medium">URL Foto Profil</Label>
-              <Input
-                id="photo_url"
+              <Label class="text-xs font-medium">URL Foto Profil</Label>
+              <ImageUploadTab
                 v-model="form.photo_url"
+                aspect-class="aspect-square"
                 placeholder="https://..."
-                class="h-9 text-xs font-mono"
               />
               <p v-if="err('photo_url')" class="text-xs text-red-500 font-medium">{{ err('photo_url') }}</p>
             </div>
@@ -239,11 +267,11 @@ function onMatrixColumnsChange(newColumns) {
           </div>
 
           <div class="pt-2">
-            <label class="flex items-start gap-2.5 p-3 rounded-lg border border-border bg-card cursor-pointer hover:border-emerald-500/50 transition">
+            <label class="flex items-start gap-2.5 p-3 rounded-lg border border-border bg-card cursor-pointer hover:border-red-500/50 transition">
               <input
                 type="checkbox"
                 v-model="form.is_featured"
-                class="mt-0.5 rounded border-input text-emerald-600 focus:ring-emerald-500 h-4 w-4"
+                class="mt-0.5 rounded border-input text-red-600 focus:ring-red-500 h-4 w-4"
               />
               <div>
                 <div class="text-xs font-semibold text-foreground">Tokoh Pekan Ini (Featured on Beranda)</div>
@@ -349,7 +377,7 @@ function onMatrixColumnsChange(newColumns) {
                 size="sm"
                 variant="outline"
                 @click="addMatrixRow"
-                class="border-dashed border-emerald-500/50 text-emerald-600 dark:text-emerald-400 text-xs"
+                class="border-dashed border-red-500/50 text-red-600 dark:text-red-400 text-xs"
               >
                 <IconComponent name="Plus" :size="14" class="mr-1" />
                 Tambah Kebijakan
@@ -399,7 +427,7 @@ function onMatrixColumnsChange(newColumns) {
                     <input
                       type="checkbox"
                       v-model="row.involvement[cIdx]"
-                      class="rounded border-input text-emerald-600 focus:ring-emerald-500 h-3.5 w-3.5"
+                      class="rounded border-input text-red-600 focus:ring-red-500 h-3.5 w-3.5"
                     />
                     <span class="text-foreground text-xs">{{ col }}</span>
                   </label>
@@ -459,24 +487,7 @@ function onMatrixColumnsChange(newColumns) {
         </CardContent>
       </Card>
 
-      <!-- Bottom Actions -->
-      <div class="flex items-center justify-end gap-3 pt-2">
-        <Link href="/cms/tokoh">
-          <Button variant="outline" size="sm" class="h-9 text-xs">
-            Batal
-          </Button>
-        </Link>
-        <Button
-          type="button"
-          @click="save"
-          :disabled="saving"
-          class="h-9 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-5 shadow-sm"
-        >
-          <IconComponent v-if="saving" name="Refresh" :size="14" class="mr-1.5 animate-spin" />
-          <IconComponent v-else name="Check" :size="14" class="mr-1.5" />
-          {{ saving ? 'Menyimpan...' : 'Simpan Tokoh' }}
-        </Button>
-      </div>
+      <!-- Bottom buttons removed per requirement (top bar only) -->
     </form>
   </div>
 </template>

@@ -18,24 +18,41 @@ class SettingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Beranda: top bar + "Pekan Ini" period
+            // Beranda: top bar + media sorotan + period
             'beranda' => ['required', 'array'],
-            'beranda.topBar' => ['required', 'array'],
-            'beranda.topBar.badge' => $this->textRules(true, 50),
-            'beranda.topBar.announcement' => $this->textRules(true, 500),
-            'beranda.topBar.info' => $this->textRules(true, 100),
-            'beranda.pekanIni' => ['required', 'array'],
-            'beranda.pekanIni.dateStart' => $this->dateRules(),
-            'beranda.pekanIni.dateEnd' => [...$this->dateRules(), 'after_or_equal:beranda.pekanIni.dateStart'],
+            'beranda.topBar' => ['nullable', 'array'],
+            'beranda.topBar.badge' => $this->textRules(false, 50),
+            'beranda.topBar.announcement' => $this->textRules(false, 500),
+            'beranda.topBar.info' => $this->textRules(false, 100),
+            'beranda.topBars' => ['nullable', 'array'],
+            'beranda.topBars.*.id' => ['nullable'],
+            'beranda.topBars.*.badge' => $this->textRules(false, 50),
+            'beranda.topBars.*.announcement' => $this->textRules(false, 500),
+            'beranda.topBars.*.info' => $this->textRules(false, 100),
+            'beranda.topBars.*.status' => ['nullable', 'string'],
 
-            // Anggota: sample member profile on /anggota
-            'anggota' => ['required', 'array'],
-            'anggota.name' => $this->textRules(),
-            'anggota.role' => $this->textRules(),
-            'anggota.organization' => $this->textRules(),
-            'anggota.plan' => $this->textRules(),
+            'beranda.mediaSorotan' => ['nullable', 'array'],
+            'beranda.mediaSorotan.*.id' => ['nullable'],
+            'beranda.mediaSorotan.*.title' => $this->textRules(false, 255),
+            'beranda.mediaSorotan.*.imageUrl' => $this->urlRules(false, 500),
+            'beranda.mediaSorotan.*.mediaUrl' => $this->urlRules(false, 500),
+            'beranda.mediaSorotan.*.category' => $this->textRules(false, 100),
+            'beranda.mediaSorotan.*.publishedAt' => ['nullable', 'string'],
+            'beranda.mediaSorotan.*.order' => ['nullable', 'integer'],
+            'beranda.mediaSorotan.*.status' => ['nullable', 'string'],
+
+            'beranda.pekanIni' => ['nullable', 'array'],
+            'beranda.pekanIni.dateStart' => $this->dateRules(false),
+            'beranda.pekanIni.dateEnd' => $this->dateRules(false),
+
+            // Anggota: sample member profile on /anggota (optional)
+            'anggota' => ['nullable', 'array'],
+            'anggota.name' => $this->textRules(false),
+            'anggota.role' => $this->textRules(false),
+            'anggota.organization' => $this->textRules(false),
+            'anggota.plan' => $this->textRules(false),
             'anggota.sektor' => $this->listRules(20),
-            'anggota.sektor.*' => $this->textRules(true, 100),
+            'anggota.sektor.*' => $this->textRules(false, 100),
         ];
     }
 }

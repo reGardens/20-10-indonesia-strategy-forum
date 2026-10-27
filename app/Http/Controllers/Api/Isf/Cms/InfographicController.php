@@ -18,7 +18,7 @@ class InfographicController extends CmsResourceController
 
     protected array $searchColumns = ['title', 'slug'];
 
-    protected array $order = ['published_at' => 'desc', 'id' => 'desc'];
+    protected array $order = ['id' => 'desc'];
 
     public function show(Infographic $infographic): JsonResponse
     {
