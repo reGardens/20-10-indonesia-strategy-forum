@@ -18,7 +18,7 @@ class BannerController extends CmsResourceController
 
     protected array $searchColumns = ['title', 'kicker', 'deck'];
 
-    protected array $order = ['id' => 'desc'];
+    protected array $order = ['order' => 'asc', 'id' => 'asc'];
 
     public function show(Banner $banner): JsonResponse
     {
@@ -31,6 +31,9 @@ class BannerController extends CmsResourceController
         if (empty($data['kicker'])) {
             $data['kicker'] = 'Sorotan';
         }
+        if (!isset($data['order']) || $data['order'] === null || $data['order'] === '') {
+            $data['order'] = ((int) Banner::max('order')) + 1;
+        }
         return $this->storeModel($data);
     }
 
@@ -41,6 +44,21 @@ class BannerController extends CmsResourceController
             $data['kicker'] = $banner->kicker ?: 'Sorotan';
         }
         return $this->updateModel($banner, $data);
+    }
+
+    public function reorder(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'items' => 'required|array',
+            'items.*.id' => 'required|integer',
+            'items.*.order' => 'required|integer',
+        ]);
+
+        foreach ($validated['items'] as $item) {
+            Banner::where('id', $item['id'])->update(['order' => $item['order']]);
+        }
+
+        return response()->json(['message' => 'Urutan banner berhasil diperbarui.']);
     }
 
     public function destroy(Banner $banner): Response

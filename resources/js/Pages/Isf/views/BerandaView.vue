@@ -37,13 +37,13 @@ const terkini = computed(() => data.value?.terkini || []);
 const latestNews = computed(() => terkini.value.slice(0, 3));
 const mediaSorotan = computed(() => {
     if (data.value?.mediaSorotan?.length) {
-        return data.value.mediaSorotan.slice(0, 2);
+        return data.value.mediaSorotan.slice(0, 3);
     }
     return [
         {
             id: 1,
             title: 'Diskusi Panel: Transformasi Digital dan Kepatuhan Regulasi Perbankan',
-            imageUrl: '/images/isf/ruu-kuhp.jpeg',
+            imageUrl: '',
             mediaUrl: 'https://www.youtube.com',
             category: 'YouTube',
             publishedAt: '2026-10-20',
@@ -51,13 +51,26 @@ const mediaSorotan = computed(() => {
         {
             id: 2,
             title: 'Sorotan Visual: Implikasi UU Energi Terbarukan bagi Sektor Industri',
-            imageUrl: '/images/isf/ruu-energi.jpeg',
+            imageUrl: '',
             mediaUrl: 'https://www.instagram.com',
             category: 'Instagram',
             publishedAt: '2026-10-18',
         },
+        {
+            id: 3,
+            title: 'Kupas Tuntas: RUU Perampasan Aset dan Efek Jeranya bagi Koruptor',
+            imageUrl: '',
+            mediaUrl: 'https://www.tiktok.com',
+            category: 'TikTok',
+            publishedAt: '2026-10-16',
+        },
     ];
 });
+
+function isVerticalMedia(category) {
+    const cat = (category || '').toLowerCase();
+    return cat.includes('instagram') || cat.includes('tiktok') || cat.includes('reel') || cat.includes('short');
+}
 const infografik = computed(() => data.value?.infografik || []);
 const pekanIni = computed(() => data.value?.pekanIni || { items: [] });
 const bannerSlides = computed(() =>
@@ -259,39 +272,25 @@ const cellPad = "lg:px-4 xl:px-[30px]";
                                         :key="item.id || item.title"
                                         class="py-4 lg:py-5"
                                     >
-                                        <!-- Thumbnail with Video/Instagram badge & play overlay -->
+                                        <!-- Thumbnail with Platform category badge (YouTube 16:9 / Instagram & TikTok vertical 9:16) -->
                                         <a
                                             :href="item.mediaUrl"
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            class="group relative block aspect-[16/10] overflow-hidden rounded-xs bg-neutral-100 border border-neutral-300 shadow-2xs"
+                                            :class="[
+                                                'group relative block overflow-hidden rounded-xs bg-neutral-100 border border-neutral-300 shadow-2xs',
+                                                isVerticalMedia(item.category)
+                                                    ? 'aspect-[9/16] max-w-[240px] mx-auto'
+                                                    : 'aspect-video w-full'
+                                            ]"
                                         >
-                                            <img
-                                                v-if="item.imageUrl"
-                                                :src="item.imageUrl"
-                                                :alt="item.title"
-                                                class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                                loading="lazy"
-                                            />
                                             <ImagePlaceholder
-                                                v-else
                                                 :label="item.title"
-                                                aspect="card"
+                                                :src="item.imageUrl || ''"
+                                                :aspect="isVerticalMedia(item.category) ? 'reel' : 'video'"
                                                 bare
-                                                class="h-full w-full"
+                                                class="h-full w-full transition-transform duration-300 group-hover:scale-105"
                                             />
-                                            <div class="absolute inset-0 bg-black/25 group-hover:bg-black/15 transition-colors flex items-center justify-center">
-                                                <div class="flex h-11 w-11 items-center justify-center rounded-full bg-isf-red/90 text-white shadow-md transition-transform duration-200 group-hover:scale-110">
-                                                    <svg v-if="(item.category || '').toLowerCase().includes('instagram')" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                                                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                                                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                                                    </svg>
-                                                    <svg v-else class="h-5 w-5 translate-x-0.5" viewBox="0 0 24 24" fill="currentColor">
-                                                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                                                    </svg>
-                                                </div>
-                                            </div>
                                             <span class="absolute bottom-2 left-2 rounded bg-black/75 px-1.5 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider backdrop-blur-xs">
                                                 {{ item.category || 'Video' }}
                                             </span>

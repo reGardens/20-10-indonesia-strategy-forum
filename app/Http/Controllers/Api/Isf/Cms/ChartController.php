@@ -18,7 +18,7 @@ class ChartController extends CmsResourceController
 
     protected array $searchColumns = ['title', 'author_name'];
 
-    protected array $order = ['id' => 'desc'];
+    protected array $order = ['order' => 'asc', 'id' => 'asc'];
 
     /** Beranda chart currently shown on the public page. */
     protected function liveId(): ?int
@@ -33,12 +33,31 @@ class ChartController extends CmsResourceController
 
     public function store(ChartRequest $request): JsonResponse
     {
-        return $this->storeModel($request->validated());
+        $data = $request->validated();
+        if (!isset($data['order']) || $data['order'] === null || $data['order'] === '') {
+            $data['order'] = ((int) Chart::max('order')) + 1;
+        }
+        return $this->storeModel($data);
     }
 
     public function update(ChartRequest $request, Chart $chart): JsonResponse
     {
         return $this->updateModel($chart, $request->validated());
+    }
+
+    public function reorder(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'items' => 'required|array',
+            'items.*.id' => 'required|integer',
+            'items.*.order' => 'required|integer',
+        ]);
+
+        foreach ($validated['items'] as $item) {
+            Chart::where('id', $item['id'])->update(['order' => $item['order']]);
+        }
+
+        return response()->json(['message' => 'Urutan grafik berhasil diperbarui.']);
     }
 
     public function destroy(Chart $chart): Response

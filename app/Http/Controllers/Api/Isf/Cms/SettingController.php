@@ -196,6 +196,8 @@ class SettingController extends Controller
             }));
         }
 
+        usort($items, fn ($a, $b) => ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0)));
+
         return response()->json([
             'data' => $items,
             'total' => count($items),
@@ -234,6 +236,11 @@ class SettingController extends Controller
         $mediaSorotan = $beranda['mediaSorotan'] ?? ($this->current()['beranda']['mediaSorotan'] ?? []);
 
         $nextId = (int) (collect($mediaSorotan)->max('id') ?? 0) + 1;
+        $maxOrder = (int) (collect($mediaSorotan)->max('order') ?? 0);
+        $order = isset($validated['order']) && $validated['order'] !== null && $validated['order'] !== ''
+            ? (int) $validated['order']
+            : ($maxOrder + 1);
+
         $newItem = [
             'id' => $nextId,
             'title' => $validated['title'],
@@ -241,11 +248,12 @@ class SettingController extends Controller
             'mediaUrl' => $validated['mediaUrl'] ?? '',
             'category' => $validated['category'] ?: 'YouTube',
             'publishedAt' => $validated['publishedAt'] ?: date('Y-m-d'),
-            'order' => (int) ($validated['order'] ?? (count($mediaSorotan) + 1)),
+            'order' => $order,
             'status' => $validated['status'] ?: 'terbit',
         ];
 
         $mediaSorotan[] = $newItem;
+        usort($mediaSorotan, fn ($a, $b) => ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0)));
         $beranda['mediaSorotan'] = $mediaSorotan;
         Setting::put('beranda', $beranda);
 
@@ -282,6 +290,7 @@ class SettingController extends Controller
             'status' => $validated['status'] ?: 'terbit',
         ]);
 
+        usort($mediaSorotan, fn ($a, $b) => ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0)));
         $beranda['mediaSorotan'] = array_values($mediaSorotan);
         Setting::put('beranda', $beranda);
 
@@ -303,6 +312,9 @@ class SettingController extends Controller
     public function updateMediaSorotan(\Illuminate\Http\Request $request): JsonResponse
     {
         $items = $request->input('items', []);
+        if (is_array($items)) {
+            usort($items, fn ($a, $b) => ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0)));
+        }
         $beranda = Setting::get('beranda', []);
         $beranda['mediaSorotan'] = $items;
         Setting::put('beranda', $beranda);

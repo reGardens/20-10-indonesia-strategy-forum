@@ -36,7 +36,6 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
     name: '',
     slug: '',
     description: '',
-    color: '#ef4444',
     order: 0,
     status: 'terbit'
   }
@@ -64,17 +63,6 @@ function onNameInput(e) {
 function onSlugInput() {
   slugTouched = true
 }
-
-const colorPresets = [
-  { label: 'Merah', hex: '#dc2626' },
-  { label: 'Biru', hex: '#2563eb' },
-  { label: 'Hijau', hex: '#16a34a' },
-  { label: 'Ungu', hex: '#9333ea' },
-  { label: 'Oranye', hex: '#ea580c' },
-  { label: 'Kuning', hex: '#eab308' },
-  { label: 'Teal', hex: '#0d9488' },
-  { label: 'Abu-abu', hex: '#64748b' },
-]
 </script>
 
 <template>
@@ -128,7 +116,7 @@ const colorPresets = [
         <CardHeader class="pb-4">
           <CardTitle class="text-base font-semibold text-foreground">Informasi Kategori</CardTitle>
           <CardDescription class="text-xs text-muted-foreground">
-            Nama kategori, slug sistem, deskripsi, dan preferensi warna badge kategori.
+            Nama kategori, slug sistem, dan deskripsi kategori.
           </CardDescription>
         </CardHeader>
         <CardContent class="space-y-4">
@@ -174,55 +162,6 @@ const colorPresets = [
               class="w-full rounded-md border border-input bg-background px-3 py-2 text-xs text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             ></textarea>
             <p v-if="err('description')" class="text-xs text-red-400 mt-1">{{ err('description') }}</p>
-          </div>
-
-          <!-- Warna Badge & Urutan -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-            <!-- Warna -->
-            <div class="space-y-1.5">
-              <Label class="text-xs font-medium text-foreground">Warna Badge Kategori</Label>
-              <div class="flex items-center gap-2">
-                <input
-                  type="color"
-                  v-model="form.color"
-                  class="w-9 h-9 p-0.5 rounded border border-border bg-background cursor-pointer"
-                />
-                <Input
-                  v-model="form.color"
-                  placeholder="#dc2626"
-                  class="h-9 text-xs font-mono w-28"
-                />
-                <div class="flex gap-1 overflow-x-auto flex-1">
-                  <button
-                    v-for="p in colorPresets"
-                    :key="p.hex"
-                    type="button"
-                    @click="form.color = p.hex"
-                    :title="p.label"
-                    class="w-5 h-5 rounded-full border border-border/80 transition-transform hover:scale-110"
-                    :style="{ backgroundColor: p.hex }"
-                  ></button>
-                </div>
-              </div>
-              <p v-if="err('color')" class="text-xs text-red-400 mt-1">{{ err('color') }}</p>
-            </div>
-
-            <!-- Urutan -->
-            <div class="space-y-1.5">
-              <Label for="order" class="text-xs font-medium text-foreground">Urutan Tampil (Order)</Label>
-              <Input
-                id="order"
-                type="number"
-                min="0"
-                max="999"
-                v-model.number="form.order"
-                class="h-9 text-xs w-full"
-              />
-              <p class="text-[11px] text-muted-foreground">
-                Urutan dalam menu dan pilihan dropdown (dimulai dari angka terkecil).
-              </p>
-              <p v-if="err('order')" class="text-xs text-red-400 mt-1">{{ err('order') }}</p>
-            </div>
           </div>
         </CardContent>
       </Card>

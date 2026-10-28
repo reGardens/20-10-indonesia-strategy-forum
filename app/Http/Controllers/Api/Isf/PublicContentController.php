@@ -110,7 +110,7 @@ class PublicContentController extends Controller
                 [
                     'id' => 1,
                     'title' => 'Diskusi Panel: Transformasi Digital dan Kepatuhan Regulasi Perbankan',
-                    'imageUrl' => '/images/isf/ruu-kuhp.jpeg',
+                    'imageUrl' => '',
                     'mediaUrl' => 'https://www.youtube.com',
                     'category' => 'YouTube',
                     'publishedAt' => '2026-10-20',
@@ -120,17 +120,27 @@ class PublicContentController extends Controller
                 [
                     'id' => 2,
                     'title' => 'Sorotan Visual: Implikasi UU Energi Terbarukan bagi Sektor Industri',
-                    'imageUrl' => '/images/isf/ruu-energi.jpeg',
+                    'imageUrl' => '',
                     'mediaUrl' => 'https://www.instagram.com',
                     'category' => 'Instagram',
                     'publishedAt' => '2026-10-18',
                     'order' => 2,
                     'status' => 'terbit',
                 ],
+                [
+                    'id' => 3,
+                    'title' => 'Kupas Tuntas: RUU Perampasan Aset dan Efek Jeranya bagi Koruptor',
+                    'imageUrl' => '',
+                    'mediaUrl' => 'https://www.tiktok.com',
+                    'category' => 'TikTok',
+                    'publishedAt' => '2026-10-16',
+                    'order' => 3,
+                    'status' => 'terbit',
+                ],
             ];
         }
         usort($activeMedia, fn ($a, $b) => ($a['order'] ?? 0) <=> ($b['order'] ?? 0));
-        $mediaSorotan2 = array_slice($activeMedia, 0, 2);
+        $mediaSorotan3 = array_slice($activeMedia, 0, 3);
 
         return response()->json([
             'topBar' => $settings['topBar'] ?? null,
@@ -140,7 +150,7 @@ class PublicContentController extends Controller
             'factBlocks' => $hero?->fact_blocks ?? [],
             'chart' => $chart ? (new ChartResource($chart))->resolve($request) : null,
             'charts' => ChartResource::collection($charts)->resolve($request),
-            'mediaSorotan' => $mediaSorotan2,
+            'mediaSorotan' => $mediaSorotan3,
             'terkini' => ArticleResource::collection($terkini)->resolve($request),
             'infografik' => InfographicResource::collection($infografik)->resolve($request),
             'pekanIni' => [

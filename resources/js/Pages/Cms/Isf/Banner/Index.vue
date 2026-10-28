@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Head, Link } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
 import { cmsResources } from '@/api/services/isfCmsService'
@@ -27,11 +27,14 @@ const items = ref([])
 const meta = ref({ current_page: 1, last_page: 1, total: 0, per_page: 15 })
 const loading = ref(true)
 const errorMsg = ref('')
+const reordering = ref(false)
 
 const search = ref('')
 const statusFilter = ref('')
 const page = ref(1)
 let searchTimeout = null
+
+const isFiltered = computed(() => Boolean(search.value || statusFilter.value))
 
 async function loadData() {
   loading.value = true
@@ -42,7 +45,8 @@ async function loadData() {
       q: search.value || undefined,
       status: statusFilter.value || undefined
     })
-    items.value = res.data || []
+    const list = res.data || []
+    items.value = [...list].sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
     meta.value = {
       current_page: res.current_page || 1,
       last_page: res.last_page || 1,
@@ -73,6 +77,42 @@ function onStatusChange(val) {
 function onPageChange(newPage) {
   page.value = newPage
   loadData()
+}
+
+async function moveOrder(index, direction) {
+  const targetIndex = index + direction
+  if (targetIndex < 0 || targetIndex >= items.value.length) return
+  if (reordering.value) return
+
+  if (isFiltered.value) {
+    alertError('Harap reset pencarian dan filter status untuk mengubah urutan.')
+    return
+  }
+
+  reordering.value = true
+  const original = [...items.value]
+
+  try {
+    const updated = [...items.value]
+    const temp = updated[index]
+    updated[index] = updated[targetIndex]
+    updated[targetIndex] = temp
+
+    updated.forEach((it, idx) => {
+      it.order = idx + 1
+    })
+
+    items.value = updated
+
+    const payload = updated.map((it) => ({ id: it.id, order: it.order }))
+    await cmsResources.banner.reorder(payload)
+    alertSuccess('Urutan banner berhasil diperbarui.')
+  } catch (err) {
+    items.value = original
+    alertError(err?.response?.data?.message || 'Gagal memperbarui urutan banner.')
+  } finally {
+    reordering.value = false
+  }
 }
 
 async function handleDelete(item) {
@@ -181,7 +221,7 @@ onMounted(() => {
       <Table>
         <TableHeader class="bg-muted/30">
           <TableRow>
-            <TableHead class="w-14 text-center">Urutan</TableHead>
+            <TableHead class="w-24 text-center text-xs">Urutan</TableHead>
             <TableHead class="w-32">Gambar</TableHead>
             <TableHead>Nama Banner & Tautan</TableHead>
             <TableHead class="w-32">Status</TableHead>
@@ -190,12 +230,36 @@ onMounted(() => {
         </TableHeader>
         <TableBody>
           <TableRow
-            v-for="item in items"
+            v-for="(item, idx) in items"
             :key="item.id"
             class="hover:bg-muted/30 transition-colors"
           >
-            <TableCell class="text-center font-mono text-xs font-semibold text-muted-foreground">
-              #{{ item.order ?? 0 }}
+            <TableCell class="text-center text-xs">
+              <div class="inline-flex items-center justify-center gap-1.5">
+                <span class="font-mono font-bold text-foreground text-xs min-w-[1.25rem] text-center">
+                  {{ item.order ?? (idx + 1) }}
+                </span>
+                <div class="inline-flex flex-col gap-0.5">
+                  <button
+                    type="button"
+                    :title="isFiltered ? 'Reset filter untuk mengubah urutan' : 'Pindah Urutan Naik'"
+                    :disabled="idx === 0 || reordering || isFiltered"
+                    @click="moveOrder(idx, -1)"
+                    class="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-25 disabled:cursor-not-allowed transition"
+                  >
+                    <IconComponent name="ChevronUp" :size="13" />
+                  </button>
+                  <button
+                    type="button"
+                    :title="isFiltered ? 'Reset filter untuk mengubah urutan' : 'Pindah Urutan Turun'"
+                    :disabled="idx === items.length - 1 || reordering || isFiltered"
+                    @click="moveOrder(idx, 1)"
+                    class="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-25 disabled:cursor-not-allowed transition"
+                  >
+                    <IconComponent name="ChevronDown" :size="13" />
+                  </button>
+                </div>
+              </div>
             </TableCell>
 
             <TableCell>

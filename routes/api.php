@@ -25,6 +25,8 @@ Route::middleware(['web'])->prefix('isf')->group(function () {
 
 // ISF CMS API (authenticated session + per-module feature access)
 Route::middleware(['web', 'auth'])->prefix('cms')->name('api.cms.')->group(function () {
+    Route::post('banner/reorder', [BannerController::class, 'reorder'])
+        ->middleware('feature:banner')->name('banner.reorder');
     Route::apiResource('banner', BannerController::class)
         ->parameters(['banner' => 'banner'])->middleware('feature:banner');
     Route::post('artikel/{article}/hero', [ArticleController::class, 'setHero'])
@@ -37,6 +39,8 @@ Route::middleware(['web', 'auth'])->prefix('cms')->name('api.cms.')->group(funct
         ->parameters(['tokoh' => 'tokoh'])->middleware('feature:tokoh');
     Route::apiResource('isu', IsuController::class)
         ->parameters(['isu' => 'isu'])->middleware('feature:isu');
+    Route::post('data-grafik/reorder', [ChartController::class, 'reorder'])
+        ->middleware('feature:data_grafik')->name('data-grafik.reorder');
     Route::apiResource('data-grafik', ChartController::class)
         ->parameters(['data-grafik' => 'chart'])->middleware('feature:data_grafik');
     Route::apiResource('alert', AlertController::class)
