@@ -107,7 +107,7 @@ async function loadSettings() {
         {
           id: 1,
           title: 'Diskusi Panel: Transformasi Digital dan Kepatuhan Regulasi Perbankan',
-          imageUrl: '/images/isf/ruu-kuhp.jpeg',
+          imageUrl: '',
           mediaUrl: 'https://www.youtube.com',
           category: 'YouTube',
           publishedAt: '2026-10-20',
@@ -117,11 +117,21 @@ async function loadSettings() {
         {
           id: 2,
           title: 'Sorotan Visual: Implikasi UU Energi Terbarukan bagi Sektor Industri',
-          imageUrl: '/images/isf/ruu-energi.jpeg',
+          imageUrl: '',
           mediaUrl: 'https://www.instagram.com',
           category: 'Instagram',
           publishedAt: '2026-10-18',
           order: 2,
+          status: 'terbit'
+        },
+        {
+          id: 3,
+          title: 'Kupas Tuntas: RUU Perampasan Aset dan Efek Jeranya bagi Koruptor',
+          imageUrl: '',
+          mediaUrl: 'https://www.tiktok.com',
+          category: 'TikTok',
+          publishedAt: '2026-10-16',
+          order: 3,
           status: 'terbit'
         }
       ]
@@ -210,6 +220,7 @@ async function handleDeleteTextItem(index) {
 // Media Sorotan Modal Handlers
 function openCreateMediaModal() {
   mediaEditingIndex.value = -1
+  const maxOrder = (form.value.beranda.mediaSorotan || []).reduce((max, it) => Math.max(max, Number(it.order) || 0), 0)
   mediaForm.value = {
     id: Date.now(),
     title: '',
@@ -217,7 +228,7 @@ function openCreateMediaModal() {
     mediaUrl: '',
     category: 'YouTube',
     publishedAt: new Date().toISOString().slice(0, 10),
-    order: (form.value.beranda.mediaSorotan?.length || 0) + 1,
+    order: maxOrder + 1,
     status: 'terbit'
   }
   mediaModalOpen.value = true
@@ -243,7 +254,21 @@ function saveMediaModalItem() {
   } else {
     form.value.beranda.mediaSorotan.push({ ...mediaForm.value })
   }
+  form.value.beranda.mediaSorotan.sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
   mediaModalOpen.value = false
+  save()
+}
+
+function moveMediaOrder(index, direction) {
+  const targetIndex = index + direction
+  const list = form.value.beranda.mediaSorotan || []
+  if (targetIndex < 0 || targetIndex >= list.length) return
+  const temp = list[index]
+  list[index] = list[targetIndex]
+  list[targetIndex] = temp
+  list.forEach((it, idx) => {
+    it.order = idx + 1
+  })
   save()
 }
 
@@ -474,8 +499,32 @@ onMounted(loadSettings)
                 <TableCell class="text-xs text-muted-foreground">
                   {{ item.publishedAt || '-' }}
                 </TableCell>
-                <TableCell class="text-center text-xs font-mono font-bold">
-                  {{ item.order || 1 }}
+                <TableCell class="text-center text-xs">
+                  <div class="inline-flex items-center justify-center gap-1.5">
+                    <span class="font-mono font-bold text-foreground text-xs min-w-[1.25rem] text-center">
+                      {{ item.order || (idx + 1) }}
+                    </span>
+                    <div class="inline-flex flex-col gap-0.5">
+                      <button
+                        type="button"
+                        title="Pindah Urutan Naik"
+                        :disabled="idx === 0 || saving"
+                        @click="moveMediaOrder(idx, -1)"
+                        class="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-25 disabled:cursor-not-allowed transition"
+                      >
+                        <IconComponent name="ChevronUp" :size="13" />
+                      </button>
+                      <button
+                        type="button"
+                        title="Pindah Urutan Turun"
+                        :disabled="idx === (form.beranda.mediaSorotan?.length || 1) - 1 || saving"
+                        @click="moveMediaOrder(idx, 1)"
+                        class="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-25 disabled:cursor-not-allowed transition"
+                      >
+                        <IconComponent name="ChevronDown" :size="13" />
+                      </button>
+                    </div>
+                  </div>
                 </TableCell>
                 <TableCell class="text-center">
                   <StatusBadge :status="item.status || 'terbit'" />
@@ -609,21 +658,23 @@ onMounted(loadSettings)
           </div>
 
           <div class="space-y-1.5">
-            <Label class="text-xs font-medium">Thumbnail Gambar</Label>
+            <Label class="text-xs font-medium">
+              Thumbnail Gambar {{ ['Instagram', 'TikTok'].includes(mediaForm.category) ? '(Rasio 9:16 Vertikal — Reels/TikTok)' : '(1280x720 px — 16:9)' }}
+            </Label>
             <ImageUploadTab
               v-model="mediaForm.imageUrl"
-              aspect-class="aspect-[16/10]"
+              :aspect-class="['Instagram', 'TikTok'].includes(mediaForm.category) ? 'aspect-[9/16] max-w-[220px]' : 'aspect-video'"
               placeholder="https://... atau unggah thumbnail"
-              preview-label="Pratinjau Thumbnail Video"
+              :preview-label="['Instagram', 'TikTok'].includes(mediaForm.category) ? 'Pratinjau Thumbnail Vertikal (9:16)' : 'Pratinjau Thumbnail Video (1280x720 px)'"
             />
           </div>
 
           <div class="space-y-1.5">
-            <Label for="media-url" class="text-xs font-medium">Tautan Link (YouTube / Instagram) <span class="text-red-500">*</span></Label>
+            <Label for="media-url" class="text-xs font-medium">Tautan Link (YouTube / Instagram / TikTok) <span class="text-red-500">*</span></Label>
             <Input
               id="media-url"
               v-model="mediaForm.mediaUrl"
-              placeholder="https://www.youtube.com/watch?v=... atau https://www.instagram.com/p/..."
+              placeholder="https://www.youtube.com/watch?v=..., https://www.instagram.com/reel/... atau https://www.tiktok.com/@..."
               class="h-9 text-xs font-mono"
             />
           </div>
@@ -639,8 +690,7 @@ onMounted(loadSettings)
                 >
                   <option value="YouTube">YouTube</option>
                   <option value="Instagram">Instagram</option>
-                  <option value="Video Riset">Video Riset</option>
-                  <option value="Podcast">Podcast</option>
+                  <option value="TikTok">TikTok</option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground">
                   <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

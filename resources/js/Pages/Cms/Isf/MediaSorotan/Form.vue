@@ -4,7 +4,6 @@ import { Head, Link } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
 import { cmsResources } from '@/api/services/isfCmsService'
 import { useCmsForm } from '@/Composables/useCmsForm'
-import { activeCategories, loadCategories } from '@/Pages/Cms/Isf/options'
 import LoadingIndicator from '@/Pages/Cms/components/shared/LoadingIndicator.vue'
 import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
 import ImageUploadTab from '@/Components/Cms/ImageUploadTab.vue'
@@ -50,8 +49,22 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
   }
 })
 
-onMounted(() => {
-  loadCategories()
+const isVertical = computed(() => {
+  const cat = (form?.category || '').toLowerCase()
+  return cat.includes('instagram') || cat.includes('tiktok')
+})
+
+onMounted(async () => {
+  if (!isEdit.value) {
+    try {
+      const res = await cmsResources.mediaSorotan.list()
+      const list = Array.isArray(res) ? res : (res?.data || [])
+      const maxOrder = list.reduce((max, it) => Math.max(max, Number(it.order) || 0), 0)
+      form.order = maxOrder + 1
+    } catch {
+      // Fallback
+    }
+  }
 })
 </script>
 
@@ -133,18 +146,7 @@ onMounted(() => {
                 <SelectContent>
                   <SelectItem value="YouTube" class="text-xs font-medium">YouTube</SelectItem>
                   <SelectItem value="Instagram" class="text-xs font-medium">Instagram</SelectItem>
-                  <SelectItem value="Podcast" class="text-xs font-medium">Podcast</SelectItem>
-                  <SelectItem value="Diskusi Panel" class="text-xs font-medium">Diskusi Panel</SelectItem>
-                  <template v-if="activeCategories && activeCategories.length">
-                    <SelectItem
-                      v-for="cat in activeCategories"
-                      :key="cat.value"
-                      :value="cat.label"
-                      class="text-xs font-medium"
-                    >
-                      {{ cat.label }}
-                    </SelectItem>
-                  </template>
+                  <SelectItem value="TikTok" class="text-xs font-medium">TikTok</SelectItem>
                 </SelectContent>
               </Select>
               <p v-if="err('category')" class="text-xs text-red-400 mt-1">{{ err('category') }}</p>
@@ -168,7 +170,7 @@ onMounted(() => {
             <Input
               id="mediaUrl"
               v-model="form.mediaUrl"
-              placeholder="https://www.youtube.com/watch?v=... atau https://www.instagram.com/p/..."
+              placeholder="https://www.youtube.com/watch?v=..., https://www.instagram.com/reel/... atau https://www.tiktok.com/@..."
               class="h-9 text-xs font-mono"
             />
             <p class="text-[11px] text-muted-foreground">
@@ -184,16 +186,18 @@ onMounted(() => {
         <CardHeader class="pb-4">
           <CardTitle class="text-base font-semibold text-foreground">Thumbnail & Pengaturan Tampilan</CardTitle>
           <CardDescription class="text-xs text-muted-foreground">
-            Visual cover thumbnail video (rasio 16:9), nomor urut tampilan, dan status penayangan.
+            {{ isVertical ? 'Visual cover thumbnail vertikal (rasio 9:16 untuk Reels / TikTok), nomor urut tampilan, dan status penayangan.' : 'Visual cover thumbnail video horizontal (1280x720 px — rasio 16:9 untuk YouTube), nomor urut tampilan, dan status penayangan.' }}
           </CardDescription>
         </CardHeader>
         <CardContent class="space-y-4">
           <!-- Thumbnail Image Upload -->
           <div class="space-y-1.5">
-            <Label class="text-xs font-medium text-foreground">Thumbnail Gambar (16:9)</Label>
+            <Label class="text-xs font-medium text-foreground">
+              Thumbnail Gambar {{ isVertical ? '(Rasio 9:16 Vertikal — Reels / TikTok)' : '(1280x720 px — Rasio 16:9 YouTube)' }}
+            </Label>
             <ImageUploadTab
               v-model="form.imageUrl"
-              aspect-class="aspect-[16/9]"
+              :aspect-class="isVertical ? 'aspect-[9/16] max-w-[240px]' : 'aspect-video'"
               placeholder="https://... atau /images/..."
             />
             <p v-if="err('imageUrl')" class="text-xs text-red-400 mt-1">{{ err('imageUrl') }}</p>
@@ -202,14 +206,19 @@ onMounted(() => {
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
             <!-- Order -->
             <div class="space-y-1.5">
-              <Label for="order" class="text-xs font-medium text-foreground">Urutan Tampil (Order)</Label>
+              <div class="flex items-center justify-between">
+                <Label for="order" class="text-xs font-medium text-foreground">Urutan Tampil (Order)</Label>
+                <span v-if="!isEdit" class="text-[11px] text-muted-foreground font-normal">
+                  (Otomatis nomor berikutnya)
+                </span>
+              </div>
               <Input
                 id="order"
                 type="number"
                 min="1"
                 max="99"
                 v-model.number="form.order"
-                class="h-9 text-xs w-full"
+                class="h-9 text-xs w-full font-mono"
               />
               <p class="text-[11px] text-muted-foreground">
                 Urutan tampilan card di kolom kanan beranda (maksimal 2 tayangan teratas).

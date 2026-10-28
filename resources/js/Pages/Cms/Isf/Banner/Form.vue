@@ -99,7 +99,19 @@ function updateFormTo() {
   }
 }
 
-onMounted(loadCategories)
+onMounted(async () => {
+  loadCategories()
+  if (!isEdit.value) {
+    try {
+      const res = await cmsResources.banner.list({ per_page: 100 })
+      const list = res?.data || []
+      const maxOrder = list.reduce((max, it) => Math.max(max, Number(it.order) || 0), 0)
+      form.order = maxOrder + 1
+    } catch {
+      // fallback
+    }
+  }
+})
 </script>
 
 <template>
@@ -289,14 +301,19 @@ onMounted(loadCategories)
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
             <!-- Urutan -->
             <div class="space-y-1.5">
-              <Label for="order" class="text-xs font-medium text-foreground">Urutan Rotasi (Order)</Label>
+              <div class="flex items-center justify-between">
+                <Label for="order" class="text-xs font-medium text-foreground">Urutan Rotasi (Order)</Label>
+                <span v-if="!isEdit" class="text-[11px] text-muted-foreground font-normal">
+                  (Otomatis nomor berikutnya)
+                </span>
+              </div>
               <Input
                 id="order"
                 type="number"
-                min="0"
+                min="1"
                 max="999"
                 v-model.number="form.order"
-                class="h-9 text-xs w-full"
+                class="h-9 text-xs w-full font-mono"
               />
               <p class="text-[11px] text-muted-foreground">
                 Urutan slide dalam carousel (dimulai dari angka terkecil, misal: 1, 2, 3...).

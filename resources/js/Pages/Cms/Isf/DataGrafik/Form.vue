@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { Head, Link } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
 import { cmsResources } from '@/api/services/isfCmsService'
@@ -56,6 +56,19 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
     source_url: '',
     is_beranda: false,
     status: 'draf'
+  }
+})
+
+onMounted(async () => {
+  if (!isEdit.value) {
+    try {
+      const res = await cmsResources.dataGrafik.list({ per_page: 100 })
+      const list = res?.data || []
+      const maxOrder = list.reduce((max, it) => Math.max(max, Number(it.order) || 0), 0)
+      form.order = maxOrder + 1
+    } catch {
+      // fallback
+    }
   }
 })
 </script>
@@ -261,14 +274,22 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
               />
             </div>
             <div class="space-y-1.5">
-              <Label for="order" class="text-xs font-medium">Urutan Tampil di Slider (Angka)</Label>
+              <div class="flex items-center justify-between">
+                <Label for="order" class="text-xs font-medium">Urutan Tampil di Slider (Angka)</Label>
+                <span v-if="!isEdit" class="text-[11px] text-muted-foreground font-normal">
+                  (Otomatis nomor berikutnya)
+                </span>
+              </div>
               <Input
                 id="order"
                 type="number"
-                v-model="form.order"
-                placeholder="0"
+                min="1"
+                max="999"
+                v-model.number="form.order"
+                placeholder="1"
                 class="h-9 text-xs font-mono"
               />
+              <p v-if="err('order')" class="text-xs text-red-400 mt-1">{{ err('order') }}</p>
             </div>
           </div>
         </CardContent>

@@ -1,8 +1,8 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Head, Link } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
-import { cmsResources, errorMessage } from '@/api/services/isfCmsService'
+import { cmsResources, mediaSorotanService, errorMessage } from '@/api/services/isfCmsService'
 import { alertSuccess, alertError, confirmDelete } from '@/Composables/useAlert'
 import StatusBadge from '@/Pages/Cms/components/shared/StatusBadge.vue'
 import LoadingIndicator from '@/Pages/Cms/components/shared/LoadingIndicator.vue'
@@ -26,7 +26,10 @@ const loading = ref(true)
 const loadError = ref('')
 const search = ref('')
 const statusFilter = ref('')
+const reordering = ref(false)
 let searchTimeout = null
+
+const isFiltered = computed(() => Boolean(search.value || statusFilter.value))
 
 async function loadData() {
   loading.value = true
@@ -36,7 +39,8 @@ async function loadData() {
       q: search.value || undefined,
       status: statusFilter.value || undefined
     })
-    items.value = Array.isArray(res) ? res : (res?.data || [])
+    const list = Array.isArray(res) ? res : (res?.data || [])
+    items.value = [...list].sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
   } catch (err) {
     loadError.value = errorMessage(err, 'Gagal memuat data media sorotan.')
   } finally {
@@ -54,6 +58,43 @@ function onSearchInput() {
 function onStatusChange(status) {
   statusFilter.value = status
   loadData()
+}
+
+async function moveOrder(index, direction) {
+  const targetIndex = index + direction
+  if (targetIndex < 0 || targetIndex >= items.value.length) return
+  if (reordering.value) return
+
+  if (isFiltered.value) {
+    alertError('Harap reset pencarian dan filter status untuk mengubah urutan.')
+    return
+  }
+
+  reordering.value = true
+  const original = [...items.value]
+
+  try {
+    const updated = [...items.value]
+    const temp = updated[index]
+    updated[index] = updated[targetIndex]
+    updated[targetIndex] = temp
+
+    // Normalisasi nomor urutan agar 1, 2, 3...
+    updated.forEach((it, idx) => {
+      it.order = idx + 1
+    })
+
+    // Optimistic update
+    items.value = updated
+
+    await mediaSorotanService.saveAll(updated)
+    alertSuccess('Urutan media sorotan berhasil diperbarui.')
+  } catch (err) {
+    items.value = original
+    alertError(errorMessage(err, 'Gagal memperbarui urutan media sorotan.'))
+  } finally {
+    reordering.value = false
+  }
 }
 
 async function handleDelete(item) {
@@ -169,7 +210,7 @@ onMounted(loadData)
             <TableHead class="text-xs">Judul & Tautan Media</TableHead>
             <TableHead class="w-28 text-xs">Platform</TableHead>
             <TableHead class="w-28 text-xs">Tanggal</TableHead>
-            <TableHead class="w-16 text-center text-xs">Urutan</TableHead>
+            <TableHead class="w-24 text-center text-xs">Urutan</TableHead>
             <TableHead class="w-24 text-center text-xs">Status</TableHead>
             <TableHead class="w-36 text-right text-xs">Aksi</TableHead>
           </TableRow>
@@ -244,8 +285,32 @@ onMounted(loadData)
             <TableCell class="text-xs text-muted-foreground font-mono">
               {{ item.publishedAt || '-' }}
             </TableCell>
-            <TableCell class="text-center text-xs font-mono font-bold text-foreground">
-              {{ item.order || 1 }}
+            <TableCell class="text-center text-xs">
+              <div class="inline-flex items-center justify-center gap-1.5">
+                <span class="font-mono font-bold text-foreground text-xs min-w-[1.25rem] text-center">
+                  {{ item.order || (idx + 1) }}
+                </span>
+                <div class="inline-flex flex-col gap-0.5">
+                  <button
+                    type="button"
+                    :title="isFiltered ? 'Reset filter untuk mengubah urutan' : 'Pindah Urutan Naik'"
+                    :disabled="idx === 0 || reordering || isFiltered"
+                    @click="moveOrder(idx, -1)"
+                    class="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-25 disabled:cursor-not-allowed transition"
+                  >
+                    <IconComponent name="ChevronUp" :size="13" />
+                  </button>
+                  <button
+                    type="button"
+                    :title="isFiltered ? 'Reset filter untuk mengubah urutan' : 'Pindah Urutan Turun'"
+                    :disabled="idx === items.length - 1 || reordering || isFiltered"
+                    @click="moveOrder(idx, 1)"
+                    class="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-25 disabled:cursor-not-allowed transition"
+                  >
+                    <IconComponent name="ChevronDown" :size="13" />
+                  </button>
+                </div>
+              </div>
             </TableCell>
             <TableCell class="text-center">
               <StatusBadge :status="item.status || 'terbit'" />

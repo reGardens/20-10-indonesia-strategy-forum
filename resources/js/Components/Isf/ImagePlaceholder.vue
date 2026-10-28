@@ -3,7 +3,7 @@
  * ImagePlaceholder — shows the image when `src` is set (alt = label), otherwise a
  * neutral placeholder box exposed to assistive tech as an image with a descriptive label.
  */
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import { IconPhoto } from "@tabler/icons-vue";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +29,7 @@ const props = defineProps({
                 "photo",
                 "card",
                 "banner",
+                "reel",
             ].includes(value),
     },
     // Bare: icon only (no visible caption), for thumbnails and story images.
@@ -46,6 +47,14 @@ const props = defineProps({
     },
 });
 
+const imageFailed = ref(false);
+watch(
+    () => props.src,
+    () => {
+        imageFailed.value = false;
+    },
+);
+
 const ASPECTS = {
     video: "aspect-video",
     news: "aspect-[16/10]",
@@ -54,6 +63,7 @@ const ASPECTS = {
     photo: "aspect-[3/2]",
     card: "aspect-[4/3]",
     banner: "aspect-video lg:aspect-[21/9]",
+    reel: "aspect-[9/16]",
 };
 
 // Wrapper selalu block + w-full + max-w-full + overflow-hidden agar gambar tidak
@@ -84,13 +94,14 @@ const imageClasses = computed(() =>
 <template>
     <div :class="wrapperClasses">
         <img
-            v-if="src"
+            v-if="src && !imageFailed"
             :src="src"
             :alt="label"
             :class="imageClasses"
             :loading="priority ? 'eager' : 'lazy'"
             :fetchpriority="priority ? 'high' : 'auto'"
             decoding="async"
+            @error="imageFailed = true"
         />
         <div v-else role="img" :aria-label="label" :class="boxClasses">
             <IconPhoto

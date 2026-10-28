@@ -168,14 +168,13 @@ onMounted(loadData)
             <TableHead class="w-48 text-xs">Nama Kategori</TableHead>
             <TableHead class="w-36 text-xs">Slug</TableHead>
             <TableHead class="text-xs">Deskripsi</TableHead>
-            <TableHead class="w-20 text-center text-xs">Urutan</TableHead>
             <TableHead class="w-28 text-center text-xs">Status</TableHead>
             <TableHead class="w-36 text-right text-xs">Aksi</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow v-if="items.length === 0">
-            <TableCell colspan="7" class="text-center py-12 text-xs text-muted-foreground">
+            <TableCell colspan="6" class="text-center py-12 text-xs text-muted-foreground">
               <div class="flex flex-col items-center justify-center gap-2">
                 <IconComponent name="Category" :size="32" class="text-muted-foreground/40" />
                 <p>Belum ada kategori yang sesuai.</p>
@@ -200,15 +199,9 @@ onMounted(loadData)
               {{ idx + 1 }}
             </TableCell>
             <TableCell>
-              <div class="flex items-center gap-2">
-                <span
-                  class="w-3 h-3 rounded-full shrink-0"
-                  :style="{ backgroundColor: item.color || '#ef4444' }"
-                ></span>
-                <span class="font-semibold text-xs text-foreground">
-                  {{ item.name }}
-                </span>
-              </div>
+              <span class="font-semibold text-xs text-foreground">
+                {{ item.name }}
+              </span>
             </TableCell>
             <TableCell>
               <span class="font-mono text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
@@ -217,9 +210,6 @@ onMounted(loadData)
             </TableCell>
             <TableCell class="text-xs text-muted-foreground max-w-sm line-clamp-1">
               {{ item.description || '-' }}
-            </TableCell>
-            <TableCell class="text-center text-xs font-mono font-bold text-foreground">
-              {{ item.order || 0 }}
             </TableCell>
             <TableCell class="text-center">
               <StatusBadge :status="item.status || 'terbit'" />

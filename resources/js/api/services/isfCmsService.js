@@ -22,7 +22,10 @@ export function createCmsResource(path) {
 }
 
 export const cmsResources = {
-  banner: createCmsResource('banner'),
+  banner: {
+    ...createCmsResource('banner'),
+    reorder: (items) => http.post('/cms/banner/reorder', { items }).then((r) => r.data)
+  },
   artikel: {
     ...createCmsResource('artikel'),
     setHero: (id) => http.post(`/cms/artikel/${id}/hero`).then((r) => r.data)
@@ -30,7 +33,10 @@ export const cmsResources = {
   infografik: createCmsResource('infografik'),
   tokoh: createCmsResource('tokoh'),
   isu: createCmsResource('isu'),
-  dataGrafik: createCmsResource('data-grafik'),
+  dataGrafik: {
+    ...createCmsResource('data-grafik'),
+    reorder: (items) => http.post('/cms/data-grafik/reorder', { items }).then((r) => r.data)
+  },
   alert: createCmsResource('alert'),
   emailBriefing: createCmsResource('email-briefing'),
   runningText: createCmsResource('running-text'),
