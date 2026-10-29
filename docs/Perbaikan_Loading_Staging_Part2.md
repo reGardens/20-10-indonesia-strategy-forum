@@ -1,4 +1,4 @@
-# Perbaikan Loading Staging — Part 2: Font, Logo & Lebar Halaman Berubah saat Refresh
+  # Perbaikan Loading Staging — Part 2: Font, Logo & Lebar Halaman Berubah saat Refresh
 
 Tanggal: 28 Oktober 2026
 Status: **Rencana, belum dikerjakan**

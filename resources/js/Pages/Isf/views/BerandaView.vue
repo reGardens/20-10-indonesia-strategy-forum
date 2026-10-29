@@ -41,34 +41,39 @@ const mediaSorotan = computed(() => {
     return [
         {
             id: 1,
-            title: 'Diskusi Panel: Transformasi Digital dan Kepatuhan Regulasi Perbankan',
-            imageUrl: '',
-            mediaUrl: 'https://www.youtube.com',
-            category: 'YouTube',
-            publishedAt: '2026-10-20',
+            title: "Diskusi Panel: Transformasi Digital dan Kepatuhan Regulasi Perbankan",
+            imageUrl: "",
+            mediaUrl: "https://www.youtube.com",
+            category: "YouTube",
+            publishedAt: "2026-10-20",
         },
         {
             id: 2,
-            title: 'Sorotan Visual: Implikasi UU Energi Terbarukan bagi Sektor Industri',
-            imageUrl: '',
-            mediaUrl: 'https://www.instagram.com',
-            category: 'Instagram',
-            publishedAt: '2026-10-18',
+            title: "Sorotan Visual: Implikasi UU Energi Terbarukan bagi Sektor Industri",
+            imageUrl: "",
+            mediaUrl: "https://www.instagram.com",
+            category: "Instagram",
+            publishedAt: "2026-10-18",
         },
         {
             id: 3,
-            title: 'Kupas Tuntas: RUU Perampasan Aset dan Efek Jeranya bagi Koruptor',
-            imageUrl: '',
-            mediaUrl: 'https://www.tiktok.com',
-            category: 'TikTok',
-            publishedAt: '2026-10-16',
+            title: "Kupas Tuntas: RUU Perampasan Aset dan Efek Jeranya bagi Koruptor",
+            imageUrl: "",
+            mediaUrl: "https://www.tiktok.com",
+            category: "TikTok",
+            publishedAt: "2026-10-16",
         },
     ];
 });
 
 function isVerticalMedia(category) {
-    const cat = (category || '').toLowerCase();
-    return cat.includes('instagram') || cat.includes('tiktok') || cat.includes('reel') || cat.includes('short');
+    const cat = (category || "").toLowerCase();
+    return (
+        cat.includes("instagram") ||
+        cat.includes("tiktok") ||
+        cat.includes("reel") ||
+        cat.includes("short")
+    );
 }
 const infografik = computed(() => data.value?.infografik || []);
 const pekanIni = computed(() => data.value?.pekanIni || { items: [] });
@@ -79,14 +84,18 @@ const insightList = computed(() => {
     if (Array.isArray(data.value?.charts) && data.value.charts.length > 0) {
         return data.value.charts.map((c) => ({
             ...c,
-            readMoreUrl: c.readMoreUrl || '/isu/kuhp-baru-pelaku-usaha',
+            readMoreUrl: c.readMoreUrl || "/isu/kuhp-baru-pelaku-usaha",
         }));
     }
     if (data.value?.chart && data.value.chart.data?.length) {
-        return [{
-            ...data.value.chart,
-            readMoreUrl: data.value.chart.readMoreUrl || '/isu/kuhp-baru-pelaku-usaha',
-        }];
+        return [
+            {
+                ...data.value.chart,
+                readMoreUrl:
+                    data.value.chart.readMoreUrl ||
+                    "/isu/kuhp-baru-pelaku-usaha",
+            },
+        ];
     }
     return BERANDA_INSIGHT_DUMMY;
 });
@@ -119,8 +128,12 @@ const cellPad = "lg:px-4 xl:px-[30px]";
                     data-testid="sorotan-line"
                     class="relative flex items-center border-b border-neutral-300 py-2.5 overflow-hidden group select-none"
                 >
-                    <div class="z-10 flex items-center bg-[#fbf9f4] pr-3 shrink-0">
-                        <span class="isf-label uppercase tracking-widest text-isf-red font-bold">
+                    <div
+                        class="z-10 flex items-center bg-[#fbf9f4] pr-3 shrink-0"
+                    >
+                        <span
+                            class="isf-label uppercase tracking-widest text-isf-red font-bold"
+                        >
                             {{ topBars[0]?.badge || "Sorotan" }}
                         </span>
                         <span class="ml-3 h-3 w-px bg-neutral-300"></span>
@@ -128,7 +141,9 @@ const cellPad = "lg:px-4 xl:px-[30px]";
 
                     <!-- Marquee Track -->
                     <div class="overflow-hidden flex-1 relative">
-                        <div class="isf-marquee-track flex whitespace-nowrap gap-10 font-ui text-[13.5px] font-medium text-neutral-900">
+                        <div
+                            class="isf-marquee-track flex whitespace-nowrap gap-10 font-ui text-[13.5px] font-medium text-neutral-900"
+                        >
                             <!-- Repeat items to form seamless scroll -->
                             <div
                                 v-for="(item, idx) in [...topBars, ...topBars]"
@@ -136,14 +151,23 @@ const cellPad = "lg:px-4 xl:px-[30px]";
                                 class="flex items-center gap-2.5 shrink-0"
                             >
                                 <span
-                                    v-if="item.badge && item.badge !== topBars[0]?.badge"
+                                    v-if="
+                                        item.badge &&
+                                        item.badge !== topBars[0]?.badge
+                                    "
                                     class="px-1.5 py-0.5 rounded text-[10px] uppercase font-bold bg-neutral-200 text-neutral-800"
                                 >
                                     {{ item.badge }}
                                 </span>
                                 <span>{{ item.announcement }}</span>
-                                <span v-if="item.info" class="text-neutral-500 text-xs font-normal">({{ item.info }})</span>
-                                <span class="text-neutral-400 mx-2 select-none">•</span>
+                                <span
+                                    v-if="item.info"
+                                    class="text-neutral-500 text-xs font-normal"
+                                    >({{ item.info }})</span
+                                >
+                                <span class="text-neutral-400 mx-2 select-none"
+                                    >•</span
+                                >
                             </div>
                         </div>
                     </div>
@@ -280,23 +304,33 @@ const cellPad = "lg:px-4 xl:px-[30px]";
                                                 'group relative block overflow-hidden rounded-xs bg-neutral-100 border border-neutral-300 shadow-2xs',
                                                 isVerticalMedia(item.category)
                                                     ? 'aspect-[9/16] max-w-[240px] mx-auto'
-                                                    : 'aspect-video w-full'
+                                                    : 'aspect-video w-full',
                                             ]"
                                         >
                                             <ImagePlaceholder
                                                 :label="item.title"
                                                 :src="item.imageUrl || ''"
-                                                :aspect="isVerticalMedia(item.category) ? 'reel' : 'video'"
+                                                :aspect="
+                                                    isVerticalMedia(
+                                                        item.category,
+                                                    )
+                                                        ? 'reel'
+                                                        : 'video'
+                                                "
                                                 bare
                                                 class="h-full w-full transition-transform duration-300 group-hover:scale-105"
                                             />
-                                            <span class="absolute bottom-2 left-2 rounded bg-black/75 px-1.5 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider backdrop-blur-xs">
-                                                {{ item.category || 'Video' }}
+                                            <span
+                                                class="absolute bottom-2 left-2 rounded bg-black/75 px-1.5 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider backdrop-blur-xs"
+                                            >
+                                                {{ item.category || "Video" }}
                                             </span>
                                         </a>
 
                                         <div class="mt-3">
-                                            <h3 class="isf-headline text-[16px] leading-[1.25] xl:text-[18px]">
+                                            <h3
+                                                class="isf-headline text-[16px] leading-[1.25] xl:text-[18px]"
+                                            >
                                                 <a
                                                     :href="item.mediaUrl"
                                                     target="_blank"
@@ -311,7 +345,9 @@ const cellPad = "lg:px-4 xl:px-[30px]";
                                                 :datetime="item.publishedAt"
                                                 class="isf-byline mt-1.5 block text-neutral-500"
                                             >
-                                                {{ formatDate(item.publishedAt) }}
+                                                {{
+                                                    formatDate(item.publishedAt)
+                                                }}
                                             </time>
                                         </div>
                                     </li>

@@ -281,6 +281,38 @@
             border-radius: 4px;
         }
 
+        /* Subgrid skeleton: ikut satu kolom di mobile, sama seperti tampilan Vue (<640px). */
+        .isf-skel-subgrid {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: var(--isf-skel-cols, repeat(3, 1fr));
+        }
+
+        .isf-skel-identity {
+            grid-template-columns: 160px minmax(0, 1fr);
+            gap: 24px;
+        }
+
+        .isf-skel-member-toolbar {
+            grid-template-columns: minmax(0, 1fr) 14rem;
+            gap: 16px;
+        }
+
+        .isf-skel-stat4 {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        @media (max-width: 639px) {
+
+            .isf-skel-subgrid,
+            .isf-skel-identity,
+            .isf-skel-member-toolbar,
+            .isf-skel-stat4 {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
         .isf-skel-pulse {
             animation: isfPulse 1.6s ease-in-out infinite;
         }
@@ -432,8 +464,8 @@
                         </div>
                         <div class="isf-skel-member-grid">
                             <section style="display: flex; flex-direction: column; gap: 16px;">
-                                <div
-                                    style="display: grid; grid-template-columns: minmax(0, 1fr) 14rem; gap: 16px; border-top: 1px solid #d1d5db; border-bottom: 1px solid #d1d5db; padding: 16px 0;">
+                                <div class="isf-skel-subgrid isf-skel-member-toolbar"
+                                    style="border-top: 1px solid #d1d5db; border-bottom: 1px solid #d1d5db; padding: 16px 0;">
                                     <div>
                                         <div class="isf-skel-el" style="width: 72px; height: 12px; margin-bottom: 8px;">
                                         </div>
@@ -554,7 +586,7 @@
                                     @if ($i === 2)
                                         <div class="isf-skel-el" style="height: 300px;"></div>
                                     @elseif($i === 4)
-                                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                                        <div class="isf-skel-subgrid">
                                             @for ($j = 0; $j < 3; $j++)
                                                 <div class="isf-skel-el" style="height: 120px;"></div>
                                             @endfor
@@ -601,12 +633,12 @@
                     <div class="isf-skel-article-grid">
                         <article>
                             <section class="isf-skel-card">
-                                <div style="display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 24px;">
+                                <div class="isf-skel-subgrid isf-skel-identity">
                                     <div class="isf-skel-el" style="height: 210px;"></div>
                                     <div class="isf-skel-lines">
                                         <div class="isf-skel-el" style="width: 75%; height: 32px;"></div>
                                         <div class="isf-skel-el" style="height: 16px;"></div>
-                                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+                                        <div class="isf-skel-subgrid isf-skel-stat4">
                                             @for ($i = 0; $i < 4; $i++)
                                                 <div class="isf-skel-el" style="height: 64px;"></div>
                                             @endfor
