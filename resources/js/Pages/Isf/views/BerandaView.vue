@@ -12,7 +12,6 @@ import {
     SectionHeading,
     SimpleBarChart,
 } from "@/Components/Isf";
-import LoadingIndicator from "@/Pages/Cms/components/shared/LoadingIndicator.vue";
 import ErrorMessage from "@/Pages/Cms/components/shared/ErrorMessage.vue";
 import { BERANDA_BANNER_DUMMY } from "@/Pages/Isf/data/berandaBannerDummy";
 import { BERANDA_INSIGHT_DUMMY } from "@/Pages/Isf/data/berandaInsightDummy";

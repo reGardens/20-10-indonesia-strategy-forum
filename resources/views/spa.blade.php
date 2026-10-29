@@ -94,7 +94,7 @@
             border-bottom: 1px solid #d4d4d4;
         }
 
-        .isf-initial-shell header>div:first-child>div {
+        .isf-initial-shell header:not(.border-b)>div:first-child>div {
             display: grid;
             grid-template-columns: minmax(2.5rem, 1fr) auto minmax(2.5rem, 1fr);
             align-items: center;
@@ -105,12 +105,35 @@
             padding: 1.5rem;
         }
 
-        .isf-initial-shell header>div:first-child>div> :first-child {
+        .isf-initial-shell header:not(.border-b)>div:first-child>div> :first-child {
             justify-self: start;
         }
 
-        .isf-initial-shell header>div:first-child>div> :last-child {
+        .isf-initial-shell header:not(.border-b)>div:first-child>div> :last-child {
             justify-self: end;
+        }
+
+        .isf-initial-shell header.border-b>div {
+            display: grid;
+            grid-template-columns: minmax(4.5rem, 1fr) auto minmax(4.5rem, 1fr);
+            align-items: center;
+            gap: .75rem;
+            width: 100%;
+            max-width: 1400px;
+            min-height: 4.5rem;
+            margin: 0 auto;
+            padding: 1rem 1.5rem;
+        }
+
+        .isf-initial-shell header.border-b>div> :first-child {
+            justify-self: start;
+        }
+
+        .isf-initial-shell header.border-b>div> :last-child {
+            display: flex;
+            align-items: center;
+            justify-self: end;
+            gap: .5rem;
         }
 
         .isf-initial-shell header .isf-wordmark {
@@ -137,12 +160,12 @@
         }
 
         .isf-initial-shell header .inline-flex,
-        .isf-initial-shell header>div:first-child>div> :last-child {
+        .isf-initial-shell header:not(.border-b)>div:first-child>div> :last-child {
             display: inline-flex;
             align-items: center;
         }
 
-        .isf-initial-shell header>div:first-child>div> :last-child {
+        .isf-initial-shell header:not(.border-b)>div:first-child>div> :last-child {
             gap: 1rem;
         }
 
@@ -176,7 +199,7 @@
             grid-template-columns: minmax(4.5rem, 1fr) auto minmax(4.5rem, 1fr);
         }
 
-        .isf-initial-shell header.border-b>div:first-child>div>a.block {
+        .isf-initial-shell header.border-b>div>a.block {
             display: block;
             min-width: 0;
             text-align: center;
@@ -215,7 +238,7 @@
         }
 
         @media (max-width: 1023px) {
-            .isf-initial-shell header>div:first-child>div {
+            .isf-initial-shell header:not(.border-b)>div:first-child>div {
                 padding: .75rem 1rem 1.40625rem;
             }
 
@@ -242,7 +265,7 @@
                 padding: 0;
             }
 
-            .isf-initial-shell header.border-b>div:first-child>div {
+            .isf-initial-shell header.border-b>div {
                 padding: .75rem 1rem;
             }
 
