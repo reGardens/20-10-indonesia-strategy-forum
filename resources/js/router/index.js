@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { getBeranda, getAnggota, getIsu, getTokoh } from '@/api/services/isfPublicService'
+import { getBeranda, getAnggota, getInfografik, getIsu, getTokoh } from '@/api/services/isfPublicService'
 
 const CmsLayout = () => import('../Pages/Cms/layouts/CmsLayout.vue')
 const InvitationLayout = () => import('../Pages/Landing/invitation/layouts/InvitationLayout.vue')
@@ -277,6 +277,8 @@ router.beforeResolve((to) => {
       getBeranda()
     } else if (to.name === 'isf-anggota' || to.path.startsWith('/anggota')) {
       getAnggota()
+    } else if (to.name === 'isf-infografik' || to.path === '/infografik') {
+      getInfografik()
     } else if (to.name === 'isf-isu' && to.params.slug) {
       getIsu(to.params.slug)
     } else if (to.name === 'isf-tokoh' && to.params.slug) {

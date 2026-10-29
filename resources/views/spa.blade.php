@@ -316,6 +316,18 @@
             grid-template-columns: minmax(0, 23fr) minmax(0, 54fr) minmax(0, 23fr);
         }
 
+        .isf-skel-beranda-hero {
+            order: 1;
+        }
+
+        .isf-skel-beranda-media {
+            order: 2;
+        }
+
+        .isf-skel-beranda-insight {
+            order: 3;
+        }
+
         .isf-skel-article-grid,
         .isf-skel-member-grid {
             display: grid;
@@ -357,8 +369,11 @@
         @media (min-width: 1024px) {
             .isf-skel-container { padding-right: 1.5rem; padding-left: 1.5rem; }
             .isf-skel-member-layout { padding-right: 1.5rem; padding-left: 1.5rem; }
+            .isf-skel-beranda-insight { order: 1; }
+            .isf-skel-beranda-hero { order: 2; }
+            .isf-skel-beranda-media { order: 3; }
         }
-        @media (max-width: 1024px) {
+        @media (max-width: 1023px) {
 
             .isf-skel-grid,
             .isf-skel-article-grid,
@@ -645,13 +660,13 @@
                         </div>
                     </div>
                     <div class="isf-skel-grid isf-skel-rule" style="margin-top: 24px;">
-                        <section style="padding: 20px; border-right: 1px solid #d1d5db;">
+                        <section class="isf-skel-beranda-insight" style="padding: 20px; border-right: 1px solid #d1d5db;">
                             <div class="isf-skel-el" style="width: 80px; height: 14px; margin-bottom: 16px;"></div>
                             <div class="isf-skel-el" style="width: 85%; height: 32px; margin-bottom: 16px;"></div>
                             <div class="isf-skel-el" style="height: 16px; margin-bottom: 8px;"></div>
                             <div class="isf-skel-el" style="width: 90%; height: 160px;"></div>
                         </section>
-                        <section style="padding: 20px; border-right: 1px solid #d1d5db;">
+                        <section class="isf-skel-beranda-hero" style="padding: 20px; border-right: 1px solid #d1d5db;">
                             <div class="isf-skel-el" style="width: 80px; height: 14px; margin-bottom: 16px;"></div>
                             <div class="isf-skel-el" style="width: 85%; height: 38px; margin-bottom: 16px;"></div>
                             <div class="isf-skel-lines">
@@ -660,7 +675,7 @@
                             </div>
                             <div class="isf-skel-el" style="height: 180px; margin-top: 20px;"></div>
                         </section>
-                        <aside style="padding: 20px;">
+                        <aside class="isf-skel-beranda-media" style="padding: 20px;">
                             @for ($i = 0; $i < 3; $i++)
                                 <div style="border-bottom: 1px solid #d1d5db; padding: 0 0 16px; margin-bottom: 16px;">
                                     <div class="isf-skel-el" style="height: 120px; margin-bottom: 12px;"></div>
