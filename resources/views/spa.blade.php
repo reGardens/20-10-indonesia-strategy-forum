@@ -190,7 +190,7 @@
         }
 
         .isf-initial-shell header>div:nth-child(2) li {
-            padding: 2px 0;
+            padding: 0;
         }
 
         .isf-initial-shell header.border-b>div:first-child>div {
@@ -308,6 +308,8 @@
             margin: 0 auto;
             padding: 2rem 1rem;
         }
+        .isf-initial-shell.isf-theme > .isf-skel-container { width: 100%; max-width: 1400px; }
+        .isf-initial-shell.isf-theme > .isf-skel-article { width: 100%; max-width: 1152px; }
 
         .isf-skel-grid {
             display: grid;
