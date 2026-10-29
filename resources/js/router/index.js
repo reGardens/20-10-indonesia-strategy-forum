@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { weddingRegistryService } from '@/api/services/weddingRegistryService'
-import store from '@/store/index.js'
+import { getBeranda, getAnggota, getIsu, getTokoh } from '@/api/services/isfPublicService'
 
 const CmsLayout = () => import('../Pages/Cms/layouts/CmsLayout.vue')
 const InvitationLayout = () => import('../Pages/Landing/invitation/layouts/InvitationLayout.vue')
@@ -238,6 +237,10 @@ const router = createRouter({
 // Navigation guard for CMS slug validation and ACL check
 router.beforeEach(async (to, from, next) => {
   if (to.params.slug && to.path.startsWith('/cms/')) {
+    const [{ weddingRegistryService }, { default: store }] = await Promise.all([
+      import('@/api/services/weddingRegistryService'),
+      import('@/store/index.js')
+    ])
     const exists = await weddingRegistryService.exists(to.params.slug)
     if (!exists) {
       return next({ path: '/cms/dashboard', query: { error: 'not-found' } })
@@ -265,6 +268,21 @@ router.beforeEach(async (to, from, next) => {
     }
   }
   next()
+})
+
+// Prefetch ISF public content in parallel with chunk downloads
+router.beforeResolve((to) => {
+  try {
+    if (to.name === 'isf-home' || to.path === '/' || to.path === '/beranda') {
+      getBeranda()
+    } else if (to.name === 'isf-anggota' || to.path.startsWith('/anggota')) {
+      getAnggota()
+    } else if (to.name === 'isf-isu' && to.params.slug) {
+      getIsu(to.params.slug)
+    } else if (to.name === 'isf-tokoh' && to.params.slug) {
+      getTokoh(to.params.slug)
+    }
+  } catch {}
 })
 
 export default router

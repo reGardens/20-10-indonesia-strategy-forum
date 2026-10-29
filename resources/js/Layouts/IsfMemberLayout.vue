@@ -4,7 +4,6 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { IconBell } from "@tabler/icons-vue";
 import { getAnggota } from "@/api/services/isfPublicService";
-import "@/assets/isf-theme.css";
 
 const route = useRoute();
 const user = ref({ name: "" });
@@ -76,6 +75,7 @@ onBeforeUnmount(() => {
             class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-isf-red focus:px-4 focus:py-2 focus:text-white"
             >Lewati ke konten utama</a
         >
+        <!-- NOTE: Keep header markup and classes in sync with resources/views/partials/isf-member-masthead.blade.php -->
         <header class="border-b border-neutral-300 bg-white">
             <div
                 class="mx-auto grid min-h-[4.5rem] w-full min-w-0 max-w-[1400px] grid-cols-[minmax(4.5rem,1fr)_auto_minmax(4.5rem,1fr)] items-center gap-3 px-4 py-3 sm:py-4 lg:px-6"
