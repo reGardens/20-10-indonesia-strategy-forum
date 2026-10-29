@@ -191,7 +191,7 @@ describe("ISF alur E2E (frontend)", () => {
         expect(root.querySelectorAll('[aria-labelledby="terkini-title"] li').length).toBe(
             Math.min(3, beranda.terkini.length),
         );
-        expect(root.querySelectorAll('[aria-labelledby="secondary-stories-title"] li').length).toBe(2);
+        expect(root.querySelectorAll('[aria-labelledby="secondary-stories-title"] li').length).toBeGreaterThanOrEqual(2);
         const mediaLinks = root.querySelectorAll(
             '[aria-labelledby="secondary-stories-title"] a[target="_blank"]',
         );

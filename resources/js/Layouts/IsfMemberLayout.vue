@@ -4,7 +4,6 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { IconBell } from "@tabler/icons-vue";
 import { getAnggota } from "@/api/services/isfPublicService";
-import "@/assets/isf-theme.css";
 
 const route = useRoute();
 const user = ref({ name: "" });
@@ -76,6 +75,7 @@ onBeforeUnmount(() => {
             class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-isf-red focus:px-4 focus:py-2 focus:text-white"
             >Lewati ke konten utama</a
         >
+        <!-- NOTE: Keep header markup and classes in sync with resources/views/partials/isf-member-masthead.blade.php -->
         <header class="border-b border-neutral-300 bg-white">
             <div
                 class="mx-auto grid min-h-[4.5rem] w-full min-w-0 max-w-[1400px] grid-cols-[minmax(4.5rem,1fr)_auto_minmax(4.5rem,1fr)] items-center gap-3 px-4 py-3 sm:py-4 lg:px-6"
@@ -88,7 +88,9 @@ onBeforeUnmount(() => {
                     <span
                         class="isf-wordmark mx-auto flex items-center justify-center min-w-0 text-center leading-none"
                     >
-                        <span class="inline-flex items-stretch justify-center gap-x-2 sm:gap-x-2.5">
+                        <span
+                            class="inline-flex items-stretch justify-center gap-x-2 sm:gap-x-2.5"
+                        >
                             <img
                                 src="/images/isf/logo-isf.jpeg"
                                 alt="ISF Logo"
@@ -97,7 +99,10 @@ onBeforeUnmount(() => {
                                 height="38"
                             />
                             <span class="sr-only">ISF </span>
-                            <span class="isf-script text-neutral-950 text-[26px] sm:text-[32px] lg:text-[38px] leading-none">Indonesia Strategy Forum</span>
+                            <span
+                                class="isf-script text-neutral-950 text-[26px] sm:text-[32px] lg:text-[38px] leading-none"
+                                >Indonesia Strategy Forum</span
+                            >
                         </span>
                     </span>
                     <span class="isf-byline mt-1 block">Portal Anggota</span>
@@ -108,7 +113,13 @@ onBeforeUnmount(() => {
                         aria-label="Notifikasi"
                         class="inline-flex h-8 w-8 items-center justify-center text-neutral-700 hover:text-isf-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red focus-visible:ring-offset-2"
                     >
-                        <IconBell class="h-4 w-4" aria-hidden="true" />
+                        <IconBell
+                            class="h-4 w-4"
+                            width="16"
+                            height="16"
+                            aria-hidden="true"
+                            focusable="false"
+                        />
                     </button>
                     <span
                         v-if="initials"

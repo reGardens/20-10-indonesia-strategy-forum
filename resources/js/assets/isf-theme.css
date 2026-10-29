@@ -178,7 +178,7 @@
 
 /* Tulisan Sambung Latin Resmi / Formal English Roundhand (Pinyon Script) */
 .isf-theme .isf-script {
-    font-family: "Pinyon Script", cursive;
+    font-family: "Pinyon Script", Georgia, "Times New Roman", serif;
     font-weight: 400;
     font-style: normal;
     text-transform: none;

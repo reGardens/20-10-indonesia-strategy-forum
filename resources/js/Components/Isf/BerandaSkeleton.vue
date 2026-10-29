@@ -1,77 +1,175 @@
 <template>
-  <div class="isf-mobile-gutter mx-auto w-full max-w-[1400px] px-4 pb-10 pt-2 lg:px-6 lg:pt-3 animate-pulse" aria-busy="true" aria-label="Memuat beranda">
-    <!-- Sorotan Skeleton -->
-    <div class="flex items-center gap-x-3 border-b border-neutral-200 py-3">
-      <div class="h-4 w-16 bg-neutral-300 rounded"></div>
-      <div class="h-4 w-72 bg-neutral-200 rounded max-w-[60%]"></div>
-      <div class="ml-auto hidden sm:block h-3.5 w-24 bg-neutral-200 rounded"></div>
-    </div>
+    <div
+        class="isf-mobile-gutter mx-auto w-full max-w-[1400px] px-4 pb-10 pt-2 lg:px-6 lg:pt-3 animate-pulse"
+        aria-busy="true"
+        aria-label="Memuat beranda"
+    >
+        <div
+            class="flex items-center gap-x-3 border-b border-neutral-300 py-2.5"
+        >
+            <div class="h-3 w-16 rounded bg-neutral-300"></div>
+            <div class="h-3 w-2/5 rounded bg-neutral-200"></div>
+        </div>
 
-    <!-- Banner Carousel Skeleton (21:9 ratio) -->
-    <div class="mt-4 relative border border-neutral-300 bg-neutral-200 aspect-video lg:aspect-[21/9] overflow-hidden flex flex-col justify-end p-4 sm:p-6">
-      <div class="relative bg-white/95 p-4 sm:p-5 md:max-w-lg border border-neutral-200 shadow-sm">
-        <div class="h-3 w-20 bg-red-200 rounded mb-2"></div>
-        <div class="h-6 w-3/4 bg-neutral-300 rounded mb-3"></div>
-        <div class="h-3.5 w-full bg-neutral-200 rounded mb-1.5"></div>
-        <div class="h-3.5 w-2/3 bg-neutral-200 rounded"></div>
-      </div>
-    </div>
-
-    <!-- 3-Column Skeleton Grid -->
-    <div class="mt-6 grid grid-cols-1 lg:grid-cols-[minmax(0,23fr)_minmax(0,54fr)_minmax(0,23fr)] lg:border lg:border-neutral-300">
-      <!-- Col 1 (ISF Insight Slider + Terkini) -->
-      <div class="p-4 border-b lg:border-b-0 lg:border-r border-neutral-200 space-y-4">
-        <!-- Insight Card Skeleton -->
-        <div class="border border-neutral-200 bg-neutral-100/70 p-4 rounded space-y-3">
-          <div class="flex items-center gap-2">
-            <div class="h-2.5 w-2.5 rounded-full bg-red-200"></div>
-            <div class="h-3 w-20 bg-neutral-300 rounded"></div>
-          </div>
-          <div class="h-4 w-4/5 bg-neutral-300 rounded"></div>
-          <div class="h-3 w-full bg-neutral-200 rounded"></div>
-          <div class="flex items-center gap-2.5 pt-2 border-t border-neutral-200">
-            <div class="h-8 w-8 rounded-full bg-neutral-300 shrink-0"></div>
-            <div class="space-y-1">
-              <div class="h-3 w-24 bg-neutral-300 rounded"></div>
-              <div class="h-2.5 w-32 bg-neutral-200 rounded"></div>
+        <div
+            class="mt-4 overflow-hidden border border-neutral-300 bg-neutral-200"
+        >
+            <div class="aspect-video lg:aspect-[21/9]"></div>
+            <div
+                class="flex items-center justify-between border-t border-neutral-300 bg-white px-4 py-3"
+            >
+                <div class="h-3 w-32 rounded bg-neutral-200"></div>
+                <div class="flex gap-2">
+                    <div class="h-7 w-7 rounded-full bg-neutral-200"></div>
+                    <div class="h-7 w-7 rounded-full bg-neutral-200"></div>
+                </div>
             </div>
-          </div>
-          <div class="space-y-2 pt-2 border-t border-neutral-200">
-            <div class="h-4 bg-neutral-300 rounded w-4/5"></div>
-            <div class="h-4 bg-neutral-200 rounded w-3/5"></div>
-            <div class="h-4 bg-neutral-200 rounded w-2/5"></div>
-          </div>
         </div>
 
-        <div class="h-3.5 w-24 bg-neutral-300 rounded pt-2"></div>
-        <div v-for="n in 3" :key="n" class="space-y-1.5 border-b border-neutral-100 pb-3 last:border-b-0">
-          <div class="h-2.5 w-16 bg-neutral-200 rounded"></div>
-          <div class="h-3.5 w-full bg-neutral-300 rounded"></div>
-        </div>
-      </div>
+        <div class="mt-6 lg:border lg:border-neutral-300">
+            <div
+                class="grid grid-cols-1 lg:grid-cols-[minmax(0,23fr)_minmax(0,54fr)_minmax(0,23fr)]"
+            >
+                <section
+                    class="order-1 min-w-0 lg:order-2 lg:border-x lg:border-neutral-300"
+                >
+                    <div
+                        class="h-11 border-b border-neutral-300 px-4 xl:px-[30px]"
+                    >
+                        <div class="mt-4 h-3 w-20 rounded bg-neutral-300"></div>
+                    </div>
+                    <div class="space-y-4 px-4 pb-6 pt-5 xl:px-[30px]">
+                        <div class="h-3 w-28 rounded bg-neutral-200"></div>
+                        <div class="h-10 w-4/5 rounded bg-neutral-300"></div>
+                        <div class="h-4 w-full rounded bg-neutral-200"></div>
+                        <div class="h-4 w-5/6 rounded bg-neutral-200"></div>
+                        <div
+                            class="aspect-[16/9] border border-neutral-300 bg-neutral-200"
+                        ></div>
+                        <div
+                            class="grid grid-cols-1 border-t border-neutral-300 sm:grid-cols-2"
+                        >
+                            <div
+                                v-for="n in 2"
+                                :key="n"
+                                class="space-y-2 border-b border-neutral-300 py-4 sm:px-4 sm:first:px-0 sm:last:border-l sm:last:border-neutral-300"
+                            >
+                                <div
+                                    class="h-3 w-full rounded bg-neutral-200"
+                                ></div>
+                                <div
+                                    class="h-3 w-3/4 rounded bg-neutral-200"
+                                ></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
-      <!-- Col 2 (Top News Hero) -->
-      <div class="p-5 border-b lg:border-b-0 lg:border-r border-neutral-200 space-y-4">
-        <div class="h-4 w-20 bg-neutral-300 rounded"></div>
-        <div class="h-3 w-24 bg-neutral-200 rounded"></div>
-        <div class="h-7 w-4/5 bg-neutral-300 rounded"></div>
-        <div class="h-4 w-full bg-neutral-200 rounded"></div>
-        <div class="h-4 w-5/6 bg-neutral-200 rounded"></div>
-        <div class="h-28 bg-neutral-100 border border-neutral-200 rounded p-4 mt-4 space-y-2">
-          <div class="h-3.5 w-3/4 bg-neutral-200 rounded"></div>
-          <div class="h-3.5 w-1/2 bg-neutral-200 rounded"></div>
-        </div>
-      </div>
+                <section
+                    class="order-2 min-w-0 border-t border-neutral-300 lg:order-3 lg:border-t-0"
+                >
+                    <div
+                        class="hidden h-11 border-b border-neutral-300 lg:block"
+                    ></div>
+                    <div class="px-4 xl:px-[30px]">
+                        <div
+                            v-for="n in 3"
+                            :key="n"
+                            class="space-y-3 border-b border-neutral-300 py-4 lg:py-5"
+                        >
+                            <div
+                                class="aspect-video border border-neutral-300 bg-neutral-200"
+                            ></div>
+                            <div
+                                class="h-4 w-full rounded bg-neutral-300"
+                            ></div>
+                            <div class="h-3 w-1/3 rounded bg-neutral-200"></div>
+                        </div>
+                    </div>
+                </section>
 
-      <!-- Col 3 (Fact block / Chart) -->
-      <div class="p-4 space-y-5">
-        <div class="h-4 w-28 bg-neutral-300 rounded mb-4"></div>
-        <div class="h-24 bg-neutral-100 border border-neutral-200 p-3 rounded space-y-2">
-          <div class="h-3 w-full bg-neutral-200 rounded"></div>
-          <div class="h-3 w-4/5 bg-neutral-200 rounded"></div>
+                <aside
+                    class="order-3 min-w-0 border-t border-neutral-300 lg:order-1 lg:border-t-0"
+                >
+                    <div class="space-y-3 p-4 xl:px-[30px]">
+                        <div class="h-3 w-24 rounded bg-neutral-300"></div>
+                        <div class="h-5 w-4/5 rounded bg-neutral-300"></div>
+                        <div class="h-3 w-full rounded bg-neutral-200"></div>
+                        <div
+                            class="h-20 border border-neutral-300 bg-neutral-100"
+                        ></div>
+                    </div>
+                    <div class="border-t border-neutral-300">
+                        <div
+                            class="h-11 border-b border-neutral-300 px-4 xl:px-[30px]"
+                        >
+                            <div
+                                class="mt-4 h-3 w-24 rounded bg-neutral-300"
+                            ></div>
+                        </div>
+                        <div class="px-4 xl:px-[30px]">
+                            <div
+                                v-for="n in 3"
+                                :key="n"
+                                class="flex gap-3 border-b border-neutral-300 py-3"
+                            >
+                                <div
+                                    class="h-14 w-14 shrink-0 bg-neutral-200"
+                                ></div>
+                                <div class="flex-1 space-y-2">
+                                    <div
+                                        class="h-3 w-16 rounded bg-neutral-200"
+                                    ></div>
+                                    <div
+                                        class="h-4 w-full rounded bg-neutral-300"
+                                    ></div>
+                                    <div
+                                        class="h-3 w-1/3 rounded bg-neutral-200"
+                                    ></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+
+            <section class="border-t border-neutral-300">
+                <div
+                    class="flex h-11 items-center justify-between border-b border-neutral-300 px-4 xl:px-[30px]"
+                >
+                    <div class="h-3 w-32 rounded bg-neutral-300"></div>
+                    <div class="h-3 w-16 rounded bg-neutral-200"></div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                    <div
+                        v-for="n in 4"
+                        :key="n"
+                        class="space-y-3 border-b border-neutral-300 px-4 py-4 sm:px-3 lg:border-b-0 lg:border-r lg:px-4 lg:py-5 last:border-r-0 xl:px-[30px]"
+                    >
+                        <div class="aspect-[4/3] bg-neutral-200"></div>
+                        <div class="h-3 w-16 rounded bg-neutral-200"></div>
+                        <div class="h-5 w-full rounded bg-neutral-300"></div>
+                        <div class="h-3 w-1/3 rounded bg-neutral-200"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="border-t border-neutral-300">
+                <div class="h-11 border-b border-neutral-300 px-4 xl:px-[30px]">
+                    <div class="mt-4 h-3 w-20 rounded bg-neutral-300"></div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2">
+                    <div
+                        v-for="n in 2"
+                        :key="n"
+                        class="space-y-3 border-b border-neutral-300 px-4 py-5 last:border-b-0 md:border-b-0 md:px-4 md:first:border-r xl:px-[30px]"
+                    >
+                        <div class="h-3 w-16 rounded bg-neutral-200"></div>
+                        <div class="h-6 w-4/5 rounded bg-neutral-300"></div>
+                        <div class="h-4 w-full rounded bg-neutral-200"></div>
+                    </div>
+                </div>
+            </section>
         </div>
-        <div class="h-32 bg-neutral-200 rounded"></div>
-      </div>
     </div>
-  </div>
 </template>

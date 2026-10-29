@@ -9,4 +9,7 @@ export { default as IsfLogo } from './IsfLogo.vue';
 export { default as IsfLink } from './IsfLink.vue';
 export { default as IsfBannerCarousel } from './IsfBannerCarousel.vue';
 export { default as BerandaSkeleton } from './BerandaSkeleton.vue';
+export { default as AnggotaSkeleton } from './AnggotaSkeleton.vue';
+export { default as ArtikelSkeleton } from './ArtikelSkeleton.vue';
+export { default as InfografikSkeleton } from './InfografikSkeleton.vue';
 export { default as IsfInsightSlider } from './IsfInsightSlider.vue';

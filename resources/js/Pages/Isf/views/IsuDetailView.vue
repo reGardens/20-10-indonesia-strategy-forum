@@ -19,6 +19,7 @@ import TableRow from "@/Components/UI/TableRow.vue";
 import TableHead from "@/Components/UI/TableHead.vue";
 import TableCell from "@/Components/UI/TableCell.vue";
 import {
+    ArtikelSkeleton,
     CategoryLabel,
     FactBlock,
     ImagePlaceholder,
@@ -26,7 +27,6 @@ import {
     SectionHeading,
     SimpleBarChart,
 } from "@/Components/Isf";
-import LoadingIndicator from "@/Pages/Cms/components/shared/LoadingIndicator.vue";
 import ErrorMessage from "@/Pages/Cms/components/shared/ErrorMessage.vue";
 import { formatDate } from "@/Utils/formatters";
 import { getIsu } from "@/api/services/isfPublicService";
@@ -50,9 +50,7 @@ const headlineLinkClass =
 
 <template>
     <div class="isf-mobile-gutter mx-auto max-w-6xl px-4 py-8 sm:py-10">
-        <div v-if="status === 'loading'" class="py-16">
-            <LoadingIndicator text="Memuat anatomi isu…" />
-        </div>
+        <ArtikelSkeleton v-if="status === 'loading'" variant="isu" />
 
         <div v-else-if="status === 'error'" class="mx-auto max-w-3xl py-16">
             <ErrorMessage

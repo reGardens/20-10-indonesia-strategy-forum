@@ -25,8 +25,7 @@ import TableBody from "@/Components/UI/TableBody.vue";
 import TableRow from "@/Components/UI/TableRow.vue";
 import TableHead from "@/Components/UI/TableHead.vue";
 import TableCell from "@/Components/UI/TableCell.vue";
-import { IsfLink, PriorityBadge } from "@/Components/Isf";
-import LoadingIndicator from "@/Pages/Cms/components/shared/LoadingIndicator.vue";
+import { AnggotaSkeleton, IsfLink, PriorityBadge } from "@/Components/Isf";
 import ErrorMessage from "@/Pages/Cms/components/shared/ErrorMessage.vue";
 import { formatDate } from "@/Utils/formatters";
 import { getAnggota } from "@/api/services/isfPublicService";
@@ -104,20 +103,7 @@ const linkClass =
 
 <template>
     <div class="space-y-6">
-        <header>
-            <div class="isf-col-head">
-                <p class="isf-label">Feed Peringatan Dini</p>
-            </div>
-            <h1
-                class="isf-headline mt-4 font-headline text-[30px] leading-[1.1] sm:text-[40px]"
-            >
-                Dasbor Umpan Peringatan
-            </h1>
-        </header>
-
-        <div v-if="status === 'loading'" class="py-16">
-            <LoadingIndicator text="Memuat umpan peringatan…" />
-        </div>
+        <AnggotaSkeleton v-if="status === 'loading'" />
 
         <ErrorMessage
             v-else-if="status !== 'ready'"
@@ -126,7 +112,19 @@ const linkClass =
             @retry="load"
         />
 
-        <div v-else class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <template v-else>
+            <header>
+                <div class="isf-col-head">
+                    <p class="isf-label">Feed Peringatan Dini</p>
+                </div>
+                <h1
+                    class="isf-headline mt-4 font-headline text-[30px] leading-[1.1] sm:text-[40px]"
+                >
+                    Dasbor Umpan Peringatan
+                </h1>
+            </header>
+
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
             <section
                 aria-labelledby="daftar-alert"
                 class="space-y-4 lg:col-span-8"
@@ -340,5 +338,6 @@ const linkClass =
                 </Card>
             </aside>
         </div>
+        </template>
     </div>
 </template>

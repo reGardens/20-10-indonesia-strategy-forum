@@ -6,18 +6,33 @@ import http from '@/api/http'
  * tokoh or isu rejects with an axios error whose response.status is 404.
  */
 
-// Concurrent calls for the same URL share one request (e.g. /anggota layout + view).
-const inFlight = new Map()
+// Cached promises with TTL so prefetch and concurrent calls share responses seamlessly
+const cache = new Map()
 
 function get(url) {
-  if (!inFlight.has(url)) {
-    const request = http
-      .get(url)
-      .then((response) => response.data)
-      .finally(() => inFlight.delete(url))
-    inFlight.set(url, request)
+  const cached = cache.get(url)
+  if (cached && Date.now() - cached.time < 30000) {
+    return cached.promise
   }
-  return inFlight.get(url)
+
+  const promise = http
+    .get(url)
+    .then((response) => response.data)
+    .catch((error) => {
+      cache.delete(url)
+      throw error
+    })
+
+  cache.set(url, { promise, time: Date.now() })
+  return promise
+}
+
+export function invalidateCache(url) {
+  if (url) {
+    cache.delete(url)
+  } else {
+    cache.clear()
+  }
 }
 
 export function getBeranda() {
