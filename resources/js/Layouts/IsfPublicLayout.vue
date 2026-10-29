@@ -155,11 +155,14 @@ onBeforeUnmount(() => {
                         >
                             <svg
                                 class="h-5 w-5"
+                                width="20"
+                                height="20"
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 stroke="currentColor"
                                 stroke-width="1.5"
                                 aria-hidden="true"
+                                focusable="false"
                             >
                                 <path
                                     v-if="menuOpen"
@@ -220,11 +223,14 @@ onBeforeUnmount(() => {
                         >
                             <svg
                                 class="h-5 w-5"
+                                width="20"
+                                height="20"
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 stroke="currentColor"
                                 stroke-width="1.5"
                                 aria-hidden="true"
+                                focusable="false"
                             >
                                 <circle cx="11" cy="11" r="6.5" />
                                 <path d="m16 16 4.5 4.5" />

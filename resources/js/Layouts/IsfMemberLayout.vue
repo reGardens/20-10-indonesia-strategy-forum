@@ -88,7 +88,9 @@ onBeforeUnmount(() => {
                     <span
                         class="isf-wordmark mx-auto flex items-center justify-center min-w-0 text-center leading-none"
                     >
-                        <span class="inline-flex items-stretch justify-center gap-x-2 sm:gap-x-2.5">
+                        <span
+                            class="inline-flex items-stretch justify-center gap-x-2 sm:gap-x-2.5"
+                        >
                             <img
                                 src="/images/isf/logo-isf.jpeg"
                                 alt="ISF Logo"
@@ -97,7 +99,10 @@ onBeforeUnmount(() => {
                                 height="38"
                             />
                             <span class="sr-only">ISF </span>
-                            <span class="isf-script text-neutral-950 text-[26px] sm:text-[32px] lg:text-[38px] leading-none">Indonesia Strategy Forum</span>
+                            <span
+                                class="isf-script text-neutral-950 text-[26px] sm:text-[32px] lg:text-[38px] leading-none"
+                                >Indonesia Strategy Forum</span
+                            >
                         </span>
                     </span>
                     <span class="isf-byline mt-1 block">Portal Anggota</span>
@@ -108,7 +113,13 @@ onBeforeUnmount(() => {
                         aria-label="Notifikasi"
                         class="inline-flex h-8 w-8 items-center justify-center text-neutral-700 hover:text-isf-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red focus-visible:ring-offset-2"
                     >
-                        <IconBell class="h-4 w-4" aria-hidden="true" />
+                        <IconBell
+                            class="h-4 w-4"
+                            width="16"
+                            height="16"
+                            aria-hidden="true"
+                            focusable="false"
+                        />
                     </button>
                     <span
                         v-if="initials"

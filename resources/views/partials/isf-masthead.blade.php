@@ -7,7 +7,7 @@
         <div class="mx-auto grid w-full max-w-[1400px] grid-cols-[minmax(2.5rem,1fr)_auto_minmax(2.5rem,1fr)] items-center gap-3 px-4 py-3 sm:py-4 lg:px-6 lg:py-6">
             <div class="justify-self-start">
                 <div class="inline-flex h-10 w-10 items-center justify-center text-neutral-900">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                    <svg class="h-5 w-5" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">
                         <path d="M3 6h18M3 12h18M3 18h18" />
                     </svg>
                 </div>
@@ -34,7 +34,7 @@
                     Portal Anggota
                 </span>
                 <div class="inline-flex h-10 w-10 shrink-0 items-center justify-center text-neutral-900">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                    <svg class="h-5 w-5" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">
                         <circle cx="11" cy="11" r="6.5" />
                         <path d="m16 16 4.5 4.5" />
                     </svg>
