@@ -365,8 +365,21 @@
 .isf-marquee-track {
     display: inline-flex;
     width: max-content;
+    max-width: none !important;
+    white-space: nowrap !important;
     will-change: transform;
     animation: isf-marquee 35s linear infinite;
+}
+
+.isf-marquee-track > * {
+    max-width: none !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+}
+
+.isf-marquee-track > * > * {
+    max-width: none !important;
+    white-space: nowrap !important;
 }
 
 .isf-marquee-track:hover {

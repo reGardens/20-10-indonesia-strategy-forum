@@ -148,8 +148,11 @@ const cellPad = "lg:px-4 xl:px-[30px]";
                             <div
                                 v-for="(item, idx) in [...topBars, ...topBars]"
                                 :key="idx"
-                                class="flex items-center gap-2.5 shrink-0"
+                                class="flex items-center gap-2.5 shrink-0 whitespace-nowrap"
                             >
+                                <span class="text-neutral-400 select-none"
+                                    >•</span
+                                >
                                 <span
                                     v-if="
                                         item.badge &&
@@ -164,9 +167,6 @@ const cellPad = "lg:px-4 xl:px-[30px]";
                                     v-if="item.info"
                                     class="text-neutral-500 text-xs font-normal"
                                     >({{ item.info }})</span
-                                >
-                                <span class="text-neutral-400 mx-2 select-none"
-                                    >•</span
                                 >
                             </div>
                         </div>
