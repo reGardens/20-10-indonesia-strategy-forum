@@ -28,15 +28,44 @@ class IsfCacheService
      */
     public static function remember(string $key, callable $callback, int $ttl = self::TTL_DEFAULT): mixed
     {
+        $result = static::rememberWithStatus($key, $callback, $ttl);
+
+        return $result['data'];
+    }
+
+    /**
+     * Mengambil data dari cache dan mengembalikan data beserta status HIT/MISS/ERROR.
+     * Format return: ['data' => mixed, 'status' => 'HIT'|'MISS'|'FALLBACK_ERROR', 'driver' => string, 'error' => ?string]
+     */
+    public static function rememberWithStatus(string $key, callable $callback, int $ttl = self::TTL_DEFAULT): array
+    {
+        $driver = (string) config('cache.default', 'file');
+        $isHit = false;
+
         try {
             if (static::supportsTags()) {
-                return Cache::tags([self::TAG_PUBLIC])->remember($key, $ttl, $callback);
+                $isHit = Cache::tags([self::TAG_PUBLIC])->has($key);
+                $data = Cache::tags([self::TAG_PUBLIC])->remember($key, $ttl, $callback);
+            } else {
+                $isHit = Cache::has($key);
+                $data = Cache::remember($key, $ttl, $callback);
             }
 
-            return Cache::remember($key, $ttl, $callback);
+            return [
+                'data' => $data,
+                'status' => $isHit ? 'HIT' : 'MISS',
+                'driver' => $driver,
+                'error' => null,
+            ];
         } catch (Throwable $e) {
             Log::warning("ISF Cache error on key [{$key}]: " . $e->getMessage());
-            return $callback();
+
+            return [
+                'data' => $callback(),
+                'status' => 'FALLBACK_ERROR',
+                'driver' => $driver,
+                'error' => $e->getMessage(),
+            ];
         }
     }
 
@@ -139,4 +168,3 @@ class IsfCacheService
         }
     }
 }
-

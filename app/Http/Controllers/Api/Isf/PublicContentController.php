@@ -25,16 +25,32 @@ use Illuminate\Http\Request;
 /**
  * Public, read-only ISF content API (GET only). Serves ONLY published
  * ("terbit") content, in the shape used by the public Vue pages.
- * Dilengkapi caching server-side otomatis via IsfCacheService.
+ * Dilengkapi caching server-side otomatis & diagnostic HTTP headers.
  */
 class PublicContentController extends Controller
 {
+    /**
+     * Helper untuk membungkus respons dengan diagnostic cache headers.
+     */
+    protected function cachedResponse(array $result): JsonResponse
+    {
+        $response = response()->json($result['data'])
+            ->header('X-Cache-Status', $result['status'])
+            ->header('X-Cache-Driver', $result['driver']);
+
+        if (!empty($result['error'])) {
+            $response->header('X-Cache-Error', substr($result['error'], 0, 100));
+        }
+
+        return $response;
+    }
+
     /**
      * GET /api/isf/beranda
      */
     public function beranda(Request $request): JsonResponse
     {
-        $data = IsfCacheService::remember(IsfCacheService::KEY_BERANDA, function () use ($request) {
+        $result = IsfCacheService::rememberWithStatus(IsfCacheService::KEY_BERANDA, function () use ($request) {
             $settings = Setting::get('beranda', [
                 'topBar' => ['badge' => '', 'announcement' => '', 'info' => ''],
                 'pekanIni' => ['dateStart' => null, 'dateEnd' => null],
@@ -164,7 +180,7 @@ class PublicContentController extends Controller
             ];
         });
 
-        return response()->json($data);
+        return $this->cachedResponse($result);
     }
 
     /**
@@ -172,7 +188,7 @@ class PublicContentController extends Controller
      */
     public function infografik(Request $request): JsonResponse
     {
-        $data = IsfCacheService::remember(IsfCacheService::KEY_INFOGRAFIK, function () use ($request) {
+        $result = IsfCacheService::rememberWithStatus(IsfCacheService::KEY_INFOGRAFIK, function () use ($request) {
             $infografik = Infographic::query()->terbit()
                 ->orderByDesc('published_at')->orderByDesc('id')->get();
 
@@ -181,7 +197,7 @@ class PublicContentController extends Controller
             ];
         });
 
-        return response()->json($data);
+        return $this->cachedResponse($result);
     }
 
     /**
@@ -195,11 +211,11 @@ class PublicContentController extends Controller
             return $this->notFound('Tokoh tidak ditemukan.');
         }
 
-        $data = IsfCacheService::remember(IsfCacheService::PREFIX_TOKOH . $slug, function () use ($request, $tokoh) {
+        $result = IsfCacheService::rememberWithStatus(IsfCacheService::PREFIX_TOKOH . $slug, function () use ($request, $tokoh) {
             return (new TokohResource($tokoh))->resolve($request);
         });
 
-        return response()->json($data);
+        return $this->cachedResponse($result);
     }
 
     /**
@@ -213,7 +229,7 @@ class PublicContentController extends Controller
             return $this->notFound('Isu tidak ditemukan.');
         }
 
-        $data = IsfCacheService::remember(IsfCacheService::PREFIX_ISU . $slug, function () use ($request, $isu) {
+        $result = IsfCacheService::rememberWithStatus(IsfCacheService::PREFIX_ISU . $slug, function () use ($request, $isu) {
             $populer = Article::query()->terbit()->where('is_popular', true)
                 ->orderByRaw('popular_rank IS NULL')->orderBy('popular_rank')
                 ->orderByDesc('published_at')->limit(5)->get();
@@ -221,7 +237,7 @@ class PublicContentController extends Controller
             return (new IsuResource($isu, $populer))->resolve($request);
         });
 
-        return response()->json($data);
+        return $this->cachedResponse($result);
     }
 
     /**
@@ -229,7 +245,7 @@ class PublicContentController extends Controller
      */
     public function anggota(Request $request): JsonResponse
     {
-        $data = IsfCacheService::remember(IsfCacheService::KEY_ANGGOTA, function () use ($request) {
+        $result = IsfCacheService::rememberWithStatus(IsfCacheService::KEY_ANGGOTA, function () use ($request) {
             $alerts = Alert::query()->terbit()->orderByDesc('date')->orderByDesc('id')->get();
 
             // "Tautan Langsung" is navigation: computed from the current weekly content.
@@ -255,7 +271,7 @@ class PublicContentController extends Controller
             ];
         });
 
-        return response()->json($data);
+        return $this->cachedResponse($result);
     }
 
     private function notFound(string $message): JsonResponse
