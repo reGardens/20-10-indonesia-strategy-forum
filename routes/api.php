@@ -21,6 +21,7 @@ Route::middleware(['web'])->prefix('isf')->group(function () {
     Route::get('/isu/{slug}', [PublicContentController::class, 'isu'])->name('api.isf.isu');
     Route::get('/infografik', [PublicContentController::class, 'infografik'])->name('api.isf.infografik');
     Route::get('/anggota', [PublicContentController::class, 'anggota'])->name('api.isf.anggota');
+    Route::get('/cache-heal', [PublicContentController::class, 'cacheHeal'])->name('api.isf.cache-heal');
 });
 
 // ISF CMS API (authenticated session + per-module feature access)
