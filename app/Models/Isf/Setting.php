@@ -2,6 +2,7 @@
 
 namespace App\Models\Isf;
 
+use App\Services\Isf\IsfCacheService;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -23,6 +24,17 @@ class Setting extends Model
         return [
             'value' => 'array',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saved(function () {
+            IsfCacheService::clearAll();
+        });
+
+        static::deleted(function () {
+            IsfCacheService::clearAll();
+        });
     }
 
     /**

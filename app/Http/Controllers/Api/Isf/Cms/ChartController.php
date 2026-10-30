@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Isf\Cms;
 
 use App\Http\Requests\Isf\ChartRequest;
 use App\Models\Isf\Chart;
+use App\Services\Isf\IsfCacheService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 
@@ -23,7 +24,7 @@ class ChartController extends CmsResourceController
     /** Beranda chart currently shown on the public page. */
     protected function liveId(): ?int
     {
-        return Chart::currentBeranda()?->id;
+        return Chart::query()->where('is_beranda', true)->value('id');
     }
 
     public function show(Chart $chart): JsonResponse
@@ -56,6 +57,8 @@ class ChartController extends CmsResourceController
         foreach ($validated['items'] as $item) {
             Chart::where('id', $item['id'])->update(['order' => $item['order']]);
         }
+
+        IsfCacheService::clearBeranda();
 
         return response()->json(['message' => 'Urutan grafik berhasil diperbarui.']);
     }

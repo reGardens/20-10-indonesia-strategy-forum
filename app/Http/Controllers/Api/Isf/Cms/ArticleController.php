@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Isf\Cms;
 
 use App\Http\Requests\Isf\ArticleRequest;
 use App\Models\Isf\Article;
+use App\Services\Isf\IsfCacheService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 
@@ -52,6 +53,8 @@ class ArticleController extends CmsResourceController
             'status' => 'terbit',
             'published_at' => now()->format('Y-m-d'),
         ]);
+
+        IsfCacheService::clearBeranda();
 
         return response()->json([
             'message' => 'Artikel berhasil ditayangkan sebagai Hero Beranda.',

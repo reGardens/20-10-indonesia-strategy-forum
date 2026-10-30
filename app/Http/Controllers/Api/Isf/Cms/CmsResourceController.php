@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Isf\Cms;
 
 use App\Http\Controllers\Controller;
+use App\Services\Isf\IsfCacheService;
 use App\Support\IsfOptions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -86,6 +87,7 @@ abstract class CmsResourceController extends Controller
     protected function storeModel(array $validated): JsonResponse
     {
         $model = $this->model::query()->create($validated);
+        IsfCacheService::clearAll();
 
         return response()->json(['data' => $model->fresh()], 201);
     }
@@ -93,6 +95,7 @@ abstract class CmsResourceController extends Controller
     protected function updateModel(Model $model, array $validated): JsonResponse
     {
         $model->update($validated);
+        IsfCacheService::clearAll();
 
         return response()->json(['data' => $model->fresh()]);
     }
@@ -100,6 +103,7 @@ abstract class CmsResourceController extends Controller
     protected function destroyModel(Model $model): Response
     {
         $model->delete();
+        IsfCacheService::clearAll();
 
         return response()->noContent();
     }
