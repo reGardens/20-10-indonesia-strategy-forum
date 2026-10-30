@@ -58,6 +58,30 @@ class IsfCacheService
                 'error' => null,
             ];
         } catch (Throwable $e) {
+            // Auto-heal Redis MISCONF (bgsave failure pada shared hosting)
+            if (str_contains($e->getMessage(), 'MISCONF')) {
+                if (static::healRedisMisconf()) {
+                    try {
+                        if (static::supportsTags()) {
+                            $isHit = Cache::tags([self::TAG_PUBLIC])->has($key);
+                            $data = Cache::tags([self::TAG_PUBLIC])->remember($key, $ttl, $callback);
+                        } else {
+                            $isHit = Cache::has($key);
+                            $data = Cache::remember($key, $ttl, $callback);
+                        }
+
+                        return [
+                            'data' => $data,
+                            'status' => $isHit ? 'HIT' : 'MISS',
+                            'driver' => $driver,
+                            'error' => null,
+                        ];
+                    } catch (Throwable $retryException) {
+                        Log::warning("ISF Cache retry after MISCONF heal failed: " . $retryException->getMessage());
+                    }
+                }
+            }
+
             Log::warning("ISF Cache error on key [{$key}]: " . $e->getMessage());
 
             return [
@@ -66,6 +90,59 @@ class IsfCacheService
                 'driver' => $driver,
                 'error' => $e->getMessage(),
             ];
+        }
+    }
+
+    /**
+     * Memperbaiki konfigurasi Redis jika mengalami error MISCONF (bgsave failure di shared hosting).
+     * Memerintahkan Redis untuk mengabaikan error snapshot disk dan tetap mengizinkan write di RAM.
+     */
+    public static function healRedisMisconf(): bool
+    {
+        try {
+            $connectionName = config('cache.stores.redis.connection', 'cache');
+            $redis = \Illuminate\Support\Facades\Redis::connection($connectionName);
+
+            // 1. Coba lewat command() Laravel facade
+            try {
+                $redis->command('config', ['SET', 'stop-writes-on-bgsave-error', 'no']);
+                Log::info('ISF Cache: Redis stop-writes-on-bgsave-error set to no via command()');
+
+                return true;
+            } catch (Throwable) {
+            }
+
+            // 2. Coba lewat rawCommand()
+            try {
+                $redis->rawCommand('CONFIG', 'SET', 'stop-writes-on-bgsave-error', 'no');
+                Log::info('ISF Cache: Redis stop-writes-on-bgsave-error set to no via rawCommand()');
+
+                return true;
+            } catch (Throwable) {
+            }
+
+            // 3. Coba akses native client phpredis
+            if (method_exists($redis, 'client')) {
+                $client = $redis->client();
+                if (method_exists($client, 'config')) {
+                    $client->config('SET', 'stop-writes-on-bgsave-error', 'no');
+                    Log::info('ISF Cache: Redis stop-writes-on-bgsave-error set to no via client()->config()');
+
+                    return true;
+                }
+                if (method_exists($client, 'rawCommand')) {
+                    $client->rawCommand('CONFIG', 'SET', 'stop-writes-on-bgsave-error', 'no');
+                    Log::info('ISF Cache: Redis stop-writes-on-bgsave-error set to no via client()->rawCommand()');
+
+                    return true;
+                }
+            }
+
+            return false;
+        } catch (Throwable $e) {
+            Log::warning('ISF Cache healRedisMisconf exception: ' . $e->getMessage());
+
+            return false;
         }
     }
 

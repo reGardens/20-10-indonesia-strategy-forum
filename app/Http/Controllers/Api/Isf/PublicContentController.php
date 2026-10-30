@@ -274,6 +274,36 @@ class PublicContentController extends Controller
         return $this->cachedResponse($result);
     }
 
+
+    /**
+     * Endpoint diagnostik & auto-heal Redis jika mengalami kendala disk snapshot.
+     */
+    public function cacheHeal(): JsonResponse
+    {
+        $driver = (string) config('cache.default', 'file');
+        $healed = IsfCacheService::healRedisMisconf();
+
+        $testResult = 'skipped';
+        if ($driver === 'redis' || $healed) {
+            try {
+                \Illuminate\Support\Facades\Cache::put('isf:test:ping', 'pong', 60);
+                $testVal = \Illuminate\Support\Facades\Cache::get('isf:test:ping');
+                $testResult = $testVal === 'pong' ? 'SUCCESS (WRITE & READ OK)' : 'FAILED_READ';
+            } catch (\Throwable $e) {
+                $testResult = 'FAILED: ' . $e->getMessage();
+            }
+        }
+
+        return response()->json([
+            'driver' => $driver,
+            'auto_heal_executed' => $healed,
+            'cache_write_test' => $testResult,
+            'message' => $healed
+                ? 'Redis stop-writes-on-bgsave-error berhasil diset ke no.'
+                : 'Driver bukan redis atau perintah CONFIG tidak didukung.',
+        ]);
+    }
+
     private function notFound(string $message): JsonResponse
     {
         return response()->json(['message' => $message], 404);
