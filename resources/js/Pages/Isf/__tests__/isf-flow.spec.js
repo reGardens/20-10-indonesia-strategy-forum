@@ -303,7 +303,8 @@ describe("ISF alur E2E (frontend)", () => {
 
     it("/ (root) merender Beranda dengan judul hero", async () => {
         await mountAt("/");
-        expect(router.currentRoute.value.name).toBe("isf-home");
+        expect(router.currentRoute.value.name).toBe("isf-beranda");
+        expect(router.currentRoute.value.path).toBe("/beranda");
         await waitFor(() => root.querySelector("#hero-title"), "beranda di /");
         expect(root.querySelector("#hero-title").textContent).toContain(beranda.hero.title);
         expect(text()).toContain("ISF Indonesia Strategy Forum");

@@ -10,15 +10,7 @@ const BerandaView = () => import('../Pages/Isf/views/BerandaView.vue')
 const routes = [
   {
     path: '/',
-    component: IsfPublicLayout,
-    children: [
-      {
-        path: '',
-        name: 'isf-home',
-        component: BerandaView,
-        meta: { title: 'Beranda · Indonesia Strategy Forum' }
-      }
-    ]
+    redirect: '/beranda'
   },
   {
     path: '/cms',
