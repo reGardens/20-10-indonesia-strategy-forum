@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 // ISF (Indonesia Strategy Forum) public pages — Vue SPA, content from the public API (/api/isf/*)
-Route::get('/', [SpaController::class, 'index'])->name('isf.home');
+Route::redirect('/', '/beranda');
 Route::get('/beranda', [SpaController::class, 'index'])->name('isf.beranda');
 Route::get('/infografik', [SpaController::class, 'index'])->name('isf.infografik');
 Route::get('/tokoh/{slug}', [SpaController::class, 'index'])->name('isf.tokoh.show');
