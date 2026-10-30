@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Isf\Cms;
 
 use App\Http\Requests\Isf\BannerRequest;
 use App\Models\Isf\Banner;
+use App\Services\Isf\IsfCacheService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 
@@ -57,6 +58,8 @@ class BannerController extends CmsResourceController
         foreach ($validated['items'] as $item) {
             Banner::where('id', $item['id'])->update(['order' => $item['order']]);
         }
+
+        IsfCacheService::clearBeranda();
 
         return response()->json(['message' => 'Urutan banner berhasil diperbarui.']);
     }
