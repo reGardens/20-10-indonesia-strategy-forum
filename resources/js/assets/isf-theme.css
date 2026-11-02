@@ -185,12 +185,13 @@
     -webkit-text-stroke: 0.15px currentColor;
 }
 
-/* Masthead icon: stretches to fill the exact flex-row height, no fixed px needed.
+/* Masthead icon: aspect-ratio keeps it square; responsive size is controlled via Tailwind classes.
    aspect-ratio keeps it square; max-height prevents overshooting on large screens. */
 .isf-theme .isf-masthead-icon {
-    height: 100%;
+    object-fit: cover;
+    flex-shrink: 0;
     aspect-ratio: 1 / 1;
-    max-height: 56px;
+    max-height: 50px;
 }
 
 .isf-theme .isf-editorial-rule {
