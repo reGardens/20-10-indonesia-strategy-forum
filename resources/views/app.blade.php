@@ -17,12 +17,26 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet" />
 
+    <!-- Dark Mode Preference Pre-init to avoid theme flash -->
+    <script>
+        (function () {
+            try {
+                var isDark = localStorage.getItem('cms-dark-mode');
+                if (isDark === 'true' || (isDark === null && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
+
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @inertiaHead
 </head>
 
-<body class="font-sans antialiased">
+<body class="font-sans antialiased bg-background text-foreground">
     <!-- Standard loading splash (ISF navy + red spinner) -->
     <div id="splash-screen"
         style="position: fixed; inset: 0; z-index: 99999; background: #0B1220; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s ease-in-out;">
@@ -41,48 +55,52 @@
     <script>
         document.body.style.overflow = 'hidden';
 
-        var isLoaded = false;
-        var minTimePassed = false;
-        var splashTimeout;
+        (function () {
+            var appMounted = false;
+            var minTimePassed = false;
+            var isHiding = false;
+            var splashTimeout;
 
-        function hideSplashScreen() {
-            var splash = document.getElementById('splash-screen');
-            if (splash && isLoaded && minTimePassed) {
-                clearTimeout(splashTimeout); // Clear safety timeout
-                splash.style.opacity = '0';
+            function dismiss() {
+                var splash = document.getElementById('splash-screen');
+                if (splash && appMounted && minTimePassed && !isHiding) {
+                    isHiding = true;
+                    clearTimeout(splashTimeout); // Clear safety timeout
+                    splash.style.opacity = '0';
 
-                // Trigger refresh IMMEDIATELY as it starts to fade
-                window.dispatchEvent(new Event('resize'));
-                if (window.gsap && window.ScrollTrigger) {
-                    window.ScrollTrigger.refresh();
+                    // Trigger refresh IMMEDIATELY as it starts to fade
+                    window.dispatchEvent(new Event('resize'));
+                    if (window.gsap && window.ScrollTrigger) {
+                        window.ScrollTrigger.refresh();
+                    }
+
+                    setTimeout(function () {
+                        splash.style.display = 'none';
+                        document.body.style.overflow = '';
+                    }, 500); // Matches transition duration
                 }
-
-                setTimeout(function () {
-                    splash.style.display = 'none';
-                    document.body.style.overflow = '';
-                }, 400); // Faster cleanup
             }
-        }
 
-        // 1. Min splash time (0.5s)
-        var introDuration = 500;
-        setTimeout(function () {
-            minTimePassed = true;
-            hideSplashScreen();
-        }, introDuration);
+            // Hook called by Inertia setup once page component is mounted
+            window.hideSplashScreen = function () {
+                appMounted = true;
+                dismiss();
+            };
 
-        // 2. Window Load (Assets ready)
-        window.addEventListener('load', function () {
-            isLoaded = true;
-            hideSplashScreen();
-        });
+            // 1. Min splash time (400ms) to ensure smooth transition without jitter on cached/fast loads
+            var introDuration = 400;
+            setTimeout(function () {
+                minTimePassed = true;
+                dismiss();
+            }, introDuration);
 
-        // 3. Safety Timeout (Max 5s) - Show page anyway if loading is too slow
-        splashTimeout = setTimeout(function () {
-            isLoaded = true;
-            minTimePassed = true;
-            hideSplashScreen();
-        }, 5000);
+            // 2. Safety Timeout (Max 6s) - Dismiss splash screen if JS error occurs
+            splashTimeout = setTimeout(function () {
+                appMounted = true;
+                minTimePassed = true;
+                dismiss();
+            }, 6000);
+        })();
     </script>
 
     @inertia

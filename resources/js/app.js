@@ -83,6 +83,12 @@ createInertiaApp({
 
         app.use(plugin);
         app.mount(el);
+
+        // Dismiss the initial splash screen now that Inertia is fully mounted in the DOM
+        if (typeof window.hideSplashScreen === 'function') {
+            window.hideSplashScreen();
+        }
+
         return app;
     },
     progress: false,
