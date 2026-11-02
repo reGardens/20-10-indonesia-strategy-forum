@@ -181,18 +181,18 @@ onBeforeUnmount(() => {
                         ]"
                     >
                         <span
-                            class="inline-flex items-stretch justify-center gap-x-2.5 sm:gap-x-3.5"
+                            class="inline-flex items-center justify-center gap-x-2 sm:gap-x-3"
                         >
                             <img
                                 src="/images/isf/logo-isf.jpeg"
                                 alt="ISF Logo"
-                                class="isf-masthead-icon w-auto self-stretch rounded-[7px] object-cover shrink-0 border border-neutral-300/80 shadow-xs"
+                                class="isf-masthead-icon h-8 w-8 sm:h-10 sm:w-10 md:h-11 md:w-11 lg:h-12 lg:w-12 xl:h-[50px] xl:w-[50px] rounded-[6px] sm:rounded-[7px] object-cover shrink-0 border border-neutral-300/80 shadow-xs"
                                 width="50"
                                 height="50"
                             />
                             <span class="sr-only">ISF </span>
                             <span
-                                class="isf-script text-neutral-950 text-[30px] sm:text-[38px] lg:text-[46px] xl:text-[50px] leading-none"
+                                class="isf-script text-neutral-950 text-[20px] sm:text-[32px] md:text-[36px] lg:text-[44px] xl:text-[50px] leading-tight sm:leading-none select-none"
                             >
                                 Indonesia Strategy Forum
                             </span>

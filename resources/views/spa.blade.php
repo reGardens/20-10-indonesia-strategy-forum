@@ -76,8 +76,8 @@
 
         .isf-initial-shell .isf-masthead-icon {
             width: auto;
-            height: 56px;
-            max-height: 56px;
+            height: 50px;
+            max-height: 50px;
             aspect-ratio: 1 / 1;
             border: 1px solid rgb(212 212 212 / .8);
             border-radius: 7px;
@@ -149,7 +149,7 @@
 
         .isf-initial-shell header .isf-wordmark>span {
             display: inline-flex;
-            align-items: stretch;
+            align-items: center;
             justify-content: center;
             gap: .875rem;
         }
@@ -207,7 +207,7 @@
 
         .isf-initial-shell header.border-b .isf-masthead-icon {
             height: 100%;
-            max-height: 56px;
+            max-height: 50px;
             border-radius: 5px;
         }
 
@@ -243,13 +243,14 @@
             }
 
             .isf-initial-shell header .isf-wordmark .isf-script {
-                font-size: 30px;
-                line-height: .666667;
+                font-size: 36px;
+                line-height: 1;
             }
 
             .isf-initial-shell header .isf-masthead-icon {
-                height: 56px;
-                max-height: 56px;
+                height: 44px;
+                width: 44px;
+                max-height: 44px;
             }
 
             .isf-initial-shell header>div:nth-child(2) nav {
@@ -273,6 +274,24 @@
                 max-width: 125px;
                 font-size: 26px;
                 line-height: 1;
+            }
+        }
+
+        @media (max-width: 639px) {
+            .isf-initial-shell header .isf-wordmark>span {
+                gap: .5rem;
+            }
+
+            .isf-initial-shell header .isf-wordmark .isf-script {
+                font-size: 20px;
+                line-height: 1.25;
+            }
+
+            .isf-initial-shell header .isf-masthead-icon {
+                height: 32px;
+                width: 32px;
+                max-height: 32px;
+                border-radius: 6px;
             }
         }
 
