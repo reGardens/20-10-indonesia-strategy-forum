@@ -193,31 +193,37 @@
             padding: 0;
         }
 
-        .isf-initial-shell header.border-b>div:first-child>div {
+        .isf-initial-shell header.border-b>div {
             min-height: 4.5rem;
             padding: 1rem 1.5rem;
-            grid-template-columns: minmax(4.5rem, 1fr) auto minmax(4.5rem, 1fr);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .75rem;
         }
 
-        .isf-initial-shell header.border-b>div>a.block {
-            display: block;
+        .isf-initial-shell header.border-b>div>a {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: .75rem;
             min-width: 0;
-            text-align: center;
+            text-align: left;
         }
 
         .isf-initial-shell header.border-b .isf-masthead-icon {
-            height: 100%;
+            height: 50px;
+            width: 50px;
             max-height: 50px;
-            border-radius: 5px;
+            border-radius: 7px;
+            object-fit: cover;
+            flex-shrink: 0;
         }
 
-        .isf-initial-shell header.border-b .isf-wordmark>span {
-            gap: .625rem;
-        }
-
-        .isf-initial-shell header.border-b .isf-wordmark .isf-script {
-            font-size: 38px;
-            line-height: 1.473684;
+        .isf-initial-shell header.border-b .isf-script {
+            font-size: 50px;
+            line-height: 1;
+            white-space: nowrap;
         }
 
         .isf-initial-shell header.border-b .isf-byline {
@@ -229,6 +235,7 @@
             letter-spacing: .1em;
             line-height: 1.35;
             text-transform: uppercase;
+            text-align: left;
         }
 
         .isf-initial-shell svg:not([width]) {
@@ -270,10 +277,16 @@
                 padding: .75rem 1rem;
             }
 
-            .isf-initial-shell header.border-b .isf-wordmark .isf-script {
-                max-width: 125px;
-                font-size: 26px;
+            .isf-initial-shell header.border-b .isf-script {
+                font-size: 36px;
                 line-height: 1;
+                white-space: nowrap;
+            }
+
+            .isf-initial-shell header.border-b .isf-masthead-icon {
+                height: 44px;
+                width: 44px;
+                max-height: 44px;
             }
         }
 
@@ -292,6 +305,33 @@
                 width: 32px;
                 max-height: 32px;
                 border-radius: 6px;
+            }
+
+            .isf-initial-shell header.border-b>div {
+                padding: .75rem 1rem;
+                min-height: 4rem;
+                gap: .75rem;
+            }
+
+            .isf-initial-shell header.border-b>div>a {
+                gap: .5rem;
+            }
+
+            .isf-initial-shell header.border-b .isf-script {
+                font-size: 20px;
+                line-height: 1.25;
+                white-space: nowrap;
+            }
+
+            .isf-initial-shell header.border-b .isf-masthead-icon {
+                height: 32px;
+                width: 32px;
+                max-height: 32px;
+                border-radius: 6px;
+            }
+
+            .isf-initial-shell header.border-b .isf-byline {
+                margin-top: .125rem;
             }
         }
 

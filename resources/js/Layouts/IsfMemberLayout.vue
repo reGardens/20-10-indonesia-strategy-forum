@@ -4,6 +4,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { IconBell } from "@tabler/icons-vue";
 import { getAnggota } from "@/api/services/isfPublicService";
+import { IsfFooter } from "@/Components/Isf";
 
 const route = useRoute();
 const user = ref({ name: "" });
@@ -78,53 +79,48 @@ onBeforeUnmount(() => {
         <!-- NOTE: Keep header markup and classes in sync with resources/views/partials/isf-member-masthead.blade.php -->
         <header class="border-b border-neutral-300 bg-white">
             <div
-                class="mx-auto grid min-h-[4.5rem] w-full min-w-0 max-w-[1400px] grid-cols-[minmax(4.5rem,1fr)_auto_minmax(4.5rem,1fr)] items-center gap-3 px-4 py-3 sm:py-4 lg:px-6"
+                class="mx-auto flex min-h-[4rem] sm:min-h-[4.5rem] lg:min-h-[5.5rem] w-full min-w-0 max-w-[1400px] items-center justify-between gap-3 px-4 py-3 sm:py-4 lg:px-6"
             >
-                <span aria-hidden="true"></span>
                 <router-link
                     to="/beranda"
-                    class="block min-w-0 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red focus-visible:ring-offset-2"
+                    class="flex items-center justify-start gap-x-2 sm:gap-x-3 min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red focus-visible:ring-offset-2"
                 >
-                    <span
-                        class="isf-wordmark mx-auto flex items-center justify-center min-w-0 text-center leading-none"
-                    >
+                    <img
+                        src="/images/isf/logo-isf.jpeg"
+                        alt="ISF Logo"
+                        class="isf-masthead-icon h-8 w-8 sm:h-10 sm:w-10 md:h-11 md:w-11 lg:h-12 lg:w-12 xl:h-[50px] xl:w-[50px] rounded-[6px] sm:rounded-[7px] object-cover shrink-0 border border-neutral-300/80 shadow-xs"
+                        width="50"
+                        height="50"
+                    />
+                    <div class="flex flex-col items-start justify-center min-w-0">
+                        <span class="sr-only">ISF </span>
                         <span
-                            class="inline-flex items-stretch justify-center gap-x-2 sm:gap-x-2.5"
+                            class="isf-script text-neutral-950 text-[20px] sm:text-[32px] md:text-[36px] lg:text-[44px] xl:text-[50px] leading-tight sm:leading-none select-none whitespace-nowrap"
                         >
-                            <img
-                                src="/images/isf/logo-isf.jpeg"
-                                alt="ISF Logo"
-                                class="isf-masthead-icon w-auto self-stretch rounded-[5px] object-cover shrink-0 border border-neutral-300/80 shadow-xs"
-                                width="38"
-                                height="38"
-                            />
-                            <span class="sr-only">ISF </span>
-                            <span
-                                class="isf-script text-neutral-950 text-[26px] sm:text-[32px] lg:text-[38px] leading-none"
-                                >Indonesia Strategy Forum</span
-                            >
+                            Indonesia Strategy Forum
                         </span>
-                    </span>
-                    <span class="isf-byline mt-1 block">Portal Anggota</span>
+                        <span class="isf-byline mt-0.5 sm:mt-1 block text-left">Portal Anggota</span>
+                    </div>
                 </router-link>
-                <div class="flex items-center gap-2 justify-self-end">
+                <div class="flex items-center gap-2 sm:gap-3 shrink-0">
                     <button
                         type="button"
                         aria-label="Notifikasi"
-                        class="inline-flex h-8 w-8 items-center justify-center text-neutral-700 hover:text-isf-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red focus-visible:ring-offset-2"
+                        class="inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center text-neutral-700 hover:text-isf-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red focus-visible:ring-offset-2"
                     >
                         <IconBell
-                            class="h-4 w-4"
-                            width="16"
-                            height="16"
+                            class="h-4 w-4 sm:h-5 sm:w-5"
+                            width="20"
+                            height="20"
                             aria-hidden="true"
                             focusable="false"
                         />
                     </button>
                     <span
                         v-if="initials"
-                        class="inline-flex h-8 w-8 items-center justify-center bg-isf-red text-xs font-bold text-white"
+                        class="inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center bg-isf-red text-xs sm:text-sm font-bold text-white tracking-wider"
                         aria-hidden="true"
+                        :title="user.name"
                         >{{ initials }}</span
                     >
                     <span
@@ -173,5 +169,6 @@ onBeforeUnmount(() => {
                 <router-view />
             </main>
         </div>
+        <IsfFooter />
     </div>
 </template>
