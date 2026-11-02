@@ -320,12 +320,12 @@ const skor = computed(() => data.value?.skorSorotan);
                 </div>
 
                 <aside
-                    class="isf-hairline-top space-y-7 pt-6 lg:col-span-4 lg:border-l lg:pl-7"
+                    class="isf-hairline-top space-y-7 pt-6 lg:col-span-4 lg:border-l lg:border-r lg:border-neutral-300 lg:px-7"
                 >
                     <!-- Related articles -->
                     <section
                         aria-labelledby="artikel-terkait"
-                        class="isf-hairline-top space-y-4 pt-5"
+                        class="space-y-4"
                     >
                         <SectionHeading
                             id="artikel-terkait"
