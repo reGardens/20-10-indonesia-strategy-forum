@@ -79,30 +79,56 @@ onBeforeUnmount(() => {
         <!-- NOTE: Keep header markup and classes in sync with resources/views/partials/isf-member-masthead.blade.php -->
         <header class="border-b border-neutral-300 bg-white">
             <div
-                class="mx-auto flex min-h-[4rem] sm:min-h-[4.5rem] lg:min-h-[5.5rem] w-full min-w-0 max-w-[1400px] items-center justify-between gap-3 px-4 py-3 sm:py-4 lg:px-6"
+                class="mx-auto flex sm:grid min-h-[4rem] sm:min-h-[4.5rem] lg:min-h-[5.5rem] w-full min-w-0 max-w-[1400px] items-center justify-between sm:grid-cols-[minmax(4.5rem,1fr)_auto_minmax(4.5rem,1fr)] gap-3 px-4 py-3 sm:py-4 lg:px-6"
             >
+                <span aria-hidden="true" class="hidden sm:block"></span>
                 <router-link
                     to="/beranda"
-                    class="flex items-center justify-start gap-x-2 sm:gap-x-3 min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red focus-visible:ring-offset-2"
+                    class="min-w-0 sm:mx-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red focus-visible:ring-offset-2"
                 >
-                    <img
-                        src="/images/isf/logo-isf.jpeg"
-                        alt="ISF Logo"
-                        class="isf-masthead-icon h-8 w-8 sm:h-10 sm:w-10 md:h-11 md:w-11 lg:h-12 lg:w-12 xl:h-[50px] xl:w-[50px] rounded-[6px] sm:rounded-[7px] object-cover shrink-0 border border-neutral-300/80 shadow-xs"
-                        width="50"
-                        height="50"
-                    />
-                    <div class="flex flex-col items-start justify-center min-w-0">
-                        <span class="sr-only">ISF </span>
+                    <!-- Mobile view (<640px): rata kiri, logo di kiri & teks tersusun di sampingnya -->
+                    <div class="flex sm:hidden items-center justify-start gap-x-2 min-w-0">
+                        <img
+                            src="/images/isf/logo-isf.jpeg"
+                            alt="ISF Logo"
+                            class="isf-masthead-icon h-8 w-8 rounded-[6px] object-cover shrink-0 border border-neutral-300/80 shadow-xs"
+                            width="32"
+                            height="32"
+                        />
+                        <div class="flex flex-col items-start justify-center min-w-0">
+                            <span class="sr-only">ISF </span>
+                            <span
+                                class="isf-script text-neutral-950 text-[20px] leading-tight select-none whitespace-nowrap"
+                            >
+                                Indonesia Strategy Forum
+                            </span>
+                            <span class="isf-byline mt-0.5 block text-left">Portal Anggota</span>
+                        </div>
+                    </div>
+
+                    <!-- Desktop & Tablet view (>=640px): rata tengah (centered) -->
+                    <div class="hidden sm:flex sm:flex-col sm:items-center sm:justify-center min-w-0 text-center leading-none">
                         <span
-                            class="isf-script text-neutral-950 text-[20px] sm:text-[32px] md:text-[36px] lg:text-[44px] xl:text-[50px] leading-tight sm:leading-none select-none whitespace-nowrap"
+                            class="inline-flex items-center justify-center gap-x-2 sm:gap-x-3"
                         >
-                            Indonesia Strategy Forum
+                            <img
+                                src="/images/isf/logo-isf.jpeg"
+                                alt="ISF Logo"
+                                class="isf-masthead-icon sm:h-10 sm:w-10 md:h-11 md:w-11 lg:h-12 lg:w-12 xl:h-[50px] xl:w-[50px] rounded-[7px] object-cover shrink-0 border border-neutral-300/80 shadow-xs"
+                                width="50"
+                                height="50"
+                            />
+                            <span class="sr-only">ISF </span>
+                            <span
+                                class="isf-script text-neutral-950 sm:text-[32px] md:text-[36px] lg:text-[44px] xl:text-[50px] leading-tight sm:leading-none select-none whitespace-nowrap"
+                            >
+                                Indonesia Strategy Forum
+                            </span>
                         </span>
-                        <span class="isf-byline mt-0.5 sm:mt-1 block text-left">Portal Anggota</span>
+                        <span class="isf-byline mt-1 block text-center">Portal Anggota</span>
                     </div>
                 </router-link>
-                <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                <div class="flex items-center gap-2 sm:gap-3 shrink-0 sm:justify-self-end">
                     <button
                         type="button"
                         aria-label="Notifikasi"

@@ -193,22 +193,38 @@
             padding: 0;
         }
 
+        .isf-initial-shell .hidden {
+            display: none !important;
+        }
+
+        @media (min-width: 640px) {
+            .isf-initial-shell .sm\:hidden {
+                display: none !important;
+            }
+            .isf-initial-shell .sm\:flex {
+                display: flex !important;
+            }
+            .isf-initial-shell .sm\:block {
+                display: block !important;
+            }
+            .isf-initial-shell .sm\:grid {
+                display: grid !important;
+            }
+        }
+
         .isf-initial-shell header.border-b>div {
             min-height: 4.5rem;
             padding: 1rem 1.5rem;
-            display: flex;
+            display: grid;
+            grid-template-columns: minmax(4.5rem, 1fr) auto minmax(4.5rem, 1fr);
             align-items: center;
-            justify-content: space-between;
             gap: .75rem;
         }
 
         .isf-initial-shell header.border-b>div>a {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            gap: .75rem;
+            display: block;
             min-width: 0;
-            text-align: left;
+            text-align: center;
         }
 
         .isf-initial-shell header.border-b .isf-masthead-icon {
@@ -235,7 +251,7 @@
             letter-spacing: .1em;
             line-height: 1.35;
             text-transform: uppercase;
-            text-align: left;
+            text-align: center;
         }
 
         .isf-initial-shell svg:not([width]) {
@@ -308,13 +324,20 @@
             }
 
             .isf-initial-shell header.border-b>div {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
                 padding: .75rem 1rem;
                 min-height: 4rem;
                 gap: .75rem;
             }
 
             .isf-initial-shell header.border-b>div>a {
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
                 gap: .5rem;
+                text-align: left;
             }
 
             .isf-initial-shell header.border-b .isf-script {
@@ -332,6 +355,7 @@
 
             .isf-initial-shell header.border-b .isf-byline {
                 margin-top: .125rem;
+                text-align: left;
             }
         }
 
