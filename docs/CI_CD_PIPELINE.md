@@ -15,7 +15,7 @@ flowchart TD
 
     subgraph CI["Workflow CI (.github/workflows/ci.yml)"]
         TriggerCI["Trigger: pull_request / push"]
-        BackendJob["Job Backend (PHP 8.2 & MySQL 8.0)\n- Setup PHP & Ekstensi\n- Composer Install (Cache)\n- MySQL Service Container\n- Migrasi Database\n- Uji Coba: PHPUnit / Pest"]
+        BackendJob["Job Backend (PHP 8.4 & MySQL 8.0)\n- Setup PHP & Ekstensi\n- Composer Install (Cache)\n- MySQL Service Container\n- Migrasi Database\n- Uji Coba: PHPUnit / Pest"]
         FrontendJob["Job Frontend (Node.js 20)\n- Setup Node.js & Cache\n- npm ci\n- Uji Coba: Vitest\n- Kompilasi: Vite Build Check"]
         PRStatus{"Semua Job Lulus?"}
     end
@@ -53,9 +53,9 @@ Berkas konfigurasi: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
 - Setiap kali ada **Pull Request (PR)** baru atau commit tambahan yang menargetkan `staging` atau `main`.
 - Bisa juga dijalankan secara manual (*manual dispatch*) melalui tab **Actions** di GitHub.
 
-### B. Tahapan Uji Backend (PHP 8.2 & MySQL 8.0)
+### B. Tahapan Uji Backend (PHP 8.4 & MySQL 8.0)
 1. **Container Service MySQL 8.0**: Dijalankan otomatis sebagai background service dengan database `wedding_db`.
-2. **Environment PHP 8.2**: Dikonfigurasi dengan ekstensi lengkap (`mbstring`, `xml`, `pdo_mysql`, `bcmath`, `zip`, dll.).
+2. **Environment PHP 8.4**: Dikonfigurasi dengan ekstensi lengkap (`mbstring`, `xml`, `pdo_mysql`, `bcmath`, `zip`, dll.).
 3. **Dependency Caching**: Composer cache otomatis disimpan untuk mempercepat waktu eksekusi run berikutnya.
 4. **Migrasi Database**: Menjalankan `php artisan migrate --force` untuk memastikan seluruh migration Laravel valid dan bebas error sintaks SQL.
 5. **Test Suite Execution**: Menjalankan `php artisan test` (Pest / PHPUnit) untuk memastikan logika fitur dan otorisasi tidak mengalami regresi.

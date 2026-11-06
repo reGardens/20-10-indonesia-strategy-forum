@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   backend-tests:
-    name: Backend Tests (PHP 8.2 & MySQL)
+    name: Backend Tests (PHP 8.4 & MySQL)
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -38,7 +38,7 @@ jobs:
       - name: Setup PHP environment
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.4'
           extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_mysql, mysql, bcmath, zip
           coverage: none
 
