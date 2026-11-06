@@ -83,6 +83,17 @@ jobs:
           DB_PASSWORD: password
         run: php artisan migrate --force
 
+      - name: Setup Node.js for Vite Manifest
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Build Assets for Feature Tests
+        run: |
+          npm ci
+          npm run build
+
       - name: Execute Tests (PHPUnit / Pest)
         env:
           DB_CONNECTION: mysql
