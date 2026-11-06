@@ -1,4 +1,4 @@
-import { encodeGuestName } from '../utils/urlEncoder.js'
+import { encodeGuestName } from '../Utils/urlEncoder.js'
 
 const DEFAULT_MESSAGE_TEMPLATE =
   'Assalamualaikum, kami mengundang {name} untuk hadir di acara pernikahan kami. Silakan buka undangan di: {url}'
