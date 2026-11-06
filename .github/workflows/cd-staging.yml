@@ -1,0 +1,146 @@
+name: CD - Staging Release & Automated Deployment
+
+on:
+  push:
+    branches:
+      - staging
+  workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: 'Paksa deployment langsung ke server staging jika secrets tersedia'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: cd-staging-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-package-staging:
+    name: Build & Package Staging Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP environment
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_mysql, zip
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-prod-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-prod-
+
+      - name: Install Production Composer Dependencies
+        run: composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader
+
+      - name: Install NPM dependencies
+        run: npm ci
+
+      - name: Compile Production Assets (Vite)
+        run: npm run build
+
+      - name: Create Staging Release Package (project-staging.zip)
+        run: python3 create_staging_zip.py
+
+      - name: Check Package Output
+        id: package_info
+        run: |
+          FILE_SIZE=$(ls -lh project-staging.zip | awk '{print $5}')
+          echo "size=$FILE_SIZE" >> $GITHUB_OUTPUT
+          echo "Package created with size $FILE_SIZE"
+
+      - name: Upload Staging Release Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-staging-release
+          path: project-staging.zip
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Generate Release Summary
+        run: |
+          echo "### 📦 Staging Release Package Generated" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Ukuran Berkas:** \`${{ steps.package_info.outputs.size }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Nama Artefak:** \`project-staging-release\` (\`project-staging.zip\`)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Berkas rilis siap diunduh langsung dari tab **Artifacts** pada run ini untuk diunggah/diekstrak ke cPanel/server staging." >> $GITHUB_STEP_SUMMARY
+
+  deploy-to-staging:
+    name: Deploy to Staging Server (Optional)
+    needs: build-and-package-staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check Deployment Credentials
+        id: check_creds
+        run: |
+          if [ -n "${{ secrets.STAGING_HOST }}" ] && [ -n "${{ secrets.STAGING_USERNAME }}" ]; then
+            echo "has_creds=true" >> $GITHUB_OUTPUT
+            echo "✅ Kredensial staging terdeteksi di GitHub Secrets. Memulai deployment..."
+          else
+            echo "has_creds=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ Secrets STAGING_HOST / STAGING_USERNAME belum dikonfigurasi di repository settings."
+          fi
+
+      - name: Download Staging Release Artifact
+        if: steps.check_creds.outputs.has_creds == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: project-staging-release
+
+      - name: Extract Package for Direct Deployment
+        if: steps.check_creds.outputs.has_creds == 'true'
+        run: |
+          mkdir -p ./deploy-dist
+          unzip -q project-staging.zip -d ./deploy-dist
+
+      - name: Deploy via FTPS/FTP
+        if: steps.check_creds.outputs.has_creds == 'true' && secrets.STAGING_PASSWORD != ''
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USERNAME }}
+          password: ${{ secrets.STAGING_PASSWORD }}
+          port: ${{ secrets.STAGING_PORT || 21 }}
+          server-dir: ${{ secrets.STAGING_REMOTE_PATH || '/' }}
+          local-dir: './deploy-dist/'
+
+      - name: Post-Deployment Report
+        run: |
+          if [ "${{ steps.check_creds.outputs.has_creds }}" = "true" ]; then
+            echo "### 🚀 Status Deployment Staging" >> $GITHUB_STEP_SUMMARY
+            echo "Deployment otomatis ke server staging berhasil dijalankan." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ℹ️ Informasi Deployment" >> $GITHUB_STEP_SUMMARY
+            echo "Direct deployment ke server dilewati karena \`STAGING_HOST\` / \`STAGING_USERNAME\` belum dikonfigurasi di GitHub Repository Secrets." >> $GITHUB_STEP_SUMMARY
+            echo "Gunakan paket **project-staging-release** dari Artifacts di atas untuk deploy ke cPanel/hosting." >> $GITHUB_STEP_SUMMARY
+          fi
