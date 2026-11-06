@@ -64,14 +64,20 @@ class AdminManagementTest extends TestCase
     }
 
     /**
+     * Test standard user can access dashboard.
+     */
+    public function test_standard_user_can_access_dashboard(): void
+    {
+        $response = $this->actingAs($this->standardUser)
+            ->get(route('cms.dashboard'));
+        $response->assertStatus(200);
+    }
+
+    /**
      * Test standard user is blocked from admin pages with a 403 response.
      */
     public function test_standard_user_is_blocked_from_admin_pages(): void
     {
-        $response = $this->actingAs($this->standardUser)
-            ->get(route('cms.dashboard'));
-        $response->assertStatus(403);
-
         $response = $this->actingAs($this->standardUser)
             ->get(route('cms.roles.index'));
         $response->assertStatus(403);
@@ -238,5 +244,4 @@ class AdminManagementTest extends TestCase
         $this->standardUser->refresh();
         $this->assertTrue($this->standardUser->hasFeature('artikel'));
     }
-
 }
