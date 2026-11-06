@@ -73,6 +73,9 @@ jobs:
           DB_PASSWORD: password
         run: php artisan migrate --force
 
+      - name: Ensure test directories exist
+        run: mkdir -p tests/Unit tests/unit
+
       - name: Execute Tests (PHPUnit / Pest)
         env:
           DB_CONNECTION: mysql
