@@ -33,6 +33,9 @@
                 <span class="hidden whitespace-nowrap font-ui text-[12px] font-bold uppercase tracking-[0.12em] text-neutral-900 lg:inline">
                     Portal Anggota
                 </span>
+                <a href="/login" class="hidden whitespace-nowrap font-ui text-[12px] font-bold uppercase tracking-[0.12em] text-neutral-900 hover:text-isf-red lg:inline">
+                    Login
+                </a>
                 <div class="inline-flex h-10 w-10 shrink-0 items-center justify-center text-neutral-900">
                     <svg class="h-5 w-5" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">
                         <circle cx="11" cy="11" r="6.5" />

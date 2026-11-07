@@ -13,6 +13,14 @@ const { isDark, toggleDarkMode } = useDarkMode();
 const page = usePage();
 const flashError = computed(() => page.props.flash?.error);
 
+const isJustRegistered = computed(() => {
+    if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        return params.get("registered") === "true";
+    }
+    return false;
+});
+
 const form = useForm({
     email: "",
     password: "",
@@ -112,6 +120,17 @@ function submit() {
                     {{ flashError }}
                 </div>
 
+                <!-- Registration Success Banner -->
+                <div
+                    v-if="isJustRegistered"
+                    class="mb-4 rounded-lg border border-emerald-500/50 bg-emerald-500/10 p-3 text-sm text-emerald-700 dark:text-emerald-400 flex items-center gap-2"
+                >
+                    <svg class="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>{{ locale === "id" ? "Pendaftaran anggota berhasil! Silakan masuk dengan akun Anda." : "Registration successful! Please sign in with your account." }}</span>
+                </div>
+
                 <!-- Form -->
                 <form @submit.prevent="submit" class="space-y-5">
                     <!-- Email -->
@@ -171,6 +190,17 @@ function submit() {
                             locale === "id" ? "Masuk" : "Sign In"
                         }}</span>
                     </Button>
+
+                    <!-- Link to Register if user has no account -->
+                    <div class="text-center text-sm text-muted-foreground pt-4 border-t border-border">
+                        <span>{{ locale === "id" ? "Belum memiliki akun anggota?" : "Don't have a member account?" }}</span>
+                        <a
+                            href="/register"
+                            class="ml-1.5 font-semibold text-isf-red hover:underline underline-offset-4 transition-colors"
+                        >
+                            {{ locale === "id" ? "Daftar di sini" : "Register here" }}
+                        </a>
+                    </div>
                 </form>
             </div>
         </div>

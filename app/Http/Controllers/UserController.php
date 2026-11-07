@@ -46,7 +46,10 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'min:2'],
+            'name' => ['nullable', 'string', 'min:2'],
+            'first_name' => ['nullable', 'string', 'max:100'],
+            'last_name' => ['nullable', 'string', 'max:100'],
+            'zip_code' => ['nullable', 'string', 'max:10'],
             'email' => ['required', 'email', 'unique:users,email'],
             'password' => [
                 'required',
@@ -60,8 +63,19 @@ class UserController extends Controller
             'password.regex' => 'Password harus mengandung huruf dan angka',
         ]);
 
+        $name = $validated['name'] ?? null;
+        if (! $name && (! empty($validated['first_name']) || ! empty($validated['last_name']))) {
+            $name = trim(($validated['first_name'] ?? '') . ' ' . ($validated['last_name'] ?? ''));
+        }
+        if (! $name) {
+            $name = $validated['email'];
+        }
+
         $user = User::create([
-            'name' => $validated['name'],
+            'name' => $name,
+            'first_name' => $validated['first_name'] ?? null,
+            'last_name' => $validated['last_name'] ?? null,
+            'zip_code' => $validated['zip_code'] ?? null,
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
         ]);
@@ -104,7 +118,10 @@ class UserController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'min:2'],
+            'name' => ['nullable', 'string', 'min:2'],
+            'first_name' => ['nullable', 'string', 'max:100'],
+            'last_name' => ['nullable', 'string', 'max:100'],
+            'zip_code' => ['nullable', 'string', 'max:10'],
             'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
             'password' => [
                 'nullable',
@@ -118,8 +135,19 @@ class UserController extends Controller
             'password.regex' => 'Password harus mengandung huruf dan angka',
         ]);
 
+        $name = $validated['name'] ?? null;
+        if (! $name && (! empty($validated['first_name']) || ! empty($validated['last_name']))) {
+            $name = trim(($validated['first_name'] ?? '') . ' ' . ($validated['last_name'] ?? ''));
+        }
+        if (! $name) {
+            $name = $user->name ?: $validated['email'];
+        }
+
         $user->update([
-            'name' => $validated['name'],
+            'name' => $name,
+            'first_name' => $validated['first_name'] ?? $user->first_name,
+            'last_name' => $validated['last_name'] ?? $user->last_name,
+            'zip_code' => $validated['zip_code'] ?? $user->zip_code,
             'email' => $validated['email'],
         ]);
 
