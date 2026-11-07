@@ -209,6 +209,15 @@ onBeforeUnmount(() => {
                         >
                             Portal Anggota
                         </router-link>
+                        <a
+                            href="/login"
+                            :class="[
+                                'hidden whitespace-nowrap font-ui text-[12px] font-bold uppercase tracking-[0.12em] text-neutral-900 hover:text-isf-red lg:inline',
+                                focusRing,
+                            ]"
+                        >
+                            Login
+                        </a>
                         <button
                             type="button"
                             aria-label="Buka pencarian"
@@ -279,7 +288,7 @@ onBeforeUnmount(() => {
                                 </a>
                             </li>
                         </ul>
-                        <div class="mt-3 border-t border-neutral-300 pt-3">
+                        <div class="mt-3 flex items-center gap-4 border-t border-neutral-300 pt-3">
                             <router-link
                                 to="/anggota"
                                 :class="[
@@ -289,6 +298,16 @@ onBeforeUnmount(() => {
                             >
                                 Portal Anggota
                             </router-link>
+                            <span class="text-neutral-300">|</span>
+                            <a
+                                href="/login"
+                                :class="[
+                                    'font-ui text-[12px] font-bold uppercase tracking-[0.12em] text-neutral-900 hover:text-isf-red',
+                                    focusRing,
+                                ]"
+                            >
+                                Login
+                            </a>
                         </div>
                     </div>
                 </nav>

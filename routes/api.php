@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\Isf\Cms\MediaUploadController;
 use App\Http\Controllers\Api\Isf\Cms\SettingController;
 use App\Http\Controllers\Api\Isf\Cms\TokohController;
 use App\Http\Controllers\Api\Isf\PublicContentController;
+use App\Http\Controllers\Auth\IsfCaptchaController;
+use App\Http\Controllers\Auth\IsfRegisterController;
 use Illuminate\Support\Facades\Route;
 
 // Public ISF content API (read-only, published content only)
@@ -22,6 +24,10 @@ Route::middleware(['web'])->prefix('isf')->group(function () {
     Route::get('/infografik', [PublicContentController::class, 'infografik'])->name('api.isf.infografik');
     Route::get('/anggota', [PublicContentController::class, 'anggota'])->name('api.isf.anggota');
     Route::get('/cache-heal', [PublicContentController::class, 'cacheHeal'])->name('api.isf.cache-heal');
+    Route::get('/captcha', [IsfCaptchaController::class, 'generate'])->name('api.isf.captcha');
+    Route::post('/register', [IsfRegisterController::class, 'store'])
+        ->middleware('throttle:6,1')
+        ->name('api.isf.register');
 });
 
 // ISF CMS API (authenticated session + per-module feature access)

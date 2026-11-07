@@ -36,6 +36,10 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'first_name',
+        'last_name',
+        'zip_code',
+        'age_verified',
         'email',
         'password',
         'allowed_features',
@@ -62,6 +66,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'allowed_features' => 'array',
+            'age_verified' => 'boolean',
         ];
     }
 

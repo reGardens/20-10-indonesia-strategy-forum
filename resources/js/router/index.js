@@ -161,6 +161,18 @@ const routes = [
     ]
   },
   {
+    path: '/register',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-register',
+        component: () => import('../Pages/Isf/views/RegisterView.vue'),
+        meta: { title: 'Pendaftaran Anggota · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
     path: '/infografik',
     component: IsfPublicLayout,
     children: [

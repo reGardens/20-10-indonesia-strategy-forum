@@ -20,7 +20,12 @@ class RedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
-                return redirect('/cms/dashboard');
+                $user = Auth::guard($guard)->user();
+                if ($user && method_exists($user, 'hasRole') && $user->hasRole('super-admin')) {
+                    return redirect('/cms/dashboard');
+                }
+
+                return redirect('/beranda');
             }
         }
 

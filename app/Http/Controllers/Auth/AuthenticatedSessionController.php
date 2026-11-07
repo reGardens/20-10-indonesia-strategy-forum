@@ -12,12 +12,17 @@ class AuthenticatedSessionController extends Controller
 {
     /**
      * Display the login view.
-     * Redirect to dashboard if already authenticated.
+     * Redirect to CMS dashboard for super-admin, or landing page for standard users if already authenticated.
      */
     public function create(): Response|\Illuminate\Http\RedirectResponse
     {
         if (Auth::check()) {
-            return redirect('/cms');
+            $user = Auth::user();
+            if ($user && method_exists($user, 'hasRole') && $user->hasRole('super-admin')) {
+                return redirect('/cms');
+            }
+
+            return redirect('/beranda');
         }
 
         return Inertia::render('Auth/Login');
@@ -25,7 +30,7 @@ class AuthenticatedSessionController extends Controller
 
     /**
      * Handle an incoming authentication request.
-     * Validate credentials, attempt login, regenerate session, redirect to dashboard.
+     * Validate credentials, attempt login, regenerate session, redirect to appropriate destination.
      */
     public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
@@ -42,7 +47,12 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->route('cms.dashboard');
+        $user = Auth::user();
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('super-admin')) {
+            return redirect()->route('cms.dashboard');
+        }
+
+        return redirect('/beranda');
     }
 
     /**

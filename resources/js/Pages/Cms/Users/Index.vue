@@ -60,7 +60,8 @@ function formatDate(dateString) {
                     <TableRow>
                         <TableHead>{{ t("users.name") }}</TableHead>
                         <TableHead>{{ t("users.email") }}</TableHead>
-                        <!-- <TableHead>{{ t("users.role") }}</TableHead> -->
+                        <TableHead>{{ t("users.role") }}</TableHead>
+                        <TableHead>Kode Pos</TableHead>
                         <TableHead>{{ t("users.created_at") }}</TableHead>
                         <TableHead class="text-right">{{
                             t("common.actions")
@@ -73,15 +74,25 @@ function formatDate(dateString) {
                             <div class="line-clamp-2">{{ user.name }}</div>
                         </TableCell>
                         <TableCell><div class="line-clamp-2">{{ user.email }}</div></TableCell>
-                        <!-- <TableCell>
-                            <Badge
-                                v-for="role in user.roles"
-                                :key="role.id"
-                                class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300"
-                            >
-                                {{ role.name }}
-                            </Badge>
-                        </TableCell> -->
+                        <TableCell>
+                            <div class="flex flex-wrap gap-1">
+                                <Badge
+                                    v-for="role in user.roles"
+                                    :key="role.id"
+                                    :class="
+                                        role.name === 'super-admin'
+                                            ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
+                                            : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300'
+                                    "
+                                >
+                                    {{ role.name }}
+                                </Badge>
+                                <span v-if="!user.roles || user.roles.length === 0" class="text-xs text-muted-foreground">-</span>
+                            </div>
+                        </TableCell>
+                        <TableCell>
+                            <span class="text-sm font-mono text-muted-foreground">{{ user.zip_code || '-' }}</span>
+                        </TableCell>
                         <TableCell>{{ formatDate(user.created_at) }}</TableCell>
                         <TableCell class="text-right space-x-2">
                             <template v-if="user.email !== 'superadmin@gmail.com' && !user.roles?.some(r => r.name === 'super-admin')">
@@ -102,7 +113,7 @@ function formatDate(dateString) {
                     </TableRow>
                     <TableRow v-if="users.data.length === 0">
                         <TableCell
-                            colspan="5"
+                            colspan="6"
                             class="text-center py-8 text-muted-foreground"
                             >{{ t("common.no_data") }}</TableCell
                         >

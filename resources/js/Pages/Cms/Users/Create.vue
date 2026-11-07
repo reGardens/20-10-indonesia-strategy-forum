@@ -23,9 +23,12 @@ const props = defineProps({
 
 const form = useForm({
     name: "",
+    first_name: "",
+    last_name: "",
+    zip_code: "",
     email: "",
     password: "",
-    role: "super-admin",
+    role: "user",
 });
 
 async function submit() {
@@ -62,16 +65,56 @@ async function submit() {
 
         <div class="w-full">
             <form @submit.prevent="submit" class="space-y-5">
-                <div class="space-y-2">
-                    <Label for="name">{{ t("users.name") }}</Label>
-                    <Input
-                        id="name"
-                        v-model="form.name"
-                        placeholder="Nama lengkap"
-                    />
-                    <p v-if="form.errors.name" class="text-sm text-destructive">
-                        {{ form.errors.name }}
-                    </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <Label for="first_name">Nama Depan (First Name)</Label>
+                        <Input
+                            id="first_name"
+                            v-model="form.first_name"
+                            placeholder="Nama depan"
+                        />
+                        <p v-if="form.errors.first_name" class="text-sm text-destructive">
+                            {{ form.errors.first_name }}
+                        </p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <Label for="last_name">Nama Belakang (Last Name)</Label>
+                        <Input
+                            id="last_name"
+                            v-model="form.last_name"
+                            placeholder="Nama belakang"
+                        />
+                        <p v-if="form.errors.last_name" class="text-sm text-destructive">
+                            {{ form.errors.last_name }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <Label for="name">{{ t("users.name") }}</Label>
+                        <Input
+                            id="name"
+                            v-model="form.name"
+                            placeholder="Nama lengkap"
+                        />
+                        <p v-if="form.errors.name" class="text-sm text-destructive">
+                            {{ form.errors.name }}
+                        </p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <Label for="zip_code">Kode Pos (Zip Code)</Label>
+                        <Input
+                            id="zip_code"
+                            v-model="form.zip_code"
+                            placeholder="Kode pos"
+                        />
+                        <p v-if="form.errors.zip_code" class="text-sm text-destructive">
+                            {{ form.errors.zip_code }}
+                        </p>
+                    </div>
                 </div>
 
                 <div class="space-y-2">
