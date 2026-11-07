@@ -207,15 +207,15 @@ onMounted(() => {
             class="hover:bg-muted/30 transition border-b border-border/50"
           >
             <TableCell class="py-3">
-              <div class="font-semibold text-foreground text-sm leading-snug">
+              <div class="font-semibold text-foreground text-sm leading-snug line-clamp-2">
                 {{ item.name }}
               </div>
-              <div class="text-xs text-muted-foreground font-mono mt-0.5">
+              <div class="text-xs text-muted-foreground font-mono mt-0.5 truncate">
                 /tokoh/{{ item.slug }}
               </div>
             </TableCell>
             <TableCell class="text-xs text-foreground font-medium">
-              {{ item.position }}
+              <div class="line-clamp-2">{{ item.position }}</div>
             </TableCell>
             <TableCell>
               <StatusBadge :status="item.status" />

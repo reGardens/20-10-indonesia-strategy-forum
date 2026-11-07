@@ -253,7 +253,7 @@ onMounted(loadData)
               </div>
             </TableCell>
             <TableCell class="text-xs">
-              <div class="font-medium text-foreground line-clamp-1">
+              <div class="font-medium text-foreground line-clamp-2">
                 {{ item.title }}
               </div>
               <a
@@ -261,7 +261,7 @@ onMounted(loadData)
                 :href="item.mediaUrl"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-[11px] text-blue-500 hover:underline flex items-center gap-1 mt-0.5 line-clamp-1"
+                class="text-[11px] text-blue-500 hover:underline flex items-center gap-1 mt-0.5 line-clamp-2"
               >
                 <span>{{ item.mediaUrl }}</span>
                 <IconComponent name="ExternalLink" :size="12" class="shrink-0" />

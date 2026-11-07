@@ -69,10 +69,10 @@ function formatDate(dateString) {
                 </TableHeader>
                 <TableBody>
                     <TableRow v-for="user in users.data" :key="user.id">
-                        <TableCell class="font-medium">{{
-                            user.name
-                        }}</TableCell>
-                        <TableCell>{{ user.email }}</TableCell>
+                        <TableCell class="font-medium">
+                            <div class="line-clamp-2">{{ user.name }}</div>
+                        </TableCell>
+                        <TableCell><div class="line-clamp-2">{{ user.email }}</div></TableCell>
                         <!-- <TableCell>
                             <Badge
                                 v-for="role in user.roles"

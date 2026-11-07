@@ -199,7 +199,7 @@ onMounted(loadData)
               {{ idx + 1 }}
             </TableCell>
             <TableCell>
-              <span class="font-semibold text-xs text-foreground">
+              <span class="font-semibold text-xs text-foreground line-clamp-2">
                 {{ item.name }}
               </span>
             </TableCell>
@@ -208,8 +208,8 @@ onMounted(loadData)
                 {{ item.slug }}
               </span>
             </TableCell>
-            <TableCell class="text-xs text-muted-foreground max-w-sm line-clamp-1">
-              {{ item.description || '-' }}
+            <TableCell class="text-xs text-muted-foreground max-w-sm">
+              <div class="line-clamp-2">{{ item.description || '-' }}</div>
             </TableCell>
             <TableCell class="text-center">
               <StatusBadge :status="item.status || 'terbit'" />

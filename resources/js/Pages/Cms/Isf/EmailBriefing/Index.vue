@@ -214,13 +214,13 @@ onMounted(() => {
             class="hover:bg-muted/30 transition border-b border-border/50"
           >
             <TableCell class="py-3 font-semibold text-foreground text-sm">
-              {{ item.ringkasan_judul }}
+              <div class="line-clamp-2">{{ item.ringkasan_judul }}</div>
             </TableCell>
             <TableCell class="text-xs text-foreground font-medium">
-              {{ item.penerima }}
+              <div class="line-clamp-2">{{ item.penerima }}</div>
             </TableCell>
             <TableCell class="text-xs text-muted-foreground">
-              {{ item.organisasi }}
+              <div class="line-clamp-2">{{ item.organisasi }}</div>
             </TableCell>
             <TableCell>
               <StatusBadge :status="item.status" />

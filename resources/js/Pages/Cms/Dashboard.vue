@@ -145,7 +145,7 @@ function formatDate(dateString) {
 
                 <div v-else class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
-                        <thead class="bg-muted/40 text-muted-foreground text-xs uppercase font-medium border-b border-border">
+                        <thead class="bg-muted/40 text-muted-foreground text-xs uppercase font-medium border-b border-border whitespace-nowrap">
                             <tr>
                                 <th class="px-4 py-3">Judul Konten</th>
                                 <th class="px-4 py-3">Modul</th>
@@ -160,8 +160,8 @@ function formatDate(dateString) {
                                 :key="`${item.type}-${item.title}`"
                                 class="hover:bg-muted/30 transition"
                             >
-                                <td class="px-4 py-3 font-semibold text-foreground text-xs max-w-xs truncate">
-                                    {{ item.title }}
+                                <td class="px-4 py-3 font-semibold text-foreground text-xs max-w-xs">
+                                    <div class="line-clamp-2">{{ item.title }}</div>
                                 </td>
                                 <td class="px-4 py-3 text-xs">
                                     <span class="px-2 py-0.5 rounded bg-muted text-muted-foreground font-medium text-[11px]">

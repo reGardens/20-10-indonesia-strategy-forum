@@ -248,10 +248,10 @@ onMounted(() => {
             class="hover:bg-muted/30 transition border-b border-border/50"
           >
             <TableCell class="py-3 text-foreground text-sm">
-              <div class="font-semibold">{{ item.title }}</div>
+              <div class="font-semibold line-clamp-2">{{ item.title }}</div>
               <div v-if="item.author_name" class="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
                 <span class="text-neutral-400">Analis:</span>
-                <span class="font-medium text-foreground/80">{{ item.author_name }}</span>
+                <span class="font-medium text-foreground/80 line-clamp-2">{{ item.author_name }}</span>
               </div>
             </TableCell>
             <TableCell class="text-xs text-muted-foreground font-mono">

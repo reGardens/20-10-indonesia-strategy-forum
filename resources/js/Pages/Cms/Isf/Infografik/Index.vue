@@ -213,10 +213,10 @@ onMounted(() => {
             class="hover:bg-muted/30 transition border-b border-border/50"
           >
             <TableCell class="py-3">
-              <div class="font-semibold text-foreground text-sm leading-snug">
+              <div class="font-semibold text-foreground text-sm leading-snug line-clamp-2">
                 {{ item.title }}
               </div>
-              <div class="text-xs text-muted-foreground font-mono mt-0.5">
+              <div class="text-xs text-muted-foreground font-mono mt-0.5 truncate">
                 /{{ item.slug }}
               </div>
             </TableCell>

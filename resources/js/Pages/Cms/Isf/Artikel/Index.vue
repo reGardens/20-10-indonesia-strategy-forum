@@ -236,7 +236,7 @@ onMounted(() => {
               <div class="font-semibold text-foreground text-sm leading-snug line-clamp-2">
                 {{ item.title }}
               </div>
-              <div class="text-xs text-muted-foreground font-mono mt-0.5">
+              <div class="text-xs text-muted-foreground font-mono mt-0.5 truncate">
                 /{{ item.slug }}
               </div>
             </TableCell>
