@@ -169,7 +169,7 @@ onMounted(() => {
         />
       </div>
 
-      <div class="flex items-center gap-2 overflow-x-auto">
+      <div class="flex items-center gap-2 overflow-x-auto w-full sm:w-auto justify-start py-0.5">
         <span class="text-xs text-muted-foreground whitespace-nowrap">Status:</span>
         <div class="flex gap-1">
           <button
