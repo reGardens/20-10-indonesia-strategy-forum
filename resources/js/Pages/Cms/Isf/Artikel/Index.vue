@@ -146,7 +146,7 @@ onMounted(() => {
     </div>
 
     <!-- Filter and Search -->
-    <div class="flex flex-col sm:flex-row gap-3 items-center justify-between">
+    <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
       <div class="relative w-full sm:w-80">
         <Input
           v-model="search"
@@ -161,7 +161,7 @@ onMounted(() => {
         />
       </div>
 
-      <div class="flex items-center gap-2 overflow-x-auto">
+      <div class="flex items-center gap-2 overflow-x-auto w-full sm:w-auto justify-start py-0.5">
         <span class="text-xs text-muted-foreground whitespace-nowrap">Status:</span>
         <div class="flex gap-1">
           <button
