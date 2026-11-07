@@ -282,10 +282,10 @@ onMounted(() => {
 
             <TableCell>
               <div class="space-y-0.5">
-                <p class="font-semibold text-sm text-foreground line-clamp-1">
+                <p class="font-semibold text-sm text-foreground line-clamp-2">
                   {{ item.title }}
                 </p>
-                <p v-if="item.to" class="text-xs text-muted-foreground font-mono line-clamp-1">
+                <p v-if="item.to" class="text-xs text-muted-foreground font-mono line-clamp-2">
                   {{ item.to }}
                 </p>
               </div>

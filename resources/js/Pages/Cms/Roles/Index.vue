@@ -85,12 +85,12 @@ function deleteRole() {
                             <Badge
                                 class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300"
                             >
-                                {{ role.name }}
+                                <span class="line-clamp-2">{{ role.name }}</span>
                             </Badge>
                         </TableCell>
-                        <TableCell class="text-muted-foreground">{{
-                            role.guard_name
-                        }}</TableCell>
+                        <TableCell class="text-muted-foreground">
+                            <div class="line-clamp-2">{{ role.guard_name }}</div>
+                        </TableCell>
                         <TableCell>{{ role.users_count }}</TableCell>
                         <TableCell class="text-right space-x-2">
                             <Link :href="`/cms/roles/${role.id}/edit`">

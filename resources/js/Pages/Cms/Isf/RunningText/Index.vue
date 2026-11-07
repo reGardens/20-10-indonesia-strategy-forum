@@ -205,10 +205,10 @@ onMounted(loadData)
               </span>
             </TableCell>
             <TableCell class="text-xs font-medium text-foreground max-w-md">
-              {{ item.announcement }}
+              <div class="line-clamp-2">{{ item.announcement }}</div>
             </TableCell>
             <TableCell class="text-xs text-muted-foreground">
-              {{ item.info || '-' }}
+              <div class="line-clamp-2">{{ item.info || '-' }}</div>
             </TableCell>
             <TableCell class="text-center">
               <StatusBadge :status="item.status || 'terbit'" />
