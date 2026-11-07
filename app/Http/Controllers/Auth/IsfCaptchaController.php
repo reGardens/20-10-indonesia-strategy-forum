@@ -23,8 +23,29 @@ class IsfCaptchaController extends Controller
         }
 
         $key = Str::uuid()->toString();
-        // Store in cache for 10 minutes
-        Cache::put('captcha:' . $key, strtolower($code), now()->addMinutes(10));
+        $storedCode = strtolower($code);
+
+        // Store with robust multi-layer fallback: Default Store -> File Store -> Session
+        $stored = false;
+        try {
+            Cache::put('captcha:' . $key, $storedCode, now()->addMinutes(10));
+            $stored = true;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Captcha default cache error (falling back to file): ' . $e->getMessage());
+        }
+
+        if (! $stored) {
+            try {
+                Cache::store('file')->put('captcha:' . $key, $storedCode, now()->addMinutes(10));
+                $stored = true;
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Captcha file cache error (falling back to session): ' . $e->getMessage());
+            }
+        }
+
+        if (! $stored) {
+            session(['captcha:' . $key => $storedCode]);
+        }
 
         // Generate stylized SVG image
         $svg = $this->renderSvg($code);

@@ -63,13 +63,32 @@ class IsfRegisterRequest extends FormRequest
                 return;
             }
 
-            $expected = Cache::get('captcha:' . $key);
+            $expected = null;
+            try {
+                $expected = Cache::get('captcha:' . $key);
+            } catch (\Throwable $e) {}
+
+            if ($expected === null) {
+                try {
+                    $expected = Cache::store('file')->get('captcha:' . $key);
+                } catch (\Throwable $e) {}
+            }
+
+            if ($expected === null) {
+                $expected = session('captcha:' . $key);
+            }
 
             if (! $expected || $expected !== $answer) {
                 $validator->errors()->add('captcha_answer', 'Kode captcha tidak cocok atau sudah kedaluwarsa.');
             } else {
                 // Invalidate after single use to prevent replay
-                Cache::forget('captcha:' . $key);
+                try {
+                    Cache::forget('captcha:' . $key);
+                } catch (\Throwable $e) {}
+                try {
+                    Cache::store('file')->forget('captcha:' . $key);
+                } catch (\Throwable $e) {}
+                session()->forget('captcha:' . $key);
             }
         });
     }

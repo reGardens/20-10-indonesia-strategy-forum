@@ -483,7 +483,15 @@ async function handleSubmit() {
                                             width="180"
                                             height="46"
                                         />
-                                        <span v-else class="text-xs text-neutral-400">Memuat kode...</span>
+                                        <span v-else-if="captchaLoading" class="text-xs text-neutral-400">Memuat kode...</span>
+                                        <button
+                                            v-else
+                                            type="button"
+                                            class="text-[11px] font-medium text-isf-red hover:underline px-2 text-center"
+                                            @click="fetchCaptcha"
+                                        >
+                                            Gagal memuat. Klik coba lagi
+                                        </button>
                                     </div>
                                     <button
                                         type="button"
