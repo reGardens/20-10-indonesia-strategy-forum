@@ -304,9 +304,10 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
                     ISF | Indonesia Strategy Forum — single line, small
                     opacity-0 → 1 when isScrolled via CSS class on <header>
                 -->
-                <div class="isf-title isf-title--compact inline-flex items-center justify-center gap-x-2.5 py-0.5 select-none whitespace-nowrap">
+                <div v-if="isScrolled" class="isf-title isf-title--compact inline-flex items-center justify-center gap-x-2.5 py-0.5 select-none whitespace-nowrap">
                     <span class="text-[1.3rem] sm:text-[1.5rem] font-bold text-isf-red font-space-grotesk leading-none shrink-0">ISF</span>
                     <span aria-hidden="true" class="h-3.5 sm:h-4 w-px bg-white/25 shrink-0"></span>
+                    {{ " " }}
                     <span class="text-[11px] sm:text-[12.5px] font-bold text-white font-space-grotesk tracking-[1.5px] uppercase shrink-0" style="letter-spacing:1.5px">Indonesia Strategy Forum</span>
                     <span
                         v-if="isMemberRoute"
@@ -319,7 +320,7 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
                     Changes content based on layout prop — but no DOM swap on scroll
                     opacity-1 → 0 when isScrolled via CSS class on <header>
                 -->
-                <div class="isf-title isf-title--normal flex items-center justify-center select-none">
+                <div v-else class="isf-title isf-title--normal flex items-center justify-center select-none">
                     <!-- Row 1: ISF (large) | Indonesia Strategy Forum (smaller, multiline) -->
                     <div
                         v-if="layout === 'single-row'"
@@ -327,6 +328,7 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
                     >
                         <span class="text-[2.4rem] sm:text-[3rem] font-bold text-isf-red font-space-grotesk leading-none whitespace-nowrap shrink-0">ISF</span>
                         <span aria-hidden="true" class="h-8 sm:h-9 w-px bg-white/20 shrink-0"></span>
+                        {{ " " }}
                         <div class="flex flex-col items-start justify-center">
                             <span
                                 class="text-left text-[17px] leading-[19px] tracking-[2px] font-bold text-white font-space-grotesk select-none shrink-0"
@@ -346,6 +348,7 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
                     >
                         <span class="text-[1.3rem] sm:text-[1.65rem] md:text-[2.1rem] xl:text-[2.6rem] font-bold text-isf-red font-space-grotesk leading-none shrink-0">ISF</span>
                         <span aria-hidden="true" class="h-3.5 sm:h-7 md:h-8 xl:h-9 w-px bg-white/25 sm:bg-white/20 shrink-0"></span>
+                        {{ " " }}
                         <span
                             class="text-[11px] sm:text-[1.65rem] md:text-[2.1rem] xl:text-[2.6rem] font-bold text-white font-space-grotesk leading-none uppercase sm:normal-case tracking-[1.5px] sm:tracking-[1px] md:tracking-[1.5px] xl:tracking-[2px] shrink-0"
                             style="letter-spacing:1.5px"
@@ -362,6 +365,7 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
                         class="flex flex-col items-center justify-center text-center py-1 sm:py-2"
                     >
                         <span class="text-[4.5rem] sm:text-[6rem] md:text-[8rem] font-anton text-isf-red uppercase leading-none whitespace-nowrap">ISF</span>
+                        {{ " " }}
                         <span
                             class="text-[14px] capitalize text-white font-space-grotesk font-medium text-center whitespace-nowrap -mt-1.5 tracking-[2px] leading-[27px]"
                             style="letter-spacing:2px; line-height:27px"
