@@ -73,7 +73,11 @@ function formatDate(dateString) {
                         <TableCell class="font-medium">
                             <div class="line-clamp-2">{{ user.name }}</div>
                         </TableCell>
-                        <TableCell><div class="line-clamp-2">{{ user.email }}</div></TableCell>
+                        <TableCell
+                            ><div class="line-clamp-2">
+                                {{ user.email }}
+                            </div></TableCell
+                        >
                         <TableCell>
                             <div class="flex flex-wrap gap-1">
                                 <Badge
@@ -87,15 +91,31 @@ function formatDate(dateString) {
                                 >
                                     {{ role.name }}
                                 </Badge>
-                                <span v-if="!user.roles || user.roles.length === 0" class="text-xs text-muted-foreground">-</span>
+                                <span
+                                    v-if="
+                                        !user.roles || user.roles.length === 0
+                                    "
+                                    class="text-xs text-muted-foreground"
+                                    >-</span
+                                >
                             </div>
                         </TableCell>
                         <TableCell>
-                            <span class="text-sm font-mono text-muted-foreground">{{ user.zip_code || '-' }}</span>
+                            <span
+                                class="text-sm font-mono text-muted-foreground"
+                                >{{ user.zip_code || "-" }}</span
+                            >
                         </TableCell>
                         <TableCell>{{ formatDate(user.created_at) }}</TableCell>
                         <TableCell class="text-right space-x-2">
-                            <template v-if="user.email !== 'superadmin@gmail.com' && !user.roles?.some(r => r.name === 'super-admin')">
+                            <template
+                                v-if="
+                                    user.email !== 'superadmin@gmail.com' &&
+                                    !user.roles?.some(
+                                        (r) => r.name === 'super-admin',
+                                    )
+                                "
+                            >
                                 <Link :href="`/cms/users/${user.id}/edit`">
                                     <Button variant="outline" size="sm">{{
                                         t("common.edit")
@@ -108,7 +128,11 @@ function formatDate(dateString) {
                                     >{{ t("common.delete") }}</Button
                                 >
                             </template>
-                            <span v-else class="text-xs text-muted-foreground italic px-3">Protected</span>
+                            <span
+                                v-else
+                                class="text-xs text-muted-foreground italic px-3"
+                                >Protected</span
+                            >
                         </TableCell>
                     </TableRow>
                     <TableRow v-if="users.data.length === 0">

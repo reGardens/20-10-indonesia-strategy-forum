@@ -13,8 +13,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preload" as="font" type="font/woff2" crossorigin
         href="{{ asset('fonts/pinyon-script-400.woff2') }}">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="{{ asset('fonts/anton-latin.woff2') }}">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="{{ asset('fonts/space-grotesk-latin.woff2') }}">
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400..800;1,6..72,400..700&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&family=Barlow:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=Newsreader:ital,opsz,wght@0,6..72,400..800;1,6..72,400..700&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&family=Barlow:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <style>
         @font-face {
@@ -23,6 +27,22 @@
             font-weight: 400;
             font-style: normal;
             font-display: block;
+        }
+
+        @font-face {
+            font-family: "Anton";
+            src: url("{{ asset('fonts/anton-latin.woff2') }}") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: "Space Grotesk";
+            src: url("{{ asset('fonts/space-grotesk-latin.woff2') }}") format("woff2");
+            font-weight: 400 700;
+            font-style: normal;
+            font-display: swap;
         }
 
         html {
@@ -85,32 +105,68 @@
             flex-shrink: 0;
         }
 
-        .isf-initial-shell header {
+        .isf-initial-shell header.bg-isf-navy {
+            background-color: #0B1220 !important;
+            color: #ffffff !important;
+            width: 100%;
+        }
+
+        .isf-initial-shell header.bg-isf-navy svg {
+            color: #ffffff;
+        }
+
+        .isf-initial-shell header.bg-isf-navy .text-isf-red {
+            color: #E10600 !important;
+        }
+
+        .isf-initial-shell header.bg-isf-navy .bg-isf-red {
+            background-color: #E10600 !important;
+        }
+
+        .isf-initial-shell header.bg-isf-navy .font-anton {
+            font-family: "Anton", sans-serif !important;
+        }
+
+        .isf-initial-shell header.bg-isf-navy .font-space-grotesk {
+            font-family: "Space Grotesk", sans-serif !important;
+        }
+
+        .isf-initial-shell header.bg-isf-navy .isf-wordmark {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            text-align: center;
+            text-decoration: none;
+            line-height: normal;
+        }
+
+        .isf-initial-shell header.bg-isf-navy nav {
+            background-color: #070D18;
+            max-width: 100%;
+            margin: 0 auto;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 0 1rem;
+        }
+
+        .isf-initial-shell header.bg-isf-navy nav ul {
+            display: flex;
+            width: max-content;
+            align-items: center;
+            gap: 1rem;
+            margin: 0 auto;
+            padding: .625rem 0;
+            list-style: none;
+            font-size: 13px;
+            font-family: "Space Grotesk", sans-serif;
+            color: #d4d4d4;
+        }
+
+        .isf-initial-shell header.border-b {
             background: #fff;
             color: #171717;
-        }
-
-        .isf-initial-shell header>div {
-            border-bottom: 1px solid #d4d4d4;
-        }
-
-        .isf-initial-shell header:not(.border-b)>div:first-child>div {
-            display: grid;
-            grid-template-columns: minmax(2.5rem, 1fr) auto minmax(2.5rem, 1fr);
-            align-items: center;
-            gap: .75rem;
-            width: 100%;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 1.5rem;
-        }
-
-        .isf-initial-shell header:not(.border-b)>div:first-child>div> :first-child {
-            justify-self: start;
-        }
-
-        .isf-initial-shell header:not(.border-b)>div:first-child>div> :last-child {
-            justify-self: end;
         }
 
         .isf-initial-shell header.border-b>div {
@@ -119,10 +175,11 @@
             align-items: center;
             gap: .75rem;
             width: 100%;
-            max-width: 1400px;
+            max-width: 100%;
             min-height: 4.5rem;
             margin: 0 auto;
             padding: 1rem 1.5rem;
+            border-bottom: 1px solid #d4d4d4;
         }
 
         .isf-initial-shell header.border-b>div> :first-child {
@@ -136,61 +193,9 @@
             gap: .5rem;
         }
 
-        .isf-initial-shell header .isf-wordmark {
-            display: flex;
-            min-width: 0;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto;
-            text-align: center;
-            line-height: 1;
-            letter-spacing: -.01em;
-        }
-
-        .isf-initial-shell header .isf-wordmark>span {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: .875rem;
-        }
-
-        .isf-initial-shell header .isf-wordmark .isf-script {
+        .isf-initial-shell header.border-b .isf-wordmark .isf-script {
             font-size: 50px;
             color: #0a0a0a;
-        }
-
-        .isf-initial-shell header .inline-flex,
-        .isf-initial-shell header:not(.border-b)>div:first-child>div> :last-child {
-            display: inline-flex;
-            align-items: center;
-        }
-
-        .isf-initial-shell header:not(.border-b)>div:first-child>div> :last-child {
-            gap: 1rem;
-        }
-
-        .isf-initial-shell header>div:nth-child(2) nav {
-            max-width: 1400px;
-            margin: 0 auto;
-            overflow-x: auto;
-            overflow-y: hidden;
-            padding: 0 1.5rem;
-        }
-
-        .isf-initial-shell header>div:nth-child(2) ul {
-            display: flex;
-            width: max-content;
-            align-items: center;
-            gap: 1.25rem;
-            margin: 0 auto;
-            padding: .625rem 0;
-            list-style: none;
-            font-size: 15px;
-            line-height: 1.5;
-        }
-
-        .isf-initial-shell header>div:nth-child(2) li {
-            padding: 0;
         }
 
         .isf-initial-shell .hidden {
@@ -413,7 +418,7 @@
         }
 
         .isf-skel-container {
-            max-width: 1400px;
+            max-width: 100%;
             margin: 0 auto;
             padding: 2rem 1rem;
         }
@@ -453,7 +458,7 @@
         .isf-skel-member-layout {
             display: flex;
             gap: 1.5rem;
-            max-width: 1400px;
+            max-width: 100%;
             margin: 0 auto;
             padding: 1.5rem 1rem;
         }
