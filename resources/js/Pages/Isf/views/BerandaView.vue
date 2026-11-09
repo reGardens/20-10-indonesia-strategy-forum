@@ -18,6 +18,10 @@ import { BERANDA_INSIGHT_DUMMY } from "@/Pages/Isf/data/berandaInsightDummy";
 import { formatDate } from "@/Utils/formatters";
 import { getBeranda } from "@/api/services/isfPublicService";
 import { useIsfContent } from "@/Composables/useIsfContent";
+import { useIsfHeaderLayout } from "@/Composables/useIsfHeaderLayout";
+
+const { layout: headerLayout, setLayout: setHeaderLayout } =
+    useIsfHeaderLayout();
 
 const { data, status, load } = useIsfContent(getBeranda);
 onMounted(load);
@@ -107,6 +111,60 @@ const cellPad = "lg:px-4 xl:px-[30px]";
 
 <template>
     <div>
+        <!-- Floating Switcher Tata Letak Header di bawah tengah layar -->
+        <Teleport to="body">
+            <div
+                class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-1.5 rounded-full border border-neutral-700/80 bg-neutral-900/95 px-3.5 py-1.5 shadow-2xl backdrop-blur-md select-none"
+                data-testid="header-layout-switcher"
+                role="group"
+                aria-label="Pilihan Tata Letak Header"
+            >
+                <span
+                    class="pr-1 text-[10px] font-bold uppercase tracking-wider text-neutral-400 font-space-grotesk whitespace-nowrap"
+                    >Layout Header:</span
+                >
+                <button
+                    type="button"
+                    :class="[
+                        'cursor-pointer rounded-full px-2.5 py-0.5 text-[11px] font-space-grotesk font-bold transition-all whitespace-nowrap',
+                        headerLayout === 'single-row'
+                            ? 'bg-isf-red text-white shadow-xs'
+                            : 'text-neutral-300 hover:text-white hover:bg-neutral-800/80',
+                    ]"
+                    title="Opsi 1: Row 1 (ISF di samping Indonesia Strategy Forum)"
+                    @click="setHeaderLayout('single-row')"
+                >
+                    Row 1
+                </button>
+                <button
+                    type="button"
+                    :class="[
+                        'cursor-pointer rounded-full px-2.5 py-0.5 text-[11px] font-space-grotesk font-bold transition-all whitespace-nowrap',
+                        headerLayout === 'two-rows'
+                            ? 'bg-isf-red text-white shadow-xs'
+                            : 'text-neutral-300 hover:text-white hover:bg-neutral-800/80',
+                    ]"
+                    title="Opsi 2: Row 2 (ISF Anton 8rem di atas, Indonesia Strategy Forum di bawah)"
+                    @click="setHeaderLayout('two-rows')"
+                >
+                    Row 2
+                </button>
+                <button
+                    type="button"
+                    :class="[
+                        'cursor-pointer rounded-full px-2.5 py-0.5 text-[11px] font-space-grotesk font-bold transition-all whitespace-nowrap',
+                        headerLayout === 'row-3'
+                            ? 'bg-isf-red text-white shadow-xs'
+                            : 'text-neutral-300 hover:text-white hover:bg-neutral-800/80',
+                    ]"
+                    title="Opsi 3: Row 3 (ISF di samping Indonesia Strategy Forum inline seukuran ISF)"
+                    @click="setHeaderLayout('row-3')"
+                >
+                    Row 3
+                </button>
+            </div>
+        </Teleport>
+
         <BerandaSkeleton v-if="status === 'loading'" />
         <div
             v-else-if="status !== 'ready'"

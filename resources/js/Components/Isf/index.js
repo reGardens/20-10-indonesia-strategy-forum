@@ -13,4 +13,5 @@ export { default as AnggotaSkeleton } from './AnggotaSkeleton.vue';
 export { default as ArtikelSkeleton } from './ArtikelSkeleton.vue';
 export { default as InfografikSkeleton } from './InfografikSkeleton.vue';
 export { default as IsfInsightSlider } from './IsfInsightSlider.vue';
+export { default as IsfHeader } from './IsfHeader.vue';
 export { default as IsfFooter } from './IsfFooter.vue';

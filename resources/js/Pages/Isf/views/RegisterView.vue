@@ -157,19 +157,6 @@ async function handleSubmit() {
                 <!-- BAGIAN 1: HEADER (Politico Pattern)                           -->
                 <!-- ============================================================= -->
                 <header class="border-b border-neutral-200 pb-6 text-center sm:text-left">
-                    <div class="flex items-center justify-center sm:justify-start gap-3 mb-4">
-                        <img
-                            src="/images/isf/logo-isf.jpeg"
-                            alt="ISF Logo"
-                            class="h-10 w-10 rounded-[6px] object-cover border border-neutral-300 shadow-xs"
-                            width="40"
-                            height="40"
-                        />
-                        <span class="isf-script text-neutral-950 text-2xl font-semibold leading-none">
-                            Indonesia Strategy Forum
-                        </span>
-                    </div>
-
                     <h1 class="font-editorial text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900">
                         Member Registration
                     </h1>

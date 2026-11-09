@@ -31,6 +31,8 @@ export default {
                     "sans-serif",
                 ],
                 montserrat: ["Montserrat", "sans-serif"],
+                "space-grotesk": ["'Space Grotesk'", "sans-serif"],
+                anton: ["Anton", "sans-serif"],
                 // Tipografi editorial ISF (Gaya Monocle / Antiqua):
                 // Script / Tulisan Sambung Latin Klasik:
                 script: ["'Pinyon Script'", "cursive"],

@@ -8,6 +8,10 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
+use Throwable;
 
 class IsfRegisterController extends Controller
 {
@@ -18,36 +22,55 @@ class IsfRegisterController extends Controller
      */
     public function store(IsfRegisterRequest $request): JsonResponse
     {
-        $validated = $request->validated();
+        try {
+            $validated = $request->validated();
 
-        $fullName = trim($validated['first_name'] . ' ' . $validated['last_name']);
+            $fullName = trim($validated['first_name'] . ' ' . $validated['last_name']);
 
-        $user = DB::transaction(function () use ($validated, $fullName) {
-            $newUser = User::create([
-                'name' => $fullName,
-                'first_name' => $validated['first_name'],
-                'last_name' => $validated['last_name'],
-                'zip_code' => $validated['zip_code'],
-                'age_verified' => true,
-                'email' => strtolower($validated['email']),
-                'password' => Hash::make($validated['password']),
+            $user = DB::transaction(function () use ($validated, $fullName) {
+                $newUser = User::create([
+                    'name' => $fullName,
+                    'first_name' => $validated['first_name'],
+                    'last_name' => $validated['last_name'],
+                    'zip_code' => $validated['zip_code'],
+                    'age_verified' => true,
+                    'email' => strtolower($validated['email']),
+                    'password' => Hash::make($validated['password']),
+                ]);
+
+                // Assign standard 'user' role safely with cache reset
+                try {
+                    app(PermissionRegistrar::class)->forgetCachedPermissions();
+                    $role = Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
+                    $newUser->assignRole($role);
+                } catch (Throwable $roleErr) {
+                    Log::warning('Spatie role assignment warning: ' . $roleErr->getMessage());
+                }
+
+                return $newUser;
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pendaftaran anggota berhasil! Selamat datang di Indonesia Strategy Forum.',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                ],
+            ], 201);
+        } catch (Throwable $e) {
+            Log::error('Registration exception: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
             ]);
 
-            // Assign standard 'user' role
-            $newUser->assignRole('user');
-
-            return $newUser;
-        });
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Pendaftaran anggota berhasil! Selamat datang di Indonesia Strategy Forum.',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-            ],
-        ], 201);
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kendala saat pendaftaran: ' . $e->getMessage(),
+                'error_detail' => $e->getMessage(),
+                'file' => basename($e->getFile()) . ':' . $e->getLine(),
+            ], 500);
+        }
     }
 }
-
