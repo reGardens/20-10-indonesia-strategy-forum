@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['web'])->prefix('isf')->group(function () {
     Route::get('/beranda', [PublicContentController::class, 'beranda'])->name('api.isf.beranda');
     Route::get('/tokoh/{slug}', [PublicContentController::class, 'tokoh'])->name('api.isf.tokoh');
+    Route::get('/media/{id}', [PublicContentController::class, 'mediaDetail'])->name('api.isf.media');
     Route::get('/infografik', [PublicContentController::class, 'infografik'])->name('api.isf.infografik');
     Route::get('/anggota', [PublicContentController::class, 'anggota'])->name('api.isf.anggota');
     Route::get('/cache-heal', [PublicContentController::class, 'cacheHeal'])->name('api.isf.cache-heal');

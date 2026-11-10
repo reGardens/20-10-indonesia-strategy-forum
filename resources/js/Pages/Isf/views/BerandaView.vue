@@ -1,6 +1,6 @@
 <script setup>
 /** Public front page driven by GET /api/isf/beranda (Politico-style 3-column module). */
-import { computed, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 import {
     BerandaSkeleton,
     CategoryLabel,
@@ -38,36 +38,105 @@ const factBlocks = computed(() => data.value?.factBlocks || []);
 const chart = computed(() => data.value?.chart);
 const terkini = computed(() => data.value?.terkini || []);
 const latestNews = computed(() => terkini.value.slice(0, 3));
-const mediaSorotan = computed(() => {
+const activeMediaTab = ref('latest');
+
+const allMediaSorotan = computed(() => {
     if (data.value?.mediaSorotan?.length) {
-        return data.value.mediaSorotan.slice(0, 3);
+        return data.value.mediaSorotan;
     }
     return [
         {
             id: 1,
             title: "Diskusi Panel: Transformasi Digital dan Kepatuhan Regulasi Perbankan",
             imageUrl: "",
-            mediaUrl: "https://www.youtube.com",
+            mediaUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
             category: "YouTube",
             publishedAt: "2026-10-20",
+            is_popular: true,
+            order: 1,
         },
         {
             id: 2,
-            title: "Sorotan Visual: Implikasi UU Energi Terbarukan bagi Sektor Industri",
+            title: "Sorotan Kilat: Implikasi Regulasi Transisi Energi Terbarukan bagi Industri",
             imageUrl: "",
-            mediaUrl: "https://www.instagram.com",
-            category: "Instagram",
+            mediaUrl: "https://www.tiktok.com/@indonesiastrategyforum/video/7200000000000000000",
+            category: "TikTok",
             publishedAt: "2026-10-18",
+            is_popular: false,
+            order: 2,
         },
         {
             id: 3,
             title: "Kupas Tuntas: RUU Perampasan Aset dan Efek Jeranya bagi Koruptor",
             imageUrl: "",
-            mediaUrl: "https://www.tiktok.com",
-            category: "TikTok",
+            mediaUrl: "https://www.youtube.com/watch?v=ScMzIvxBSi4",
+            category: "YouTube",
             publishedAt: "2026-10-16",
+            is_popular: true,
+            order: 3,
+        },
+        {
+            id: 4,
+            title: "Penjelasan Singkat: Dinamika Anggaran Pendidikan dan Gaji Pendidik 2026",
+            imageUrl: "",
+            mediaUrl: "https://www.tiktok.com/@indonesiastrategyforum/video/7200000000000000001",
+            category: "TikTok",
+            publishedAt: "2026-10-15",
+            is_popular: true,
+            order: 4,
         },
     ];
+});
+
+/**
+ * Membatasi tampilan hanya pada 2 kartu:
+ * 1. Horizontal: Video / thumbnail YouTube terbaru
+ * 2. Vertikal: Video / thumbnail TikTok terbaru
+ * Terhubung dengan tab LATEST (default) & POPULAR.
+ */
+const mediaSorotan = computed(() => {
+    const list = [...allMediaSorotan.value];
+
+    if (activeMediaTab.value === 'popular') {
+        const popYouTube = list.find((it) => !isVerticalMedia(it.category) && it.is_popular)
+            || list.find((it) => !isVerticalMedia(it.category));
+        const popTikTok = list.find((it) => isVerticalMedia(it.category) && it.is_popular)
+            || list.find((it) => isVerticalMedia(it.category));
+
+        const cards = [];
+        if (popYouTube) cards.push(popYouTube);
+        if (popTikTok) cards.push(popTikTok);
+
+        if (cards.length < 2) {
+            for (const it of list) {
+                if (!cards.some((c) => c.id === it.id)) {
+                    cards.push(it);
+                    if (cards.length === 2) break;
+                }
+            }
+        }
+        return cards.slice(0, 2);
+    }
+
+    // Default: LATEST (urut tanggal rilis terbaru)
+    const sorted = [...list].sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0));
+
+    const latestYouTube = sorted.find((it) => !isVerticalMedia(it.category));
+    const latestTikTok = sorted.find((it) => isVerticalMedia(it.category));
+
+    const cards = [];
+    if (latestYouTube) cards.push(latestYouTube);
+    if (latestTikTok) cards.push(latestTikTok);
+
+    if (cards.length < 2) {
+        for (const it of sorted) {
+            if (!cards.some((c) => c.id === it.id)) {
+                cards.push(it);
+                if (cards.length === 2) break;
+            }
+        }
+    }
+    return cards.slice(0, 2);
 });
 
 function isVerticalMedia(category) {
@@ -78,6 +147,20 @@ function isVerticalMedia(category) {
         cat.includes("reel") ||
         cat.includes("short")
     );
+}
+
+function getMediaThumbnail(item) {
+    if (item.imageUrl) return item.imageUrl;
+    const raw = item.mediaUrl || "";
+    const match = raw.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:embed\/|shorts\/|live\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+    if (match && match[1]) {
+        return `https://i.ytimg.com/vi/${match[1]}/hqdefault.jpg`;
+    }
+    const cat = (item.category || "").toLowerCase();
+    if (!isVerticalMedia(cat) && (cat.includes("youtube") || raw.includes("youtube.com"))) {
+        return "https://i.ytimg.com/vi/aBxlmrCPjBA/hqdefault.jpg";
+    }
+    return "";
 }
 const infografik = computed(() => data.value?.infografik || []);
 const pekanIni = computed(() => data.value?.pekanIni || { items: [] });
@@ -328,17 +411,43 @@ const cellPad = "lg:px-4 xl:px-[30px]";
                             </div>
                         </article>
 
-                        <!-- RIGHT: image-on-top stories, no visible heading -->
+                        <!-- RIGHT: Media Sorotan (YouTube Horizontal & TikTok Vertikal dengan Tab LATEST & POPULAR) -->
                         <div
                             class="order-2 min-w-0 border-t border-neutral-300 lg:order-3 lg:border-t-0"
                         >
+                            <!-- Tab Navigation: LATEST & POPULAR (default LATEST) -->
                             <div
                                 :class="[
-                                    'isf-col-head max-lg:!hidden',
+                                    'isf-col-head flex items-center gap-4',
                                     cellPad,
                                 ]"
-                                aria-hidden="true"
-                            ></div>
+                            >
+                                <button
+                                    type="button"
+                                    @click="activeMediaTab = 'latest'"
+                                    :class="[
+                                        'cursor-pointer py-2 text-[11px] font-bold uppercase tracking-wider transition-colors border-b-2 -mb-[1px]',
+                                        activeMediaTab === 'latest'
+                                            ? 'border-isf-red text-neutral-900 font-extrabold'
+                                            : 'border-transparent text-neutral-500 hover:text-neutral-800'
+                                    ]"
+                                >
+                                    Latest
+                                </button>
+                                <button
+                                    type="button"
+                                    @click="activeMediaTab = 'popular'"
+                                    :class="[
+                                        'cursor-pointer py-2 text-[11px] font-bold uppercase tracking-wider transition-colors border-b-2 -mb-[1px]',
+                                        activeMediaTab === 'popular'
+                                            ? 'border-isf-red text-neutral-900 font-extrabold'
+                                            : 'border-transparent text-neutral-500 hover:text-neutral-800'
+                                    ]"
+                                >
+                                    Popular
+                                </button>
+                            </div>
+
                             <section
                                 aria-labelledby="secondary-stories-title"
                                 :class="cellPad"
@@ -355,21 +464,19 @@ const cellPad = "lg:px-4 xl:px-[30px]";
                                         :key="item.id || item.title"
                                         class="py-4 lg:py-5"
                                     >
-                                        <!-- Thumbnail with Platform category badge (YouTube 16:9 / Instagram & TikTok vertical 9:16) -->
-                                        <a
-                                            :href="item.mediaUrl"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
+                                        <!-- Thumbnail with Platform category badge & Link to Detail Embed Page (/media/:id) -->
+                                        <router-link
+                                            :to="'/media/' + item.id"
                                             :class="[
-                                                'group relative block overflow-hidden rounded-xs bg-neutral-100 border border-neutral-300 shadow-2xs',
+                                                'group relative block overflow-hidden rounded-xs',
                                                 isVerticalMedia(item.category)
-                                                    ? 'aspect-[9/16] max-w-[240px] mx-auto'
-                                                    : 'aspect-video w-full',
+                                                    ? 'max-w-[240px] mx-auto'
+                                                    : 'w-full',
                                             ]"
                                         >
                                             <ImagePlaceholder
                                                 :label="item.title"
-                                                :src="item.imageUrl || ''"
+                                                :src="getMediaThumbnail(item)"
                                                 :aspect="
                                                     isVerticalMedia(
                                                         item.category,
@@ -378,27 +485,27 @@ const cellPad = "lg:px-4 xl:px-[30px]";
                                                         : 'video'
                                                 "
                                                 bare
-                                                class="h-full w-full transition-transform duration-300 group-hover:scale-105"
+                                                class="transition-transform duration-300 group-hover:scale-105"
                                             />
-                                            <span
-                                                class="absolute bottom-2 left-2 rounded bg-black/75 px-1.5 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider backdrop-blur-xs"
-                                            >
-                                                {{ item.category || "Video" }}
-                                            </span>
-                                        </a>
 
-                                        <div class="mt-3">
-                                            <h3
-                                                class="isf-headline text-[16px] leading-[1.25] xl:text-[18px]"
+                                            <!-- Platform Category Badge -->
+                                            <span
+                                                class="absolute bottom-2 left-2 rounded bg-black/75 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-xs select-none pointer-events-none"
                                             >
-                                                <a
-                                                    :href="item.mediaUrl"
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
+                                                {{ item.category || (isVerticalMedia(item.category) ? 'TikTok' : 'YouTube') }}
+                                            </span>
+                                        </router-link>
+
+                                        <div class="mt-2.5">
+                                            <h3
+                                                class="isf-headline text-[17px] leading-[1.2] xl:text-[19px]"
+                                            >
+                                                <router-link
+                                                    :to="'/media/' + item.id"
                                                     class="hover:text-isf-red transition-colors"
                                                 >
                                                     {{ item.title }}
-                                                </a>
+                                                </router-link>
                                             </h3>
                                             <time
                                                 v-if="item.publishedAt"

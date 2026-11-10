@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { getBeranda, getAnggota, getInfografik, getTokoh } from '@/api/services/isfPublicService'
+import { getBeranda, getAnggota, getInfografik, getTokoh, getMediaDetail } from '@/api/services/isfPublicService'
 
 const CmsLayout = () => import('../Pages/Cms/layouts/CmsLayout.vue')
 const InvitationLayout = () => import('../Pages/Landing/invitation/layouts/InvitationLayout.vue')
@@ -197,6 +197,18 @@ const routes = [
     ]
   },
   {
+    path: '/media/:id',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-media-detail',
+        component: () => import('../Pages/Isf/views/MediaDetailView.vue'),
+        meta: { title: 'Media Sorotan & Video Analisis · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
     path: '/anggota',
     component: IsfMemberLayout,
     children: [
@@ -273,6 +285,8 @@ router.beforeResolve((to) => {
       getInfografik()
     } else if (to.name === 'isf-tokoh' && to.params.slug) {
       getTokoh(to.params.slug)
+    } else if (to.name === 'isf-media-detail' && to.params.id) {
+      getMediaDetail(to.params.id)
     }
   } catch {}
 })

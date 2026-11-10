@@ -269,18 +269,28 @@ onMounted(loadData)
               <span v-else class="text-[11px] text-muted-foreground">Tanpa tautan</span>
             </TableCell>
             <TableCell>
-              <span
-                :class="[
-                  'inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider border pointer-events-none select-none',
-                  item.category === 'YouTube'
-                    ? 'bg-red-500/10 text-red-500 border-red-500/30'
-                    : (item.category === 'Instagram'
-                        ? 'bg-pink-500/10 text-pink-500 border-pink-500/30'
-                        : 'bg-muted text-foreground border-border')
-                ]"
-              >
-                {{ item.category || 'YouTube' }}
-              </span>
+              <div class="flex flex-col gap-1 items-start">
+                <span
+                  :class="[
+                    'inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider border pointer-events-none select-none',
+                    item.category === 'YouTube'
+                      ? 'bg-red-500/10 text-red-500 border-red-500/30'
+                      : (item.category === 'TikTok'
+                          ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/30'
+                          : (item.category === 'Instagram'
+                              ? 'bg-pink-500/10 text-pink-500 border-pink-500/30'
+                              : 'bg-muted text-foreground border-border'))
+                  ]"
+                >
+                  {{ item.category || 'YouTube' }}
+                </span>
+                <span
+                  v-if="item.is_popular"
+                  class="inline-flex items-center gap-0.5 text-[9.5px] font-bold px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 pointer-events-none select-none"
+                >
+                  ★ Populer
+                </span>
+              </div>
             </TableCell>
             <TableCell class="text-xs text-muted-foreground font-mono">
               {{ item.publishedAt || '-' }}
@@ -317,6 +327,20 @@ onMounted(loadData)
             </TableCell>
             <TableCell class="text-right">
               <div class="flex items-center justify-end gap-1.5">
+                <a
+                  :href="`/media/${item.id}`"
+                  target="_blank"
+                  title="Lihat Halaman Publik Embed & Ulasan"
+                >
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    class="h-8 px-2 text-xs font-medium hover:bg-muted inline-flex items-center"
+                  >
+                    <IconComponent name="Eye" :size="14" />
+                  </Button>
+                </a>
                 <Link :href="`/cms/media-sorotan/${item.id}/edit`">
                   <Button
                     type="button"
