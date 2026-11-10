@@ -189,7 +189,7 @@
         }
 
         .isf-initial-shell header.bg-isf-navy nav {
-            background-color: #070D18;
+            background-color: #0B1220;
             max-width: 100%;
             margin: 0 auto;
             overflow-x: auto;
