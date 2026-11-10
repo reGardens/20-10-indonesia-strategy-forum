@@ -22,7 +22,6 @@ class IsfPageController extends Controller
         'artikel' => 'Artikel',
         'infografik' => 'Infografik',
         'tokoh' => 'Tokoh',
-        'isu' => 'Isu',
         'data-grafik' => 'DataGrafik',
         'alert' => 'Alert',
         'email-briefing' => 'EmailBriefing',

@@ -11,11 +11,25 @@
     <link rel="apple-touch-icon" href="{{ asset('images/isf/logo-isf.jpeg') }}">
     <meta name="theme-color" content="#0B1220">
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet" />
+    <!-- Preload Critical Fonts (Local) -->
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="{{ asset('fonts/montserrat-latin.woff2') }}">
+    <style>
+        @font-face {
+            font-family: "Montserrat";
+            src: url("{{ asset('fonts/montserrat-latin.woff2') }}") format("woff2");
+            font-weight: 100 900;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: "Montserrat";
+            src: url("{{ asset('fonts/montserrat-italic-latin.woff2') }}") format("woff2");
+            font-weight: 100 900;
+            font-style: italic;
+            font-display: swap;
+        }
+    </style>
 
     <!-- Dark Mode Preference Pre-init to avoid theme flash -->
     <script>

@@ -32,7 +32,6 @@ export const cmsResources = {
   },
   infografik: createCmsResource('infografik'),
   tokoh: createCmsResource('tokoh'),
-  isu: createCmsResource('isu'),
   dataGrafik: {
     ...createCmsResource('data-grafik'),
     reorder: (items) => http.post('/cms/data-grafik/reorder', { items }).then((r) => r.data)
@@ -61,11 +60,6 @@ export const runningTextService = {
 export const mediaSorotanService = {
   ...cmsResources.mediaSorotan,
   saveAll: (items) => http.put('/cms/media-sorotan', { items }).then((r) => r.data.data)
-}
-
-/** Data Grafik options for the isu "Visual Kunci" select: [{ id, title, status }] */
-export function chartOptions() {
-  return http.get('/cms/options/charts').then((r) => r.data.data)
 }
 
 /** Category options for dropdown pickers across CMS modules: [{ id, value, label, color }] */

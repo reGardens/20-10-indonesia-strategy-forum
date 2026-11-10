@@ -29,7 +29,7 @@ const props = defineProps({
 
 const isEdit = computed(() => Boolean(props.id))
 
-const targetType = ref('/isu')
+const targetType = ref('/tokoh')
 const targetPath = ref('')
 
 const { form, err, loading, loadError, saving, save, load } = useCmsForm({
@@ -49,14 +49,11 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
 
 watch(() => form.to, (val) => {
   if (!val) {
-    targetType.value = '/isu'
+    targetType.value = '/tokoh'
     targetPath.value = ''
     return
   }
-  if (val.startsWith('/isu/')) {
-    targetType.value = '/isu'
-    targetPath.value = val.replace(/^\/isu\//, '')
-  } else if (val.startsWith('/tokoh/')) {
+  if (val.startsWith('/tokoh/')) {
     targetType.value = '/tokoh'
     targetPath.value = val.replace(/^\/tokoh\//, '')
   } else if (val.startsWith('/artikel/')) {
@@ -84,9 +81,7 @@ function updateFormTo() {
     return
   }
   const cleanPath = targetPath.value.trim().replace(/^\/+/, '')
-  if (targetType.value === '/isu') {
-    form.to = `/isu/${cleanPath}`
-  } else if (targetType.value === '/tokoh') {
+  if (targetType.value === '/tokoh') {
     form.to = `/tokoh/${cleanPath}`
   } else if (targetType.value === '/artikel') {
     form.to = `/artikel/${cleanPath}`
@@ -188,7 +183,7 @@ onMounted(async () => {
             <Input
               id="kicker"
               v-model="form.kicker"
-              placeholder="Contoh: Sorotan, Anatomi Isu, Tokoh Pekan Ini, Politik..."
+              placeholder="Contoh: Sorotan, Tokoh Pekan Ini, Politik..."
               class="h-9 text-xs font-medium"
             />
             <p v-if="err('kicker')" class="text-xs text-red-400 mt-1">{{ err('kicker') }}</p>
@@ -219,7 +214,6 @@ onMounted(async () => {
                   @change="updateFormTo"
                   class="w-full h-9 rounded-md border border-input bg-background pl-3 pr-8 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring appearance-none font-medium cursor-pointer"
                 >
-                  <option value="/isu">/isu (Isu Mingguan)</option>
                   <option value="/tokoh">/tokoh (Profil Tokoh)</option>
                   <option value="/artikel">/artikel (Artikel)</option>
                   <option value="/infografik">/infografik (Infografik)</option>
@@ -235,7 +229,7 @@ onMounted(async () => {
 
               <div class="flex-1 relative flex items-center">
                 <span
-                  v-if="['/isu', '/tokoh', '/artikel', '/infografik'].includes(targetType)"
+                  v-if="['/tokoh', '/artikel', '/infografik'].includes(targetType)"
                   class="absolute left-3 text-xs font-mono text-muted-foreground/80 pointer-events-none select-none font-medium"
                 >
                   {{ targetType }}/
@@ -244,10 +238,10 @@ onMounted(async () => {
                   id="target-path"
                   v-model="targetPath"
                   @input="updateFormTo"
-                  :placeholder="targetType === '/isu' ? 'kuhp-baru-pelaku-usaha' : (targetType === '/tokoh' ? 'budi-santoso' : (targetType === 'external' ? 'https://example.com' : 'Masukkan slug atau path...'))"
+                  :placeholder="targetType === '/tokoh' ? 'budi-santoso' : (targetType === 'external' ? 'https://example.com' : 'Masukkan slug atau path...')"
                   :class="[
                     'h-9 text-xs font-mono w-full',
-                    ['/isu', '/tokoh', '/artikel', '/infografik'].includes(targetType) ? 'pl-20 sm:pl-20' : 'pl-3'
+                    ['/tokoh', '/artikel', '/infografik'].includes(targetType) ? 'pl-20 sm:pl-20' : 'pl-3'
                   ]"
                 />
               </div>

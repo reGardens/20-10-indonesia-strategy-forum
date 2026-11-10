@@ -34,7 +34,6 @@ const features = [
     { key: "artikel", label: "Artikel", desc: "Hero beranda, artikel terkini, isu terpopuler, dan konten editorial analitis" },
     { key: "infografik", label: "Infografik", desc: "Grafik data visual, infografik terbaru, dan aset publikasi" },
     { key: "tokoh", label: "Tokoh", desc: "Profil tokoh pekan ini, skor sorotan, jejak legislasi, dan jejaring relasi" },
-    { key: "isu", label: "Isu Mingguan", desc: "Anatomi isu pekan ini, kerangka baku 01-07, visual kunci, dan analisis regulasi" },
     { key: "data_grafik", label: "Data Grafik", desc: "Polling, survei, data visual beranda, dan grafik visual isu" },
     { key: "alert", label: "Alert Peringatan Dini", desc: "Feed peringatan dini regulasi, tingkat urgensi, dan status kepatuhan B2B" },
     { key: "email_briefing", label: "Email Briefing", desc: "Briefing eksklusif anggota, ringkasan eksekutif, dan pratinjau newsletter" },

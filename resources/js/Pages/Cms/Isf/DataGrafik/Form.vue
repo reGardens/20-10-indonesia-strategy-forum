@@ -269,7 +269,7 @@ onMounted(async () => {
               <Input
                 id="read_more_url"
                 v-model="form.read_more_url"
-                placeholder="/isu/kuhp-dan-pelaku-usaha"
+                placeholder="/tokoh/budi-santoso"
                 class="h-9 text-xs font-mono"
               />
             </div>

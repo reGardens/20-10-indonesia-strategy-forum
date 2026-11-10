@@ -82,12 +82,6 @@ const menuGroups = computed(() => [
                 visible: hasFeature("tokoh"),
             },
             {
-                label: "Isu Mingguan",
-                href: "/cms/isu",
-                icon: "Bulb",
-                visible: hasFeature("isu"),
-            },
-            {
                 label: "ISF Insight (Grafik)",
                 href: "/cms/data-grafik",
                 icon: "ChartBar",

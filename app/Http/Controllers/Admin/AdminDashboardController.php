@@ -9,7 +9,6 @@ use App\Models\Isf\Banner;
 use App\Models\Isf\Briefing;
 use App\Models\Isf\Chart;
 use App\Models\Isf\Infographic;
-use App\Models\Isf\Isu;
 use App\Models\Isf\Tokoh;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -28,7 +27,6 @@ class AdminDashboardController extends Controller
         'artikel' => ['Artikel', Article::class, 'artikel', 'Article', 'title'],
         'infografik' => ['Infografik', Infographic::class, 'infografik', 'ChartInfographic', 'title'],
         'tokoh' => ['Tokoh', Tokoh::class, 'tokoh', 'UserStar', 'name'],
-        'isu' => ['Isu Mingguan', Isu::class, 'isu', 'Bulb', 'title'],
         'data_grafik' => ['Data Grafik', Chart::class, 'data-grafik', 'ChartBar', 'title'],
         'alert' => ['Alert Peringatan Dini', Alert::class, 'alert', 'AlertTriangle', 'title'],
         'email_briefing' => ['Email Briefing', Briefing::class, 'email-briefing', 'Mail', 'ringkasan_judul'],
@@ -89,9 +87,6 @@ class AdminDashboardController extends Controller
         ];
         if ($tokoh = Tokoh::currentFeatured()) {
             $publicLinks[] = ['label' => 'Tokoh Pekan Ini', 'href' => "/tokoh/{$tokoh->slug}"];
-        }
-        if ($isu = Isu::currentWeekly()) {
-            $publicLinks[] = ['label' => 'Anatomi Isu Pekan Ini', 'href' => "/isu/{$isu->slug}"];
         }
         $publicLinks[] = ['label' => 'Dasbor Anggota', 'href' => '/anggota'];
         // The public briefing preview 404s without a published briefing.

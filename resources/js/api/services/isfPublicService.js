@@ -43,10 +43,6 @@ export function getTokoh(slug) {
   return get(`/isf/tokoh/${encodeURIComponent(slug)}`)
 }
 
-export function getIsu(slug) {
-  return get(`/isf/isu/${encodeURIComponent(slug)}`)
-}
-
 export function getAnggota() {
   return get('/isf/anggota')
 }
@@ -60,4 +56,4 @@ export function isNotFound(error) {
   return error?.response?.status === 404
 }
 
-export default { getBeranda, getTokoh, getIsu, getAnggota, getInfografik, isNotFound }
+export default { getBeranda, getTokoh, getAnggota, getInfografik, isNotFound }

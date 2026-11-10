@@ -16,17 +16,17 @@
         {
             "judul": "Aturan turunan pidana korporasi masuk tahap finalisasi",
             "deskripsi": "Draf aturan pelaksana KUHP untuk korporasi dijadwalkan dibahas pekan depan dan berdampak langsung pada kebijakan kepatuhan direksi.",
-            "url": "/isu/kuhp-baru-pelaku-usaha"
+            "url": "#"
         },
         {
             "judul": "RUU Perampasan Aset dijadwalkan Pembahasan Tingkat I",
             "deskripsi": "Komisi III menjadwalkan rapat kerja; ketentuan perampasan aset tanpa pemidanaan perlu dicermati oleh sektor keuangan.",
-            "url": "/isu/kuhp-baru-pelaku-usaha"
+            "url": "#"
         },
         {
             "judul": "Kewajiban pelaporan emisi diperluas ke sektor energi",
             "deskripsi": "Draf peraturan menteri memperluas cakupan pelaporan emisi dengan usulan tenggat kepatuhan awal 2027.",
-            "url": "/isu/kuhp-baru-pelaku-usaha"
+            "url": "#"
         }
     ],
     "penutup": "Lihat dasbor anggota untuk daftar lengkap alert dan filter berdasarkan prioritas.",
@@ -34,7 +34,7 @@
     "tautan": [
         { "label": "Beranda ISF", "url": "/beranda" },
         { "label": "Dasbor Anggota", "url": "/anggota" },
-        { "label": "Anatomi Isu Pekan Ini", "url": "/isu/kuhp-baru-pelaku-usaha" },
+        { "label": "Anatomi Isu Pekan Ini", "url": "#" },
         { "label": "Profil Tokoh Pekan Ini", "url": "/tokoh/budi-santoso" }
     ]
 }

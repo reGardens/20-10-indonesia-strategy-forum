@@ -14,7 +14,6 @@ import App from "@/App.vue";
 import appRouter from "@/router/index.js";
 import anggota from "../../../../../database/seeders/data/isf/anggota.json";
 import beranda from "../../../../../database/seeders/data/isf/beranda.json";
-import isu from "../../../../../database/seeders/data/isf/isu.json";
 import tokoh from "../../../../../database/seeders/data/isf/tokoh.json";
 
 // Public API mock: same response shape as GET /api/isf/* (unknown slug → 404).
@@ -27,22 +26,16 @@ vi.mock("@/api/services/isfPublicService", async () => {
         const data = await seed("tokoh");
         return slug === data.slug ? data : notFound();
     };
-    const getIsu = async (slug) => {
-        const data = await seed("isu");
-        return slug === data.slug ? data : notFound();
-    };
     const isNotFound = (error) => error?.response?.status === 404;
     return {
         getBeranda,
         getAnggota,
         getTokoh,
-        getIsu,
         isNotFound,
-        default: { getBeranda, getAnggota, getTokoh, getIsu, isNotFound },
+        default: { getBeranda, getAnggota, getTokoh, isNotFound },
     };
 });
 
-const ISU_PATH = `/isu/${isu.slug}`;
 const TOKOH_PATH = `/tokoh/${tokoh.slug}`;
 const COUNT_MERAH = anggota.alerts.filter((a) => a.priority === "merah").length;
 const COUNT_KUNING = anggota.alerts.filter((a) => a.priority === "kuning").length;
@@ -228,48 +221,10 @@ describe("ISF alur E2E (frontend)", () => {
         );
         expect(lihatSemua.getAttribute("href")).toBe("/infografik");
 
-        // (2) klik tautan isu dari beranda (judul hero)
-        click(heroTitle.querySelector(`a[href="${ISU_PATH}"]`));
-        await waitFor(() => router.currentRoute.value.path === ISU_PATH && root.querySelector("#isu-title"), "halaman isu");
-        expect(router.currentRoute.value.name).toBe("isf-isu");
-        expect(root.querySelector("#isu-title").textContent).toContain(isu.title);
-
-        const frameworkHeadings = Array.from(root.querySelectorAll('h2[id^="fw-"]'));
-        expect(frameworkHeadings.map((h) => h.id)).toEqual(["fw-01", "fw-02", "fw-03", "fw-04", "fw-05", "fw-06", "fw-07"]);
-        expect(frameworkHeadings[4].textContent).toContain("Lensa GRC");
-        const grcSection = frameworkHeadings[4].closest("section");
-        for (const lens of ["Governance", "Risk", "Compliance"]) {
-            expect(grcSection.textContent).toContain(lens);
-        }
-        expect(root.querySelector("#metodologi-title")?.textContent).toContain("Cara isu ini dipilih");
-
-        const actorSection = frameworkHeadings[3].closest("section");
-        const actorLink = actorSection.querySelector(`a[href="${TOKOH_PATH}"]`);
-        expect(actorLink).not.toBeNull();
-        expect(actorLink.parentElement.tagName).toBe("LI");
-        expect(actorLink.querySelectorAll("a")).toHaveLength(0);
-        expect(
-            Array.from(actorSection.querySelectorAll("li")).find((item) =>
-                item.textContent.includes("Asosiasi Pengusaha"),
-            ).querySelector("a"),
-        ).toBeNull();
-
-        const grcTable = grcSection.querySelector("table");
-        expect(grcTable.classList.contains("min-w-[42rem]")).toBe(true);
-        expect(
-            grcTable.closest(".overflow-x-auto") !== null ||
-                grcTable.closest(".overflow-auto") !== null,
-        ).toBe(true);
-
-        const relatedSection = Array.from(root.querySelectorAll("section")).find((section) =>
-            section.textContent.includes("Artikel Terkait"),
-        );
-        const relatedLinks = relatedSection.querySelectorAll("li > a");
-        expect(relatedLinks).toHaveLength(isu.related.length);
-        expect(Array.from(relatedLinks).filter((link) => link.getAttribute("href") === "#")).toHaveLength(2);
-
-        // (3) klik tautan aktor → profil tokoh
-        click(actorLink);
+        // (2) klik tautan tokoh dari beranda (pekan ini / sosok)
+        const tokohLink = root.querySelector(`a[href="${TOKOH_PATH}"]`);
+        expect(tokohLink).not.toBeNull();
+        click(tokohLink);
         await waitFor(() => router.currentRoute.value.path === TOKOH_PATH && root.querySelector("#skor-sorotan"), "halaman tokoh");
         expect(router.currentRoute.value.name).toBe("isf-tokoh");
         expect(text()).toContain(tokoh.name);
@@ -313,16 +268,16 @@ describe("ISF alur E2E (frontend)", () => {
         );
     });
 
-    it("(4) slug tidak dikenal → state not found untuk isu dan tokoh", async () => {
-        await mountAt("/isu/slug-tidak-ada");
-        expect(router.currentRoute.value.name).toBe("isf-isu");
-        await waitFor(() => text().includes("Isu tidak ditemukan"), "isu not found (API 404)");
-        expect(root.querySelector("#isu-title")).toBeNull();
-        expect(root.querySelector('a[href="/beranda"]')).not.toBeNull();
-
-        await router.push("/tokoh/slug-tidak-ada");
+    it("(4) slug tidak dikenal → state not found untuk tokoh, dan rute isu tidak ada", async () => {
+        await mountAt("/tokoh/slug-tidak-ada");
+        expect(router.currentRoute.value.name).toBe("isf-tokoh");
         await waitFor(() => text().includes("Tokoh tidak ditemukan"), "tokoh not found");
         expect(root.querySelector("#skor-sorotan")).toBeNull();
+
+        // Rute /isu/:slug sudah dihapus (tidak lagi dapat diakses)
+        await router.push("/isu/slug-tidak-ada");
+        await nextTick();
+        expect(router.currentRoute.value.name).not.toBe("isf-isu");
     });
 
     it("(5) /anggota: tabel alert → menu Prioritas Tinggi (merah) → filter Perlu Dipantau (kuning)", async () => {

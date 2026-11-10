@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Isf\Isu;
 use App\Models\Isf\Tokoh;
 use Illuminate\Console\Command;
 use Spatie\Sitemap\Sitemap;
@@ -31,14 +30,6 @@ class GenerateSitemap extends Command
             $sitemap->add(Url::create("/tokoh/{$tokoh->slug}")
                 ->setPriority(0.7)
                 ->setLastModificationDate($tokoh->updated_at)
-                ->setChangeFrequency(Url::CHANGE_FREQUENCY_WEEKLY));
-        }
-
-        // 3. Published isu (Anatomi Isu Mingguan)
-        foreach (Isu::query()->terbit()->get(['slug', 'updated_at']) as $isu) {
-            $sitemap->add(Url::create("/isu/{$isu->slug}")
-                ->setPriority(0.8)
-                ->setLastModificationDate($isu->updated_at)
                 ->setChangeFrequency(Url::CHANGE_FREQUENCY_WEEKLY));
         }
 

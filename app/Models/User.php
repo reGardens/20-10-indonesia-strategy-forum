@@ -21,7 +21,6 @@ class User extends Authenticatable
         'artikel',
         'infografik',
         'tokoh',
-        'isu',
         'data_grafik',
         'alert',
         'email_briefing',

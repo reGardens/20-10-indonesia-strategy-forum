@@ -6,7 +6,7 @@
     },
     "hero": {
         "slug": "kuhp-baru-pelaku-usaha",
-        "to": "/isu/kuhp-baru-pelaku-usaha",
+        "to": "#",
         "category": "hukum",
         "publishedAt": "2026-10-15",
         "title": "Apa yang berubah bagi pelaku usaha setelah KUHP baru berlaku",
@@ -65,13 +65,6 @@
         "dateEnd": "2026-10-21",
         "label": "15–21 Okt 2026",
         "items": [
-            {
-                "type": "isu",
-                "typeLabel": "Anatomi Isu",
-                "title": "Apa yang berubah bagi pelaku usaha setelah KUHP baru berlaku",
-                "summary": "Tujuh kerangka baku: dari ringkasan isu, Lensa GRC, hingga apa yang perlu dipantau selanjutnya.",
-                "to": "/isu/kuhp-baru-pelaku-usaha"
-            },
             {
                 "type": "tokoh",
                 "typeLabel": "Tokoh Pekan Ini",

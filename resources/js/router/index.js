@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { getBeranda, getAnggota, getInfografik, getIsu, getTokoh } from '@/api/services/isfPublicService'
+import { getBeranda, getAnggota, getInfografik, getTokoh } from '@/api/services/isfPublicService'
 
 const CmsLayout = () => import('../Pages/Cms/layouts/CmsLayout.vue')
 const InvitationLayout = () => import('../Pages/Landing/invitation/layouts/InvitationLayout.vue')
@@ -197,18 +197,6 @@ const routes = [
     ]
   },
   {
-    path: '/isu/:slug',
-    component: IsfPublicLayout,
-    children: [
-      {
-        path: '',
-        name: 'isf-isu',
-        component: () => import('../Pages/Isf/views/IsuDetailView.vue'),
-        meta: { title: 'Anatomi Isu Mingguan · Indonesia Strategy Forum' }
-      }
-    ]
-  },
-  {
     path: '/anggota',
     component: IsfMemberLayout,
     children: [
@@ -283,8 +271,6 @@ router.beforeResolve((to) => {
       getAnggota()
     } else if (to.name === 'isf-infografik' || to.path === '/infografik') {
       getInfografik()
-    } else if (to.name === 'isf-isu' && to.params.slug) {
-      getIsu(to.params.slug)
     } else if (to.name === 'isf-tokoh' && to.params.slug) {
       getTokoh(to.params.slug)
     }

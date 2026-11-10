@@ -8,7 +8,6 @@ use App\Models\Isf\Banner;
 use App\Models\Isf\Briefing;
 use App\Models\Isf\Chart;
 use App\Models\Isf\Infographic;
-use App\Models\Isf\Isu;
 use App\Models\Isf\Setting;
 use App\Models\Isf\Tokoh;
 use Illuminate\Database\Seeder;
@@ -40,11 +39,10 @@ class IsfContentSeeder extends Seeder
         $briefing = $this->load('briefing');
 
         $this->seedBanners();
-        $visualChart = $this->seedCharts($beranda, $isu);
+        $this->seedCharts($beranda, $isu);
         $this->seedArticles($beranda, $isu);
         $this->seedInfographics($beranda);
         $this->seedTokoh($tokoh, $beranda);
-        $this->seedIsu($isu, $beranda, $visualChart);
         $this->seedAlerts($anggota);
         $this->seedBriefing($briefing);
         $this->seedSettings($beranda, $anggota);
@@ -54,12 +52,12 @@ class IsfContentSeeder extends Seeder
     {
         $banners = [
             [
-                'kicker' => 'Anatomi Isu',
+                'kicker' => 'Sorotan',
                 'title' => 'KUHP baru dan pelaku usaha',
                 'deck' => 'Tujuh kerangka baku untuk memahami dampak pidana korporasi bagi tata kelola perusahaan.',
-                'to' => '/isu/kuhp-dan-pelaku-usaha',
+                'to' => '#',
                 'image_url' => 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1600&auto=format&fit=crop',
-                'image_label' => 'Ilustrasi banner: Anatomi Isu KUHP baru dan pelaku usaha',
+                'image_label' => 'Ilustrasi banner: KUHP baru dan pelaku usaha',
                 'order' => 1,
                 'status' => 'terbit',
             ],
@@ -105,7 +103,7 @@ class IsfContentSeeder extends Seeder
     /**
      * Seeds the Beranda chart and the isu "Visual Kunci" chart; returns the latter.
      */
-    private function seedCharts(array $beranda, array $isu): Chart
+    private function seedCharts(array $beranda, array $isu): void
     {
         $chart = $beranda['chart'];
         Chart::updateOrCreate(['title' => $chart['title']], [
@@ -120,7 +118,7 @@ class IsfContentSeeder extends Seeder
 
         $visual = $isu['frameworks']['visualKunci'];
 
-        return Chart::updateOrCreate(['title' => $visual['title']], [
+        Chart::updateOrCreate(['title' => $visual['title']], [
             'description' => $visual['description'],
             'unit' => $visual['unit'] !== '' ? $visual['unit'] : null,
             'data' => $visual['data'],
@@ -217,41 +215,6 @@ class IsfContentSeeder extends Seeder
             'calendar_events' => $tokoh['calendar']['events'],
             'teaser' => $this->pekanIniSummary($beranda, 'tokoh'),
             'is_featured' => true,
-            'status' => 'terbit',
-        ]);
-    }
-
-    private function seedIsu(array $isu, array $beranda, Chart $visualChart): void
-    {
-        $fw = $isu['frameworks'];
-
-        Isu::updateOrCreate(['slug' => $isu['slug']], [
-            'title' => $isu['title'],
-            'category' => $isu['category'],
-            'published_at' => $isu['publishedAt'],
-            'summary' => $isu['summary'],
-            'author' => $isu['author'],
-            'teaser' => $this->pekanIniSummary($beranda, 'isu'),
-            'is_weekly' => true,
-            'ringkasan' => $fw['ringkasan'],
-            'visual_chart_id' => $visualChart->id,
-            'visual_image_alt' => $fw['visualKunci']['imageAlt'],
-            'visual_image_url' => null,
-            'fakta_kunci' => $fw['faktaKunci'],
-            'linimasa' => $fw['linimasa'],
-            'aktor' => $fw['aktor'],
-            'grc_governance' => $fw['grc']['governance'],
-            'grc_risk_level' => $fw['grc']['risk']['level'],
-            'grc_risk_description' => $fw['grc']['risk']['description'],
-            'grc_compliance' => $fw['grc']['compliance'],
-            'dampak_sektoral' => $fw['dampak']['sektoral'],
-            'dampak_reaksi' => $fw['dampak']['reaksi'],
-            'selanjutnya_tahapan' => $fw['selanjutnya']['tahapan'],
-            'selanjutnya_pantau' => $fw['selanjutnya']['pantau'],
-            'metodologi_text' => $isu['metodologi']['text'],
-            'metodologi_signals' => $isu['metodologi']['signals'],
-            'faq' => $isu['faq'],
-            'related' => $isu['related'],
             'status' => 'terbit',
         ]);
     }

@@ -160,7 +160,7 @@ const NAV_LINKS = [
     { label: "Sosok", to: "/tokoh/budi-santoso", group: "rubrik" },
     { label: "Opini Publik", to: "#", group: "rubrik" },
     { label: "Survei", to: "#", group: "rubrik" },
-    { label: "Anatomi Isu", to: "/isu/kuhp-baru-pelaku-usaha", group: "fitur" },
+    { label: "Portal Anggota", to: "/anggota", group: "fitur" },
 ];
 
 const NAV_GROUPS = computed(() => [
@@ -427,7 +427,7 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
                 <nav aria-label="Navigasi utama" class="isf-no-scrollbar min-w-0 flex-1 overflow-x-auto overflow-y-hidden px-2 lg:overflow-visible flex items-center justify-center">
                     <ul class="flex items-center gap-x-4 sm:gap-x-5 xl:gap-x-6 py-1 font-space-grotesk text-[12px] sm:text-[13px] font-semibold xl:text-[14px] whitespace-nowrap">
                         <template v-for="(group, groupIndex) in NAV_GROUPS" :key="groupIndex">
-                            <li v-if="groupIndex > 0" aria-hidden="true" class="mx-1 h-3.5 w-px bg-neutral-700 shrink-0"></li>
+                            <li v-if="groupIndex > 0 && group.length > 0" aria-hidden="true" class="mx-1 h-3.5 w-px bg-neutral-700 shrink-0"></li>
                             <li v-for="link in group" :key="link.label" class="shrink-0">
                                 <router-link
                                     v-if="link.to.startsWith('/')"
@@ -479,11 +479,6 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
                         </router-link>
                     </template>
                     <template v-else>
-                        <router-link
-                            to="/anggota"
-                            :class="['hidden whitespace-nowrap font-space-grotesk text-[11px] md:text-[12px] font-bold uppercase tracking-[0.1em] text-neutral-200 hover:text-isf-red md:inline px-2 py-1 rounded transition-colors', focusRing]"
-                        >Portal Anggota</router-link>
-
                         <a
                             href="/login"
                             :class="['hidden whitespace-nowrap font-space-grotesk text-[11px] md:text-[12px] font-bold uppercase tracking-[0.1em] rounded-md border border-white/30 px-2.5 py-1 text-white transition-all hover:border-isf-red hover:bg-isf-red hover:text-white sm:inline shadow-2xs', focusRing]"
@@ -512,7 +507,7 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
         <div
             v-show="menuOpen"
             :id="menuId"
-            class="w-full border-b border-neutral-800 bg-isf-panel text-white shadow-md"
+            class="w-full border-b border-neutral-800 bg-isf-navy text-white shadow-md"
             @keydown.esc="closeMenu"
         >
             <nav aria-label="Menu lengkap" class="w-full px-4 py-4 sm:px-6 md:px-8 xl:px-12">
@@ -553,7 +548,7 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
         <div
             v-show="searchOpen"
             :id="searchId"
-            class="w-full border-b border-neutral-800 bg-isf-panel text-white"
+            class="w-full border-b border-neutral-800 bg-isf-navy text-white"
         >
             <form role="search" class="w-full flex flex-wrap items-end gap-3 px-4 py-3 sm:px-6 md:px-8 xl:px-12" @submit.prevent="submitSearch">
                 <div class="min-w-0 flex-1">
@@ -563,7 +558,7 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
                         ref="searchInput"
                         type="search"
                         placeholder="Cari artikel, isu, atau tokoh..."
-                        class="font-space-grotesk focus-visible:ring-isf-red bg-neutral-900 border-neutral-700 text-white placeholder:text-neutral-400"
+                        class="font-space-grotesk focus-visible:ring-isf-red bg-isf-navy border-neutral-700 text-white placeholder:text-neutral-400"
                     />
                 </div>
                 <button type="submit" :class="['rounded-md bg-isf-red px-4 py-2 font-space-grotesk text-[11px] font-bold uppercase tracking-[0.12em] text-white transition-colors hover:bg-isf-red-dark shadow-2xs', focusRing]">Cari</button>

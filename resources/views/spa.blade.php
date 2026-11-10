@@ -9,22 +9,44 @@
     <link rel="icon" type="image/jpeg" href="{{ asset('images/isf/logo-isf.jpeg') }}">
     <link rel="apple-touch-icon" href="{{ asset('images/isf/logo-isf.jpeg') }}">
     <meta name="theme-color" content="#0B1220">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <script>
+        (function() {
+            try {
+                var layout = localStorage.getItem('isf_header_layout') || 'two-rows';
+                document.documentElement.setAttribute('data-isf-layout', layout);
+            } catch(e) {}
+        })();
+    </script>
+    <!-- Preload Critical Fonts (Local Self-Hosted) -->
     <link rel="preload" as="font" type="font/woff2" crossorigin
-        href="{{ asset('fonts/pinyon-script-400.woff2') }}">
+        href="{{ asset('fonts/montserrat-latin.woff2') }}">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="{{ asset('fonts/space-grotesk-latin.woff2') }}">
     <link rel="preload" as="font" type="font/woff2" crossorigin
         href="{{ asset('fonts/anton-latin.woff2') }}">
     <link rel="preload" as="font" type="font/woff2" crossorigin
-        href="{{ asset('fonts/space-grotesk-latin.woff2') }}">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=Newsreader:ital,opsz,wght@0,6..72,400..800;1,6..72,400..700&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&family=Barlow:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
+        href="{{ asset('fonts/pinyon-script-400.woff2') }}">
     <style>
         @font-face {
-            font-family: "Pinyon Script";
-            src: url("{{ asset('fonts/pinyon-script-400.woff2') }}") format("woff2");
-            font-weight: 400;
+            font-family: "Montserrat";
+            src: url("{{ asset('fonts/montserrat-latin.woff2') }}") format("woff2");
+            font-weight: 100 900;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: "Montserrat";
+            src: url("{{ asset('fonts/montserrat-italic-latin.woff2') }}") format("woff2");
+            font-weight: 100 900;
+            font-style: italic;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: "Space Grotesk";
+            src: url("{{ asset('fonts/space-grotesk-latin.woff2') }}") format("woff2");
+            font-weight: 300 700;
             font-style: normal;
             font-display: block;
         }
@@ -38,10 +60,34 @@
         }
 
         @font-face {
-            font-family: "Space Grotesk";
-            src: url("{{ asset('fonts/space-grotesk-latin.woff2') }}") format("woff2");
-            font-weight: 400 700;
+            font-family: "Pinyon Script";
+            src: url("{{ asset('fonts/pinyon-script-400.woff2') }}") format("woff2");
+            font-weight: 400;
             font-style: normal;
+            font-display: block;
+        }
+
+        @font-face {
+            font-family: "Inter";
+            src: url("{{ asset('fonts/inter-latin.woff2') }}") format("woff2");
+            font-weight: 100 900;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: "Newsreader";
+            src: url("{{ asset('fonts/newsreader-latin.woff2') }}") format("woff2");
+            font-weight: 200 800;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: "Newsreader";
+            src: url("{{ asset('fonts/newsreader-italic-latin.woff2') }}") format("woff2");
+            font-weight: 200 800;
+            font-style: italic;
             font-display: swap;
         }
 
@@ -159,9 +205,23 @@
             margin: 0 auto;
             padding: .625rem 0;
             list-style: none;
-            font-size: 13px;
+            font-size: 12px;
             font-family: "Space Grotesk", sans-serif;
             color: #d4d4d4;
+        }
+
+        @media (min-width: 640px) {
+            .isf-initial-shell header.bg-isf-navy nav ul {
+                font-size: 13px;
+                gap: 1.25rem;
+            }
+        }
+
+        @media (min-width: 1280px) {
+            .isf-initial-shell header.bg-isf-navy nav ul {
+                font-size: 14px;
+                gap: 1.5rem;
+            }
         }
 
         .isf-initial-shell header.border-b {
@@ -211,6 +271,12 @@
             }
             .isf-initial-shell .sm\:block {
                 display: block !important;
+            }
+            .isf-initial-shell .sm\:inline {
+                display: inline !important;
+            }
+            .isf-initial-shell .sm\:inline-block {
+                display: inline-block !important;
             }
             .isf-initial-shell .sm\:grid {
                 display: grid !important;
