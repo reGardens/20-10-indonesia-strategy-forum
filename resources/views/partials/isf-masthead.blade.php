@@ -101,7 +101,7 @@ html[data-isf-layout="row-3"] .isf-ssr-masthead { padding-top: 0.875rem; padding
     <div class="h-[2px] w-full bg-isf-red shrink-0" style="height: 2px; width: 100%; background-color: #E10600;"></div>
 
     <!-- Navigation Menu Bar: 3 distinct groups (space-between) -->
-    <div class="border-b border-neutral-800 bg-[#070D18]" style="border-bottom: 1px solid #262626; background-color: #070D18;">
+    <div class="border-b border-neutral-800 bg-isf-navy" style="border-bottom: 1px solid #262626; background-color: #0B1220;">
         <div class="w-full flex items-center justify-between gap-3 px-4 sm:px-6 md:px-8 xl:px-12 py-1.5" style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding-top: 0.375rem; padding-bottom: 0.375rem; width: 100%;">
             <!-- Kelompok 1: Hamburger Menu (kiri) -->
             <div class="flex items-center justify-start shrink-0 lg:min-w-[220px]" style="display: flex; align-items: center; justify-content: flex-start; flex-shrink: 0;">

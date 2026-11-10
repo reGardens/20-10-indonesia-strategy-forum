@@ -401,7 +401,7 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
         <div class="h-[2px] w-full bg-isf-red shrink-0"></div>
 
         <!-- ═══ NAVIGATION ROW ════════════════════════════════════════════════ -->
-        <div class="isf-nav-row border-b border-neutral-800 bg-[#070D18] overflow-hidden shrink-0">
+        <div class="isf-nav-row border-b border-neutral-800 bg-isf-navy overflow-hidden shrink-0">
             <div class="w-full flex items-center justify-between gap-3 px-4 sm:px-6 md:px-8 xl:px-12 py-1.5">
 
                 <!-- Hamburger (kiri) -->
@@ -558,7 +558,8 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
                         ref="searchInput"
                         type="search"
                         placeholder="Cari artikel, isu, atau tokoh..."
-                        class="font-space-grotesk focus-visible:ring-isf-red bg-isf-navy border-neutral-700 text-white placeholder:text-neutral-400"
+                        class="font-space-grotesk focus-visible:ring-isf-red !bg-isf-navy border-neutral-700 text-white placeholder:text-neutral-400"
+                        style="background-color: #0B1220;"
                     />
                 </div>
                 <button type="submit" :class="['rounded-md bg-isf-red px-4 py-2 font-space-grotesk text-[11px] font-bold uppercase tracking-[0.12em] text-white transition-colors hover:bg-isf-red-dark shadow-2xs', focusRing]">Cari</button>
