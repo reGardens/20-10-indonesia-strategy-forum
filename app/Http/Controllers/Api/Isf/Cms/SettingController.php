@@ -102,6 +102,10 @@ class SettingController extends Controller
             'badge' => 'nullable|string|max:50',
             'info' => 'nullable|string|max:100',
             'status' => 'nullable|string|in:terbit,draf',
+            'summary' => 'nullable|string',
+            'content' => 'nullable|string',
+            'author' => 'nullable|string|max:255',
+            'is_popular' => 'nullable|boolean',
         ]);
 
         $beranda = Setting::get('beranda', []);
@@ -131,6 +135,10 @@ class SettingController extends Controller
             'badge' => 'nullable|string|max:50',
             'info' => 'nullable|string|max:100',
             'status' => 'nullable|string|in:terbit,draf',
+            'summary' => 'nullable|string',
+            'content' => 'nullable|string',
+            'author' => 'nullable|string|max:255',
+            'is_popular' => 'nullable|boolean',
         ]);
 
         $beranda = Setting::get('beranda', []);
@@ -234,6 +242,10 @@ class SettingController extends Controller
             'publishedAt' => 'nullable|string|max:50',
             'order' => 'nullable|integer',
             'status' => 'nullable|string|in:terbit,draf',
+            'summary' => 'nullable|string',
+            'content' => 'nullable|string',
+            'author' => 'nullable|string|max:255',
+            'is_popular' => 'nullable|boolean',
         ]);
 
         $beranda = Setting::get('beranda', []);
@@ -254,6 +266,10 @@ class SettingController extends Controller
             'publishedAt' => $validated['publishedAt'] ?: date('Y-m-d'),
             'order' => $order,
             'status' => $validated['status'] ?: 'terbit',
+            'summary' => $validated['summary'] ?? '',
+            'content' => $validated['content'] ?? '',
+            'author' => $validated['author'] ?? 'Tim Redaksi ISF',
+            'is_popular' => (bool) ($validated['is_popular'] ?? false),
         ];
 
         $mediaSorotan[] = $newItem;
@@ -274,6 +290,10 @@ class SettingController extends Controller
             'publishedAt' => 'nullable|string|max:50',
             'order' => 'nullable|integer',
             'status' => 'nullable|string|in:terbit,draf',
+            'summary' => 'nullable|string',
+            'content' => 'nullable|string',
+            'author' => 'nullable|string|max:255',
+            'is_popular' => 'nullable|boolean',
         ]);
 
         $beranda = Setting::get('beranda', []);
@@ -292,6 +312,10 @@ class SettingController extends Controller
             'publishedAt' => $validated['publishedAt'] ?: date('Y-m-d'),
             'order' => (int) ($validated['order'] ?? ($mediaSorotan[$index]['order'] ?? 1)),
             'status' => $validated['status'] ?: 'terbit',
+            'summary' => $validated['summary'] ?? ($mediaSorotan[$index]['summary'] ?? ''),
+            'content' => $validated['content'] ?? ($mediaSorotan[$index]['content'] ?? ''),
+            'author' => $validated['author'] ?? ($mediaSorotan[$index]['author'] ?? 'Tim Redaksi ISF'),
+            'is_popular' => isset($validated['is_popular']) ? (bool) $validated['is_popular'] : ($mediaSorotan[$index]['is_popular'] ?? false),
         ]);
 
         usort($mediaSorotan, fn ($a, $b) => ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0)));
@@ -397,6 +421,10 @@ class SettingController extends Controller
             'category' => 'nullable|string|max:100',
             'published_at' => 'nullable|string|max:100',
             'status' => 'nullable|string|in:terbit,draf',
+            'summary' => 'nullable|string',
+            'content' => 'nullable|string',
+            'author' => 'nullable|string|max:255',
+            'is_popular' => 'nullable|boolean',
         ]);
 
         $beranda = Setting::get('beranda', []);
@@ -432,6 +460,10 @@ class SettingController extends Controller
             'category' => 'nullable|string|max:100',
             'published_at' => 'nullable|string|max:100',
             'status' => 'nullable|string|in:terbit,draf',
+            'summary' => 'nullable|string',
+            'content' => 'nullable|string',
+            'author' => 'nullable|string|max:255',
+            'is_popular' => 'nullable|boolean',
         ]);
 
         $beranda = Setting::get('beranda', []);

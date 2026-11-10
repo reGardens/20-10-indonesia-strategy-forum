@@ -40,6 +40,10 @@ class SettingRequest extends FormRequest
             'beranda.mediaSorotan.*.publishedAt' => ['nullable', 'string'],
             'beranda.mediaSorotan.*.order' => ['nullable', 'integer'],
             'beranda.mediaSorotan.*.status' => ['nullable', 'string'],
+            'beranda.mediaSorotan.*.summary' => ['nullable', 'string'],
+            'beranda.mediaSorotan.*.content' => ['nullable', 'string'],
+            'beranda.mediaSorotan.*.author' => ['nullable', 'string', 'max:255'],
+            'beranda.mediaSorotan.*.is_popular' => ['nullable', 'boolean'],
 
             'beranda.hotNews' => ['nullable', 'array'],
             'beranda.hotNews.*.id' => ['nullable'],

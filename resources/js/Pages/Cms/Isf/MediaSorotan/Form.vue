@@ -22,7 +22,8 @@ import {
   SelectTrigger,
   SelectContent,
   SelectItem,
-  SelectValue
+  SelectValue,
+  RichTextEditor
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -45,7 +46,11 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
     category: 'YouTube',
     publishedAt: new Date().toISOString().slice(0, 10),
     order: 1,
-    status: 'terbit'
+    status: 'terbit',
+    author: 'Tim Redaksi & Dewan Pakar ISF',
+    summary: '',
+    content: '',
+    is_popular: false
   }
 })
 
@@ -85,12 +90,22 @@ onMounted(async () => {
             {{ isEdit ? 'Edit Media Sorotan' : 'Tambah Media Sorotan Baru' }}
           </h1>
           <p class="text-xs text-muted-foreground mt-0.5">
-            {{ isEdit ? `Mengubah data media sorotan #${props.id}` : 'Tambahkan media video sorotan (YouTube / Instagram) untuk bagian kanan Beranda artikel.' }}
+            {{ isEdit ? `Mengubah data media sorotan #${props.id}` : 'Tambahkan media video sorotan (YouTube / TikTok) dengan embed dan naskah ulasan pendamping.' }}
           </p>
         </div>
       </div>
       <!-- Action buttons -->
       <div class="flex items-center gap-2">
+        <a
+          v-if="isEdit && props.id"
+          :href="`/media/${props.id}`"
+          target="_blank"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border border-border bg-card hover:bg-muted text-foreground transition shadow-2xs mr-1"
+        >
+          <IconComponent name="Eye" :size="14" />
+          <span>Lihat Halaman Publik</span>
+        </a>
+
         <Link href="/cms/media-sorotan">
           <Button variant="outline" size="sm" class="h-9 text-xs">
             Batal
@@ -117,9 +132,9 @@ onMounted(async () => {
     <form v-else @submit.prevent="save" class="space-y-6">
       <Card class="bg-card border-border shadow-sm">
         <CardHeader class="pb-4">
-          <CardTitle class="text-base font-semibold text-foreground">Informasi Media & Tautan</CardTitle>
+          <CardTitle class="text-base font-semibold text-foreground">Informasi Media &amp; Tautan</CardTitle>
           <CardDescription class="text-xs text-muted-foreground">
-            Judul tayangan, kategori platform (YouTube / Instagram), dan tautan video asli.
+            Judul tayangan, kategori platform (YouTube / TikTok), analis penyusun, dan tautan video asli.
           </CardDescription>
         </CardHeader>
         <CardContent class="space-y-4">
@@ -129,7 +144,7 @@ onMounted(async () => {
             <Input
               id="title"
               v-model="form.title"
-              placeholder="Contoh: Diskusi Panel: Transformasi Digital dan Kepatuhan Regulasi..."
+              placeholder="Contoh: Diskusi Panel: Transformasi Digital dan Kepatuhan Regulasi Perbankan..."
               class="h-9 text-xs font-medium"
             />
             <p v-if="err('title')" class="text-xs text-red-400 mt-1">{{ err('title') }}</p>
@@ -144,9 +159,9 @@ onMounted(async () => {
                   <SelectValue placeholder="Pilih Kategori Platform..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="YouTube" class="text-xs font-medium">YouTube</SelectItem>
-                  <SelectItem value="Instagram" class="text-xs font-medium">Instagram</SelectItem>
-                  <SelectItem value="TikTok" class="text-xs font-medium">TikTok</SelectItem>
+                  <SelectItem value="YouTube" class="text-xs font-medium">YouTube (Horizontal 16:9)</SelectItem>
+                  <SelectItem value="TikTok" class="text-xs font-medium">TikTok (Vertikal 9:16)</SelectItem>
+                  <SelectItem value="Instagram" class="text-xs font-medium">Instagram Reels (Vertikal 9:16)</SelectItem>
                 </SelectContent>
               </Select>
               <p v-if="err('category')" class="text-xs text-red-400 mt-1">{{ err('category') }}</p>
@@ -164,36 +179,98 @@ onMounted(async () => {
             </div>
           </div>
 
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Author / Analis -->
+            <div class="space-y-1.5">
+              <Label for="author" class="text-xs font-medium text-foreground">Nama Analis / Tim Redaksi</Label>
+              <Input
+                id="author"
+                v-model="form.author"
+                placeholder="Contoh: Tim Redaksi ISF, Dewan Pakar Hukum ISF..."
+                class="h-9 text-xs"
+              />
+              <p v-if="err('author')" class="text-xs text-red-400 mt-1">{{ err('author') }}</p>
+            </div>
+
+            <!-- Popular Toggle -->
+            <div class="space-y-1.5 flex flex-col justify-end">
+              <label class="flex items-center gap-2 cursor-pointer pt-2">
+                <input
+                  type="checkbox"
+                  v-model="form.is_popular"
+                  class="rounded border-input text-red-600 focus:ring-red-500 h-4 w-4"
+                />
+                <span class="text-xs font-medium text-foreground">Tandai sebagai Populer (Tampil di Tab POPULAR)</span>
+              </label>
+              <p class="text-[11px] text-muted-foreground">
+                Jika dicentang, tayangan ini akan diutamakan saat tab "Popular" dipilih di Beranda.
+              </p>
+            </div>
+          </div>
+
           <!-- Media URL -->
           <div class="space-y-1.5">
-            <Label for="mediaUrl" class="text-xs font-medium text-foreground">Tautan Video / Media (Link Luar)</Label>
+            <Label for="mediaUrl" class="text-xs font-medium text-foreground">Tautan Video Asli (YouTube / TikTok / Embed)</Label>
             <Input
               id="mediaUrl"
               v-model="form.mediaUrl"
-              placeholder="https://www.youtube.com/watch?v=..., https://www.instagram.com/reel/... atau https://www.tiktok.com/@..."
+              placeholder="https://www.youtube.com/watch?v=... atau https://www.tiktok.com/@.../video/..."
               class="h-9 text-xs font-mono"
             />
             <p class="text-[11px] text-muted-foreground">
-              Ketika card media diklik di Beranda, pengguna akan diarahkan langsung ke link ini.
+              Sistem secara otomatis akan mengekstrak video ID untuk disematkan (embed player) di halaman detail publik ISF.
             </p>
             <p v-if="err('mediaUrl')" class="text-xs text-red-400 mt-1">{{ err('mediaUrl') }}</p>
           </div>
+
+          <!-- Summary / Deskripsi Singkat Analisis -->
+          <div class="space-y-1.5">
+            <Label for="summary" class="text-xs font-medium text-foreground">Ringkasan Eksekutif &amp; Deskripsi Analisis</Label>
+            <textarea
+              id="summary"
+              v-model="form.summary"
+              rows="3"
+              placeholder="Jelaskan ringkasan analisis, topik utama diskusi meja bundar, atau poin penting video..."
+              class="w-full rounded-md border border-input bg-background p-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring leading-relaxed"
+            />
+            <p class="text-[11px] text-muted-foreground">
+              Ringkasan ini akan tampil sebagai quote sorotan kunci di halaman detail video.
+            </p>
+            <p v-if="err('summary')" class="text-xs text-red-400 mt-1">{{ err('summary') }}</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <!-- Card: Naskah Artikel Pendamping (Companion Article) -->
+      <Card class="bg-card border-border shadow-sm">
+        <CardHeader class="pb-3">
+          <CardTitle class="text-base font-semibold text-foreground">Naskah Ulasan &amp; Artikel Pendamping (Format Meja Bundar)</CardTitle>
+          <CardDescription class="text-xs text-muted-foreground">
+            Artikel pendamping mendalam yang mendampingi pemutar video di halaman detail publik (format tata letak ala EU Reporter Roundtable Article). Jika dikosongkan, sistem akan menyediakan format analisis standar secara otomatis.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <RichTextEditor
+            v-model="form.content"
+            placeholder="Tuliskan naskah ulasan, poin perdebatan panelis, konteks regulasi, dan implikasi kebijakan di sini..."
+          />
+          <p v-if="err('content')" class="text-xs text-red-500 font-medium mt-1">{{ err('content') }}</p>
         </CardContent>
       </Card>
 
       <!-- Thumbnail & Display Settings Card -->
       <Card class="bg-card border-border shadow-sm">
         <CardHeader class="pb-4">
-          <CardTitle class="text-base font-semibold text-foreground">Thumbnail & Pengaturan Tampilan</CardTitle>
+          <CardTitle class="text-base font-semibold text-foreground">Thumbnail &amp; Pengaturan Tampilan</CardTitle>
           <CardDescription class="text-xs text-muted-foreground">
-            {{ isVertical ? 'Visual cover thumbnail vertikal (rasio 9:16 untuk Reels / TikTok), nomor urut tampilan, dan status penayangan.' : 'Visual cover thumbnail video horizontal (1280x720 px — rasio 16:9 untuk YouTube), nomor urut tampilan, dan status penayangan.' }}
+            {{ isVertical ? 'Visual cover thumbnail vertikal (rasio 9:16 untuk TikTok / Reels), nomor urut tampilan, dan status penayangan.' : 'Visual cover thumbnail video horizontal (1280x720 px — rasio 16:9 untuk YouTube), nomor urut tampilan, dan status penayangan.' }}
           </CardDescription>
         </CardHeader>
         <CardContent class="space-y-4">
           <!-- Thumbnail Image Upload -->
           <div class="space-y-1.5">
             <Label class="text-xs font-medium text-foreground">
-              Thumbnail Gambar {{ isVertical ? '(Rasio 9:16 Vertikal — Reels / TikTok)' : '(1280x720 px — Rasio 16:9 YouTube)' }}
+              Thumbnail Gambar {{ isVertical ? '(Rasio 9:16 Vertikal — TikTok / Reels)' : '(1280x720 px — Rasio 16:9 YouTube)' }}
             </Label>
             <ImageUploadTab
               v-model="form.imageUrl"
@@ -221,7 +298,7 @@ onMounted(async () => {
                 class="h-9 text-xs w-full font-mono"
               />
               <p class="text-[11px] text-muted-foreground">
-                Urutan tampilan card di kolom kanan beranda (maksimal 2 tayangan teratas).
+                Urutan prioritas penayangan di Beranda (1 = prioritas paling awal).
               </p>
               <p v-if="err('order')" class="text-xs text-red-400 mt-1">{{ err('order') }}</p>
             </div>

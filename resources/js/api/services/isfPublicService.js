@@ -51,9 +51,13 @@ export function getInfografik() {
   return get('/isf/infografik')
 }
 
+export function getMediaDetail(id) {
+  return get('/isf/media/' + encodeURIComponent(id))
+}
+
 /** True when the error is an API "not found" (missing or unpublished content). */
 export function isNotFound(error) {
   return error?.response?.status === 404
 }
 
-export default { getBeranda, getTokoh, getAnggota, getInfografik, isNotFound }
+export default { getBeranda, getTokoh, getAnggota, getInfografik, getMediaDetail, isNotFound }
