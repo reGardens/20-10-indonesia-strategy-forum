@@ -102,6 +102,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}/edit', [IsfPageController::class, 'edit'])->defaults('module', 'media-sorotan')->whereNumber('id')->name('cms.isf.media-sorotan.edit');
     });
 
+    Route::prefix('cms/hot-news')->group(function () {
+        Route::get('/', [IsfPageController::class, 'index'])->defaults('module', 'hot-news')->name('cms.isf.hot-news.index');
+        Route::get('/create', [IsfPageController::class, 'create'])->defaults('module', 'hot-news')->name('cms.isf.hot-news.create');
+        Route::get('/{id}/edit', [IsfPageController::class, 'edit'])->defaults('module', 'hot-news')->whereNumber('id')->name('cms.isf.hot-news.edit');
+    });
+
     Route::get('/cms/pengaturan-halaman', fn () => redirect()->route('cms.isf.running-text.index'))
         ->name('cms.isf.pengaturan-halaman');
 

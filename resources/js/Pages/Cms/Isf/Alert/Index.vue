@@ -223,7 +223,7 @@ onMounted(() => {
                     ? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
                     : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
                 ]"
-                class="text-[11px] font-semibold"
+                class="pointer-events-none select-none text-[11px] font-semibold"
               >
                 {{ item.priority === 'merah' ? 'Prioritas Tinggi' : 'Perlu Dipantau' }}
               </Badge>

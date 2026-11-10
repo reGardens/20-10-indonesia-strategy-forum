@@ -391,7 +391,10 @@ onMounted(loadSettings)
                   {{ idx + 1 }}
                 </TableCell>
                 <TableCell>
-                  <Badge class="bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 text-[9.5px] font-bold uppercase tracking-wider px-1.5 py-0.5">
+                  <Badge
+                    variant="outline"
+                    class="pointer-events-none select-none bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 text-[9.5px] font-bold uppercase tracking-wider px-1.5 py-0.5"
+                  >
                     {{ item.badge || 'Sorotan' }}
                   </Badge>
                 </TableCell>
@@ -481,7 +484,7 @@ onMounted(loadSettings)
                 </TableCell>
                 <TableCell>
                   <span
-                    class="inline-flex items-center gap-1 text-[9.5px] font-bold px-1.5 py-0.5 rounded"
+                    class="inline-flex items-center gap-1 text-[9.5px] font-bold px-1.5 py-0.5 rounded pointer-events-none select-none"
                     :class="
                       (item.category || '').toLowerCase().includes('instagram')
                         ? 'bg-pink-500/10 text-pink-600 border border-pink-500/20'

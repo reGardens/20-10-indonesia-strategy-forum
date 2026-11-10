@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Api\Isf\Cms;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Isf\SettingRequest;
+use App\Models\Isf\Article;
+use App\Models\Isf\Category;
 use App\Models\Isf\Setting;
+use App\Services\Isf\IsfCacheService;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -38,6 +41,7 @@ class SettingController extends Controller
 
         $existingBeranda = Setting::get('beranda', []);
         $beranda['mediaSorotan'] = $beranda['mediaSorotan'] ?? ($existingBeranda['mediaSorotan'] ?? []);
+        $beranda['hotNews'] = $beranda['hotNews'] ?? ($existingBeranda['hotNews'] ?? []);
 
         Setting::put('beranda', $beranda);
         if (!empty($validated['anggota'])) {
@@ -321,6 +325,250 @@ class SettingController extends Controller
         return response()->json(['data' => $beranda['mediaSorotan']]);
     }
 
+    public function getHotNews(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $current = $this->current();
+        $items = $current['beranda']['hotNews'] ?? [];
+
+        $categoryMap = [
+            'hukum & regulasi' => 'Hukum',
+            'kebijakan publik' => 'Kebijakan',
+            'ekonomi & pasar' => 'Ekonomi',
+            'ruu' => 'RUU',
+            'kebijakan' => 'Kebijakan',
+            'ekonomi' => 'Ekonomi',
+            'politik' => 'Politik',
+            'hukum' => 'Hukum',
+        ];
+
+        $items = array_map(function ($it) use ($categoryMap) {
+            $cat = $it['category'] ?? '';
+            $key = strtolower(trim((string) $cat));
+            if (isset($categoryMap[$key])) {
+                $it['category'] = $categoryMap[$key];
+            }
+            return $it;
+        }, $items);
+
+        $q = trim((string) $request->input('q', ''));
+        $status = (string) $request->input('status', '');
+
+        if ($q !== '') {
+            $items = array_values(array_filter($items, function ($it) use ($q) {
+                return str_contains(strtolower($it['title'] ?? ''), strtolower($q))
+                    || str_contains(strtolower($it['category'] ?? ''), strtolower($q));
+            }));
+        }
+
+        if ($status !== '') {
+            $items = array_values(array_filter($items, function ($it) use ($status) {
+                return ($it['status'] ?? 'terbit') === $status;
+            }));
+        }
+
+        return response()->json([
+            'data' => $items,
+            'total' => count($items),
+            'current_page' => 1,
+            'last_page' => 1,
+            'per_page' => 50,
+        ]);
+    }
+
+    public function showHotNews(int $id): JsonResponse
+    {
+        $current = $this->current();
+        $items = $current['beranda']['hotNews'] ?? [];
+        $item = collect($items)->first(fn ($it) => (int) ($it['id'] ?? 0) === $id);
+
+        if (!$item) {
+            abort(404, 'Hot news tidak ditemukan.');
+        }
+
+        return response()->json(['data' => $item]);
+    }
+
+    public function createHotNews(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:500',
+            'to' => 'nullable|string|max:500',
+            'url' => 'nullable|string|max:500',
+            'category' => 'nullable|string|max:100',
+            'published_at' => 'nullable|string|max:100',
+            'status' => 'nullable|string|in:terbit,draf',
+        ]);
+
+        $beranda = Setting::get('beranda', []);
+        $hotNews = $beranda['hotNews'] ?? ($this->current()['beranda']['hotNews'] ?? []);
+
+        $nextId = (int) (collect($hotNews)->max('id') ?? 0) + 1;
+        $target = $validated['to'] ?? ($validated['url'] ?? '/beranda');
+
+        $newItem = [
+            'id' => $nextId,
+            'title' => $validated['title'],
+            'to' => $target,
+            'url' => $target,
+            'category' => $validated['category'] ?: 'Berita Utama',
+            'published_at' => $validated['published_at'] ?: date('d M Y'),
+            'status' => $validated['status'] ?: 'terbit',
+        ];
+
+        $hotNews[] = $newItem;
+        $beranda['hotNews'] = $hotNews;
+        Setting::put('beranda', $beranda);
+        IsfCacheService::forget(IsfCacheService::KEY_BERANDA);
+
+        return response()->json(['data' => $newItem], 201);
+    }
+
+    public function updateHotNewsItem(\Illuminate\Http\Request $request, int $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:500',
+            'to' => 'nullable|string|max:500',
+            'url' => 'nullable|string|max:500',
+            'category' => 'nullable|string|max:100',
+            'published_at' => 'nullable|string|max:100',
+            'status' => 'nullable|string|in:terbit,draf',
+        ]);
+
+        $beranda = Setting::get('beranda', []);
+        $hotNews = $beranda['hotNews'] ?? ($this->current()['beranda']['hotNews'] ?? []);
+
+        $index = collect($hotNews)->search(fn ($it) => (int) ($it['id'] ?? 0) === $id);
+        if ($index === false) {
+            abort(404, 'Hot news tidak ditemukan.');
+        }
+
+        $target = $validated['to'] ?? ($validated['url'] ?? ($hotNews[$index]['to'] ?? '/beranda'));
+
+        $hotNews[$index] = array_merge($hotNews[$index], [
+            'title' => $validated['title'],
+            'to' => $target,
+            'url' => $target,
+            'category' => $validated['category'] ?: ($hotNews[$index]['category'] ?? 'Berita Utama'),
+            'published_at' => $validated['published_at'] ?: ($hotNews[$index]['published_at'] ?? date('d M Y')),
+            'status' => $validated['status'] ?: 'terbit',
+        ]);
+
+        $beranda['hotNews'] = array_values($hotNews);
+        Setting::put('beranda', $beranda);
+        IsfCacheService::forget(IsfCacheService::KEY_BERANDA);
+
+        return response()->json(['data' => $hotNews[$index]]);
+    }
+
+    public function deleteHotNewsItem(int $id): JsonResponse
+    {
+        $beranda = Setting::get('beranda', []);
+        $hotNews = $beranda['hotNews'] ?? ($this->current()['beranda']['hotNews'] ?? []);
+
+        $hotNews = array_values(array_filter($hotNews, fn ($it) => (int) ($it['id'] ?? 0) !== $id));
+        $beranda['hotNews'] = $hotNews;
+        Setting::put('beranda', $beranda);
+        IsfCacheService::forget(IsfCacheService::KEY_BERANDA);
+
+        return response()->json(['message' => 'Hot news berhasil dihapus.']);
+    }
+
+    public function updateHotNews(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $items = $request->input('items', []);
+        $beranda = Setting::get('beranda', []);
+        $beranda['hotNews'] = is_array($items) ? array_values($items) : [];
+        Setting::put('beranda', $beranda);
+        IsfCacheService::forget(IsfCacheService::KEY_BERANDA);
+
+        return response()->json(['data' => $beranda['hotNews']]);
+    }
+
+    public function getHotNewsArticleOptions(): JsonResponse
+    {
+        $categoriesBySlug = Category::query()->terbit()->pluck('name', 'slug')->all();
+
+        $articles = Article::query()->terbit()
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
+            ->limit(15)
+            ->get(['id', 'title', 'category', 'link_url', 'published_at'])
+            ->map(function ($a) use ($categoriesBySlug) {
+                $catSlug = strtolower(trim((string) $a->category));
+                $catLabel = $categoriesBySlug[$catSlug] ?? ($a->category ? ucfirst($a->category) : 'Berita Utama');
+                return [
+                    'id' => $a->id,
+                    'title' => $a->title,
+                    'category' => $catLabel,
+                    'to' => $a->link_url ?: '/beranda',
+                    'url' => $a->link_url ?: '/beranda',
+                    'published_at' => $a->published_at ? $a->published_at->format('d M Y') : date('d M Y'),
+                ];
+            });
+
+        return response()->json(['data' => $articles]);
+    }
+
+    public function syncHotNewsArticles(): JsonResponse
+    {
+        $categoriesBySlug = Category::query()->terbit()->pluck('name', 'slug')->all();
+
+        $articles = Article::query()->terbit()
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
+            ->limit(5)
+            ->get();
+
+        $hotNews = [];
+        $id = 1;
+        foreach ($articles as $a) {
+            $catSlug = strtolower(trim((string) $a->category));
+            $catLabel = $categoriesBySlug[$catSlug] ?? ($a->category ? ucfirst($a->category) : 'Berita Utama');
+            $hotNews[] = [
+                'id' => $id++,
+                'title' => $a->title,
+                'category' => $catLabel,
+                'to' => $a->link_url ?: '/beranda',
+                'url' => $a->link_url ?: '/beranda',
+                'published_at' => $a->published_at ? $a->published_at->format('d M Y') : date('d M Y'),
+                'status' => 'terbit',
+            ];
+        }
+
+        if (empty($hotNews)) {
+            $hotNews = [
+                [
+                    'id' => 1,
+                    'title' => 'RUU Perampasan Aset Masuk Pembahasan Tingkat I di DPR Pekan Ini',
+                    'to' => '/beranda',
+                    'url' => '/beranda',
+                    'category' => 'Hukum',
+                    'published_at' => date('d M Y'),
+                    'status' => 'terbit',
+                ],
+                [
+                    'id' => 2,
+                    'title' => 'Kemenkeu Rilis Panduan Insentif Fiskal Transisi Energi Terbarukan 2026',
+                    'to' => '/beranda',
+                    'url' => '/beranda',
+                    'category' => 'Kebijakan',
+                    'published_at' => date('d M Y'),
+                    'status' => 'terbit',
+                ],
+            ];
+        }
+
+        $beranda = Setting::get('beranda', []);
+        $beranda['hotNews'] = $hotNews;
+        Setting::put('beranda', $beranda);
+        IsfCacheService::forget(IsfCacheService::KEY_BERANDA);
+
+        return response()->json([
+            'message' => 'Hot news berhasil disinkronkan dengan artikel terkini.',
+            'data' => $hotNews,
+        ]);
+    }
+
     private function syncFirstActiveTopBar(array &$beranda, array $topBars): void
     {
         $firstActive = collect($topBars)->first(fn ($item) => ($item['status'] ?? 'terbit') === 'terbit')
@@ -368,6 +616,40 @@ class SettingController extends Controller
             $beranda['topBars'] = $topBars;
         }
 
+        $hotNews = $beranda['hotNews'] ?? null;
+        if ($hotNews === null) {
+            $hotNews = [
+                [
+                    'id' => 1,
+                    'title' => 'RUU Perampasan Aset Masuk Pembahasan Tingkat I di DPR Pekan Ini',
+                    'to' => '/beranda',
+                    'url' => '/beranda',
+                    'category' => 'Hukum',
+                    'published_at' => date('d M Y'),
+                    'status' => 'terbit',
+                ],
+                [
+                    'id' => 2,
+                    'title' => 'Kemenkeu Rilis Panduan Insentif Fiskal Transisi Energi Terbarukan 2026',
+                    'to' => '/beranda',
+                    'url' => '/beranda',
+                    'category' => 'Kebijakan',
+                    'published_at' => date('d M Y'),
+                    'status' => 'terbit',
+                ],
+                [
+                    'id' => 3,
+                    'title' => 'IHSG Menguat ke Level 7.450 Didorong Sektor Keuangan dan Konsumer',
+                    'to' => '/beranda',
+                    'url' => '/beranda',
+                    'category' => 'Ekonomi',
+                    'published_at' => date('d M Y'),
+                    'status' => 'terbit',
+                ],
+            ];
+            $beranda['hotNews'] = $hotNews;
+        }
+
         $mediaSorotan = $beranda['mediaSorotan'] ?? [
             [
                 'id' => 1,
@@ -396,6 +678,7 @@ class SettingController extends Controller
                 'topBar' => $topBar,
                 'topBars' => $topBars,
                 'mediaSorotan' => $mediaSorotan,
+                'hotNews' => $hotNews,
                 'pekanIni' => $beranda['pekanIni'] ?? ['dateStart' => '', 'dateEnd' => ''],
             ],
             'anggota' => Setting::get('anggota', [

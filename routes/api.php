@@ -72,6 +72,15 @@ Route::middleware(['web', 'auth'])->prefix('cms')->name('api.cms.')->group(funct
     Route::delete('/media-sorotan/{id}', [SettingController::class, 'deleteMediaSorotanItem'])->whereNumber('id')->name('media-sorotan.destroy');
     Route::put('/media-sorotan', [SettingController::class, 'updateMediaSorotan'])->name('media-sorotan.update');
 
+    Route::get('/hot-news/article-options', [SettingController::class, 'getHotNewsArticleOptions'])->name('hot-news.article-options');
+    Route::post('/hot-news/sync-articles', [SettingController::class, 'syncHotNewsArticles'])->name('hot-news.sync-articles');
+    Route::get('/hot-news', [SettingController::class, 'getHotNews'])->name('hot-news.index');
+    Route::post('/hot-news', [SettingController::class, 'createHotNews'])->name('hot-news.store');
+    Route::get('/hot-news/{id}', [SettingController::class, 'showHotNews'])->whereNumber('id')->name('hot-news.show');
+    Route::put('/hot-news/{id}', [SettingController::class, 'updateHotNewsItem'])->whereNumber('id')->name('hot-news.update-item');
+    Route::delete('/hot-news/{id}', [SettingController::class, 'deleteHotNewsItem'])->whereNumber('id')->name('hot-news.destroy');
+    Route::put('/hot-news', [SettingController::class, 'updateHotNews'])->name('hot-news.update');
+
     // Media image upload for CMS modules
     Route::post('/media/upload', [MediaUploadController::class, 'upload'])->name('media.upload');
 

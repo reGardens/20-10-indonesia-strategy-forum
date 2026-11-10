@@ -41,6 +41,15 @@ class SettingRequest extends FormRequest
             'beranda.mediaSorotan.*.order' => ['nullable', 'integer'],
             'beranda.mediaSorotan.*.status' => ['nullable', 'string'],
 
+            'beranda.hotNews' => ['nullable', 'array'],
+            'beranda.hotNews.*.id' => ['nullable'],
+            'beranda.hotNews.*.title' => $this->textRules(false, 500),
+            'beranda.hotNews.*.to' => ['nullable', 'string', 'max:500'],
+            'beranda.hotNews.*.url' => ['nullable', 'string', 'max:500'],
+            'beranda.hotNews.*.category' => $this->textRules(false, 100),
+            'beranda.hotNews.*.published_at' => ['nullable', 'string'],
+            'beranda.hotNews.*.status' => ['nullable', 'string'],
+
             'beranda.pekanIni' => ['nullable', 'array'],
             'beranda.pekanIni.dateStart' => $this->dateRules(false),
             'beranda.pekanIni.dateEnd' => $this->dateRules(false),

@@ -200,7 +200,7 @@ onMounted(loadData)
               {{ idx + 1 }}
             </TableCell>
             <TableCell>
-              <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider bg-red-500/10 text-red-500 border border-red-500/20">
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider bg-red-500/10 text-red-500 border border-red-500/20 pointer-events-none select-none">
                 {{ item.badge || 'Sorotan' }}
               </span>
             </TableCell>

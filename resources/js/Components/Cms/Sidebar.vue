@@ -58,6 +58,12 @@ const menuGroups = computed(() => [
                 visible: true,
             },
             {
+                label: "Hot News",
+                href: "/cms/hot-news",
+                icon: "Sparkles",
+                visible: true,
+            },
+            {
                 label: "Kategori",
                 href: "/cms/kategori",
                 icon: "Category",
