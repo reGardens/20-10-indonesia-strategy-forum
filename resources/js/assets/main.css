@@ -1,3 +1,19 @@
+@font-face {
+    font-family: "Space Grotesk";
+    src: url("/fonts/space-grotesk-latin.woff2") format("woff2");
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: block;
+}
+
+@font-face {
+    font-family: "Anton";
+    src: url("/fonts/anton-latin.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: block;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

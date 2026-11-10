@@ -149,7 +149,7 @@ onMounted(() => {
           </Badge>
         </h1>
         <p class="text-sm text-muted-foreground mt-1">
-          Kelola dataset grafik interaktif untuk slider ISF Insight di Beranda publik dan Visual Kunci Anatomi Isu.
+          Kelola dataset grafik interaktif untuk slider ISF Insight di Beranda publik.
         </p>
       </div>
       <Link href="/cms/data-grafik/create">

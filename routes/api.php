@@ -7,7 +7,6 @@ use App\Http\Controllers\Api\Isf\Cms\BriefingController;
 use App\Http\Controllers\Api\Isf\Cms\CategoryController;
 use App\Http\Controllers\Api\Isf\Cms\ChartController;
 use App\Http\Controllers\Api\Isf\Cms\InfographicController;
-use App\Http\Controllers\Api\Isf\Cms\IsuController;
 use App\Http\Controllers\Api\Isf\Cms\MediaUploadController;
 use App\Http\Controllers\Api\Isf\Cms\SettingController;
 use App\Http\Controllers\Api\Isf\Cms\TokohController;
@@ -20,7 +19,6 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['web'])->prefix('isf')->group(function () {
     Route::get('/beranda', [PublicContentController::class, 'beranda'])->name('api.isf.beranda');
     Route::get('/tokoh/{slug}', [PublicContentController::class, 'tokoh'])->name('api.isf.tokoh');
-    Route::get('/isu/{slug}', [PublicContentController::class, 'isu'])->name('api.isf.isu');
     Route::get('/infografik', [PublicContentController::class, 'infografik'])->name('api.isf.infografik');
     Route::get('/anggota', [PublicContentController::class, 'anggota'])->name('api.isf.anggota');
     Route::get('/cache-heal', [PublicContentController::class, 'cacheHeal'])->name('api.isf.cache-heal');
@@ -44,8 +42,6 @@ Route::middleware(['web', 'auth'])->prefix('cms')->name('api.cms.')->group(funct
         ->parameters(['infografik' => 'infographic'])->middleware('feature:infografik');
     Route::apiResource('tokoh', TokohController::class)
         ->parameters(['tokoh' => 'tokoh'])->middleware('feature:tokoh');
-    Route::apiResource('isu', IsuController::class)
-        ->parameters(['isu' => 'isu'])->middleware('feature:isu');
     Route::post('data-grafik/reorder', [ChartController::class, 'reorder'])
         ->middleware('feature:data_grafik')->name('data-grafik.reorder');
     Route::apiResource('data-grafik', ChartController::class)
@@ -79,9 +75,6 @@ Route::middleware(['web', 'auth'])->prefix('cms')->name('api.cms.')->group(funct
     // Media image upload for CMS modules
     Route::post('/media/upload', [MediaUploadController::class, 'upload'])->name('media.upload');
 
-    // Chart picker for the isu "02 Visual Kunci" field
-    Route::get('/options/charts', [ChartController::class, 'options'])
-        ->middleware('feature:isu')->name('options.charts');
 
     // Category options for dropdown pickers across CMS modules
     Route::get('/options/categories', [CategoryController::class, 'options'])->name('options.categories');

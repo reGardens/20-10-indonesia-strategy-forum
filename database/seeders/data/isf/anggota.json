@@ -74,7 +74,6 @@
     ],
     "tautanLangsung": [
         { "label": "Pratinjau Email Briefing", "href": "/anggota/briefing/preview", "type": "external" },
-        { "label": "Anatomi Isu Pekan Ini", "to": "/isu/kuhp-baru-pelaku-usaha" },
         { "label": "Profil Tokoh Pekan Ini", "to": "/tokoh/budi-santoso" },
         { "label": "Beranda ISF", "to": "/beranda" }
     ]

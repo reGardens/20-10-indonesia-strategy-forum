@@ -31,15 +31,15 @@ afterEach(() => {
 
 describe("IsfLink", () => {
     it("SPA path → router-link (client-side navigation)", async () => {
-        const { link, router } = await render("/isu/kuhp-baru-pelaku-usaha");
-        expect(link.getAttribute("href")).toBe("/isu/kuhp-baru-pelaku-usaha");
+        const { link, router } = await render("/tokoh/budi-santoso");
+        expect(link.getAttribute("href")).toBe("/tokoh/budi-santoso");
         expect(link.getAttribute("target")).toBeNull();
         expect(link.classList.contains("link")).toBe(true);
         const push = vi.spyOn(router, "push");
         const event = new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 });
         link.dispatchEvent(event);
         expect(event.defaultPrevented).toBe(true);
-        expect(push).toHaveBeenCalledWith("/isu/kuhp-baru-pelaku-usaha");
+        expect(push).toHaveBeenCalledWith("/tokoh/budi-santoso");
     });
 
     it("absolute URL → external <a> in a new tab (not /https://…)", async () => {

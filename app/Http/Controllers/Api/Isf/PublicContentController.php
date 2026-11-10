@@ -7,7 +7,6 @@ use App\Http\Resources\Isf\AlertResource;
 use App\Http\Resources\Isf\ArticleResource;
 use App\Http\Resources\Isf\ChartResource;
 use App\Http\Resources\Isf\InfographicResource;
-use App\Http\Resources\Isf\IsuResource;
 use App\Http\Resources\Isf\TokohResource;
 use App\Models\Isf\Alert;
 use App\Models\Isf\Article;
@@ -15,7 +14,6 @@ use App\Models\Isf\Banner;
 use App\Models\Isf\Briefing;
 use App\Models\Isf\Chart;
 use App\Models\Isf\Infographic;
-use App\Models\Isf\Isu;
 use App\Models\Isf\Setting;
 use App\Models\Isf\Tokoh;
 use App\Services\Isf\IsfCacheService;
@@ -115,9 +113,6 @@ class PublicContentController extends Controller
             $chart = $charts->first();
 
             $pekanIniItems = [];
-            if ($isu = Isu::currentWeekly()) {
-                $pekanIniItems[] = (new IsuResource($isu))->pekanIniItem();
-            }
             if ($tokoh = Tokoh::currentFeatured()) {
                 $pekanIniItems[] = (new TokohResource($tokoh))->pekanIniItem();
             }
@@ -219,28 +214,6 @@ class PublicContentController extends Controller
     }
 
     /**
-     * GET /api/isf/isu/{slug}
-     */
-    public function isu(Request $request, string $slug): JsonResponse
-    {
-        $isu = Isu::query()->terbit()->with('visualChart')->where('slug', $slug)->first();
-
-        if (! $isu) {
-            return $this->notFound('Isu tidak ditemukan.');
-        }
-
-        $result = IsfCacheService::rememberWithStatus(IsfCacheService::PREFIX_ISU . $slug, function () use ($request, $isu) {
-            $populer = Article::query()->terbit()->where('is_popular', true)
-                ->orderByRaw('popular_rank IS NULL')->orderBy('popular_rank')
-                ->orderByDesc('published_at')->limit(5)->get();
-
-            return (new IsuResource($isu, $populer))->resolve($request);
-        });
-
-        return $this->cachedResponse($result);
-    }
-
-    /**
      * GET /api/isf/anggota
      */
     public function anggota(Request $request): JsonResponse
@@ -253,9 +226,6 @@ class PublicContentController extends Controller
             $tautan = [];
             if (Briefing::query()->terbit()->exists()) {
                 $tautan[] = ['label' => 'Pratinjau Email Briefing', 'href' => '/anggota/briefing/preview', 'type' => 'external'];
-            }
-            if ($isu = Isu::currentWeekly()) {
-                $tautan[] = ['label' => 'Anatomi Isu Pekan Ini', 'to' => "/isu/{$isu->slug}"];
             }
             if ($tokoh = Tokoh::currentFeatured()) {
                 $tautan[] = ['label' => 'Profil Tokoh Pekan Ini', 'to' => "/tokoh/{$tokoh->slug}"];
