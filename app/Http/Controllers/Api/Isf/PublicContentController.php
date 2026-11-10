@@ -12,6 +12,7 @@ use App\Models\Isf\Alert;
 use App\Models\Isf\Article;
 use App\Models\Isf\Banner;
 use App\Models\Isf\Briefing;
+use App\Models\Isf\Category;
 use App\Models\Isf\Chart;
 use App\Models\Isf\Infographic;
 use App\Models\Isf\Setting;
@@ -156,10 +157,82 @@ class PublicContentController extends Controller
             usort($activeMedia, fn ($a, $b) => ($a['order'] ?? 0) <=> ($b['order'] ?? 0));
             $mediaSorotan3 = array_slice($activeMedia, 0, 3);
 
+            $hotNews = $settings['hotNews'] ?? null;
+            $activeHotNews = is_array($hotNews)
+                ? array_values(array_filter($hotNews, fn ($item) => ($item['status'] ?? 'terbit') === 'terbit'))
+                : [];
+
+            $categoryMap = [
+                'hukum & regulasi' => 'Hukum',
+                'kebijakan publik' => 'Kebijakan',
+                'ekonomi & pasar' => 'Ekonomi',
+                'ruu' => 'RUU',
+                'kebijakan' => 'Kebijakan',
+                'ekonomi' => 'Ekonomi',
+                'politik' => 'Politik',
+                'hukum' => 'Hukum',
+            ];
+
+            $activeHotNews = array_map(function ($it) use ($categoryMap) {
+                $cat = $it['category'] ?? '';
+                $key = strtolower(trim((string) $cat));
+                if (isset($categoryMap[$key])) {
+                    $it['category'] = $categoryMap[$key];
+                }
+                return $it;
+            }, $activeHotNews);
+
+            if (empty($activeHotNews)) {
+                $categoriesBySlug = Category::query()->terbit()->pluck('name', 'slug')->all();
+                $activeHotNews = Article::query()->terbit()
+                    ->orderByDesc('published_at')
+                    ->orderByDesc('id')
+                    ->limit(5)
+                    ->get()
+                    ->map(function (Article $a) use ($categoriesBySlug) {
+                        $catSlug = strtolower(trim((string) $a->category));
+                        $catLabel = $categoriesBySlug[$catSlug] ?? ($a->category ? ucfirst($a->category) : 'Berita Utama');
+                        return [
+                            'id' => (string) $a->id,
+                            'title' => $a->title,
+                            'category' => $catLabel,
+                            'to' => $a->link_url ?: '/beranda',
+                            'url' => $a->link_url ?: '/beranda',
+                            'published_at' => $a->published_at ? $a->published_at->format('d M Y') : date('d M Y'),
+                            'status' => 'terbit',
+                        ];
+                    })
+                    ->all();
+            }
+
+            if (empty($activeHotNews)) {
+                $activeHotNews = [
+                    [
+                        'id' => 1,
+                        'title' => 'RUU Perampasan Aset Masuk Pembahasan Tingkat I di DPR Pekan Ini',
+                        'to' => '/beranda',
+                        'url' => '/beranda',
+                        'category' => 'Hukum',
+                        'published_at' => date('d M Y'),
+                        'status' => 'terbit',
+                    ],
+                    [
+                        'id' => 2,
+                        'title' => 'Kemenkeu Rilis Panduan Insentif Fiskal Transisi Energi Terbarukan 2026',
+                        'to' => '/beranda',
+                        'url' => '/beranda',
+                        'category' => 'Kebijakan',
+                        'published_at' => date('d M Y'),
+                        'status' => 'terbit',
+                    ],
+                ];
+            }
+
             return [
                 'topBar' => $settings['topBar'] ?? null,
                 'topBars' => $activeTopBars,
                 'banners' => $banners,
+                'hotNews' => $activeHotNews,
                 'hero' => $hero ? (new ArticleResource($hero))->hero() : null,
                 'factBlocks' => $hero?->fact_blocks ?? [],
                 'chart' => $chart ? (new ChartResource($chart))->resolve($request) : null,

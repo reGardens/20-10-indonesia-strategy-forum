@@ -27,6 +27,7 @@ class IsfPageController extends Controller
         'email-briefing' => 'EmailBriefing',
         'running-text' => 'RunningText',
         'media-sorotan' => 'MediaSorotan',
+        'hot-news' => 'HotNews',
         'kategori' => 'Kategori',
     ];
 

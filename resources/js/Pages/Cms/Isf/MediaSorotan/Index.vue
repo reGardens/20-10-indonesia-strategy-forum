@@ -271,7 +271,7 @@ onMounted(loadData)
             <TableCell>
               <span
                 :class="[
-                  'inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider border',
+                  'inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider border pointer-events-none select-none',
                   item.category === 'YouTube'
                     ? 'bg-red-500/10 text-red-500 border-red-500/30'
                     : (item.category === 'Instagram'

@@ -16,13 +16,10 @@
         >
             <div class="aspect-video lg:aspect-[21/9]"></div>
             <div
-                class="flex items-center justify-between border-t border-neutral-300 bg-white px-4 py-3"
+                class="flex items-center gap-3 border-t border-neutral-300 bg-white px-3 sm:px-4 py-2 min-h-[42px]"
             >
-                <div class="h-3 w-32 rounded bg-neutral-200"></div>
-                <div class="flex gap-2">
-                    <div class="h-7 w-7 rounded-full bg-neutral-200"></div>
-                    <div class="h-7 w-7 rounded-full bg-neutral-200"></div>
-                </div>
+                <div class="h-5 w-20 rounded bg-neutral-300"></div>
+                <div class="h-3.5 w-1/2 rounded bg-neutral-200"></div>
             </div>
         </div>
 

@@ -40,6 +40,12 @@ export const cmsResources = {
   emailBriefing: createCmsResource('email-briefing'),
   runningText: createCmsResource('running-text'),
   mediaSorotan: createCmsResource('media-sorotan'),
+  hotNews: {
+    ...createCmsResource('hot-news'),
+    saveAll: (items) => http.put('/cms/hot-news', { items }).then((r) => r.data.data),
+    getArticleOptions: () => http.get('/cms/hot-news/article-options').then((r) => r.data.data),
+    syncArticles: () => http.post('/cms/hot-news/sync-articles').then((r) => r.data.data)
+  },
   kategori: createCmsResource('kategori')
 }
 
@@ -57,6 +63,10 @@ export const runningTextService = {
 }
 
 /** Media Sorotan standalone service */
+export const hotNewsService = {
+  ...cmsResources.hotNews
+}
+
 export const mediaSorotanService = {
   ...cmsResources.mediaSorotan,
   saveAll: (items) => http.put('/cms/media-sorotan', { items }).then((r) => r.data.data)

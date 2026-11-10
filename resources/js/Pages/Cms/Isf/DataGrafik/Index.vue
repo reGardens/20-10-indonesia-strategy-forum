@@ -290,14 +290,14 @@ onMounted(() => {
             <TableCell>
               <span
                 v-if="item.is_beranda && item.status === 'terbit'"
-                class="inline-flex items-center gap-1.5 text-[9.5px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                class="inline-flex items-center gap-1.5 text-[9.5px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 pointer-events-none select-none"
               >
                 <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                 Slider Beranda (#{{ item.order ?? 0 }})
               </span>
               <span
                 v-else-if="item.is_beranda"
-                class="inline-flex items-center gap-1.5 text-[9.5px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                class="inline-flex items-center gap-1.5 text-[9.5px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 pointer-events-none select-none"
               >
                 <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
                 Slider (Status: {{ item.status }})

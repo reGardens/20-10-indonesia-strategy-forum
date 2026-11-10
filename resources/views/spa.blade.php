@@ -840,9 +840,9 @@
                     <div class="isf-skel-rule" style="margin-top: 16px;">
                         <div class="isf-skel-el" style="height: 320px; border-radius: 0;"></div>
                         <div
-                            style="display: flex; justify-content: space-between; border-top: 1px solid #d1d5db; padding: 12px;">
-                            <div class="isf-skel-el" style="width: 120px; height: 14px;"></div>
-                            <div class="isf-skel-el" style="width: 72px; height: 24px;"></div>
+                            style="display: flex; align-items: center; gap: 12px; border-top: 1px solid #d1d5db; padding: 8px 12px; min-height: 42px;">
+                            <div class="isf-skel-el" style="width: 72px; height: 20px;"></div>
+                            <div class="isf-skel-el" style="width: 50%; height: 14px;"></div>
                         </div>
                     </div>
                     <div class="isf-skel-grid isf-skel-rule" style="margin-top: 24px;">

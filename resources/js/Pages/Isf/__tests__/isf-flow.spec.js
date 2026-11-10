@@ -156,22 +156,27 @@ describe("ISF alur E2E (frontend)", () => {
         const slides = Array.from(carousel.querySelectorAll('[aria-roledescription="slide"]'));
         expect(slides).toHaveLength(3);
         expect(slides.map((s) => s.getAttribute("aria-label"))).toEqual(["1 dari 3", "2 dari 3", "3 dari 3"]);
-        const visible = () => slides.filter((s) => s.style.display !== "none");
-        expect(visible()).toEqual([slides[0]]);
+        expect(slides[0].getAttribute("aria-hidden")).toBeNull();
         expect(slides[1].getAttribute("aria-hidden")).toBe("true");
-        click(carousel.querySelector('button[aria-label="Slide berikutnya"]'));
+
+        // Slider swipe / keyboard navigation replaces old static buttons
+        carousel.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }));
         await flush();
-        expect(visible()).toEqual([slides[1]]);
-        click(carousel.querySelector('button[aria-label="Slide sebelumnya"]'));
+        expect(slides[1].getAttribute("aria-hidden")).toBeNull();
+        expect(slides[0].getAttribute("aria-hidden")).toBe("true");
+
+        carousel.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true, cancelable: true }));
         await flush();
-        expect(visible()).toEqual([slides[0]]);
+        expect(slides[0].getAttribute("aria-hidden")).toBeNull();
+
         const slideLink = slides[0].querySelector("a");
         expect(slideLink.getAttribute("href")).toBe("#");
         expect(slideLink.getAttribute("aria-disabled")).toBe("true");
-        const playToggle = carousel.querySelector('button[aria-label="Jeda putar otomatis"]');
-        click(playToggle);
-        await flush();
-        expect(playToggle.getAttribute("aria-label")).toBe("Putar otomatis");
+
+        // Hot News ticker is rendered in place of old control bar
+        const hotNewsTicker = carousel.querySelector('[aria-label="Hot News Ticker"]');
+        expect(hotNewsTicker).not.toBeNull();
+        expect(hotNewsTicker.textContent).toContain("HOT NEWS");
 
         const sections = [
             ["terkini-title", "LATEST NEWS"],

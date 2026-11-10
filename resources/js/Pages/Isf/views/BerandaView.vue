@@ -81,6 +81,7 @@ function isVerticalMedia(category) {
 }
 const infografik = computed(() => data.value?.infografik || []);
 const pekanIni = computed(() => data.value?.pekanIni || { items: [] });
+const hotNews = computed(() => data.value?.hotNews || []);
 const bannerSlides = computed(() =>
     data.value?.banners?.length ? data.value.banners : BERANDA_BANNER_DUMMY,
 );
@@ -233,6 +234,7 @@ const cellPad = "lg:px-4 xl:px-[30px]";
 
                 <IsfBannerCarousel
                     :slides="bannerSlides"
+                    :hot-news="hotNews"
                     label="Banner sorotan"
                     class="mt-4"
                 />
