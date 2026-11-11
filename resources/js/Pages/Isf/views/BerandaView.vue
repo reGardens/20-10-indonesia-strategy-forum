@@ -11,6 +11,7 @@ import {
     IsfLink,
     IsfAdBanner,
     IsfAdPopupModal,
+    IsfFullLayerSections,
     SectionHeading,
     SimpleBarChart,
 } from "@/Components/Isf";
@@ -39,6 +40,7 @@ const hero = computed(() => data.value?.hero);
 const factBlocks = computed(() => data.value?.factBlocks || []);
 const chart = computed(() => data.value?.chart);
 const terkini = computed(() => data.value?.terkini || []);
+const sections = computed(() => data.value?.sections || {});
 const latestNews = computed(() => terkini.value.slice(0, 3));
 const activeMediaTab = ref('latest');
 
@@ -634,6 +636,14 @@ const cellPad = "lg:px-4 xl:px-[30px]";
                             Belum ada infografik.
                         </p>
                     </section>
+
+                    <!-- Below the fold: Full-Layer Sections (Politik, Hukum, Kebijakan, Video) ala EU Reporter -->
+                    <IsfFullLayerSections
+                        :sections="sections"
+                        :media-sorotan="mediaSorotan"
+                        :cell-pad="cellPad"
+                        :link-class="linkClass"
+                    />
 
                     <!-- Below the fold: Pekan Ini (2-up ruled row) -->
                     <section
