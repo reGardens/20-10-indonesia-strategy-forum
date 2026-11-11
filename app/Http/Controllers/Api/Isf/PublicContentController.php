@@ -196,6 +196,126 @@ class PublicContentController extends Controller
                 ];
             }
 
+            $rawIklan = Setting::get('iklan', \App\Http\Controllers\Api\Isf\Cms\SettingController::defaultIklan());
+            $defaultIklan = \App\Http\Controllers\Api\Isf\Cms\SettingController::defaultIklan();
+
+            $iklanItems = Setting::get('iklan_items');
+            $now = now();
+
+            if (is_array($iklanItems) && !empty($iklanItems)) {
+                $isItemActive = function ($it) use ($now) {
+                    if (empty($it['is_active']) || ($it['status'] ?? 'terbit') !== 'terbit') return false;
+                    if (!empty($it['start_date']) && $now->lt(\Carbon\Carbon::parse($it['start_date'])->startOfDay())) return false;
+                    if (!empty($it['end_date']) && $now->gt(\Carbon\Carbon::parse($it['end_date'])->endOfDay())) return false;
+                    return true;
+                };
+
+                $activeBannerItem = collect($iklanItems)
+                    ->filter(fn ($it) => in_array($it['placement'], ['spanduk', 'banner']))
+                    ->filter($isItemActive)
+                    ->sortBy('order')
+                    ->first();
+
+                // Jika tidak ada banner aktif, cek apakah ada iklan body terjadwal yang periodenya aktif hari ini
+                if (!$activeBannerItem) {
+                    $autoBannerCandidate = collect($iklanItems)
+                        ->filter(fn ($it) => in_array($it['placement'], ['spanduk', 'banner']))
+                        ->filter(function ($it) use ($now) {
+                            if (($it['status'] ?? 'terbit') !== 'terbit') return false;
+                            if (!empty($it['start_date']) && $now->lt(\Carbon\Carbon::parse($it['start_date'])->startOfDay())) return false;
+                            if (!empty($it['end_date']) && $now->gt(\Carbon\Carbon::parse($it['end_date'])->endOfDay())) return false;
+                            return true;
+                        })
+                        ->sortBy('order')
+                        ->first();
+
+                    if ($autoBannerCandidate) {
+                        $activeBannerItem = $autoBannerCandidate;
+                        $syncNeeded = false;
+                        foreach ($iklanItems as &$it) {
+                            if ($it['id'] === $autoBannerCandidate['id']) {
+                                if (empty($it['is_active'])) {
+                                    $it['is_active'] = true;
+                                    $syncNeeded = true;
+                                }
+                            } elseif (in_array($it['placement'], ['spanduk', 'banner'])) {
+                                if (!empty($it['is_active'])) {
+                                    $it['is_active'] = false;
+                                    $syncNeeded = true;
+                                }
+                            }
+                        }
+                        unset($it);
+                        if ($syncNeeded) {
+                            Setting::put('iklan_items', $iklanItems);
+                        }
+                    }
+                }
+
+                $activePopupBannerItem = collect($iklanItems)
+                    ->filter(fn ($it) => in_array($it['placement'], ['popup_banner', 'popup']) && ($it['type'] ?? 'banner') === 'banner')
+                    ->filter($isItemActive)
+                    ->sortBy('order')
+                    ->first();
+
+                $activePopupVideoItem = collect($iklanItems)
+                    ->filter(fn ($it) => in_array($it['placement'], ['popup_video', 'popup_duration', 'popup']) && ($it['type'] ?? '') === 'video')
+                    ->filter($isItemActive)
+                    ->sortBy('order')
+                    ->first();
+
+                $activeTopPopup = collect($iklanItems)
+                    ->filter(fn ($it) => in_array($it['placement'], ['popup_banner', 'popup_video', 'popup_duration', 'popup']))
+                    ->filter($isItemActive)
+                    ->sortBy('order')
+                    ->first();
+
+                $bannerConfig = $activeBannerItem ?: array_merge($defaultIklan['banner'], $rawIklan['banner'] ?? []);
+                $popupConfig = $activeTopPopup ?: array_merge($defaultIklan['popup'], $rawIklan['popup'] ?? []);
+                $popupBannerConfig = $activePopupBannerItem ?: array_merge($defaultIklan['popup'], ['type' => 'banner']);
+                $popupVideoConfig = $activePopupVideoItem ?: array_merge($defaultIklan['popup'], ['type' => 'video', 'video_duration' => 30]);
+
+                $bannerConfig['is_active'] = !empty($activeBannerItem);
+                $popupConfig['is_active'] = !empty($activeTopPopup);
+                $popupBannerConfig['is_active'] = !empty($activePopupBannerItem);
+                $popupVideoConfig['is_active'] = !empty($activePopupVideoItem);
+            } else {
+                $bannerConfig = array_merge($defaultIklan['banner'], $rawIklan['banner'] ?? []);
+                $popupConfig = array_merge($defaultIklan['popup'], $rawIklan['popup'] ?? []);
+                $popupBannerConfig = array_merge($popupConfig, ['type' => 'banner']);
+                $popupVideoConfig = array_merge($popupConfig, ['type' => 'video', 'video_duration' => 30]);
+
+                // Check banner active status & date window
+                $bannerActive = ($bannerConfig['status'] ?? 'terbit') === 'terbit';
+                if ($bannerActive && !empty($bannerConfig['start_date'])) {
+                    if ($now->lt(\Carbon\Carbon::parse($bannerConfig['start_date'])->startOfDay())) {
+                        $bannerActive = false;
+                    }
+                }
+                if ($bannerActive && !empty($bannerConfig['end_date'])) {
+                    if ($now->gt(\Carbon\Carbon::parse($bannerConfig['end_date'])->endOfDay())) {
+                        $bannerActive = false;
+                    }
+                }
+                $bannerConfig['is_active'] = $bannerActive;
+
+                // Check popup active status & date window
+                $popupActive = !empty($popupConfig['is_active']) && ($popupConfig['status'] ?? 'terbit') === 'terbit';
+                if ($popupActive && !empty($popupConfig['start_date'])) {
+                    if ($now->lt(\Carbon\Carbon::parse($popupConfig['start_date'])->startOfDay())) {
+                        $popupActive = false;
+                    }
+                }
+                if ($popupActive && !empty($popupConfig['end_date'])) {
+                    if ($now->gt(\Carbon\Carbon::parse($popupConfig['end_date'])->endOfDay())) {
+                        $popupActive = false;
+                    }
+                }
+                $popupConfig['is_active'] = $popupActive;
+                $popupBannerConfig['is_active'] = $popupActive && ($popupConfig['type'] ?? 'banner') === 'banner';
+                $popupVideoConfig['is_active'] = $popupActive && ($popupConfig['type'] ?? '') === 'video';
+            }
+
             return [
                 'topBar' => $settings['topBar'] ?? null,
                 'topBars' => $activeTopBars,
@@ -207,6 +327,51 @@ class PublicContentController extends Controller
                 'charts' => ChartResource::collection($charts)->resolve($request),
                 'mediaSorotan' => $activeMedia,
                 'terkini' => ArticleResource::collection($terkini)->resolve($request),
+                'iklan' => [
+                    'banner' => [
+                        'title' => $bannerConfig['title'] ?? '',
+                        'kicker' => $bannerConfig['kicker'] ?? 'SPONSOR RESMI',
+                        'imageUrl' => $bannerConfig['image_url'] ?? '',
+                        'targetUrl' => $bannerConfig['target_url'] ?? '',
+                        'status' => $bannerConfig['status'] ?? 'terbit',
+                        'isActive' => $bannerConfig['is_active'] ?? true,
+                        'startDate' => $bannerConfig['start_date'] ?? null,
+                        'endDate' => $bannerConfig['end_date'] ?? null,
+                    ],
+                    'popup' => [
+                        'title' => $popupConfig['title'] ?? '',
+                        'type' => $popupConfig['type'] ?? 'banner',
+                        'imageUrl' => $popupConfig['image_url'] ?? '',
+                        'videoUrl' => $popupConfig['video_url'] ?? '',
+                        'videoDuration' => (int) ($popupConfig['video_duration'] ?? 30),
+                        'targetUrl' => $popupConfig['target_url'] ?? '',
+                        'status' => $popupConfig['status'] ?? 'terbit',
+                        'isActive' => $popupConfig['is_active'] ?? true,
+                        'startDate' => $popupConfig['start_date'] ?? null,
+                        'endDate' => $popupConfig['end_date'] ?? null,
+                    ],
+                    'popup_banner' => [
+                        'title' => $popupBannerConfig['title'] ?? '',
+                        'type' => 'banner',
+                        'imageUrl' => $popupBannerConfig['image_url'] ?? '',
+                        'targetUrl' => $popupBannerConfig['target_url'] ?? '',
+                        'status' => $popupBannerConfig['status'] ?? 'terbit',
+                        'isActive' => $popupBannerConfig['is_active'] ?? true,
+                        'startDate' => $popupBannerConfig['start_date'] ?? null,
+                        'endDate' => $popupBannerConfig['end_date'] ?? null,
+                    ],
+                    'popup_video' => [
+                        'title' => $popupVideoConfig['title'] ?? '',
+                        'type' => 'video',
+                        'videoUrl' => $popupVideoConfig['video_url'] ?? '',
+                        'videoDuration' => (int) ($popupVideoConfig['video_duration'] ?? 30),
+                        'targetUrl' => $popupVideoConfig['target_url'] ?? '',
+                        'status' => $popupVideoConfig['status'] ?? 'terbit',
+                        'isActive' => $popupVideoConfig['is_active'] ?? true,
+                        'startDate' => $popupVideoConfig['start_date'] ?? null,
+                        'endDate' => $popupVideoConfig['end_date'] ?? null,
+                    ],
+                ],
                 'infografik' => InfographicResource::collection($infografik)->resolve($request),
                 'pekanIni' => [
                     'dateStart' => $settings['pekanIni']['dateStart'] ?? null,

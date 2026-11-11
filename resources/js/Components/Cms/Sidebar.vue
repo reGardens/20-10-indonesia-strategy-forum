@@ -64,6 +64,12 @@ const menuGroups = computed(() => [
                 visible: true,
             },
             {
+                label: "Kelola Iklan",
+                href: "/cms/iklan",
+                icon: "Tag",
+                visible: true,
+            },
+            {
                 label: "Kategori",
                 href: "/cms/kategori",
                 icon: "Category",

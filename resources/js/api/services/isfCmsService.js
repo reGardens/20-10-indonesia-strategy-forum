@@ -46,7 +46,12 @@ export const cmsResources = {
     getArticleOptions: () => http.get('/cms/hot-news/article-options').then((r) => r.data.data),
     syncArticles: () => http.post('/cms/hot-news/sync-articles').then((r) => r.data.data)
   },
-  kategori: createCmsResource('kategori')
+  kategori: createCmsResource('kategori'),
+  iklan: {
+    ...createCmsResource('iklan'),
+    reorder: (items) => http.post('/cms/iklan/reorder', { items }).then((r) => r.data),
+    toggleActive: (id) => http.post(`/cms/iklan/${id}/toggle`).then((r) => r.data.data)
+  }
 }
 
 /** Pengaturan Halaman (singleton): { beranda, anggota } */
@@ -70,6 +75,19 @@ export const hotNewsService = {
 export const mediaSorotanService = {
   ...cmsResources.mediaSorotan,
   saveAll: (items) => http.put('/cms/media-sorotan', { items }).then((r) => r.data.data)
+}
+
+/** Manajemen Iklan standalone service (Banner Slot & Popup Modal) */
+export const iklanService = {
+  get: (params) => http.get('/cms/iklan', { params }).then((r) => r.data),
+  list: (params) => http.get('/cms/iklan', { params }).then((r) => r.data.data || r.data),
+  show: (id) => http.get(`/cms/iklan/${id}`).then((r) => r.data.data),
+  create: (data) => http.post('/cms/iklan', data).then((r) => r.data.data),
+  updateItem: (id, data) => http.put(`/cms/iklan/${id}`, data).then((r) => r.data.data),
+  remove: (id) => http.delete(`/cms/iklan/${id}`).then((r) => r.data),
+  reorder: (items) => http.post('/cms/iklan/reorder', { items }).then((r) => r.data),
+  toggleActive: (id) => http.post(`/cms/iklan/${id}/toggle`).then((r) => r.data.data),
+  update: (data) => http.put('/cms/iklan', data).then((r) => r.data.data)
 }
 
 /** Category options for dropdown pickers across CMS modules: [{ id, value, label, color }] */
