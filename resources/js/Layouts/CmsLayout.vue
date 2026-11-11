@@ -131,7 +131,7 @@ function logout() {
         <div class="lg:pl-[260px] flex flex-col flex-1 min-h-0">
             <!-- Top navbar -->
             <header
-                class="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-border bg-card/80 backdrop-blur px-4 lg:px-6 overflow-visible"
+                class="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-md px-4 lg:px-6 overflow-visible"
             >
                 <!-- Mobile hamburger -->
                 <button

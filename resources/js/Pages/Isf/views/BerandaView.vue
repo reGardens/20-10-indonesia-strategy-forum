@@ -9,6 +9,8 @@ import {
     IsfBannerCarousel,
     IsfInsightSlider,
     IsfLink,
+    IsfAdBanner,
+    IsfAdPopupModal,
     SectionHeading,
     SimpleBarChart,
 } from "@/Components/Isf";
@@ -39,6 +41,33 @@ const chart = computed(() => data.value?.chart);
 const terkini = computed(() => data.value?.terkini || []);
 const latestNews = computed(() => terkini.value.slice(0, 3));
 const activeMediaTab = ref('latest');
+
+const adBanner = computed(() => {
+    return data.value?.iklan?.banner || {
+        title: "Kemitraan Strategis & Solusi Riset Kebijakan ISF 2026",
+        kicker: "SPONSOR RESMI",
+        imageUrl: "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80",
+        targetUrl: "/register",
+        status: "terbit",
+        isActive: true,
+    };
+});
+
+const adPopup = computed(() => {
+    return data.value?.iklan?.popup || {
+        title: "Indonesia Strategy Forum — Annual Summit & Briefing 2026",
+        type: "banner",
+        imageUrl: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=80",
+        videoUrl: "https://www.youtube.com/watch?v=aBxlmrCPjBA",
+        videoDuration: 30,
+        targetUrl: "/register",
+        status: "terbit",
+        isActive: true,
+    };
+});
+
+const adPopupVideo = computed(() => data.value?.iklan?.popup_video);
+const adPopupBanner = computed(() => data.value?.iklan?.popup_banner);
 
 const allMediaSorotan = computed(() => {
     if (data.value?.mediaSorotan?.length) {
@@ -528,7 +557,7 @@ const cellPad = "lg:px-4 xl:px-[30px]";
                             </section>
                         </div>
 
-                        <!-- LEFT: ISF Insight widget + Latest News -->
+                        <!-- LEFT: ISF Insight widget + Slot Iklan Spanduk Banner -->
                         <aside
                             aria-labelledby="insight-title"
                             class="order-3 min-w-0 border-t border-neutral-300 lg:order-1 lg:border-t-0"
@@ -537,68 +566,11 @@ const cellPad = "lg:px-4 xl:px-[30px]";
                                 :insights="insightList"
                                 :cell-pad="cellPad"
                             />
-                            <section
-                                aria-labelledby="terkini-title"
-                                class="border-t border-neutral-300"
-                            >
-                                <SectionHeading
-                                    id="terkini-title"
-                                    title="LATEST NEWS"
-                                    :class="cellPad"
-                                />
-                                <ol
-                                    :class="[
-                                        'divide-y divide-neutral-300',
-                                        cellPad,
-                                    ]"
-                                >
-                                    <li
-                                        v-for="item in latestNews"
-                                        :key="item.title"
-                                        class="flex gap-3 py-3"
-                                    >
-                                        <ImagePlaceholder
-                                            :label="item.title"
-                                            aspect="photo"
-                                            bare
-                                            class="w-14 shrink-0 xl:w-16"
-                                        />
-                                        <div class="min-w-0">
-                                            <CategoryLabel
-                                                :category="item.category"
-                                            />
-                                            <h3
-                                                class="isf-headline mt-0.5 text-[14px] leading-[1.25] xl:text-[15px]"
-                                            >
-                                                <IsfLink
-                                                    :to="item.to || '#'"
-                                                    :class="[
-                                                        linkClass,
-                                                        'hover:text-isf-red',
-                                                    ]"
-                                                    >{{ item.title }}</IsfLink
-                                                >
-                                            </h3>
-                                            <time
-                                                :datetime="item.publishedAt"
-                                                class="isf-byline mt-1 block"
-                                                >{{
-                                                    formatDate(item.publishedAt)
-                                                }}</time
-                                            >
-                                        </div>
-                                    </li>
-                                </ol>
-                                <p
-                                    v-if="latestNews.length === 0"
-                                    :class="[
-                                        'py-4 text-sm text-neutral-600',
-                                        cellPad,
-                                    ]"
-                                >
-                                    Belum ada artikel terbaru.
-                                </p>
-                            </section>
+                            <!-- Slot Iklan Spanduk Sponsor -->
+                            <IsfAdBanner
+                                :ad="adBanner"
+                                :cell-pad="cellPad"
+                            />
                         </aside>
                     </div>
 
@@ -715,5 +687,21 @@ const cellPad = "lg:px-4 xl:px-[30px]";
                 </div>
             </div>
         </template>
+
+        <!-- Modal Popup Iklan Saat Akses Pertama: Kategori 3 (Video durasi) & Kategori 2 (Banner statis) -->
+        <IsfAdPopupModal
+            v-if="adPopupVideo && adPopupVideo.isActive"
+            :ad="adPopupVideo"
+            storage-key="isf_popup_video_seen"
+        />
+        <IsfAdPopupModal
+            v-else-if="adPopupBanner && adPopupBanner.isActive"
+            :ad="adPopupBanner"
+            storage-key="isf_popup_banner_seen"
+        />
+        <IsfAdPopupModal
+            v-else
+            :ad="adPopup"
+        />
     </div>
 </template>

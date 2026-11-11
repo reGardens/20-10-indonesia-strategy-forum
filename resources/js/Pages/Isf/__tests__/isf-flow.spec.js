@@ -252,7 +252,7 @@ describe("ISF alur E2E (frontend)", () => {
         expect(hotNewsTicker.textContent).toContain("HOT NEWS");
 
         const sections = [
-            ["terkini-title", "LATEST NEWS"],
+            ["ad-placement-title", "SPONSOR RESMI"],
             ["infografik-terbaru", "Infografik Terbaru"],
             ["pekan-ini", "Pekan Ini"],
         ];
@@ -262,9 +262,8 @@ describe("ISF alur E2E (frontend)", () => {
             );
         }
         expect(
-            root.querySelectorAll('[aria-labelledby="terkini-title"] li')
-                .length,
-        ).toBe(Math.min(3, beranda.terkini.length));
+            root.querySelector('[data-testid="ad-placement-banner"]'),
+        ).not.toBeNull();
         expect(
             root.querySelectorAll(
                 '[aria-labelledby="secondary-stories-title"] li',

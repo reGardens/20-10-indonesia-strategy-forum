@@ -82,6 +82,15 @@ Route::middleware(['web', 'auth'])->prefix('cms')->name('api.cms.')->group(funct
     Route::delete('/hot-news/{id}', [SettingController::class, 'deleteHotNewsItem'])->whereNumber('id')->name('hot-news.destroy');
     Route::put('/hot-news', [SettingController::class, 'updateHotNews'])->name('hot-news.update');
 
+    Route::get('/iklan', [SettingController::class, 'getIklan'])->name('iklan.index');
+    Route::post('/iklan', [SettingController::class, 'createIklan'])->name('iklan.store');
+    Route::post('/iklan/reorder', [SettingController::class, 'reorderIklan'])->name('iklan.reorder');
+    Route::post('/iklan/{id}/toggle', [SettingController::class, 'toggleIklanActive'])->whereNumber('id')->name('iklan.toggle');
+    Route::get('/iklan/{id}', [SettingController::class, 'showIklan'])->whereNumber('id')->name('iklan.show');
+    Route::put('/iklan/{id}', [SettingController::class, 'updateIklanItem'])->whereNumber('id')->name('iklan.update-item');
+    Route::delete('/iklan/{id}', [SettingController::class, 'deleteIklanItem'])->whereNumber('id')->name('iklan.destroy');
+    Route::put('/iklan', [SettingController::class, 'updateIklan'])->name('iklan.update');
+
     // Media image upload for CMS modules
     Route::post('/media/upload', [MediaUploadController::class, 'upload'])->name('media.upload');
 

@@ -109,6 +109,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}/edit', [IsfPageController::class, 'edit'])->defaults('module', 'hot-news')->whereNumber('id')->name('cms.isf.hot-news.edit');
     });
 
+    Route::prefix('cms/iklan')->group(function () {
+        Route::get('/', [IsfPageController::class, 'index'])->defaults('module', 'iklan')->name('cms.isf.iklan.index');
+        Route::get('/create', [IsfPageController::class, 'create'])->defaults('module', 'iklan')->name('cms.isf.iklan.create');
+        Route::get('/{id}/edit', [IsfPageController::class, 'edit'])->defaults('module', 'iklan')->whereNumber('id')->name('cms.isf.iklan.edit');
+    });
+
     Route::get('/cms/pengaturan-halaman', fn () => redirect()->route('cms.isf.running-text.index'))
         ->name('cms.isf.pengaturan-halaman');
 

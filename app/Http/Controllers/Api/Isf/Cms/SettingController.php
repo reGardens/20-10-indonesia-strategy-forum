@@ -718,4 +718,655 @@ class SettingController extends Controller
             ]),
         ];
     }
+
+    /**
+     * Default konfigurasi slot iklan banner dan modal popup.
+     */
+    public static function defaultIklan(): array
+    {
+        return [
+            'banner' => [
+                'title' => 'Kemitraan Strategis & Solusi Riset Kebijakan ISF 2026',
+                'kicker' => 'SPONSOR RESMI',
+                'image_url' => 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80',
+                'target_url' => '/register',
+                'status' => 'terbit',
+                'start_date' => null,
+                'end_date' => null,
+            ],
+            'popup' => [
+                'is_active' => true,
+                'type' => 'banner',
+                'title' => 'Indonesia Strategy Forum — Annual Summit & Briefing 2026',
+                'image_url' => 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=80',
+                'video_url' => 'https://www.youtube.com/watch?v=aBxlmrCPjBA',
+                'video_duration' => 30,
+                'target_url' => '/register',
+                'status' => 'terbit',
+                'start_date' => null,
+                'end_date' => null,
+            ],
+        ];
+    }
+
+    /**
+     * Default list data iklan untuk tampilan tabel CMS.
+     */
+    public static function defaultIklanItems(): array
+    {
+        return [
+            [
+                'id' => 1,
+                'placement' => 'spanduk',
+                'type' => 'banner',
+                'title' => 'Kemitraan Strategis & Solusi Riset Kebijakan ISF 2026',
+                'kicker' => 'SPONSOR RESMI',
+                'image_url' => '/images/isf-ad-banner-default.jpg',
+                'video_url' => '',
+                'video_duration' => 30,
+                'interval_minutes' => 0,
+                'target_url' => '/register',
+                'status' => 'terbit',
+                'is_active' => true,
+                'order' => 1,
+                'start_date' => '2026-11-01',
+                'end_date' => '2026-11-15',
+            ],
+            [
+                'id' => 2,
+                'placement' => 'popup',
+                'type' => 'banner',
+                'title' => 'Indonesia Strategy Forum — Annual Summit & Briefing 2026',
+                'kicker' => 'SPONSOR RESMI',
+                'image_url' => '/images/isf-ad-popup-default.jpg',
+                'video_url' => '',
+                'video_duration' => 30,
+                'interval_minutes' => 0,
+                'target_url' => '/register',
+                'status' => 'terbit',
+                'is_active' => true,
+                'order' => 1,
+                'start_date' => '2026-11-05',
+                'end_date' => '2026-11-20',
+            ],
+            [
+                'id' => 3,
+                'placement' => 'popup',
+                'type' => 'video',
+                'title' => 'Briefing Video Kebijakan ISF 2026',
+                'kicker' => 'SPONSOR RESMI',
+                'image_url' => '',
+                'video_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                'video_duration' => 30,
+                'interval_minutes' => 10,
+                'target_url' => '/register',
+                'status' => 'terbit',
+                'is_active' => true,
+                'order' => 2,
+                'start_date' => '2026-11-10',
+                'end_date' => '2026-11-18',
+            ],
+            [
+                'id' => 4,
+                'placement' => 'spanduk',
+                'type' => 'banner',
+                'title' => 'Program Akselerasi Riset & Regulasi Industri Hijau',
+                'kicker' => 'MITRA ENERGI',
+                'image_url' => 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80',
+                'video_url' => '',
+                'video_duration' => 30,
+                'interval_minutes' => 0,
+                'target_url' => '/register',
+                'status' => 'draf',
+                'is_active' => false,
+                'order' => 2,
+                'start_date' => '2026-11-16',
+                'end_date' => '2026-11-30',
+            ],
+            [
+                'id' => 5,
+                'placement' => 'popup',
+                'type' => 'banner',
+                'title' => 'Peluncuran Buku Putih Transformasi Fiskal & Tata Kelola',
+                'kicker' => 'PUBLIKASI KHUSUS',
+                'image_url' => 'https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=800&q=80',
+                'video_url' => '',
+                'video_duration' => 30,
+                'interval_minutes' => 15,
+                'target_url' => '/register',
+                'status' => 'draf',
+                'is_active' => false,
+                'order' => 3,
+                'start_date' => '2026-12-01',
+                'end_date' => '2026-12-15',
+            ],
+        ];
+    }
+
+    /**
+     * Sinkronisasi data iklan items dengan konfigurasi iklan beranda.
+     */
+    protected function syncIklanSettings(array $items): void
+    {
+        Setting::put('iklan_items', array_values($items));
+
+        $defaults = self::defaultIklan();
+        $current = Setting::get('iklan', $defaults);
+
+        $firstBanner = collect($items)
+            ->filter(fn ($it) => in_array($it['placement'], ['spanduk', 'banner']))
+            ->where('is_active', true)
+            ->sortBy('order')
+            ->first();
+
+        $firstPopupBanner = collect($items)
+            ->filter(fn ($it) => in_array($it['placement'], ['popup_banner', 'popup']) && ($it['type'] ?? 'banner') === 'banner')
+            ->where('is_active', true)
+            ->sortBy('order')
+            ->first();
+
+        $firstPopupVideo = collect($items)
+            ->filter(fn ($it) => in_array($it['placement'], ['popup_video', 'popup_duration', 'popup']) && ($it['type'] ?? '') === 'video')
+            ->where('is_active', true)
+            ->sortBy('order')
+            ->first();
+
+        $firstPopup = collect($items)
+            ->filter(fn ($it) => in_array($it['placement'], ['popup_banner', 'popup_video', 'popup_duration', 'popup']))
+            ->where('is_active', true)
+            ->sortBy('order')
+            ->first();
+
+        $banner = $firstBanner ? [
+            'title' => $firstBanner['title'] ?? '',
+            'kicker' => $firstBanner['kicker'] ?? 'SPONSOR RESMI',
+            'image_url' => $firstBanner['image_url'] ?? '',
+            'target_url' => $firstBanner['target_url'] ?? '',
+            'status' => $firstBanner['status'] ?? 'terbit',
+            'is_active' => (bool) ($firstBanner['is_active'] ?? true),
+            'start_date' => $firstBanner['start_date'] ?? null,
+            'end_date' => $firstBanner['end_date'] ?? null,
+        ] : $current['banner'];
+
+        $popup = $firstPopup ? [
+            'is_active' => (bool) ($firstPopup['is_active'] ?? true),
+            'type' => $firstPopup['type'] ?? ($firstPopup['placement'] === 'popup_video' ? 'video' : 'banner'),
+            'title' => $firstPopup['title'] ?? '',
+            'image_url' => $firstPopup['image_url'] ?? '',
+            'video_url' => $firstPopup['video_url'] ?? '',
+            'video_duration' => (int) ($firstPopup['video_duration'] ?? 30),
+            'target_url' => $firstPopup['target_url'] ?? '',
+            'status' => $firstPopup['status'] ?? 'terbit',
+            'start_date' => $firstPopup['start_date'] ?? null,
+            'end_date' => $firstPopup['end_date'] ?? null,
+        ] : $current['popup'];
+
+        Setting::put('iklan', [
+            'banner' => $banner,
+            'popup' => $popup,
+        ]);
+    }
+
+    public static function normalizeCategory(string $placement, string $type = ''): string
+    {
+        if (in_array($placement, ['spanduk', 'banner'])) {
+            return 'spanduk';
+        }
+        if (in_array($placement, ['popup_duration', 'popup_video']) || ($placement === 'popup' && $type === 'video')) {
+            return 'popup_duration';
+        }
+        return 'popup';
+    }
+
+    /**
+     * GET /api/cms/iklan
+     */
+    public function getIklan(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $items = Setting::get('iklan_items');
+        if (!is_array($items) || count($items) < 5) {
+            $items = self::defaultIklanItems();
+            Setting::put('iklan_items', $items);
+            $this->syncIklanSettings($items);
+        } else {
+            $today = now()->format('Y-m-d');
+            $changed = false;
+
+            // Auto-heal data dummy lama jika ada
+            foreach ($items as &$it) {
+                if (($it['id'] ?? 0) === 1 && ($it['end_date'] ?? '') === '2026-11-25') {
+                    $it['end_date'] = '2026-11-15';
+                    $changed = true;
+                }
+                if (($it['id'] ?? 0) === 4 && ($it['start_date'] ?? '') === '2026-11-20') {
+                    $it['start_date'] = '2026-11-16';
+                    $changed = true;
+                }
+            }
+            unset($it);
+
+            // 1. Nonaktifkan iklan body yang tanggal akhirnya sudah lewat (Berakhir)
+            foreach ($items as &$it) {
+                if (in_array($it['placement'] ?? '', ['spanduk', 'banner'])) {
+                    if (!empty($it['end_date']) && $it['end_date'] < $today && !empty($it['is_active'])) {
+                        $it['is_active'] = false;
+                        $changed = true;
+                    }
+                }
+            }
+            unset($it);
+
+            // 2. Evaluasi iklan body aktif: hanya boleh maksimal 1 iklan body yang aktif
+            $activeBodyIndices = [];
+            foreach ($items as $idx => $it) {
+                if (in_array($it['placement'] ?? '', ['spanduk', 'banner']) && !empty($it['is_active'])) {
+                    $activeBodyIndices[] = $idx;
+                }
+            }
+
+            if (count($activeBodyIndices) > 1) {
+                // Cari iklan body yang saat ini dalam periode hari berjalan (start_date <= today <= end_date)
+                $keepActiveIdx = null;
+                foreach ($activeBodyIndices as $idx) {
+                    $s = $items[$idx]['start_date'] ?? null;
+                    $e = $items[$idx]['end_date'] ?? null;
+                    $inRange = true;
+                    if ($s && $s > $today) $inRange = false;
+                    if ($e && $e < $today) $inRange = false;
+                    if ($inRange) {
+                        $keepActiveIdx = $idx;
+                        break;
+                    }
+                }
+                if ($keepActiveIdx === null) {
+                    $keepActiveIdx = $activeBodyIndices[0];
+                }
+                foreach ($activeBodyIndices as $idx) {
+                    if ($idx !== $keepActiveIdx) {
+                        $items[$idx]['is_active'] = false;
+                        $changed = true;
+                    }
+                }
+            } elseif (count($activeBodyIndices) === 0) {
+                // 3. Jika TIDAK ada iklan body yang aktif, auto-aktifkan iklan terjadwal yang periodenya aktif hari ini
+                foreach ($items as &$it) {
+                    if (in_array($it['placement'] ?? '', ['spanduk', 'banner'])) {
+                        $s = $it['start_date'] ?? null;
+                        $e = $it['end_date'] ?? null;
+                        $inRange = true;
+                        if ($s && $s > $today) $inRange = false;
+                        if ($e && $e < $today) $inRange = false;
+
+                        if ($inRange && ($it['status'] ?? 'terbit') === 'terbit') {
+                            $it['is_active'] = true;
+                            $changed = true;
+                            break;
+                        }
+                    }
+                }
+                unset($it);
+            }
+
+            if ($changed) {
+                Setting::put('iklan_items', $items);
+                $this->syncIklanSettings($items);
+            }
+        }
+
+        $q = trim((string) $request->input('q', ''));
+        $status = (string) $request->input('status', '');
+
+        $filtered = $items;
+
+        if ($q !== '') {
+            $filtered = array_values(array_filter($filtered, function ($it) use ($q) {
+                return str_contains(strtolower($it['title'] ?? ''), strtolower($q))
+                    || str_contains(strtolower($it['kicker'] ?? ''), strtolower($q))
+                    || str_contains(strtolower($it['target_url'] ?? ''), strtolower($q));
+            }));
+        }
+
+        if ($status !== '') {
+            $filtered = array_values(array_filter($filtered, function ($it) use ($status) {
+                return ($it['status'] ?? 'terbit') === $status;
+            }));
+        }
+
+        usort($filtered, fn ($a, $b) => ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0)));
+
+        $defaults = self::defaultIklan();
+        $legacy = Setting::get('iklan', $defaults);
+
+        return response()->json([
+            'data' => $filtered,
+            'items' => $filtered,
+            'total' => count($filtered),
+            'banner' => $legacy['banner'] ?? $defaults['banner'],
+            'popup' => $legacy['popup'] ?? $defaults['popup'],
+        ]);
+    }
+
+    /**
+     * POST /api/cms/iklan
+     */
+    public function createIklan(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'placement' => 'required|string|in:spanduk,popup_banner,popup_video,popup_duration,banner,popup',
+            'type' => 'nullable|string|in:banner,video',
+            'kicker' => 'nullable|string|max:100',
+            'image_url' => 'nullable|string|max:1000',
+            'video_url' => 'nullable|string|max:1000',
+            'video_duration' => 'nullable|integer|min:5|max:300',
+            'interval_minutes' => 'nullable|integer|min:0|max:1440',
+            'target_url' => 'nullable|string|max:1000',
+            'status' => 'nullable|string|in:terbit,draf',
+            'is_active' => 'nullable|boolean',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+            'order' => 'nullable|integer',
+        ]);
+
+        $items = Setting::get('iklan_items', self::defaultIklanItems());
+        $nextId = (int) (collect($items)->max('id') ?? 0) + 1;
+        $maxOrder = (int) (collect($items)->max('order') ?? 0);
+        $order = isset($validated['order']) && $validated['order'] !== null && $validated['order'] !== ''
+            ? (int) $validated['order']
+            : ($maxOrder + 1);
+
+        $placement = $validated['placement'];
+        $type = $validated['type'] ?? (in_array($placement, ['popup_video', 'popup_duration']) ? 'video' : 'banner');
+
+        if (in_array($placement, ['spanduk', 'banner']) && !empty($validated['start_date'])) {
+            $newStart = $validated['start_date'];
+            $newEnd = $validated['end_date'] ?: '2099-12-31';
+
+            foreach ($items as $existing) {
+                if (!in_array($existing['placement'] ?? '', ['spanduk', 'banner'])) continue;
+                if (empty($existing['start_date'])) continue;
+
+                $existStart = $existing['start_date'];
+                $existEnd = $existing['end_date'] ?: '2099-12-31';
+
+                if ($newStart <= $existEnd && $newEnd >= $existStart) {
+                    return response()->json([
+                        'message' => 'Tanggal penayangan bertabrakan dengan jadwal iklan body lain "' . ($existing['title'] ?? 'Iklan') . '" (' . $existStart . ' s/d ' . ($existing['end_date'] ?: 'Seterusnya') . '). Iklan body tidak boleh memiliki tanggal tayang ganda.',
+                        'errors' => [
+                            'start_date' => ['Tanggal penayangan bertabrakan dengan jadwal iklan body lain.'],
+                        ],
+                    ], 422);
+                }
+            }
+        }
+
+        $newItemIsActive = isset($validated['is_active']) ? (bool) $validated['is_active'] : true;
+        if ($newItemIsActive && in_array($placement, ['spanduk', 'banner'])) {
+            foreach ($items as &$other) {
+                if (in_array($other['placement'] ?? '', ['spanduk', 'banner'])) {
+                    $other['is_active'] = false;
+                }
+            }
+            unset($other);
+        }
+
+        $newItem = [
+            'id' => $nextId,
+            'placement' => $placement,
+            'type' => $type,
+            'title' => $validated['title'],
+            'kicker' => $validated['kicker'] ?: 'SPONSOR RESMI',
+            'image_url' => $validated['image_url'] ?? '',
+            'video_url' => $validated['video_url'] ?? '',
+            'video_duration' => (int) ($validated['video_duration'] ?? 30),
+            'interval_minutes' => (int) ($validated['interval_minutes'] ?? 10),
+            'target_url' => $validated['target_url'] ?? '/register',
+            'status' => $validated['status'] ?: 'terbit',
+            'is_active' => $newItemIsActive,
+            'order' => $order,
+            'start_date' => $validated['start_date'] ?? null,
+            'end_date' => $validated['end_date'] ?? null,
+        ];
+
+        $items[] = $newItem;
+
+        usort($items, fn ($a, $b) => ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0)));
+        $this->syncIklanSettings($items);
+
+        return response()->json(['data' => $newItem, 'message' => 'Iklan berhasil ditambahkan.'], 201);
+    }
+
+    /**
+     * GET /api/cms/iklan/{id}
+     */
+    public function showIklan(int $id): JsonResponse
+    {
+        $items = Setting::get('iklan_items', self::defaultIklanItems());
+        $item = collect($items)->first(fn ($it) => (int) ($it['id'] ?? 0) === $id);
+
+        if (!$item) {
+            abort(404, 'Iklan tidak ditemukan.');
+        }
+
+        return response()->json(['data' => $item]);
+    }
+
+    /**
+     * PUT /api/cms/iklan/{id}
+     */
+    public function updateIklanItem(\Illuminate\Http\Request $request, int $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'placement' => 'required|string|in:spanduk,popup_banner,popup_video,popup_duration,banner,popup',
+            'type' => 'nullable|string|in:banner,video',
+            'kicker' => 'nullable|string|max:100',
+            'image_url' => 'nullable|string|max:1000',
+            'video_url' => 'nullable|string|max:1000',
+            'video_duration' => 'nullable|integer|min:5|max:300',
+            'interval_minutes' => 'nullable|integer|min:0|max:1440',
+            'target_url' => 'nullable|string|max:1000',
+            'status' => 'nullable|string|in:terbit,draf',
+            'is_active' => 'nullable|boolean',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+            'order' => 'nullable|integer',
+        ]);
+
+        $items = Setting::get('iklan_items', self::defaultIklanItems());
+        $index = collect($items)->search(fn ($it) => (int) ($it['id'] ?? 0) === $id);
+        if ($index === false) {
+            abort(404, 'Iklan tidak ditemukan.');
+        }
+
+        $placement = $validated['placement'];
+        $type = $validated['type'] ?? (in_array($placement, ['popup_video', 'popup_duration']) ? 'video' : 'banner');
+
+        if (in_array($placement, ['spanduk', 'banner']) && !empty($validated['start_date'])) {
+            $newStart = $validated['start_date'];
+            $newEnd = $validated['end_date'] ?: '2099-12-31';
+
+            foreach ($items as $existing) {
+                if ((int) ($existing['id'] ?? 0) === $id) continue;
+                if (!in_array($existing['placement'] ?? '', ['spanduk', 'banner'])) continue;
+                if (empty($existing['start_date'])) continue;
+
+                $existStart = $existing['start_date'];
+                $existEnd = $existing['end_date'] ?: '2099-12-31';
+
+                if ($newStart <= $existEnd && $newEnd >= $existStart) {
+                    return response()->json([
+                        'message' => 'Tanggal penayangan bertabrakan dengan jadwal iklan body lain "' . ($existing['title'] ?? 'Iklan') . '" (' . $existStart . ' s/d ' . ($existing['end_date'] ?: 'Seterusnya') . '). Iklan body tidak boleh memiliki tanggal tayang ganda.',
+                        'errors' => [
+                            'start_date' => ['Tanggal penayangan bertabrakan dengan jadwal iklan body lain.'],
+                        ],
+                    ], 422);
+                }
+            }
+        }
+
+        $updatedIsActive = isset($validated['is_active']) ? (bool) $validated['is_active'] : ($items[$index]['is_active'] ?? true);
+        if ($updatedIsActive && in_array($placement, ['spanduk', 'banner'])) {
+            foreach ($items as $idx => &$other) {
+                if ($idx !== $index && in_array($other['placement'] ?? '', ['spanduk', 'banner'])) {
+                    $other['is_active'] = false;
+                }
+            }
+            unset($other);
+        }
+
+        $items[$index] = array_merge($items[$index], [
+            'placement' => $placement,
+            'type' => $type,
+            'title' => $validated['title'],
+            'kicker' => $validated['kicker'] ?: 'SPONSOR RESMI',
+            'image_url' => $validated['image_url'] ?? '',
+            'video_url' => $validated['video_url'] ?? '',
+            'video_duration' => (int) ($validated['video_duration'] ?? ($items[$index]['video_duration'] ?? 30)),
+            'interval_minutes' => (int) ($validated['interval_minutes'] ?? ($items[$index]['interval_minutes'] ?? 10)),
+            'target_url' => $validated['target_url'] ?? '/register',
+            'status' => $validated['status'] ?: 'terbit',
+            'is_active' => $updatedIsActive,
+            'order' => isset($validated['order']) ? (int) $validated['order'] : ($items[$index]['order'] ?? 1),
+            'start_date' => $validated['start_date'] ?? null,
+            'end_date' => $validated['end_date'] ?? null,
+        ]);
+
+        usort($items, fn ($a, $b) => ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0)));
+        $this->syncIklanSettings($items);
+
+        return response()->json(['data' => $items[$index], 'message' => 'Iklan berhasil diperbarui.']);
+    }
+
+    /**
+     * DELETE /api/cms/iklan/{id}
+     */
+    public function deleteIklanItem(int $id): JsonResponse
+    {
+        $items = Setting::get('iklan_items', self::defaultIklanItems());
+        $items = array_values(array_filter($items, fn ($it) => (int) ($it['id'] ?? 0) !== $id));
+
+        foreach ($items as $idx => &$item) {
+            $item['order'] = $idx + 1;
+        }
+        unset($item);
+
+        $this->syncIklanSettings($items);
+
+        return response()->json(['message' => 'Iklan berhasil dihapus.']);
+    }
+
+    /**
+     * POST /api/cms/iklan/reorder
+     */
+    public function reorderIklan(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $payload = $request->input('items', []);
+        $items = Setting::get('iklan_items', self::defaultIklanItems());
+
+        if (is_array($payload) && !empty($payload)) {
+            $orderMap = [];
+            foreach ($payload as $idx => $entry) {
+                if (is_array($entry) && isset($entry['id'])) {
+                    $orderMap[(int) $entry['id']] = isset($entry['order']) ? (int) $entry['order'] : ($idx + 1);
+                }
+            }
+
+            foreach ($items as &$it) {
+                $id = (int) ($it['id'] ?? 0);
+                if (isset($orderMap[$id])) {
+                    $it['order'] = $orderMap[$id];
+                }
+            }
+            unset($it);
+
+            usort($items, fn ($a, $b) => ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0)));
+            $this->syncIklanSettings($items);
+        }
+
+        return response()->json(['message' => 'Urutan iklan berhasil diperbarui.']);
+    }
+
+    /**
+     * POST /api/cms/iklan/{id}/toggle
+     */
+    public function toggleIklanActive(int $id): JsonResponse
+    {
+        $items = Setting::get('iklan_items', self::defaultIklanItems());
+        $index = collect($items)->search(fn ($it) => (int) ($it['id'] ?? 0) === $id);
+        if ($index === false) {
+            abort(404, 'Iklan tidak ditemukan.');
+        }
+
+        $willBeActive = !($items[$index]['is_active'] ?? true);
+        $items[$index]['is_active'] = $willBeActive;
+
+        $placement = $items[$index]['placement'] ?? '';
+        if ($willBeActive && in_array($placement, ['spanduk', 'banner'])) {
+            foreach ($items as $idx => &$other) {
+                if ($idx !== $index && in_array($other['placement'] ?? '', ['spanduk', 'banner'])) {
+                    $other['is_active'] = false;
+                }
+            }
+            unset($other);
+        }
+
+        $this->syncIklanSettings($items);
+
+        return response()->json([
+            'data' => $items[$index],
+            'message' => 'Status aktif iklan berhasil diperbarui.',
+        ]);
+    }
+
+    /**
+     * PUT /api/cms/iklan
+     */
+    public function updateIklan(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'banner' => ['nullable', 'array'],
+            'banner.title' => ['nullable', 'string', 'max:255'],
+            'banner.kicker' => ['nullable', 'string', 'max:100'],
+            'banner.image_url' => ['nullable', 'string', 'max:1000'],
+            'banner.target_url' => ['nullable', 'string', 'max:1000'],
+            'banner.status' => ['nullable', 'string', 'in:terbit,draf'],
+            'banner.start_date' => ['nullable', 'date'],
+            'banner.end_date' => ['nullable', 'date'],
+
+            'popup' => ['nullable', 'array'],
+            'popup.is_active' => ['nullable', 'boolean'],
+            'popup.type' => ['nullable', 'string', 'in:banner,video'],
+            'popup.title' => ['nullable', 'string', 'max:255'],
+            'popup.image_url' => ['nullable', 'string', 'max:1000'],
+            'popup.video_url' => ['nullable', 'string', 'max:1000'],
+            'popup.video_duration' => ['nullable', 'integer', 'min:5', 'max:300'],
+            'popup.target_url' => ['nullable', 'string', 'max:1000'],
+            'popup.status' => ['nullable', 'string', 'in:terbit,draf'],
+            'popup.start_date' => ['nullable', 'date'],
+            'popup.end_date' => ['nullable', 'date'],
+        ]);
+
+        $current = Setting::get('iklan', self::defaultIklan());
+        $defaults = self::defaultIklan();
+
+        $banner = array_merge($defaults['banner'], $current['banner'] ?? [], $validated['banner'] ?? []);
+        $popup = array_merge($defaults['popup'], $current['popup'] ?? [], $validated['popup'] ?? []);
+
+        if (isset($validated['popup']['is_active'])) {
+            $popup['is_active'] = (bool) $validated['popup']['is_active'];
+        }
+
+        $data = [
+            'banner' => $banner,
+            'popup' => $popup,
+        ];
+
+        Setting::put('iklan', $data);
+
+        return response()->json([
+            'message' => 'Pengaturan iklan berhasil disimpan.',
+            'data' => $data,
+        ]);
+    }
 }

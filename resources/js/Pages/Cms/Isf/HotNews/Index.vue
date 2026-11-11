@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { Head, Link } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
-import { cmsResources, hotNewsService, errorMessage } from '@/api/services/isfCmsService'
+import { cmsResources, errorMessage } from '@/api/services/isfCmsService'
 import { alertSuccess, alertError, confirmDelete } from '@/Composables/useAlert'
 import StatusBadge from '@/Pages/Cms/components/shared/StatusBadge.vue'
 import LoadingIndicator from '@/Pages/Cms/components/shared/LoadingIndicator.vue'
@@ -24,7 +24,6 @@ defineOptions({ layout: CmsLayout })
 
 const items = ref([])
 const loading = ref(true)
-const syncing = ref(false)
 const loadError = ref('')
 const search = ref('')
 const statusFilter = ref('')
@@ -58,19 +57,6 @@ function onStatusChange(status) {
   loadData()
 }
 
-async function handleSyncArticles() {
-  syncing.value = true
-  try {
-    const res = await hotNewsService.syncArticles()
-    alertSuccess(`Sinkronisasi berhasil! ${res.synced_count ?? res.length ?? ''} artikel terbaru ditambahkan ke Hot News.`)
-    await loadData()
-  } catch (err) {
-    alertError(errorMessage(err, 'Gagal menyinkronkan artikel.'))
-  } finally {
-    syncing.value = false
-  }
-}
-
 async function handleDelete(item) {
   const confirmed = await confirmDelete(item.title || 'Item Hot News')
   if (!confirmed) return
@@ -102,22 +88,7 @@ onMounted(loadData)
           Kelola berita kilat interaktif yang tampil tepat pada bilah bawah banner sorotan Beranda publik ISF.
         </p>
       </div>
-      <div class="flex items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          :disabled="syncing"
-          @click="handleSyncArticles"
-          class="text-xs font-semibold h-9 px-3 shadow-sm inline-flex items-center gap-1.5"
-          title="Tarik 5 artikel terbit terbaru menjadi headline hot news"
-        >
-          <IconComponent
-            name="Refresh"
-            :size="15"
-            :class="['text-muted-foreground', syncing ? 'animate-spin' : '']"
-          />
-          <span>{{ syncing ? 'Menyinkronkan...' : 'Sinkronkan Artikel Terbit' }}</span>
-        </Button>
+      <div>
         <Link href="/cms/hot-news/create">
           <Button
             type="button"
@@ -131,8 +102,8 @@ onMounted(loadData)
     </div>
 
     <!-- Filters -->
-    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-      <div class="relative flex-1">
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <div class="relative w-full lg:w-80">
         <IconComponent
           name="Search"
           :size="16"
@@ -146,43 +117,46 @@ onMounted(loadData)
         />
       </div>
 
-      <div class="flex items-center gap-2">
-        <button
-          type="button"
-          :class="[
-            'px-3 py-1.5 text-xs font-medium rounded-md border transition-colors',
-            statusFilter === ''
-              ? 'bg-neutral-900 text-white border-neutral-900 dark:bg-white dark:text-neutral-900'
-              : 'bg-background text-muted-foreground border-border hover:bg-muted'
-          ]"
-          @click="onStatusChange('')"
-        >
-          Semua Status
-        </button>
-        <button
-          type="button"
-          :class="[
-            'px-3 py-1.5 text-xs font-medium rounded-md border transition-colors',
-            statusFilter === 'terbit'
-              ? 'bg-green-600 text-white border-green-600'
-              : 'bg-background text-muted-foreground border-border hover:bg-muted'
-          ]"
-          @click="onStatusChange('terbit')"
-        >
-          Terbit
-        </button>
-        <button
-          type="button"
-          :class="[
-            'px-3 py-1.5 text-xs font-medium rounded-md border transition-colors',
-            statusFilter === 'draf'
-              ? 'bg-amber-600 text-white border-amber-600'
-              : 'bg-background text-muted-foreground border-border hover:bg-muted'
-          ]"
-          @click="onStatusChange('draf')"
-        >
-          Draf
-        </button>
+      <div class="flex items-center gap-1.5 overflow-x-auto py-0.5">
+        <span class="text-xs text-muted-foreground whitespace-nowrap">Status:</span>
+        <div class="flex gap-1">
+          <button
+            type="button"
+            @click="onStatusChange('')"
+            :class="[
+              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors cursor-pointer',
+              statusFilter === ''
+                ? 'bg-red-600/20 text-red-400 border border-red-500/40'
+                : 'bg-card text-muted-foreground hover:bg-muted/40 border border-border'
+            ]"
+          >
+            Semua
+          </button>
+          <button
+            type="button"
+            @click="onStatusChange('terbit')"
+            :class="[
+              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors cursor-pointer',
+              statusFilter === 'terbit'
+                ? 'bg-red-600/20 text-red-400 border border-red-500/40'
+                : 'bg-card text-muted-foreground hover:bg-muted/40 border border-border'
+            ]"
+          >
+            Terbit
+          </button>
+          <button
+            type="button"
+            @click="onStatusChange('draf')"
+            :class="[
+              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors cursor-pointer',
+              statusFilter === 'draf'
+                ? 'bg-amber-600/20 text-amber-400 border border-amber-500/40'
+                : 'bg-card text-muted-foreground hover:bg-muted/40 border border-border'
+            ]"
+          >
+            Draf
+          </button>
+        </div>
       </div>
     </div>
 
