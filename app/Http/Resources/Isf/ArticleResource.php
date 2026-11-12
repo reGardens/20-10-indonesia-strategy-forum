@@ -15,7 +15,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class ArticleResource extends JsonResource
 {
     /**
-     * "Terkini" item {title, category, publishedAt, to?}.
+     * "Terkini" item {title, category, publishedAt, imageUrl, to?}.
      */
     public function toArray(Request $request): array
     {
@@ -23,6 +23,8 @@ class ArticleResource extends JsonResource
             'title' => $this->title,
             'category' => $this->category,
             'publishedAt' => $this->published_at?->format('Y-m-d'),
+            // Thumbnail untuk daftar Terkini (sidebar halaman Media); null bila belum ada gambar.
+            'imageUrl' => $this->image_url,
             ...($this->link_url ? ['to' => $this->link_url] : []),
         ];
     }
