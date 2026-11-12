@@ -55,7 +55,7 @@ const skor = computed(() => data.value?.skorSorotan);
 </script>
 
 <template>
-    <div class="isf-mobile-gutter mx-auto max-w-6xl px-4 py-8 sm:py-10">
+    <div class="isf-mobile-gutter w-full px-4 py-8 sm:px-6 sm:py-10 md:px-8 xl:px-12">
         <ArtikelSkeleton v-if="status === 'loading'" variant="tokoh" />
 
         <div v-else-if="status === 'error'" class="mx-auto max-w-3xl py-16">

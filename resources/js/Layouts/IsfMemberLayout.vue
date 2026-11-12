@@ -63,7 +63,7 @@ onBeforeUnmount(() => {
         <IsfHeader />
 
         <div
-            class="isf-mobile-gutter mx-auto flex w-full max-w-[1400px] flex-1 flex-col gap-6 px-4 py-6 lg:flex-row lg:px-6"
+            class="isf-mobile-gutter flex w-full flex-1 flex-col gap-6 px-4 py-6 sm:px-6 md:px-8 lg:flex-row xl:px-12"
         >
             <nav
                 aria-label="Menu anggota"
