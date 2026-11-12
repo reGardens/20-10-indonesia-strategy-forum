@@ -23,7 +23,7 @@ import {
     ref,
     watch,
 } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useIsfHeaderLayout } from "@/Composables/useIsfHeaderLayout";
 import { getAnggota } from "@/api/services/isfPublicService";
 import Input from "@/Components/UI/Input.vue";
@@ -44,6 +44,7 @@ const props = defineProps({
 });
 
 const route = useRoute();
+const router = useRouter();
 
 const isMemberRoute = computed(() => Boolean(route?.path?.startsWith("/anggota")));
 const memberUser = ref({ name: "" });
@@ -147,10 +148,20 @@ function updateSpacerHeight() {
 const searchOpen = ref(false);
 const searchInput = ref(null);
 const searchPending = ref(false);
+const searchQuery = ref("");
 const searchId = "isf-public-search";
 const menuOpen = ref(false);
 const menuId = "isf-menu-panel";
 const menuToggle = ref(null);
+
+const quickSuggestions = [
+    "RUU Perampasan Aset",
+    "Hilirisasi Nikel",
+    "Mahkamah Konstitusi",
+    "Transisi Energi Hijau",
+    "Prabowo Subianto",
+    "IKN Nusantara",
+];
 
 const NAV_LINKS = [
     { label: "Beranda", to: "/beranda", group: "rubrik" },
@@ -184,6 +195,18 @@ async function toggleSearch() {
 
 function submitSearch() {
     searchPending.value = true;
+    if (searchQuery.value && searchQuery.value.trim()) {
+        const q = searchQuery.value.trim();
+        searchOpen.value = false;
+        router.push({ path: "/pencarian", query: { q } });
+    }
+}
+
+function selectSuggestion(keyword) {
+    searchQuery.value = keyword;
+    searchPending.value = true;
+    searchOpen.value = false;
+    router.push({ path: "/pencarian", query: { q: keyword } });
 }
 
 function toggleMenu() {
@@ -540,22 +563,53 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
         <div
             v-show="searchOpen"
             :id="searchId"
-            class="w-full border-b border-neutral-800 bg-isf-navy text-white"
+            class="w-full border-b border-neutral-800 bg-isf-navy text-white shadow-xl"
         >
-            <form role="search" class="w-full flex flex-wrap items-end gap-3 px-4 py-3 sm:px-6 md:px-8 xl:px-12" @submit.prevent="submitSearch">
-                <div class="min-w-0 flex-1">
-                    <Label for="isf-search-input" class="sr-only">Cari di Indonesia Strategy Forum</Label>
-                    <Input
-                        id="isf-search-input"
-                        ref="searchInput"
-                        type="search"
-                        placeholder="Cari artikel, isu, atau tokoh..."
-                        class="font-space-grotesk focus-visible:ring-isf-red !bg-isf-navy border-neutral-700 text-white placeholder:text-neutral-400"
-                        style="background-color: #0B1220;"
-                    />
+            <form role="search" class="w-full flex flex-col gap-2.5 px-4 py-3 sm:px-6 md:px-8 xl:px-12" @submit.prevent="submitSearch">
+                <div class="flex items-center gap-3 w-full">
+                    <div class="min-w-0 flex-1 relative">
+                        <Label for="isf-search-input" class="sr-only">Cari di Indonesia Strategy Forum</Label>
+                        <Input
+                            id="isf-search-input"
+                            ref="searchInput"
+                            v-model="searchQuery"
+                            type="search"
+                            placeholder="Cari artikel, isu, tokoh, infografik, briefing, atau video..."
+                            class="font-space-grotesk focus-visible:ring-isf-red !bg-isf-navy border-neutral-700 text-white placeholder:text-neutral-400 w-full pr-8"
+                            style="background-color: #0B1220;"
+                        />
+                        <button
+                            v-if="searchQuery"
+                            type="button"
+                            @click="searchQuery = ''"
+                            class="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white"
+                            aria-label="Bersihkan kata kunci"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                    <button type="submit" :class="['rounded-md bg-isf-red px-4 py-2 font-space-grotesk text-[11px] font-bold uppercase tracking-[0.12em] text-white transition-colors hover:bg-isf-red-dark shadow-2xs shrink-0', focusRing]">Cari</button>
                 </div>
-                <button type="submit" :class="['rounded-md bg-isf-red px-4 py-2 font-space-grotesk text-[11px] font-bold uppercase tracking-[0.12em] text-white transition-colors hover:bg-isf-red-dark shadow-2xs', focusRing]">Cari</button>
-                <p v-if="searchPending" class="w-full text-sm font-space-grotesk text-neutral-400" aria-live="polite">Pencarian akan segera tersedia.</p>
+
+                <div class="flex flex-wrap items-center gap-2 pt-0.5 text-xs">
+                    <span class="text-neutral-400 font-ui text-[11px] font-semibold flex items-center gap-1.5 shrink-0">
+                        <span class="h-1.5 w-1.5 rounded-full bg-isf-red"></span>
+                        Tren Pencarian:
+                    </span>
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <button
+                            v-for="keyword in quickSuggestions"
+                            :key="keyword"
+                            type="button"
+                            @click="selectSuggestion(keyword)"
+                            class="rounded-full bg-white/10 hover:bg-isf-red hover:text-white text-neutral-300 px-2.5 py-0.5 text-[11px] font-ui transition-colors cursor-pointer"
+                        >
+                            {{ keyword }}
+                        </button>
+                    </div>
+                </div>
+
+                <p v-if="searchPending && !searchQuery?.trim()" class="w-full text-sm font-space-grotesk text-neutral-400" aria-live="polite">Pencarian akan segera tersedia.</p>
             </form>
         </div>
     </header>

@@ -19,6 +19,8 @@ Route::get('/register', [SpaController::class, 'index'])->name('isf.register');
 Route::get('/infografik', [SpaController::class, 'index'])->name('isf.infografik');
 Route::get('/tokoh/{slug}', [SpaController::class, 'index'])->name('isf.tokoh.show');
 Route::get('/media/{id}', [SpaController::class, 'index'])->name('isf.media.show');
+Route::get('/pencarian', [SpaController::class, 'index'])->name('isf.pencarian');
+Route::get('/search', [SpaController::class, 'index'])->name('isf.search');
 // ISF member portal (B2B) — NOT protected by auth yet (UI preview only)
 Route::get('/anggota', [SpaController::class, 'index'])->name('isf.anggota.dashboard');
 Route::get('/anggota/briefing/preview', [BriefingPreviewController::class, 'show'])->name('isf.anggota.briefing.preview');

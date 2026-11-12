@@ -55,9 +55,18 @@ export function getMediaDetail(id) {
   return get('/isf/media/' + encodeURIComponent(id))
 }
 
+export function searchContent(params = {}) {
+  const query = typeof params === 'string' ? { q: params } : params
+  const qs = new URLSearchParams()
+  if (query.q) qs.set('q', query.q)
+  if (query.type && query.type !== 'semua') qs.set('type', query.type)
+  const queryString = qs.toString()
+  return get('/isf/search' + (queryString ? `?${queryString}` : ''))
+}
+
 /** True when the error is an API "not found" (missing or unpublished content). */
 export function isNotFound(error) {
   return error?.response?.status === 404
 }
 
-export default { getBeranda, getTokoh, getAnggota, getInfografik, getMediaDetail, isNotFound }
+export default { getBeranda, getTokoh, getAnggota, getInfografik, getMediaDetail, searchContent, isNotFound }
