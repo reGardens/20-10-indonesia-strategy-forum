@@ -47,18 +47,53 @@ vi.mock("@/api/services/isfPublicService", async () => {
             recentArticles: [],
         };
     };
+    const searchContent = async (params = {}) => {
+        return {
+            query: typeof params === 'string' ? params : (params?.q || ''),
+            type: typeof params === 'object' ? (params?.type || 'semua') : 'semua',
+            total: 1,
+            counts: { semua: 1, artikel: 1, tokoh: 0, infografik: 0, briefing: 0, video: 0 },
+            data: [
+                {
+                    id: '1',
+                    type: 'artikel',
+                    typeLabel: 'Artikel',
+                    title: 'Apa yang berubah bagi pelaku usaha setelah KUHP baru berlaku',
+                    kicker: 'HUKUM',
+                    category: 'hukum',
+                    summary: 'KUHP nasional (UU No. 1 Tahun 2023) kini berlaku penuh.',
+                    snippet: '...berubah bagi pelaku usaha setelah KUHP baru berlaku...',
+                    publishedAt: '2026-10-15',
+                    author: 'Redaksi ISF',
+                    imageUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?q=80&w=800&auto=format&fit=crop',
+                    to: '/beranda',
+                    readingMinutes: 6,
+                },
+            ],
+            suggestions: {
+                Politik: ['RUU Perampasan Aset', 'Koalisi Partai', 'Reshuffle Kabinet'],
+                Hukum: ['Mahkamah Konstitusi', 'Mahkamah Agung'],
+                'Kebijakan & Ekonomi': ['Hilirisasi Nikel', 'Transisi Energi Hijau'],
+                Geopolitik: ['Diplomasi ASEAN', 'Aksesi OECD'],
+                Tokoh: ['Prabowo Subianto', 'Gibran Rakabuming'],
+            },
+            popularKeywords: ['RUU Perampasan Aset', 'Hilirisasi Nikel', 'Mahkamah Konstitusi'],
+        };
+    };
     const isNotFound = (error) => error?.response?.status === 404;
     return {
         getBeranda,
         getAnggota,
         getTokoh,
         getMediaDetail,
+        searchContent,
         isNotFound,
         default: {
             getBeranda,
             getAnggota,
             getTokoh,
             getMediaDetail,
+            searchContent,
             isNotFound,
         },
     };

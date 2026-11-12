@@ -209,6 +209,22 @@ const routes = [
     ]
   },
   {
+    path: '/pencarian',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-search',
+        component: () => import('../Pages/Isf/views/SearchView.vue'),
+        meta: { title: 'Pencarian Terpadu · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
+    path: '/search',
+    redirect: '/pencarian'
+  },
+  {
     path: '/anggota',
     component: IsfMemberLayout,
     children: [

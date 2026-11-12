@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 // Public ISF content API (read-only, published content only)
 Route::middleware(['web'])->prefix('isf')->group(function () {
     Route::get('/beranda', [PublicContentController::class, 'beranda'])->name('api.isf.beranda');
+    Route::get('/search', [PublicContentController::class, 'search'])->name('api.isf.search');
     Route::get('/tokoh/{slug}', [PublicContentController::class, 'tokoh'])->name('api.isf.tokoh');
     Route::get('/media/{id}', [PublicContentController::class, 'mediaDetail'])->name('api.isf.media');
     Route::get('/infografik', [PublicContentController::class, 'infografik'])->name('api.isf.infografik');
