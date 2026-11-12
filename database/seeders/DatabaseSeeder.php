@@ -58,5 +58,8 @@ class DatabaseSeeder extends Seeder
 
         // ISF public content (sample data shown on Beranda, Tokoh, Isu, Anggota, Email Briefing)
         $this->call(IsfContentSeeder::class);
+
+        // Gambar & konten tambahan agar halaman publik terlihat seperti situs nyata (aman diulang, tidak menimpa data CMS)
+        $this->call(IsfRealisticContentSeeder::class);
     }
 }
