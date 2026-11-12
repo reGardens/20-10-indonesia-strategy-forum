@@ -18,3 +18,4 @@ export { default as InfografikSkeleton } from './InfografikSkeleton.vue';
 export { default as IsfInsightSlider } from './IsfInsightSlider.vue';
 export { default as IsfHeader } from './IsfHeader.vue';
 export { default as IsfFooter } from './IsfFooter.vue';
+export { default as IsfFullLayerSections } from './IsfFullLayerSections.vue';

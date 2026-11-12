@@ -595,6 +595,29 @@
                 padding-right: 1rem;
             }
         }
+        /* Skeleton Beranda, Sosok, Anggota: 100% lebar dengan padding sama seperti header. */
+        .isf-initial-shell.isf-theme > .isf-skel-container.isf-skel-container--full,
+        .isf-initial-shell.isf-theme > .isf-skel-article.isf-skel-article--full,
+        .isf-initial-shell.isf-theme > .isf-skel-member-layout.isf-skel-member-layout--full {
+            max-width: none;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        @media (min-width: 640px) {
+            .isf-initial-shell.isf-theme > .isf-skel-container.isf-skel-container--full,
+            .isf-initial-shell.isf-theme > .isf-skel-article.isf-skel-article--full,
+            .isf-initial-shell.isf-theme > .isf-skel-member-layout.isf-skel-member-layout--full { padding-left: 1.5rem; padding-right: 1.5rem; }
+        }
+        @media (min-width: 768px) {
+            .isf-initial-shell.isf-theme > .isf-skel-container.isf-skel-container--full,
+            .isf-initial-shell.isf-theme > .isf-skel-article.isf-skel-article--full,
+            .isf-initial-shell.isf-theme > .isf-skel-member-layout.isf-skel-member-layout--full { padding-left: 2rem; padding-right: 2rem; }
+        }
+        @media (min-width: 1280px) {
+            .isf-initial-shell.isf-theme > .isf-skel-container.isf-skel-container--full,
+            .isf-initial-shell.isf-theme > .isf-skel-article.isf-skel-article--full,
+            .isf-initial-shell.isf-theme > .isf-skel-member-layout.isf-skel-member-layout--full { padding-left: 3rem; padding-right: 3rem; }
+        }
     </style>
     @vite(['resources/js/spa.js'])
 </head>
@@ -604,7 +627,7 @@
         <div class="isf-initial-shell isf-theme">
             @if (request()->is('anggota*'))
                 @include('partials.isf-member-masthead')
-                <div class="isf-skel-member-layout isf-skel-pulse" aria-busy="true"
+                <div class="isf-skel-member-layout isf-skel-member-layout--full isf-skel-pulse" aria-busy="true"
                     aria-label="Memuat umpan peringatan">
                     <nav class="isf-skel-member-nav" aria-label="Memuat menu anggota">
                         @for ($i = 0; $i < 5; $i++)
@@ -781,7 +804,7 @@
                 </main>
             @elseif(request()->is('tokoh/*'))
                 @include('partials.isf-masthead')
-                <main class="isf-skel-article isf-skel-pulse" aria-busy="true" aria-label="Memuat profil tokoh">
+                <main class="isf-skel-article isf-skel-article--full isf-skel-pulse" aria-busy="true" aria-label="Memuat profil tokoh">
                     <div class="isf-skel-el" style="width: 120px; height: 12px; margin-bottom: 16px;"></div>
                     <div class="isf-skel-el" style="width: 55%; height: 42px; margin-bottom: 32px;"></div>
                     <div class="isf-skel-article-grid">
@@ -831,7 +854,7 @@
                 </main>
             @else
                 @include('partials.isf-masthead')
-                <main class="isf-skel-container isf-skel-pulse" aria-busy="true" aria-label="Memuat beranda">
+                <main class="isf-skel-container isf-skel-container--full isf-skel-pulse" aria-busy="true" aria-label="Memuat beranda">
                     <div
                         style="display: flex; gap: 12px; align-items: center; border-bottom: 1px solid #d1d5db; padding-bottom: 10px;">
                         <div class="isf-skel-el" style="width: 64px; height: 14px;"></div>

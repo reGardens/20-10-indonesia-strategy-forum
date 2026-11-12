@@ -149,8 +149,8 @@ async function handleSubmit() {
 </script>
 
 <template>
-    <div class="min-h-[80vh] bg-neutral-50/60 py-10 px-4 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-2xl">
+    <div class="min-h-[80vh] bg-neutral-50/60 py-10 px-4 sm:px-6 md:px-8 xl:px-12">
+        <div class="w-full">
             <!-- Form Card Container -->
             <div class="rounded-xl border border-neutral-300 bg-white p-6 shadow-sm sm:p-10">
                 <!-- ============================================================= -->

@@ -21,6 +21,29 @@ html[data-isf-layout="row-3"] #isf-ssr-row3 { display: inline-flex !important; }
 html[data-isf-layout="row-3"] #isf-ssr-spacer { height: 130px; }
 html[data-isf-layout="row-3"] .isf-ssr-masthead { padding-top: 0.875rem; padding-bottom: 0.875rem; }
 
+/* ── isf-ssr-title-size: ukuran judul sejak paint pertama (salinan class Tailwind) ── */
+/* Row 1: ISF text-[2.4rem] sm:text-[3rem] */
+#isf-ssr-row1 > span:first-child { font-size: 2.4rem; }
+/* Row 3: ISF & judul text-[1.3rem]/[11px] sm:[1.65rem] md:[2.1rem] xl:[2.6rem] */
+#isf-ssr-row3 > span:first-child { font-size: 1.3rem; }
+#isf-ssr-row3 > span:last-child { font-size: 11px; text-transform: uppercase; }
+/* Row 2: ISF text-[4.5rem] sm:text-[6rem] md:text-[8rem] */
+#isf-ssr-row2 > span:first-child { font-size: 4.5rem; }
+@media (min-width: 640px) {
+    #isf-ssr-row1 > span:first-child { font-size: 3rem; }
+    #isf-ssr-row3 > span:first-child,
+    #isf-ssr-row3 > span:last-child { font-size: 1.65rem; text-transform: none; }
+    #isf-ssr-row2 > span:first-child { font-size: 6rem; }
+}
+@media (min-width: 768px) {
+    #isf-ssr-row3 > span:first-child,
+    #isf-ssr-row3 > span:last-child { font-size: 2.1rem; }
+    #isf-ssr-row2 > span:first-child { font-size: 8rem; }
+}
+@media (min-width: 1280px) {
+    #isf-ssr-row3 > span:first-child,
+    #isf-ssr-row3 > span:last-child { font-size: 2.6rem; }
+}
 /* ── Prevent initial shell from hiding metadata & action buttons on desktop ─ */
 .isf-ssr-side { display: none; }
 @media (min-width: 1024px) {

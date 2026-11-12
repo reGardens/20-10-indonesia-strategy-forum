@@ -11,6 +11,7 @@ import {
     IsfLink,
     IsfAdBanner,
     IsfAdPopupModal,
+    IsfFullLayerSections,
     SectionHeading,
     SimpleBarChart,
 } from "@/Components/Isf";
@@ -39,6 +40,7 @@ const hero = computed(() => data.value?.hero);
 const factBlocks = computed(() => data.value?.factBlocks || []);
 const chart = computed(() => data.value?.chart);
 const terkini = computed(() => data.value?.terkini || []);
+const sections = computed(() => data.value?.sections || {});
 const latestNews = computed(() => terkini.value.slice(0, 3));
 const activeMediaTab = ref('latest');
 
@@ -220,6 +222,9 @@ const linkClass =
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red focus-visible:ring-offset-2";
 // Inner padding of every module cell (Politico keeps text ~30px inside the rules).
 const cellPad = "lg:px-4 xl:px-[30px]";
+// Full-layer sections punya bingkai sendiri, jadi di mobile perlu padding kecil
+// supaya isi tidak menempel ke garis bingkai. Desktop tetap sama dengan cellPad.
+const sectionPad = "px-3 lg:px-4 xl:px-[30px]";
 </script>
 
 <template>
@@ -291,7 +296,7 @@ const cellPad = "lg:px-4 xl:px-[30px]";
         </div>
         <template v-else>
             <div
-                class="isf-mobile-gutter mx-auto w-full max-w-[1400px] px-4 pb-10 pt-2 lg:px-6 lg:pt-3"
+                class="isf-mobile-gutter w-full px-4 pb-10 pt-2 sm:px-6 md:px-8 lg:pt-3 xl:px-12"
             >
                 <!-- Sorotan (CMS topBar): Running text marquee -->
                 <div
@@ -360,7 +365,7 @@ const cellPad = "lg:px-4 xl:px-[30px]";
                         <article
                             v-if="hero"
                             aria-labelledby="hero-title"
-                            class="order-1 min-w-0 lg:order-2 lg:border-x lg:border-neutral-300"
+                            class="isf-accent-top order-1 min-w-0 lg:order-2 lg:border-x lg:border-neutral-300"
                         >
                             <div :class="['isf-col-head', cellPad]">
                                 <p class="isf-label">Top News</p>
@@ -573,16 +578,19 @@ const cellPad = "lg:px-4 xl:px-[30px]";
                             />
                         </aside>
                     </div>
+                </div>
 
-                    <!-- Below the fold: Infografik Terbaru (4-up ruled row) -->
-                    <section
-                        aria-labelledby="infografik-terbaru"
-                        class="border-t border-neutral-300"
-                    >
+                <!-- Below the fold: Infografik Terbaru (4-up ruled row), dengan bingkai sendiri
+                     seperti full-layer sections supaya border-nya terpisah dari modul di atas. -->
+                <section
+                    aria-labelledby="infografik-terbaru"
+                    class="isf-full-layer-section isf-full-layer-section--cream mt-12"
+                >
                         <SectionHeading
                             id="infografik-terbaru"
                             title="Infografik Terbaru"
-                            :class="cellPad"
+                            size="lg"
+                            :class="sectionPad"
                             ><template #action
                                 ><IsfLink
                                     to="/infografik"
@@ -594,56 +602,115 @@ const cellPad = "lg:px-4 xl:px-[30px]";
                                 ></template
                             ></SectionHeading
                         >
+                        <!-- Baris 1: 2 kartu utama, teks di atas gambar -->
                         <div
-                            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+                            :class="[
+                                'grid grid-cols-1 gap-4 pt-4 sm:grid-cols-2 lg:gap-5 lg:pt-5',
+                                sectionPad,
+                            ]"
                         >
                             <IsfLink
-                                v-for="item in infografik"
+                                v-for="item in infografik.slice(0, 2)"
                                 :key="item.title"
                                 :to="item.to || '#'"
                                 :class="[
                                     linkClass,
-                                    'group block min-w-0 border-b border-neutral-300 py-4 last:border-b-0 sm:px-3 lg:border-b-0 lg:border-r lg:px-4 lg:py-5 lg:last:border-r-0 xl:px-[30px]',
+                                    'group relative block min-w-0 overflow-hidden bg-isf-navy pr-0',
                                 ]"
+                                ><ImagePlaceholder
+                                    :label="item.alt"
+                                    :src="item.imageUrl || ''"
+                                    aspect="news"
+                                    bare
+                                    class="transition-transform duration-500 group-hover:scale-[1.03]"
+                                />
+                                <div
+                                    class="pointer-events-none absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/85 via-black/35 to-transparent p-4 sm:p-5"
+                                >
+                                    <p class="isf-byline !text-neutral-200">
+                                        <CategoryLabel
+                                            :category="item.category"
+                                            class="!text-[#f87171]"
+                                        />
+                                        /
+                                        <time :datetime="item.publishedAt">{{
+                                            formatDate(item.publishedAt)
+                                        }}</time>
+                                    </p>
+                                    <h3
+                                        class="isf-headline mt-1.5 text-[20px] leading-[1.15] !text-white sm:text-[24px] xl:text-[28px]"
+                                    >
+                                        {{ item.title }}
+                                    </h3>
+                                </div></IsfLink
+                            >
+                        </div>
+                        <!-- Baris 2: kartu kecil, gambar di atas, teks di bawah -->
+                        <div
+                            v-if="infografik.length > 2"
+                            :class="[
+                                'grid grid-cols-1 gap-4 py-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5 lg:py-5',
+                                sectionPad,
+                            ]"
+                        >
+                            <IsfLink
+                                v-for="item in infografik.slice(2)"
+                                :key="item.title"
+                                :to="item.to || '#'"
+                                :class="[linkClass, 'group block min-w-0']"
                                 ><ImagePlaceholder
                                     :label="item.alt"
                                     :src="item.imageUrl || ''"
                                     aspect="photo"
                                     bare
                                 />
-                                <CategoryLabel
-                                    :category="item.category"
-                                    class="mt-3"
-                                />
+                                <p class="isf-byline mt-3">
+                                    <CategoryLabel :category="item.category" />
+                                    /
+                                    <time :datetime="item.publishedAt">{{
+                                        formatDate(item.publishedAt)
+                                    }}</time>
+                                </p>
                                 <h3
                                     class="isf-headline mt-1 text-[17px] leading-[1.2] group-hover:text-isf-red xl:text-[19px]"
                                 >
                                     {{ item.title }}
-                                </h3>
-                                <time
-                                    :datetime="item.publishedAt"
-                                    class="isf-byline mt-2 block"
-                                    >{{ formatDate(item.publishedAt) }}</time
-                                ></IsfLink
+                                </h3></IsfLink
                             >
                         </div>
+                        <div
+                            v-else-if="infografik.length"
+                            class="pb-4 lg:pb-5"
+                        ></div>
                         <p
                             v-if="infografik.length === 0"
-                            :class="['py-4 text-sm text-neutral-600', cellPad]"
+                            :class="['py-4 text-sm text-neutral-600', sectionPad]"
                         >
                             Belum ada infografik.
                         </p>
                     </section>
 
-                    <!-- Below the fold: Pekan Ini (2-up ruled row) -->
-                    <section
-                        v-if="pekanIni.items.length"
-                        aria-labelledby="pekan-ini"
-                        class="border-t border-neutral-300"
-                    >
+
+                <!-- Below the fold: Full-Layer Sections (Politik, Hukum, Kebijakan, Video) ala EU Reporter.
+                     Dirender di luar bingkai modul di atas supaya border tiap section benar-benar terpisah. -->
+                <IsfFullLayerSections
+                    class="mt-12"
+                    :sections="sections"
+                    :media-sorotan="mediaSorotan"
+                    :cell-pad="sectionPad"
+                    :link-class="linkClass"
+                />
+
+                <!-- Below the fold: Pekan Ini (2-up ruled row), dengan bingkai sendiri -->
+                <div
+                    v-if="pekanIni.items.length"
+                    class="isf-full-layer-section isf-full-layer-section--cream mt-12"
+                >
+                    <section aria-labelledby="pekan-ini">
                         <SectionHeading
                             id="pekan-ini"
                             title="Pekan Ini"
+                            size="lg"
                             :class="cellPad"
                             ><template
                                 v-if="pekanIni.dateStart && pekanIni.dateEnd"

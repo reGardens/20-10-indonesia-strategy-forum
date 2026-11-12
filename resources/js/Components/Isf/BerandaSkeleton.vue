@@ -1,6 +1,6 @@
 <template>
     <div
-        class="isf-mobile-gutter mx-auto w-full max-w-[1400px] px-4 pb-10 pt-2 lg:px-6 lg:pt-3 animate-pulse"
+        class="isf-mobile-gutter w-full px-4 pb-10 pt-2 sm:px-6 md:px-8 lg:pt-3 xl:px-12 animate-pulse"
         aria-busy="true"
         aria-label="Memuat beranda"
     >

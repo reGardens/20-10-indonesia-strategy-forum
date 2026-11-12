@@ -22,7 +22,13 @@
     --radius: 0;
     color: hsl(var(--foreground));
     background-color: hsl(var(--background));
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    font-family:
+        "Inter",
+        -apple-system,
+        BlinkMacSystemFont,
+        "Helvetica Neue",
+        Arial,
+        sans-serif;
     width: 100%;
     max-width: 100%;
     min-width: 0;
@@ -50,7 +56,13 @@
 
 /* Clean sans for nav, labels, kickers and bylines (Helvetica Neue / Inter style). */
 .isf-theme :where(.font-ui) {
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    font-family:
+        "Inter",
+        -apple-system,
+        BlinkMacSystemFont,
+        "Helvetica Neue",
+        Arial,
+        sans-serif;
 }
 
 /* Bold Antiqua serif for headlines (Monocle / Plantin style). */
@@ -61,7 +73,13 @@
 }
 
 .isf-theme :where(.font-body) {
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    font-family:
+        "Inter",
+        -apple-system,
+        BlinkMacSystemFont,
+        "Helvetica Neue",
+        Arial,
+        sans-serif;
 }
 
 /* Shared Monocle/Politico-style editorial treatments. */
@@ -71,13 +89,19 @@
     display: inline-flex;
     align-items: center;
     gap: 0.625rem;
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    font-family:
+        "Inter",
+        -apple-system,
+        BlinkMacSystemFont,
+        "Helvetica Neue",
+        Arial,
+        sans-serif;
     font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.12em;
     line-height: 1.2;
     text-transform: uppercase;
-    color: #171717;
+    color: #0b1220;
 }
 
 .isf-theme .isf-label::before {
@@ -92,7 +116,13 @@
 /* Red category kicker above headlines ("HUKUM", like Politico's "EXCLUSIVE"). */
 .isf-theme .isf-kicker {
     display: inline-block;
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    font-family:
+        "Inter",
+        -apple-system,
+        BlinkMacSystemFont,
+        "Helvetica Neue",
+        Arial,
+        sans-serif;
     font-size: 0.6875rem;
     font-weight: 700;
     letter-spacing: 0.1em;
@@ -103,7 +133,13 @@
 
 /* Tiny gray uppercase byline: "OLEH <strong>NAMA</strong>". */
 .isf-theme .isf-byline {
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    font-family:
+        "Inter",
+        -apple-system,
+        BlinkMacSystemFont,
+        "Helvetica Neue",
+        Arial,
+        sans-serif;
     font-size: 0.6875rem;
     font-weight: 500;
     letter-spacing: 0.1em;
@@ -155,6 +191,143 @@
 .isf-theme .isf-editorial-compact {
     border-radius: 0;
     box-shadow: none;
+}
+
+/* Framed full-layer modules remain distinct without doubling the page frame. */
+.isf-theme .isf-full-layer-section {
+    overflow: hidden;
+    border: 1px solid #d4d4d4;
+    background-color: #fff;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+/*
+ * Tiap section punya bingkai sendiri, setinggi isinya.
+ * Jarak antar section tetap 3rem (48px) dan berada di luar border.
+ */
+.isf-theme .isf-full-layer-sections {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 3rem;
+    align-items: start;
+}
+
+.isf-theme .isf-full-layer-section--video {
+    /* Panel navy (lebih terang dari navy Hukum) supaya dua blok gelap tidak identik. */
+    background-color: #111a2e;
+    border-color: #111a2e;
+}
+
+/* ---- Varian warna identitas per section (60% putih/krem, 30% navy, 10% merah) ---- */
+
+/* Aksen merah 3px di sisi atas elemen (inset, tidak menambah tinggi / menumpuk border). */
+.isf-theme .isf-accent-top {
+    box-shadow: inset 0 3px 0 0 #e10600;
+}
+
+/*
+ * Judul section pilar (opsi 2): serif editorial besar, huruf normal, bulatan merah.
+ * Dipakai lewat SectionHeading size="lg"; label kolom kecil (.isf-label) tidak berubah.
+ */
+.isf-theme .isf-col-head--section {
+    min-height: 3.75rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+
+.isf-theme .isf-label.isf-label--section {
+    gap: 0.625rem;
+    font-family: "Newsreader", "Plantin", Georgia, serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    text-transform: none;
+}
+
+.isf-theme .isf-label.isf-label--section::before {
+    width: 0.75rem;
+    height: 0.75rem;
+}
+
+@media (min-width: 640px) {
+    .isf-theme .isf-label.isf-label--section {
+        font-size: 1.5rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .isf-theme .isf-label.isf-label--section {
+        font-size: 1.75rem;
+    }
+}
+
+/* Section Video berlatar gelap: judul putih. */
+.isf-theme .isf-full-layer-section--video .isf-label {
+    color: #fff;
+}
+
+/* Angka utama di blok Insight. */
+.isf-theme .isf-stat-value {
+    font-family: "Newsreader", "Plantin", Georgia, serif;
+    font-size: 2.25rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: #e10600;
+}
+
+/* Permukaan krem hangat (dipakai juga di baris Sorotan). */
+.isf-theme .isf-surface-cream,
+.isf-theme .isf-full-layer-section--cream {
+    background-color: #fbf9f4;
+}
+
+/* Pita aksen merah di sisi atas kotak section. */
+.isf-theme .isf-full-layer-section--accent {
+    border-top: 3px solid #e10600;
+}
+
+/* Section navy penuh: teks terang, aksen merah muda (sama seperti section Video). */
+.isf-theme .isf-full-layer-section--navy {
+    background-color: #0b1220;
+    border-color: #0b1220;
+    color: #fff;
+}
+
+.isf-theme .isf-full-layer-section--navy .isf-label,
+.isf-theme .isf-full-layer-section--navy .isf-headline {
+    color: #fff;
+}
+
+.isf-theme .isf-full-layer-section--navy .isf-col-head,
+.isf-theme .isf-full-layer-section--navy .border-neutral-200,
+.isf-theme .isf-full-layer-section--navy .border-neutral-300 {
+    border-color: rgb(255 255 255 / 0.1);
+}
+
+.isf-theme .isf-full-layer-section--navy .text-neutral-600 {
+    color: #d4d4d4;
+}
+
+.isf-theme .isf-full-layer-section--navy .isf-byline {
+    color: #a3a3a3;
+}
+
+.isf-theme .isf-full-layer-section--navy .isf-byline strong {
+    color: #d4d4d4;
+}
+
+.isf-theme .isf-full-layer-section--navy .bg-neutral-100 {
+    background-color: #111a2e;
+}
+
+/* Merah #E10600 kurang kontras untuk teks kecil di atas navy: pakai merah muda. */
+.isf-theme .isf-full-layer-section--navy .isf-kicker,
+.isf-theme .isf-full-layer-section--navy .text-isf-red,
+.isf-theme .isf-full-layer-section--navy .hover\:text-isf-red:hover,
+.isf-theme .isf-full-layer-section--navy .hover\:text-isf-red-dark:hover {
+    color: #f87171;
 }
 
 .isf-theme .isf-editorial-columns > * + * {
@@ -386,4 +559,3 @@
 .isf-marquee-track:hover {
     animation-play-state: paused;
 }
-

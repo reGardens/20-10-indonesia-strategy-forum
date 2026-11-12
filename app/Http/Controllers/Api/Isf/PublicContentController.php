@@ -378,6 +378,7 @@ class PublicContentController extends Controller
                     'dateEnd' => $settings['pekanIni']['dateEnd'] ?? null,
                     'items' => $pekanIniItems,
                 ],
+                'sections' => $this->getBerandaSections($request, $activeMedia),
             ];
         });
 
@@ -644,6 +645,315 @@ class PublicContentController extends Controller
     </p>
 </div>
 HTML;
+    }
+
+
+    /**
+     * Data struktur Full-Layer Sections (Politik, Hukum, Kebijakan, Video) ala EU Reporter.
+     */
+    private function getBerandaSections(Request $request, array $activeMedia): array
+    {
+        // 1. Politik
+        $politikArticles = Article::query()->terbit()
+            ->where('category', 'politik')
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
+            ->take(5)
+            ->get();
+
+        $politikLead = null;
+        $politikItems = [];
+
+        if ($politikArticles->isNotEmpty()) {
+            $first = $politikArticles->shift();
+            $politikLead = [
+                'id' => (string) $first->id,
+                'title' => $first->title,
+                'kicker' => 'ANALISIS POLITIK',
+                'category' => 'Politik',
+                'summary' => $first->summary ?: 'Telaah peta koalisi parlemen dan dinamika lobi antar-fraksi terkait prioritas legislasi nasional.',
+                'publishedAt' => $first->published_at ? $first->published_at->format('Y-m-d') : date('Y-m-d'),
+                'author' => [
+                    'name' => $first->author_name ?: 'Tim Riset Politik ISF',
+                    'role' => $first->author_role ?: 'Analis Parlemen',
+                ],
+                'readingMinutes' => $first->reading_minutes ?: 5,
+                'imageUrl' => $first->image_url ?: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?q=80&w=1200&auto=format&fit=crop',
+                'to' => $first->link_url ?: '/beranda',
+            ];
+
+            foreach ($politikArticles as $art) {
+                $politikItems[] = [
+                    'id' => (string) $art->id,
+                    'title' => $art->title,
+                    'kicker' => 'PARLEMEN',
+                    'publishedAt' => $art->published_at ? $art->published_at->format('Y-m-d') : date('Y-m-d'),
+                    'summary' => $art->summary ?: '',
+                    'imageUrl' => $art->image_url ?: '',
+                    'to' => $art->link_url ?: '/beranda',
+                ];
+            }
+        }
+
+        if (!$politikLead) {
+            $politikLead = [
+                'id' => 'pol-1',
+                'title' => 'Konsolidasi Parlemen: Peta Koalisi Pembahasan Agenda Legislasi Prioritas 2026',
+                'kicker' => 'ANALISIS POLITIK',
+                'category' => 'Politik',
+                'summary' => 'Dinamika lobi antar-fraksi di Senayan mengindikasikan pergeseran prioritas regulasi strategis. Simak telaah peta kekuatan koalisi dan implikasinya terhadap stabilitas kebijakan nasional.',
+                'publishedAt' => date('Y-m-d'),
+                'author' => [
+                    'name' => 'Tim Riset Politik ISF',
+                    'role' => 'Analis Parlemen & Tata Kelola',
+                ],
+                'readingMinutes' => 5,
+                'imageUrl' => 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?q=80&w=1200&auto=format&fit=crop',
+                'to' => '/beranda',
+            ];
+        }
+
+        if (count($politikItems) < 3) {
+            $defaultPolitik = [
+                [
+                    'id' => 'pol-sub-1',
+                    'title' => 'Penyusunan RUU Prioritas Komisi II: Uji Publik & Evaluasi Sistem Pemilu',
+                    'kicker' => 'KOMISI II DPR',
+                    'publishedAt' => date('Y-m-d', strtotime('-1 day')),
+                    'summary' => 'Harmonisasi draf revisi regulasi kepemiluan mulai memasuki tahap dengar pendapat bersama pakar tata negara.',
+                    'imageUrl' => 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?q=80&w=400&auto=format&fit=crop',
+                    'to' => '/beranda',
+                ],
+                [
+                    'id' => 'pol-sub-2',
+                    'title' => 'Dinamika Badan Anggaran: Harmonisasi Alokasi Dana Alokasi Khusus (DAK)',
+                    'kicker' => 'BADAN ANGGARAN',
+                    'publishedAt' => date('Y-m-d', strtotime('-2 days')),
+                    'summary' => 'Pemerintah dan Banggar sepakati formula pengawasan realisasi belanja transfer ke daerah berbasis kinerja.',
+                    'imageUrl' => 'https://images.unsplash.com/photo-1450133064473-71024230f91b?q=80&w=400&auto=format&fit=crop',
+                    'to' => '/beranda',
+                ],
+                [
+                    'id' => 'pol-sub-3',
+                    'title' => 'Studi Komparatif Tata Kelola Parlemen Regional: Catatan untuk Reformasi Birokrasi',
+                    'kicker' => 'KAJIAN REGIONAL',
+                    'publishedAt' => date('Y-m-d', strtotime('-3 days')),
+                    'summary' => 'Benchmarking efektivitas fungsi pengawasan legislatif di tingkat regional untuk meningkatkan akuntabilitas publik.',
+                    'imageUrl' => 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=400&auto=format&fit=crop',
+                    'to' => '/beranda',
+                ],
+            ];
+            foreach ($defaultPolitik as $def) {
+                if (count($politikItems) < 3) {
+                    $politikItems[] = $def;
+                }
+            }
+        }
+
+        // 2. Hukum (4-Column Ruled Grid ala EU Reporter)
+        $hukumArticles = Article::query()->terbit()
+            ->whereIn('category', ['hukum', 'ruu'])
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
+            ->take(4)
+            ->get();
+
+        $hukumItems = [];
+        foreach ($hukumArticles as $art) {
+            $hukumItems[] = [
+                'id' => (string) $art->id,
+                'title' => $art->title,
+                'kicker' => strtoupper($art->category ?: 'Hukum'),
+                'publishedAt' => $art->published_at ? $art->published_at->format('Y-m-d') : date('Y-m-d'),
+                'summary' => $art->summary ?: 'Ulasan mendalam aspek yuridis, kepatuhan tata kelola, dan konsekuensi hukum bagi pemangku kepentingan.',
+                'imageUrl' => $art->image_url ?: '',
+                'to' => $art->link_url ?: '/beranda',
+            ];
+        }
+
+        if (count($hukumItems) < 4) {
+            $defaultHukum = [
+                [
+                    'id' => 'huk-1',
+                    'title' => 'Pembaruan KUHP Nasional: Standardisasi Penilaian Risiko Pidana Korporasi',
+                    'kicker' => 'PIDANA KORPORASI',
+                    'publishedAt' => date('Y-m-d'),
+                    'summary' => 'Pedoman operasional kepatuhan bagi organ perseroan guna memitigasi risiko delik korporasi pasca berlakunya KUHP baru.',
+                    'imageUrl' => 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?q=80&w=800&auto=format&fit=crop',
+                    'to' => '/beranda',
+                ],
+                [
+                    'id' => 'huk-2',
+                    'title' => 'Yurisprudensi Mahkamah Agung tentang Batasan Tanggung Jawab Direksi',
+                    'kicker' => 'YURISPRUDENSI',
+                    'publishedAt' => date('Y-m-d', strtotime('-1 day')),
+                    'summary' => 'Analisis doktrin Business Judgment Rule dalam putusan perdata mutakhir yang memperkuat perlindungan itikad baik direksi.',
+                    'imageUrl' => 'https://images.unsplash.com/photo-1505664194779-8beaceb93744?q=80&w=800&auto=format&fit=crop',
+                    'to' => '/beranda',
+                ],
+                [
+                    'id' => 'huk-3',
+                    'title' => 'Pelacakan RUU Perampasan Aset: Harmonisasi Mekanisme Non-Conviction',
+                    'kicker' => 'LEGISLASI TRACKER',
+                    'publishedAt' => date('Y-m-d', strtotime('-2 days')),
+                    'summary' => 'Mekanisme non-conviction based asset forfeiture ditinjau dari prinsip perlindungan hak kepemilikan dan hukum acara peradilan.',
+                    'imageUrl' => 'https://images.unsplash.com/photo-1453728013993-6d66e9c9123a?q=80&w=800&auto=format&fit=crop',
+                    'to' => '/beranda',
+                ],
+                [
+                    'id' => 'huk-4',
+                    'title' => 'Kepatuhan Regulasi ESG & Audit Lingkungan: Kewajiban Pelaporan Emiten 2026',
+                    'kicker' => 'KEPATUHAN TATA KELOLA',
+                    'publishedAt' => date('Y-m-d', strtotime('-3 days')),
+                    'summary' => 'Regulator pertegas sanksi administratif bagi keterlambatan pengungkapan jejak karbon dan dampak sosial operasional industri.',
+                    'imageUrl' => 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800&auto=format&fit=crop',
+                    'to' => '/beranda',
+                ],
+            ];
+            foreach ($defaultHukum as $def) {
+                if (count($hukumItems) < 4) {
+                    $hukumItems[] = $def;
+                }
+            }
+        }
+
+        // 3. Kebijakan (3-Column Asymmetric Analytical Grid)
+        $kebijakanLead = [
+            'id' => 'kbj-lead-1',
+            'title' => 'Kebijakan Fiskal Hijau: Skema Insentif Pajak & Transisi Energi Bersih 2026',
+            'kicker' => 'ANALISIS FISKAL',
+            'category' => 'Kebijakan',
+            'summary' => 'Pemerintah mematangkan peta jalan insentif perpajakan bagi industri pelopor energi baru terbarukan sembari mempersiapkan pemberlakuan tarif pajak karbon secara bertahap.',
+            'imageUrl' => 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?q=80&w=1000&auto=format&fit=crop',
+            'publishedAt' => date('Y-m-d'),
+            'author' => 'Dr. Hendra Wijaya, Dewan Pakar Fiskal ISF',
+            'to' => '/beranda',
+        ];
+
+        $kebijakanImpact = [
+            'title' => 'Pemetaan Dampak Regulasi Moneter & Suku Bunga Sektoral',
+            'kicker' => 'DAMPAK REGULASI',
+            'publishedAt' => date('Y-m-d', strtotime('-1 day')),
+            'keyPoints' => [
+                'Likuiditas Perbankan: Ketahanan rasio kecukupan modal menghadapi volatilitas pasar global.',
+                'Sektor Riil & Manufaktur: Efisiensi beban pinjaman modal kerja industri berorientasi ekspor.',
+                'Iklim Investasi Domestik: Dampak stabilisasi nilai tukar terhadap arus penanaman modal asing.',
+            ],
+            'to' => '/beranda',
+        ];
+
+        $kebijakanBrief = [
+            'title' => 'Rekomendasi Kebijakan: Akselerasi Deregulasi Perizinan Berbasis Risiko',
+            'kicker' => 'POLICY BRIEF',
+            'publishedAt' => date('Y-m-d', strtotime('-2 days')),
+            'author' => 'Prof. Siti Rahmawati',
+            'authorRole' => 'Ketua Tim Kajian Deregulasi ISF',
+            'quote' => 'Kepastian regulasi dan simplifikasi birokrasi digital adalah pilar fundamental untuk mendongkrak daya saing investasi Indonesia.',
+            'to' => '/beranda',
+        ];
+
+        // 4. Video (Multimedia Hub)
+        $videoFeatured = null;
+        $videoPlaylist = [];
+
+        if (!empty($activeMedia)) {
+            $firstMedia = $activeMedia[0];
+            $videoFeatured = [
+                'id' => $firstMedia['id'] ?? 1,
+                'title' => $firstMedia['title'] ?? 'Diskusi Panel: Transformasi Digital dan Kepatuhan Regulasi',
+                'summary' => $firstMedia['summary'] ?? 'Kajian mendalam pakar regulator dan praktisi terkait kepatuhan tata kelola digital.',
+                'category' => 'Diskusi Strategis',
+                'duration' => '18:45',
+                'author' => $firstMedia['author'] ?? 'Dewan Pakar ISF',
+                'publishedAt' => $firstMedia['publishedAt'] ?? date('Y-m-d'),
+                'mediaUrl' => $firstMedia['mediaUrl'] ?? '',
+                'imageUrl' => !empty($firstMedia['imageUrl']) ? $firstMedia['imageUrl'] : 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=1200&auto=format&fit=crop',
+                'to' => '/media/' . ($firstMedia['id'] ?? 1),
+            ];
+
+            $otherMedia = array_slice($activeMedia, 1, 3);
+            foreach ($otherMedia as $idx => $m) {
+                $videoPlaylist[] = [
+                    'id' => $m['id'] ?? ($idx + 2),
+                    'title' => $m['title'] ?? 'Sorotan Kilat Media Analisis',
+                    'category' => $m['category'] ?? 'Video Analisis',
+                    'duration' => $idx === 0 ? '08:20' : ($idx === 1 ? '12:15' : '05:40'),
+                    'author' => $m['author'] ?? 'Redaksi ISF',
+                    'publishedAt' => $m['publishedAt'] ?? date('Y-m-d'),
+                    'imageUrl' => !empty($m['imageUrl']) ? $m['imageUrl'] : 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=600&auto=format&fit=crop',
+                    'to' => '/media/' . ($m['id'] ?? ($idx + 2)),
+                ];
+            }
+        }
+
+        if (!$videoFeatured) {
+            $videoFeatured = [
+                'id' => 1,
+                'title' => 'Diskusi Panel: Transformasi Digital dan Kepatuhan Regulasi Perbankan',
+                'summary' => 'Kajian mendalam regulator dan praktisi perbankan terkait kepatuhan tata kelola AI, perlindungan privasi data nasabah, dan kesiapan sistem pembayaran nasional.',
+                'category' => 'Diskusi Strategis',
+                'duration' => '18:45',
+                'author' => 'Dewan Pakar Ekonomi & Regulasi ISF',
+                'publishedAt' => date('Y-m-d'),
+                'mediaUrl' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                'imageUrl' => 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=1200&auto=format&fit=crop',
+                'to' => '/media/1',
+            ];
+        }
+
+        if (empty($videoPlaylist)) {
+            $videoPlaylist = [
+                [
+                    'id' => 2,
+                    'title' => 'Sorotan Kilat: Implikasi Regulasi Transisi Energi Terbarukan bagi Industri',
+                    'category' => 'Video Analisis',
+                    'duration' => '08:20',
+                    'author' => 'Divisi Riset ISF',
+                    'publishedAt' => date('Y-m-d', strtotime('-2 days')),
+                    'imageUrl' => 'https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?q=80&w=600&auto=format&fit=crop',
+                    'to' => '/media/2',
+                ],
+                [
+                    'id' => 3,
+                    'title' => 'Kupas Tuntas: RUU Perampasan Aset dan Efek Jeranya bagi Koruptor',
+                    'category' => 'Wawancara Eksklusif',
+                    'duration' => '14:10',
+                    'author' => 'Dewan Pakar Hukum ISF',
+                    'publishedAt' => date('Y-m-d', strtotime('-4 days')),
+                    'imageUrl' => 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=600&auto=format&fit=crop',
+                    'to' => '/media/3',
+                ],
+                [
+                    'id' => 4,
+                    'title' => 'Briefing Redaksi: Tinjauan Ketahanan Moneter & Kebijakan Likuiditas',
+                    'category' => 'Editorial Briefing',
+                    'duration' => '06:45',
+                    'author' => 'Redaksi ISF',
+                    'publishedAt' => date('Y-m-d', strtotime('-5 days')),
+                    'imageUrl' => 'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?q=80&w=600&auto=format&fit=crop',
+                    'to' => '/media/4',
+                ],
+            ];
+        }
+
+        return [
+            'politik' => [
+                'lead' => $politikLead,
+                'items' => $politikItems,
+            ],
+            'hukum' => [
+                'items' => $hukumItems,
+            ],
+            'kebijakan' => [
+                'lead' => $kebijakanLead,
+                'impact' => $kebijakanImpact,
+                'brief' => $kebijakanBrief,
+            ],
+            'video' => [
+                'featured' => $videoFeatured,
+                'playlist' => $videoPlaylist,
+            ],
+        ];
     }
 
     private function notFound(string $message): JsonResponse

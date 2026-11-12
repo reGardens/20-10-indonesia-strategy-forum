@@ -22,6 +22,12 @@ const props = defineProps({
         type: String,
         default: "",
     },
+    // 'sm' = label kolom kecil (default); 'lg' = judul section pilar gaya editorial besar.
+    size: {
+        type: String,
+        default: "sm",
+        validator: (value) => ["sm", "lg"].includes(value),
+    },
     // Applied to the heading element (for aria-labelledby on the parent section)
     id: {
         type: String,
@@ -35,14 +41,21 @@ const props = defineProps({
 
 const tag = computed(() => `h${props.level}`);
 const classes = computed(() =>
-    cn("isf-col-head justify-between text-left", props.class),
+    cn(
+        "isf-col-head justify-between text-left",
+        props.size === "lg" && "isf-col-head--section",
+        props.class,
+    ),
+);
+const titleClasses = computed(() =>
+    cn("isf-label", props.size === "lg" && "isf-label--section"),
 );
 </script>
 
 <template>
     <div :class="classes">
         <div class="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
-            <component :is="tag" :id="id" class="isf-label">{{
+            <component :is="tag" :id="id" :class="titleClasses">{{
                 title
             }}</component>
             <span v-if="eyebrow || $slots.eyebrow" class="isf-byline"

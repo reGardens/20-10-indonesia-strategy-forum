@@ -309,10 +309,6 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
                     <span aria-hidden="true" class="h-3.5 sm:h-4 w-px bg-white/25 shrink-0"></span>
                     {{ " " }}
                     <span class="text-[11px] sm:text-[12.5px] font-bold text-white font-space-grotesk tracking-[1.5px] uppercase shrink-0" style="letter-spacing:1.5px">Indonesia Strategy Forum</span>
-                    <span
-                        v-if="isMemberRoute"
-                        class="hidden sm:inline-block text-[10px] font-bold uppercase tracking-[0.15em] text-neutral-400 font-space-grotesk border-l border-white/20 pl-2 shrink-0"
-                    >Portal Anggota</span>
                 </div>
 
                 <!--
@@ -353,10 +349,6 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
                             class="text-[11px] sm:text-[1.65rem] md:text-[2.1rem] xl:text-[2.6rem] font-bold text-white font-space-grotesk leading-none uppercase sm:normal-case tracking-[1.5px] sm:tracking-[1px] md:tracking-[1.5px] xl:tracking-[2px] shrink-0"
                             style="letter-spacing:1.5px"
                         >Indonesia Strategy Forum</span>
-                        <span
-                            v-if="isMemberRoute"
-                            class="hidden md:inline-block ml-3 text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-400 font-space-grotesk border-l border-white/20 pl-3 shrink-0"
-                        >Portal Anggota</span>
                     </div>
 
                     <!-- Row 2 (default): ISF besar di atas, Indonesia Strategy Forum di bawah -->
