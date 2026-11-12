@@ -99,6 +99,9 @@ const activeBars = computed(() => {
         };
     });
 });
+
+// Angka utama per blok: nilai bar yang disorot merah (bar pertama).
+const topBar = computed(() => activeBars.value.find((bar) => bar.isTop) || null);
 </script>
 
 <template>
@@ -203,6 +206,18 @@ const activeBars = computed(() => {
 
             <!-- Horizontal Bar Chart -->
             <div class="mt-4 space-y-2 border-t border-neutral-200 pt-3.5">
+                <!-- Angka utama: satu angka merah besar per blok -->
+                <p
+                    v-if="topBar"
+                    data-testid="insight-top-stat"
+                    class="flex items-baseline gap-2 pb-1"
+                >
+                    <span class="isf-stat-value">{{ topBar.display }}</span>
+                    <span
+                        class="font-ui text-[11px] font-semibold uppercase tracking-[0.08em] text-neutral-600"
+                        >{{ topBar.label }}</span
+                    >
+                </p>
                 <div
                     v-for="bar in activeBars"
                     :key="bar.label"
