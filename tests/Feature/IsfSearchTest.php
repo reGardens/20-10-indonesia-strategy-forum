@@ -2,11 +2,32 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\Isf\Article;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 class IsfSearchTest extends TestCase
 {
+    // Sama dengan test lain: data uji dibuat di dalam transaksi lalu di-rollback,
+    // jadi test tidak bergantung pada isi database (CI kosong) dan tidak mengubah data lokal.
+    use DatabaseTransactions;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Article::create([
+            'slug' => 'uji-pencarian-kuhp-' . uniqid(),
+            'title' => 'Uji pencarian: dampak KUHP baru bagi pelaku usaha',
+            'category' => 'Hukum',
+            'summary' => 'Ringkasan uji tentang penerapan KUHP nasional.',
+            'body' => '<p>Isi uji pencarian terpadu.</p>',
+            'author_name' => 'Tim Uji',
+            'published_at' => now(),
+            'status' => 'terbit',
+        ]);
+    }
+
     public function test_search_endpoint_returns_suggestions_and_popular_keywords(): void
     {
         $response = $this->getJson('/api/isf/search');
@@ -55,6 +76,7 @@ class IsfSearchTest extends TestCase
         $json = $response->json();
         $this->assertSame('artikel', $json['type']);
 
+        $this->assertNotEmpty($json['data']);
         foreach ($json['data'] as $item) {
             $this->assertSame('artikel', $item['type']);
         }
