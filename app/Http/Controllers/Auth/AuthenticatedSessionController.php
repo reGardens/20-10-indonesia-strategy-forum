@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Support\SafeRedirect;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -32,7 +33,7 @@ class AuthenticatedSessionController extends Controller
      * Handle an incoming authentication request.
      * Validate credentials, attempt login, regenerate session, redirect to appropriate destination.
      */
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
+    public function store(Request $request): \Symfony\Component\HttpFoundation\Response
     {
         $request->validate([
             'email' => ['required', 'email'],
@@ -47,12 +48,14 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        $user = Auth::user();
-        if ($user && method_exists($user, 'hasRole') && $user->hasRole('super-admin')) {
-            return redirect()->route('cms.dashboard');
+        // Login dari halaman tokoh (tombol "Login untuk memberi ulasan", juga lewat register) membawa ?redirect=
+        // → kembali ke halaman tokoh. Inertia::location: tujuan adalah SPA blade (bukan halaman Inertia).
+        if ($target = SafeRedirect::path($request->input('redirect'))) {
+            return Inertia::location($target);
         }
 
-        return redirect('/beranda');
+        // Login murni dari /login atau /register → dashboard CMS (semua role; data difilter per akses fitur).
+        return redirect()->route('cms.dashboard');
     }
 
     /**
