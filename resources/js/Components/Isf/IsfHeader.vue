@@ -26,6 +26,9 @@ import {
 import { useRoute, useRouter } from "vue-router";
 import { useIsfHeaderLayout } from "@/Composables/useIsfHeaderLayout";
 import { getAnggota } from "@/api/services/isfPublicService";
+import { logout } from "@/api/services/isfSessionService";
+import { useIsfSession } from "@/Composables/useIsfSession";
+import IsfProfileMenu from "@/Components/Isf/IsfProfileMenu.vue";
 import Input from "@/Components/UI/Input.vue";
 import Label from "@/Components/UI/Label.vue";
 
@@ -62,8 +65,36 @@ async function loadMemberUser() {
     }
 }
 
+/* Status login sebenarnya (sesi Laravel). Login → avatar + nama + Keluar di semua halaman publik. */
+// State bersama (useIsfSession): langsung benar dari data server (window.__ISF_SESSION__),
+// tidak di-reset saat header di-mount ulang ketika pindah halaman → tidak ada "Login" sekejap.
+const { session: sessionUser, isLoggedIn, ensureLoaded: loadSession } = useIsfSession();
+const loggingOut = ref(false);
+
+async function handleLogout() {
+    if (loggingOut.value) return;
+    loggingOut.value = true;
+    try {
+        await logout();
+    } catch {
+        // tetap muat ulang: halaman akan menampilkan status sesi terbaru dari server
+    }
+    // Muat ulang penuh agar shell blade, header, dan data per-sesi (mis. form ulasan) ikut ter-reset.
+    window.location.reload();
+}
+
+// Nama yang tampil: user login → nama akunnya; tamu di /anggota → nama contoh (perilaku lama).
+const displayName = computed(() =>
+    isLoggedIn.value && sessionUser.value.name
+        ? sessionUser.value.name
+        : memberUser.value?.name || "Anindya Putri",
+);
+
 const memberInitials = computed(() => {
-    const name = memberUser.value?.name || (isMemberRoute.value ? "Anindya Putri" : "");
+    const name =
+        (isLoggedIn.value && sessionUser.value.name) ||
+        memberUser.value?.name ||
+        (isMemberRoute.value ? "Anindya Putri" : "");
     return (
         name
             .split(" ")
@@ -246,6 +277,7 @@ onMounted(() => {
     // Seed initial state without waiting for a scroll event
     handleScroll();
     loadMemberUser();
+    loadSession();
 });
 
 onBeforeUnmount(() => {
@@ -465,7 +497,7 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
 
                 <!-- Portal Anggota / Login / Search / Member Profile (kanan) -->
                 <div class="flex items-center gap-2 sm:gap-3 shrink-0 justify-end lg:min-w-[220px]">
-                    <template v-if="isMemberRoute || memberUser?.name">
+                    <template v-if="isLoggedIn || isMemberRoute || memberUser?.name">
                         <button
                             type="button"
                             aria-label="Notifikasi"
@@ -477,7 +509,17 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
                                 <path d="M9 17v1a3 3 0 0 0 6 0v-1" />
                             </svg>
                         </button>
+                        <!-- User login: ikon avatar saja; klik → menu berisi nama + Keluar (seperti CMS) -->
+                        <IsfProfileMenu
+                            v-if="isLoggedIn"
+                            :name="sessionUser.name"
+                            :initials="memberInitials"
+                            :logging-out="loggingOut"
+                            @logout="handleLogout"
+                        />
+                        <!-- Tamu di /anggota: pratinjau lama (nama contoh) tidak diubah -->
                         <router-link
+                            v-else
                             to="/anggota"
                             :class="['flex items-center gap-2 select-none group', focusRing]"
                             title="Portal Anggota"
@@ -490,7 +532,7 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
                             <span
                                 v-if="memberUser?.name || isMemberRoute"
                                 class="hidden max-w-[120px] truncate text-[12px] font-space-grotesk font-semibold text-neutral-200 group-hover:text-white transition-colors sm:inline"
-                            >{{ memberUser?.name || "Anindya Putri" }}</span>
+                            >{{ displayName }}</span>
                         </router-link>
                     </template>
                     <template v-else>
@@ -543,11 +585,21 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
                 </ul>
                 <div class="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-neutral-800 pt-3">
                     <div class="flex items-center gap-4">
-                        <template v-if="isMemberRoute || memberUser?.name">
+                        <template v-if="isLoggedIn || isMemberRoute || memberUser?.name">
                             <router-link to="/anggota" :class="['flex items-center gap-2 font-space-grotesk text-[12px] font-bold text-white hover:text-isf-red transition-colors', focusRing]">
                                 <span class="inline-flex h-6 w-6 items-center justify-center rounded-xs bg-isf-red text-[10px] font-bold text-white">{{ memberInitials }}</span>
-                                <span>{{ memberUser?.name || "Portal Anggota" }}</span>
+                                <span>{{ isLoggedIn && sessionUser.name ? sessionUser.name : memberUser?.name || "Portal Anggota" }}</span>
                             </router-link>
+                            <template v-if="isLoggedIn">
+                                <span class="text-neutral-500">|</span>
+                                <button
+                                    type="button"
+                                    :disabled="loggingOut"
+                                    data-testid="menu-logout"
+                                    :class="['font-space-grotesk text-[11px] font-bold uppercase tracking-[0.12em] hover:text-isf-red transition-colors disabled:opacity-50', focusRing]"
+                                    @click="handleLogout"
+                                >Keluar</button>
+                            </template>
                         </template>
                         <template v-else>
                             <router-link to="/anggota" :class="['font-space-grotesk text-[11px] font-bold uppercase tracking-[0.12em] hover:text-isf-red transition-colors', focusRing]">Portal Anggota</router-link>

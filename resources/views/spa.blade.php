@@ -9,7 +9,16 @@
     <link rel="icon" type="image/jpeg" href="{{ asset('images/isf/logo-isf.jpeg') }}">
     <link rel="apple-touch-icon" href="{{ asset('images/isf/logo-isf.jpeg') }}">
     <meta name="theme-color" content="#0B1220">
+    @php
+        // Status login untuk header publik (dibaca sinkron oleh useIsfSession) → tidak tampil "Login" sekejap. Hanya nama.
+        $isfSessionUser = auth()->user();
+        $isfSessionPayload = $isfSessionUser
+            ? ['authenticated' => true, 'name' => (string) $isfSessionUser->name]
+            : ['authenticated' => false, 'name' => null];
+    @endphp
     <script>
+        {{-- Directive json Blade meng-escape <, >, &, ' dan " → aman di dalam <script>. --}}
+        window.__ISF_SESSION__ = @json($isfSessionPayload);
         (function() {
             try {
                 var layout = localStorage.getItem('isf_header_layout') || 'two-rows';

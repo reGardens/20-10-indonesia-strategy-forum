@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\Isf\Cms\MediaUploadController;
 use App\Http\Controllers\Api\Isf\Cms\SettingController;
 use App\Http\Controllers\Api\Isf\Cms\TokohController;
 use App\Http\Controllers\Api\Isf\PublicContentController;
+use App\Http\Controllers\Api\Isf\SessionController;
 use App\Http\Controllers\Api\Isf\TokohReviewController;
 use App\Http\Controllers\Auth\IsfCaptchaController;
 use App\Http\Controllers\Auth\IsfRegisterController;
@@ -19,6 +20,8 @@ use Illuminate\Support\Facades\Route;
 // Public ISF content API (read-only, published content only)
 Route::middleware(['web'])->prefix('isf')->group(function () {
     Route::get('/beranda', [PublicContentController::class, 'beranda'])->name('api.isf.beranda');
+    // Status login untuk header publik (nama & inisial saja, no-store).
+    Route::get('/me', [SessionController::class, 'me'])->name('api.isf.me');
     Route::get('/search', [PublicContentController::class, 'search'])->name('api.isf.search');
     Route::get('/tokoh/{slug}', [PublicContentController::class, 'tokoh'])->name('api.isf.tokoh');
     // Indeks Tokoh (rating & ulasan): baca publik, kirim wajib login akun ISF.
