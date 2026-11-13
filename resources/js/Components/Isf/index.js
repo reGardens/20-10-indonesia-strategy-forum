@@ -22,3 +22,4 @@ export { default as IsfFullLayerSections } from './IsfFullLayerSections.vue';
 export { default as StarRating } from './StarRating.vue';
 export { default as RatingSummary } from './RatingSummary.vue';
 export { default as ReviewCard } from './ReviewCard.vue';
+export { default as IsfProfileMenu } from './IsfProfileMenu.vue';

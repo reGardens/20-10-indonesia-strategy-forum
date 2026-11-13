@@ -5,8 +5,13 @@
 @php
     // = isMemberRoute di IsfHeader.vue: /anggota* menampilkan label "Portal Anggota" + notifikasi & avatar (bukan Login).
     $isfMember = request()->is('anggota*');
+    // = isLoggedIn di IsfHeader.vue (GET /api/isf/me): user login → avatar + nama + Keluar di semua halaman.
+    $isfAuthUser = auth()->user();
+    $isfShowMemberArea = $isfMember || $isfAuthUser;
     $isfMemberName = 'Anindya Putri'; // fallback yang sama dengan IsfHeader.vue
-    if ($isfMember) {
+    if ($isfAuthUser && trim((string) $isfAuthUser->name) !== '') {
+        $isfMemberName = (string) $isfAuthUser->name;
+    } elseif ($isfMember) {
         try {
             $isfMemberName = (\App\Models\Isf\Setting::get('anggota', [])['name'] ?? '') ?: $isfMemberName;
         } catch (\Throwable $e) {
@@ -192,17 +197,22 @@ html[data-isf-layout="row-3"] .isf-ssr-masthead { padding-top: 0.875rem; padding
 
             <!-- Kelompok 3: Login, Search (kanan) -->
             <div class="flex items-center gap-2 sm:gap-3 shrink-0 justify-end lg:min-w-[220px]" style="display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0;">
-                @if ($isfMember)
+                @if ($isfShowMemberArea)
                 <button type="button" aria-label="Notifikasi" title="Notifikasi" class="inline-flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-md border border-white/10 text-white">
                     <svg class="h-4 w-4 sm:h-5 sm:w-5 shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true" focusable="false">
                         <path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6" />
                         <path d="M9 17v1a3 3 0 0 0 6 0v-1" />
                     </svg>
                 </button>
+                @if ($isfAuthUser)
+                {{-- = pemicu IsfProfileMenu (menu nama + Keluar dibuka oleh Vue) --}}
+                <button type="button" aria-haspopup="menu" aria-expanded="false" aria-label="Menu akun {{ $isfMemberName }}" title="{{ $isfMemberName }}" class="inline-flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xs bg-isf-red text-[11px] sm:text-xs font-bold text-white tracking-wider shadow-xs">{{ $isfMemberInitials }}</button>
+                @else
                 <a href="/anggota" class="flex items-center gap-2 select-none group" title="Portal Anggota">
                     <span class="inline-flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xs bg-isf-red text-[11px] sm:text-xs font-bold text-white tracking-wider shadow-xs" aria-hidden="true">{{ $isfMemberInitials }}</span>
                     <span class="hidden max-w-[120px] truncate text-[12px] font-space-grotesk font-semibold text-neutral-200 sm:inline">{{ $isfMemberName }}</span>
                 </a>
+                @endif
                 @else
                 <a href="/login" class="isf-ssr-login whitespace-nowrap font-space-grotesk text-[11px] md:text-[12px] font-bold uppercase tracking-[0.1em] rounded-md border border-white/30 px-2.5 py-1 text-white sm:inline shadow-2xs" style="font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.3); padding: 4px 10px; color: #ffffff; text-decoration: none;">Login</a>
                 @endif
