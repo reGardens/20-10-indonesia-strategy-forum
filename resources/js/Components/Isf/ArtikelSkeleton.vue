@@ -116,79 +116,59 @@ defineProps({
                 </div>
                 <div class="mt-4 h-10 w-3/5 rounded bg-neutral-300"></div>
             </header>
-            <div class="grid grid-cols-1 gap-8 lg:grid-cols-12">
-                <div class="space-y-10 lg:col-span-8">
-                    <section class="border border-neutral-300 p-6">
-                        <div
-                            class="grid grid-cols-1 gap-6 sm:grid-cols-[10rem_minmax(0,1fr)]"
-                        >
+            <div class="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:items-start">
+                <div class="grid grid-cols-1 gap-12 lg:col-span-8">
+                    <!-- Profil Tokoh -->
+                    <section class="border border-neutral-300 border-t-[3px] border-t-isf-red bg-white">
+                        <div class="flex h-[3.75rem] items-center border-b border-neutral-300 px-3 lg:px-4 xl:px-[30px]"><div class="h-6 w-40 rounded bg-neutral-300"></div></div>
+                        <div class="grid grid-cols-1 gap-6 px-3 py-5 sm:grid-cols-[10rem_minmax(0,1fr)] lg:px-4 lg:py-6 xl:px-[30px]">
                             <div class="aspect-[3/4] bg-neutral-200"></div>
                             <div class="space-y-5">
-                                <div
-                                    class="h-8 w-3/4 rounded bg-neutral-300"
-                                ></div>
-                                <div
-                                    class="h-4 w-full rounded bg-neutral-200"
-                                ></div>
-                                <div
-                                    class="grid grid-cols-2 gap-4 md:grid-cols-4"
-                                >
-                                    <div
-                                        v-for="n in 4"
-                                        :key="n"
-                                        class="h-16 border-y border-neutral-300 bg-neutral-100"
-                                    ></div>
+                                <div class="h-8 w-3/4 rounded bg-neutral-300"></div>
+                                <div class="h-4 w-full rounded bg-neutral-200"></div>
+                                <!-- 3 statistik Indeks Tokoh: Karya, Tingkat Kesukaan, Tidak Suka -->
+                                <div class="grid grid-cols-3 gap-4">
+                                    <div v-for="n in 3" :key="n" class="h-16 border-y border-neutral-300 bg-neutral-100"></div>
                                 </div>
-                                <div
-                                    class="space-y-3 border-y border-neutral-300 py-4"
-                                >
-                                    <div
-                                        class="h-4 w-32 rounded bg-neutral-300"
-                                    ></div>
-                                    <div
-                                        class="h-2 w-full bg-neutral-200"
-                                    ></div>
-                                    <div
-                                        class="h-3 w-4/5 rounded bg-neutral-200"
-                                    ></div>
+                                <div class="space-y-3 border-y border-neutral-300 py-4">
+                                    <div class="h-4 w-32 rounded bg-neutral-300"></div>
+                                    <div class="h-2 w-full bg-neutral-200"></div>
+                                    <div class="h-3 w-4/5 rounded bg-neutral-200"></div>
                                 </div>
-                                <div
-                                    class="h-9 w-32 rounded bg-neutral-300"
-                                ></div>
+                                <div class="h-9 w-32 rounded bg-neutral-300"></div>
                             </div>
                         </div>
                     </section>
-                    <section class="space-y-4 border-t border-neutral-300 pt-5">
-                        <div class="h-6 w-64 rounded bg-neutral-300"></div>
-                        <div class="overflow-hidden border border-neutral-300">
-                            <div
-                                class="h-10 border-b border-neutral-300 bg-neutral-100"
-                            ></div>
-                            <div
-                                v-for="n in 4"
-                                :key="n"
-                                class="h-12 border-b border-neutral-200 last:border-b-0"
-                            ></div>
+                    <!-- Indeks Tokoh -->
+                    <section class="border border-neutral-300 bg-[#fbf9f4]">
+                        <div class="flex h-[3.75rem] items-center border-b border-neutral-300 px-3 lg:px-4 xl:px-[30px]"><div class="h-6 w-64 rounded bg-neutral-300"></div></div>
+                        <div class="space-y-6 px-3 py-5 lg:px-4 lg:py-6 xl:px-[30px]">
+                            <div class="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-6">
+                                <div class="h-20 w-20 rounded bg-neutral-300"></div>
+                                <div class="space-y-2">
+                                    <div v-for="n in 5" :key="n" class="h-2 w-full rounded-full bg-neutral-200"></div>
+                                </div>
+                            </div>
+                            <div class="h-8 w-80 max-w-full rounded-lg bg-neutral-200"></div>
+                            <div class="overflow-hidden border border-neutral-300 bg-white">
+                                <div class="h-10 border-b border-neutral-300 bg-neutral-100"></div>
+                                <div v-for="n in 4" :key="n" class="h-12 border-b border-neutral-200 last:border-b-0"></div>
+                            </div>
                         </div>
-                        <div class="h-3 w-2/5 rounded bg-neutral-200"></div>
                     </section>
                 </div>
-                <aside
-                    class="space-y-7 border-t border-neutral-300 pt-6 lg:col-span-4 lg:border-l lg:pl-7"
-                >
-                    <section class="space-y-4">
-                        <div class="h-6 w-36 rounded bg-neutral-300"></div>
-                        <div
-                            v-for="n in 3"
-                            :key="n"
-                            class="h-5 border-b border-neutral-200 pb-3 rounded bg-neutral-200"
-                        ></div>
+                <aside class="grid grid-cols-1 gap-12 lg:col-span-4">
+                    <section class="border border-neutral-300 border-t-[3px] border-t-isf-red bg-white">
+                        <div class="flex h-[3.75rem] items-center border-b border-neutral-300 px-3 lg:px-4 xl:px-[30px]"><div class="h-6 w-36 rounded bg-neutral-300"></div></div>
+                        <div class="space-y-4 px-3 py-4 lg:px-4 xl:px-[30px]">
+                            <div v-for="n in 3" :key="n" class="h-5 rounded bg-neutral-200"></div>
+                        </div>
                     </section>
-                    <section class="space-y-4 border-t border-neutral-300 pt-5">
-                        <div class="h-6 w-36 rounded bg-neutral-300"></div>
-                        <div
-                            class="h-64 border border-neutral-300 bg-neutral-100"
-                        ></div>
+                    <section class="border border-neutral-300 bg-[#fbf9f4]">
+                        <div class="flex h-[3.75rem] items-center border-b border-neutral-300 px-3 lg:px-4 xl:px-[30px]"><div class="h-6 w-36 rounded bg-neutral-300"></div></div>
+                        <div class="px-3 py-5 lg:px-4 xl:px-[30px]">
+                            <div class="h-64 border border-neutral-300 bg-neutral-100"></div>
+                        </div>
                     </section>
                 </aside>
             </div>

@@ -19,3 +19,6 @@ export { default as IsfInsightSlider } from './IsfInsightSlider.vue';
 export { default as IsfHeader } from './IsfHeader.vue';
 export { default as IsfFooter } from './IsfFooter.vue';
 export { default as IsfFullLayerSections } from './IsfFullLayerSections.vue';
+export { default as StarRating } from './StarRating.vue';
+export { default as RatingSummary } from './RatingSummary.vue';
+export { default as ReviewCard } from './ReviewCard.vue';

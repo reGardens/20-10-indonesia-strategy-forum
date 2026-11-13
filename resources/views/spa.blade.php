@@ -185,8 +185,23 @@
             gap: 16px;
         }
 
-        .isf-skel-stat4 {
-            grid-template-columns: repeat(4, 1fr);
+        /* Tokoh: = .isf-full-layer-section (accent / cream) + SectionHeading size="lg"; jarak antar section 48px. */
+        .isf-skel-tokoh { gap: 48px; align-items: start; }
+        .isf-skel-stack { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 48px; }
+        .isf-skel-frame { border: 1px solid #d4d4d4; background: #fff; }
+        .isf-skel-frame--accent { border-top: 3px solid #e10600; }
+        .isf-skel-frame--cream { background: #fbf9f4; }
+        .isf-skel-sechead { display: flex; align-items: center; min-height: 3.75rem; border-bottom: 1px solid #d4d4d4; padding: 0 0.75rem; }
+        .isf-skel-framebody { padding: 20px 0.75rem; }
+        @media (min-width: 1024px) {
+            .isf-skel-sechead, .isf-skel-framebody { padding-left: 1rem; padding-right: 1rem; }
+        }
+        @media (min-width: 1280px) {
+            .isf-skel-sechead, .isf-skel-framebody { padding-left: 30px; padding-right: 30px; }
+        }
+
+        .isf-skel-stat3 {
+            grid-template-columns: repeat(3, 1fr);
             gap: 12px;
         }
 
@@ -194,10 +209,14 @@
 
             .isf-skel-subgrid,
             .isf-skel-identity,
-            .isf-skel-member-toolbar,
-            .isf-skel-stat4 {
+            .isf-skel-member-toolbar {
                 grid-template-columns: minmax(0, 1fr);
             }
+        }
+
+        /* .isf-skel-subgrid di atas jadi 1 kolom di mobile; statistik tetap 3 kolom seperti di Vue. */
+        .isf-skel-subgrid.isf-skel-stat3 {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
         }
 
         .isf-skel-pulse {
@@ -540,16 +559,19 @@
                 <main class="isf-skel-article isf-skel-article--full isf-skel-pulse" aria-busy="true" aria-label="Memuat profil tokoh">
                     <div class="isf-skel-el" style="width: 120px; height: 12px; margin-bottom: 16px;"></div>
                     <div class="isf-skel-el" style="width: 55%; height: 42px; margin-bottom: 32px;"></div>
-                    <div class="isf-skel-article-grid">
-                        <article>
-                            <section class="isf-skel-card">
-                                <div class="isf-skel-subgrid isf-skel-identity">
+                    {{-- = TokohProfileView: section berbingkai (accent/krem) + judul section besar, jarak 48px --}}
+                    <div class="isf-skel-article-grid isf-skel-tokoh">
+                        <article class="isf-skel-stack">
+                            <section class="isf-skel-frame isf-skel-frame--accent">
+                                <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 160px; height: 26px;"></div></div>
+                                <div class="isf-skel-subgrid isf-skel-identity isf-skel-framebody">
                                     <div class="isf-skel-el" style="height: 210px;"></div>
                                     <div class="isf-skel-lines">
                                         <div class="isf-skel-el" style="width: 75%; height: 32px;"></div>
                                         <div class="isf-skel-el" style="height: 16px;"></div>
-                                        <div class="isf-skel-subgrid isf-skel-stat4">
-                                            @for ($i = 0; $i < 4; $i++)
+                                        {{-- 3 statistik Indeks Tokoh: Karya, Tingkat Kesukaan, Tidak Suka --}}
+                                        <div class="isf-skel-subgrid isf-skel-stat3">
+                                            @for ($i = 0; $i < 3; $i++)
                                                 <div class="isf-skel-el" style="height: 64px;"></div>
                                             @endfor
                                         </div>
@@ -558,30 +580,36 @@
                                     </div>
                                 </div>
                             </section>
-                            <section style="border-top: 1px solid #d1d5db; margin-top: 40px; padding-top: 20px;">
-                                <div class="isf-skel-el" style="width: 270px; height: 26px; margin-bottom: 16px;">
-                                </div>
-                                <div class="isf-skel-rule">
-                                    @for ($i = 0; $i < 5; $i++)
-                                        <div class="isf-skel-el"
-                                            style="height: 48px; border-radius: 0; border-bottom: 1px solid #e5e7eb;">
-                                        </div>
-                                    @endfor
+                            <section class="isf-skel-frame isf-skel-frame--cream">
+                                <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 270px; height: 26px;"></div></div>
+                                <div class="isf-skel-framebody isf-skel-lines">
+                                    <div class="isf-skel-el" style="height: 84px;"></div>
+                                    <div class="isf-skel-el" style="width: min(320px, 100%); height: 32px;"></div>
+                                    <div class="isf-skel-rule">
+                                        @for ($i = 0; $i < 5; $i++)
+                                            <div class="isf-skel-el"
+                                                style="height: 48px; border-radius: 0; border-bottom: 1px solid #e5e7eb;">
+                                            </div>
+                                        @endfor
+                                    </div>
                                 </div>
                             </section>
                         </article>
-                        <aside style="border-top: 1px solid #d1d5db; padding-top: 24px;">
-                            <div class="isf-skel-el" style="width: 140px; height: 24px; margin-bottom: 16px;"></div>
-                            <div class="isf-skel-lines">
-                                @for ($i = 0; $i < 3; $i++)
-                                    <div class="isf-skel-el" style="height: 20px;"></div>
-                                @endfor
-                            </div>
-                            <div style="border-top: 1px solid #d1d5db; margin-top: 28px; padding-top: 20px;">
-                                <div class="isf-skel-el" style="width: 140px; height: 24px; margin-bottom: 16px;">
+                        <aside class="isf-skel-stack">
+                            <section class="isf-skel-frame isf-skel-frame--accent">
+                                <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 140px; height: 26px;"></div></div>
+                                <div class="isf-skel-framebody isf-skel-lines">
+                                    @for ($i = 0; $i < 3; $i++)
+                                        <div class="isf-skel-el" style="height: 20px;"></div>
+                                    @endfor
                                 </div>
-                                <div class="isf-skel-el" style="height: 260px;"></div>
-                            </div>
+                            </section>
+                            <section class="isf-skel-frame isf-skel-frame--cream">
+                                <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 140px; height: 26px;"></div></div>
+                                <div class="isf-skel-framebody">
+                                    <div class="isf-skel-el" style="height: 260px;"></div>
+                                </div>
+                            </section>
                         </aside>
                     </div>
                 </main>

@@ -6,6 +6,7 @@ import { useI18n } from "@/Composables/useI18n";
 import { useDarkMode } from "@/Composables/useDarkMode";
 import IconComponent from "@/Components/IconComponent/IconComponent.vue";
 import IsfLogo from "@/Components/Isf/IsfLogo.vue";
+import { currentRedirect, withRedirect } from "@/Utils/authRedirect";
 
 const { t, locale, toggleLocale } = useI18n();
 const { isDark, toggleDarkMode } = useDarkMode();
@@ -21,10 +22,16 @@ const isJustRegistered = computed(() => {
     return false;
 });
 
+// ?redirect=/tokoh/... (dari form ulasan Indeks Tokoh): diteruskan ke server (divalidasi ulang di sana)
+// dan ikut ke link "Daftar di sini". Tanpa parameter ini perilaku login tidak berubah.
+const redirectTo = currentRedirect();
+const registerHref = withRedirect("/register", redirectTo);
+
 const form = useForm({
     email: "",
     password: "",
     remember: false,
+    ...(redirectTo ? { redirect: redirectTo } : {}),
 });
 
 function submit() {
@@ -195,7 +202,7 @@ function submit() {
                     <div class="text-center text-sm text-muted-foreground pt-4 border-t border-border">
                         <span>{{ locale === "id" ? "Belum memiliki akun anggota?" : "Don't have a member account?" }}</span>
                         <a
-                            href="/register"
+                            :href="registerHref"
                             class="ml-1.5 font-semibold text-isf-red hover:underline underline-offset-4 transition-colors"
                         >
                             {{ locale === "id" ? "Daftar di sini" : "Register here" }}
