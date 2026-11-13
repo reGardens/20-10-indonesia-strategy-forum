@@ -18,7 +18,8 @@ class IsfRegisterController extends Controller
     /**
      * Handle an incoming registration request from the public landing page.
      *
-     * Saves user to database with default role 'user'.
+     * Saves user to database with default role 'member' (Issue #42).
+     * Nomor WhatsApp disimpan belum terverifikasi; verifikasi OTP dilakukan setelah login.
      */
     public function store(IsfRegisterRequest $request): JsonResponse
     {
@@ -32,16 +33,16 @@ class IsfRegisterController extends Controller
                     'name' => $fullName,
                     'first_name' => $validated['first_name'],
                     'last_name' => $validated['last_name'],
-                    'zip_code' => $validated['zip_code'],
+                    'whatsapp' => \App\Support\WhatsAppNumber::normalize($validated['whatsapp']),
                     'age_verified' => true,
                     'email' => strtolower($validated['email']),
                     'password' => Hash::make($validated['password']),
                 ]);
 
-                // Assign standard 'user' role safely with cache reset
+                // Assign standard 'member' role safely with cache reset
                 try {
                     app(PermissionRegistrar::class)->forgetCachedPermissions();
-                    $role = Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
+                    $role = Role::firstOrCreate(['name' => 'member', 'guard_name' => 'web']);
                     $newUser->assignRole($role);
                 } catch (Throwable $roleErr) {
                     Log::warning('Spatie role assignment warning: ' . $roleErr->getMessage());

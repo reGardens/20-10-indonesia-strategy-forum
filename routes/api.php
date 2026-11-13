@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\Isf\Cms\TokohController;
 use App\Http\Controllers\Api\Isf\PublicContentController;
 use App\Http\Controllers\Api\Isf\SessionController;
 use App\Http\Controllers\Api\Isf\TokohReviewController;
+use App\Http\Controllers\Api\Isf\WhatsAppVerificationController;
 use App\Http\Controllers\Auth\IsfCaptchaController;
 use App\Http\Controllers\Auth\IsfRegisterController;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,12 @@ Route::middleware(['web'])->prefix('isf')->group(function () {
     Route::get('/beranda', [PublicContentController::class, 'beranda'])->name('api.isf.beranda');
     // Status login untuk header publik (nama & inisial saja, no-store).
     Route::get('/me', [SessionController::class, 'me'])->name('api.isf.me');
+    // Nomor WhatsApp Aktif milik user login + verifikasi OTP (Issue #42).
+    Route::middleware(['auth', 'throttle:10,1'])->prefix('/me/whatsapp')->group(function () {
+        Route::put('/', [WhatsAppVerificationController::class, 'update'])->name('api.isf.me.whatsapp.update');
+        Route::post('/kirim-kode', [WhatsAppVerificationController::class, 'resend'])->name('api.isf.me.whatsapp.resend');
+        Route::post('/verifikasi', [WhatsAppVerificationController::class, 'verify'])->name('api.isf.me.whatsapp.verify');
+    });
     Route::get('/search', [PublicContentController::class, 'search'])->name('api.isf.search');
     Route::get('/tokoh/{slug}', [PublicContentController::class, 'tokoh'])->name('api.isf.tokoh');
     // Indeks Tokoh (rating & ulasan): baca publik, kirim wajib login akun ISF.

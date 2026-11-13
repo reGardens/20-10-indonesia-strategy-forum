@@ -61,7 +61,7 @@ function formatDate(dateString) {
                         <TableHead>{{ t("users.name") }}</TableHead>
                         <TableHead>{{ t("users.email") }}</TableHead>
                         <TableHead>{{ t("users.role") }}</TableHead>
-                        <TableHead>Kode Pos</TableHead>
+                        <TableHead>WhatsApp</TableHead>
                         <TableHead>{{ t("users.created_at") }}</TableHead>
                         <TableHead class="text-right">{{
                             t("common.actions")
@@ -103,7 +103,17 @@ function formatDate(dateString) {
                         <TableCell>
                             <span
                                 class="text-sm font-mono text-muted-foreground"
-                                >{{ user.zip_code || "-" }}</span
+                                >{{ user.whatsapp || "-" }}</span
+                            >
+                            <span
+                                v-if="user.whatsapp && $page.props.auth?.user?.whatsapp_verification"
+                                :class="[
+                                    'ml-2 inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold',
+                                    user.whatsapp_verified_at
+                                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300'
+                                        : 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
+                                ]"
+                                >{{ user.whatsapp_verified_at ? "Terverifikasi" : "Belum" }}</span
                             >
                         </TableCell>
                         <TableCell>{{ formatDate(user.created_at) }}</TableCell>

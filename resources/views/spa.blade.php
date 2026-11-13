@@ -10,10 +10,12 @@
     <link rel="apple-touch-icon" href="{{ asset('images/isf/logo-isf.jpeg') }}">
     <meta name="theme-color" content="#0B1220">
     @php
-        // Status login untuk header publik (dibaca sinkron oleh useIsfSession) → tidak tampil "Login" sekejap. Hanya nama.
+        // Status login untuk header publik (dibaca sinkron oleh useIsfSession) → tidak tampil "Login" sekejap.
+        // Hanya nama + status Nomor WhatsApp milik user sendiri (Issue #42).
         $isfSessionUser = auth()->user();
         $isfSessionPayload = $isfSessionUser
             ? ['authenticated' => true, 'name' => (string) $isfSessionUser->name]
+                + \App\Http\Controllers\Api\Isf\SessionController::whatsapp($isfSessionUser)
             : ['authenticated' => false, 'name' => null];
     @endphp
     <script>

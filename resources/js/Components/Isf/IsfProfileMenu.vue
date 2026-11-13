@@ -18,8 +18,19 @@ defineProps({
     name: { type: String, default: "" },
     initials: { type: String, default: "" },
     loggingOut: { type: Boolean, default: false },
+    /** Issue #42: tampilkan alert "perbarui Nomor WhatsApp" bila nomor kosong / belum terverifikasi. */
+    whatsappStatus: {
+        type: String,
+        default: "verified",
+        validator: (v) => ["verified", "unverified", "missing"].includes(v),
+    },
 });
-const emit = defineEmits(["logout"]);
+const emit = defineEmits(["logout", "verify-whatsapp"]);
+
+function onVerifyWhatsApp() {
+    setOpen(false);
+    emit("verify-whatsapp");
+}
 
 const open = ref(false);
 const triggerEl = ref(null);
@@ -143,9 +154,33 @@ const focusRing =
                     </p>
                 </div>
             </div>
-            <div class="p-1.5" role="none">
+            <!-- Issue #42: alert Nomor WhatsApp (kosong / belum terverifikasi) -->
+            <div
+                v-if="whatsappStatus !== 'verified'"
+                class="border-b border-white/10 px-4 py-3"
+                role="none"
+                data-testid="profile-menu-wa-alert"
+            >
+                <p class="flex items-start gap-2 text-[12px] leading-snug text-amber-300">
+                    <svg class="mt-0.5 h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true" focusable="false">
+                        <path d="M12 9v4" /><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z" /><path d="M12 16h.01" />
+                    </svg>
+                    <span>{{ whatsappStatus === "missing" ? "Nomor WhatsApp belum diisi." : "Nomor WhatsApp belum diverifikasi." }}</span>
+                </p>
                 <button
                     ref="firstItemEl"
+                    type="button"
+                    role="menuitem"
+                    data-testid="profile-menu-wa-action"
+                    class="mt-2 w-full cursor-pointer bg-isf-red px-2.5 py-1.5 font-space-grotesk text-[11px] font-bold uppercase tracking-[0.12em] text-white transition-colors hover:bg-isf-red-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                    @click="onVerifyWhatsApp"
+                >
+                    {{ whatsappStatus === "missing" ? "Tambahkan nomor" : "Verifikasi sekarang" }}
+                </button>
+            </div>
+            <div class="p-1.5" role="none">
+                <button
+                    :ref="(el) => { if (whatsappStatus === 'verified') firstItemEl = el; }"
                     type="button"
                     role="menuitem"
                     :disabled="loggingOut"

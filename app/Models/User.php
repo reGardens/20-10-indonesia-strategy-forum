@@ -29,6 +29,12 @@ class User extends Authenticatable
     ];
 
     /**
+     * Role yang bisa dipilih di Kelola Pengguna (Issue #42: user → member, tambah admin).
+     * Semua role selain super-admin aksesnya mengikuti ACL fitur.
+     */
+    public const ASSIGNABLE_ROLES = ['super-admin', 'admin', 'member'];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
@@ -37,7 +43,7 @@ class User extends Authenticatable
         'name',
         'first_name',
         'last_name',
-        'zip_code',
+        'whatsapp',
         'age_verified',
         'email',
         'password',
@@ -66,6 +72,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'allowed_features' => 'array',
             'age_verified' => 'boolean',
+            'whatsapp_verified_at' => 'datetime',
         ];
     }
 

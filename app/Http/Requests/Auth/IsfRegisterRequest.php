@@ -26,7 +26,8 @@ class IsfRegisterRequest extends FormRequest
             // General Information (Strict Politico match)
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
-            'zip_code' => ['required', 'string', 'max:10'],
+            // Nomor WhatsApp Aktif (Issue #42, pengganti kode pos); format dicek di withValidator.
+            'whatsapp' => ['required', 'string', 'max:25'],
             'age_requirement' => ['required', 'accepted'],
 
             // Login Information (Strict Politico match)
@@ -51,6 +52,10 @@ class IsfRegisterRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
+            if ($this->filled('whatsapp') && ! \App\Support\WhatsAppNumber::isValid($this->input('whatsapp'))) {
+                $validator->errors()->add('whatsapp', 'Gunakan nomor seluler Indonesia aktif, contoh 0812xxxxxxxx.');
+            }
+
             // Allow testing bypass with 'TEST_CAPTCHA'
             if (app()->environment('testing') && $this->input('captcha_answer') === 'TEST_CAPTCHA') {
                 return;
@@ -103,7 +108,7 @@ class IsfRegisterRequest extends FormRequest
         return [
             'first_name.required' => 'Nama depan wajib diisi.',
             'last_name.required' => 'Nama belakang wajib diisi.',
-            'zip_code.required' => 'Kode pos wajib diisi.',
+            'whatsapp.required' => 'Nomor WhatsApp wajib diisi.',
             'age_requirement.required' => 'Konfirmasi usia wajib dicentang.',
             'age_requirement.accepted' => 'Anda harus menyatakan berusia 18 tahun atau lebih.',
             'email.required' => 'Alamat email wajib diisi.',

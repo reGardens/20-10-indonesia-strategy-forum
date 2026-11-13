@@ -29,6 +29,7 @@ import { getAnggota } from "@/api/services/isfPublicService";
 import { logout } from "@/api/services/isfSessionService";
 import { useIsfSession } from "@/Composables/useIsfSession";
 import IsfProfileMenu from "@/Components/Isf/IsfProfileMenu.vue";
+import WhatsAppVerifyDialog from "@/Components/Isf/WhatsAppVerifyDialog.vue";
 import Input from "@/Components/UI/Input.vue";
 import Label from "@/Components/UI/Label.vue";
 
@@ -68,7 +69,16 @@ async function loadMemberUser() {
 /* Status login sebenarnya (sesi Laravel). Login → avatar + nama + Keluar di semua halaman publik. */
 // State bersama (useIsfSession): langsung benar dari data server (window.__ISF_SESSION__),
 // tidak di-reset saat header di-mount ulang ketika pindah halaman → tidak ada "Login" sekejap.
-const { session: sessionUser, isLoggedIn, ensureLoaded: loadSession } = useIsfSession();
+const { session: sessionUser, isLoggedIn, ensureLoaded: loadSession, updateWhatsApp } = useIsfSession();
+
+// Issue #42: alert & dialog "perbarui Nomor WhatsApp" untuk user login yang nomornya kosong/belum terverifikasi.
+const whatsappStatus = computed(() => {
+    if (!sessionUser.value.whatsapp) return "missing";
+    // Verifikasi OTP dimatikan (default) → nomor terisi dianggap cukup, tidak ada alert.
+    if (!sessionUser.value.whatsappVerification) return "verified";
+    return sessionUser.value.whatsappVerified ? "verified" : "unverified";
+});
+const waDialogOpen = ref(false);
 const loggingOut = ref(false);
 
 async function handleLogout() {
@@ -515,7 +525,9 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
                             :name="sessionUser.name"
                             :initials="memberInitials"
                             :logging-out="loggingOut"
+                            :whatsapp-status="whatsappStatus"
                             @logout="handleLogout"
+                            @verify-whatsapp="waDialogOpen = true"
                         />
                         <!-- Tamu di /anggota: pratinjau lama (nama contoh) tidak diubah -->
                         <router-link
@@ -664,6 +676,14 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
                 <p v-if="searchPending && !searchQuery?.trim()" class="w-full text-sm font-space-grotesk text-neutral-400" aria-live="polite">Pencarian akan segera tersedia.</p>
             </form>
         </div>
+        <WhatsAppVerifyDialog
+            v-if="isLoggedIn"
+            v-model:open="waDialogOpen"
+            :whatsapp="sessionUser.whatsapp"
+            :verified="sessionUser.whatsappVerified"
+            :verification="sessionUser.whatsappVerification"
+            @updated="updateWhatsApp"
+        />
     </header>
 </template>
 

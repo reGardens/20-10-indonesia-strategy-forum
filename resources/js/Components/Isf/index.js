@@ -23,3 +23,4 @@ export { default as StarRating } from './StarRating.vue';
 export { default as RatingSummary } from './RatingSummary.vue';
 export { default as ReviewCard } from './ReviewCard.vue';
 export { default as IsfProfileMenu } from './IsfProfileMenu.vue';
+export { default as WhatsAppVerifyDialog } from './WhatsAppVerifyDialog.vue';

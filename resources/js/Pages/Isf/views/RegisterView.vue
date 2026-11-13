@@ -17,7 +17,7 @@ const loginRegisteredHref = withRedirect("/login?registered=true", redirectTo);
 const form = reactive({
     first_name: "",
     last_name: "",
-    zip_code: "",
+    whatsapp: "",
     age_requirement: false,
     email: "",
     password: "",
@@ -94,7 +94,11 @@ async function handleSubmit() {
     const newErrors = {};
     if (!form.first_name.trim()) newErrors.first_name = ["Nama depan wajib diisi."];
     if (!form.last_name.trim()) newErrors.last_name = ["Nama belakang wajib diisi."];
-    if (!form.zip_code.trim()) newErrors.zip_code = ["Kode pos wajib diisi."];
+    // Nomor WhatsApp Aktif (Issue #42, pengganti kode pos): 08xx / +628xx / 628xx
+    const wa = form.whatsapp.replace(/[\s-]/g, "");
+    if (!wa) newErrors.whatsapp = ["Nomor WhatsApp wajib diisi."];
+    else if (!/^(\+?62|0)8[1-9][0-9]{6,11}$/.test(wa))
+        newErrors.whatsapp = ["Gunakan nomor seluler Indonesia aktif, contoh 0812xxxxxxxx."];
     if (!form.age_requirement) newErrors.age_requirement = ["Anda harus menyatakan berusia 18 tahun atau lebih."];
     if (!form.email.trim()) newErrors.email = ["Alamat email wajib diisi."];
     if (!form.password) newErrors.password = ["Kata sandi wajib diisi."];
@@ -121,7 +125,7 @@ async function handleSubmit() {
         const response = await http.post("/isf/register", {
             first_name: form.first_name.trim(),
             last_name: form.last_name.trim(),
-            zip_code: form.zip_code.trim(),
+            whatsapp: form.whatsapp.trim(),
             age_requirement: form.age_requirement,
             email: form.email.trim().toLowerCase(),
             password: form.password,
@@ -279,24 +283,30 @@ async function handleSubmit() {
                         </div>
 
                         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 items-start pt-1">
-                            <!-- Zip Code -->
+                            <!-- Nomor WhatsApp Aktif (Issue #42, pengganti Zip Code) -->
                             <div class="space-y-1.5">
-                                <Label for="registerZip" class="text-neutral-800 text-xs sm:text-sm font-semibold">
-                                    Zip Code <span class="text-isf-red font-bold" aria-hidden="true">*</span>
+                                <Label for="registerWhatsapp" class="text-neutral-800 text-xs sm:text-sm font-semibold">
+                                    Nomor WhatsApp Aktif <span class="text-isf-red font-bold" aria-hidden="true">*</span>
                                     <span class="sr-only">(Required)</span>
                                 </Label>
                                 <Input
-                                    id="registerZip"
-                                    v-model="form.zip_code"
-                                    type="text"
-                                    placeholder="Enter Zip Code"
-                                    autocomplete="postal-code"
+                                    id="registerWhatsapp"
+                                    v-model="form.whatsapp"
+                                    type="tel"
+                                    inputmode="tel"
+                                    placeholder="0812xxxxxxxx"
+                                    autocomplete="tel"
                                     :disabled="loading"
-                                    :class="errors.zip_code ? 'border-red-500 focus-visible:ring-red-500' : ''"
-                                    @input="clearError('zip_code')"
+                                    :aria-invalid="errors.whatsapp ? 'true' : 'false'"
+                                    :aria-describedby="errors.whatsapp ? 'registerWhatsappError' : 'registerWhatsappHint'"
+                                    :class="errors.whatsapp ? 'border-red-500 focus-visible:ring-red-500' : ''"
+                                    @input="clearError('whatsapp')"
                                 />
-                                <p v-if="errors.zip_code" class="text-xs text-red-600 font-medium">
-                                    {{ errors.zip_code[0] }}
+                                <p v-if="errors.whatsapp" id="registerWhatsappError" class="text-xs text-red-600 font-medium">
+                                    {{ errors.whatsapp[0] }}
+                                </p>
+                                <p v-else id="registerWhatsappHint" class="text-xs text-neutral-500">
+                                    Pastikan nomor aktif dan terhubung dengan WhatsApp.
                                 </p>
                             </div>
 

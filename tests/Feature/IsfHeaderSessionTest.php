@@ -35,7 +35,9 @@ class IsfHeaderSessionTest extends TestCase
         $user = $this->makeUser();
 
         $response = $this->actingAs($user)->getJson('/api/isf/me')->assertOk()
-            ->assertExactJson(['authenticated' => true, 'name' => 'Rina Kartika', 'initials' => 'RK']);
+            // Issue #42: ikut status Nomor WhatsApp milik user sendiri (tanpa email/role/id)
+            ->assertExactJson(['authenticated' => true, 'name' => 'Rina Kartika', 'initials' => 'RK',
+                'whatsapp' => null, 'whatsappDisplay' => null, 'whatsappVerified' => false, 'whatsappVerification' => false]);
 
         $this->assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
         $this->assertStringNotContainsString($user->email, $response->getContent());
@@ -57,7 +59,7 @@ class IsfHeaderSessionTest extends TestCase
         // Shell = pemicu menu profil (ikon avatar saja), nama & Keluar ada di dalam menu (Vue).
         $this->assertMatchesRegularExpression('#<button type="button" aria-haspopup="menu" aria-expanded="false" aria-label="Menu akun Rina Kartika"[^>]*>RK</button>#', $html);
         // Status login dikirim ke Vue sejak awal (tanpa menunggu /api/isf/me).
-        $this->assertStringContainsString('window.__ISF_SESSION__ = {"authenticated":true,"name":"Rina Kartika"}', $html);
+        $this->assertStringContainsString('window.__ISF_SESSION__ = {"authenticated":true,"name":"Rina Kartika","whatsapp":null,"whatsappDisplay":null,"whatsappVerified":false,"whatsappVerification":false}', $html);
     }
 
     public function test_spa_seeds_guest_session_for_guest(): void
