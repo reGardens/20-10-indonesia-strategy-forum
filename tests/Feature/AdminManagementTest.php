@@ -22,7 +22,7 @@ class AdminManagementTest extends TestCase
 
         // Retrieve or create roles
         $this->adminRole = Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
-        $this->userRole = Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
+        $this->userRole = Role::firstOrCreate(['name' => 'member', 'guard_name' => 'web']);
 
         // Create a unique super admin for testing
         $this->superAdmin = User::create([
@@ -38,7 +38,7 @@ class AdminManagementTest extends TestCase
             'email' => 'test_user_' . uniqid() . '@example.com',
             'password' => bcrypt('password123'),
         ]);
-        $this->standardUser->assignRole('user');
+        $this->standardUser->assignRole('member');
     }
 
     /**
@@ -147,7 +147,7 @@ class AdminManagementTest extends TestCase
                 'name' => 'John Doe',
                 'email' => $email,
                 'password' => 'SecurePass123',
-                'role' => 'user',
+                'role' => 'member',
             ]);
 
         $response->assertRedirect(route('cms.users.index'));
@@ -156,7 +156,7 @@ class AdminManagementTest extends TestCase
         ]);
 
         $user = User::where('email', $email)->firstOrFail();
-        $this->assertTrue($user->hasRole('user'));
+        $this->assertTrue($user->hasRole('member'));
 
         // Update user
         $updatedEmail = 'johndoe_updated_' . uniqid() . '@example.com';
@@ -164,7 +164,7 @@ class AdminManagementTest extends TestCase
             ->put(route('cms.users.update', $user), [
                 'name' => 'John Doe Updated',
                 'email' => $updatedEmail,
-                'role' => 'user',
+                'role' => 'member',
             ]);
 
         $response->assertRedirect(route('cms.users.index'));
@@ -199,7 +199,7 @@ class AdminManagementTest extends TestCase
             ->put("/cms/users/{$this->superAdmin->id}", [
                 'name' => 'Hacked Name',
                 'email' => 'hacked@example.com',
-                'role' => 'user'
+                'role' => 'member'
             ]);
         $response->assertRedirect(route('cms.users.index'));
         $this->assertDatabaseHas('users', [

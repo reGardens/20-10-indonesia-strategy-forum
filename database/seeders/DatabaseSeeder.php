@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         // Role names used by RoleController / UserController
-        foreach (['super-admin', 'user'] as $name) {
+        foreach (['super-admin', 'admin', 'member'] as $name) {
             Role::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
         }
 

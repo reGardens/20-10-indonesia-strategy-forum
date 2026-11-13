@@ -15,7 +15,7 @@ const props = defineProps({
     ongoingTemplates: { type: Array, required: true },
 });
 
-const userRole = computed(() => page.props.auth?.user?.roles?.[0] || "user");
+const userRole = computed(() => page.props.auth?.user?.roles?.[0] || "member");
 const isSuperAdmin = computed(() => userRole.value === "super-admin");
 
 const readyExpanded = ref(true);
