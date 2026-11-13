@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\Isf\Cms\MediaUploadController;
 use App\Http\Controllers\Api\Isf\Cms\SettingController;
 use App\Http\Controllers\Api\Isf\Cms\TokohController;
 use App\Http\Controllers\Api\Isf\PublicContentController;
+use App\Http\Controllers\Api\Isf\TokohReviewController;
 use App\Http\Controllers\Auth\IsfCaptchaController;
 use App\Http\Controllers\Auth\IsfRegisterController;
 use Illuminate\Support\Facades\Route;
@@ -20,6 +21,11 @@ Route::middleware(['web'])->prefix('isf')->group(function () {
     Route::get('/beranda', [PublicContentController::class, 'beranda'])->name('api.isf.beranda');
     Route::get('/search', [PublicContentController::class, 'search'])->name('api.isf.search');
     Route::get('/tokoh/{slug}', [PublicContentController::class, 'tokoh'])->name('api.isf.tokoh');
+    // Indeks Tokoh (rating & ulasan): baca publik, kirim wajib login akun ISF.
+    Route::get('/tokoh/{slug}/ulasan', [TokohReviewController::class, 'index'])->name('api.isf.tokoh.ulasan');
+    Route::post('/tokoh/{slug}/ulasan', [TokohReviewController::class, 'store'])
+        ->middleware(['auth', 'throttle:10,1'])
+        ->name('api.isf.tokoh.ulasan.store');
     Route::get('/media/{id}', [PublicContentController::class, 'mediaDetail'])->name('api.isf.media');
     Route::get('/infografik', [PublicContentController::class, 'infografik'])->name('api.isf.infografik');
     Route::get('/anggota', [PublicContentController::class, 'anggota'])->name('api.isf.anggota');

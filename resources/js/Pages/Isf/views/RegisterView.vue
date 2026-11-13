@@ -1,11 +1,18 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { currentRedirect, withRedirect } from "@/Utils/authRedirect";
 import http from "@/api/http";
 import { alertSuccess, alertError } from "@/Composables/useAlert";
 import { Button, Input, Label } from "@/Components/UI";
 
 const router = useRouter();
+
+// ?redirect=/tokoh/... (dari login → "Daftar di sini"): diteruskan ke halaman login setelah daftar,
+// supaya pengguna kembali ke halaman asal (mis. form ulasan Indeks Tokoh). Tanpa parameter: tidak berubah.
+const redirectTo = currentRedirect();
+const loginHref = withRedirect("/login", redirectTo);
+const loginRegisteredHref = withRedirect("/login?registered=true", redirectTo);
 
 const form = reactive({
     first_name: "",
@@ -128,7 +135,7 @@ async function handleSubmit() {
 
         // Redirect to login page after short delay
         setTimeout(() => {
-            window.location.href = "/login?registered=true";
+            window.location.href = loginRegisteredHref;
         }, 2000);
     } catch (err) {
         // Refresh captcha on failed attempt
@@ -167,7 +174,7 @@ async function handleSubmit() {
                     <div class="mt-4 pt-3 border-t border-neutral-100 flex items-center justify-between text-xs sm:text-sm">
                         <span class="text-neutral-500">Sudah memiliki akun anggota?</span>
                         <a
-                            href="/login"
+                            :href="loginHref"
                             class="font-semibold text-isf-red hover:text-red-700 underline underline-offset-4 transition-colors"
                         >
                             Masuk di sini
@@ -197,7 +204,7 @@ async function handleSubmit() {
                     </p>
                     <div class="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
                         <a
-                            href="/login?registered=true"
+                            :href="loginRegisteredHref"
                             class="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-neutral-900 text-white text-xs font-semibold tracking-wide uppercase hover:bg-neutral-800 transition-colors shadow-xs"
                         >
                             Masuk Sekarang
