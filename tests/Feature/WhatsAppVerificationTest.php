@@ -210,6 +210,9 @@ class WhatsAppVerificationTest extends TestCase
         $this->assertTrue(Role::where('name', 'admin')->where('guard_name', 'web')->exists());
         $this->assertFalse(Role::where('name', 'user')->where('guard_name', 'web')->exists());
 
+        // DB CI kosong (tanpa seeder): super-admin dibuat di test; member & admin dibuat oleh migrasi #42.
+        Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
         $super = User::create(['name' => 'Super Uji', 'email' => 'uji-super-' . uniqid() . '@example.test', 'password' => Hash::make('rahasia-123')]);
         $super->assignRole('super-admin');
         $admin = $this->makeUser();
