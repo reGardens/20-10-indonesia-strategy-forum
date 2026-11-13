@@ -3,7 +3,7 @@ defineProps({
     variant: {
         type: String,
         required: true,
-        validator: (value) => ["isu", "tokoh"].includes(value),
+        validator: (value) => ["isu", "tokoh", "artikel", "infografik", "rubrik"].includes(value),
     },
 });
 </script>
@@ -13,7 +13,15 @@ defineProps({
         class="animate-pulse"
         aria-busy="true"
         :aria-label="
-            variant === 'isu' ? 'Memuat anatomi isu' : 'Memuat profil tokoh'
+            variant === 'isu'
+                ? 'Memuat anatomi isu'
+                : variant === 'artikel'
+                  ? 'Memuat artikel'
+                  : variant === 'infografik'
+                    ? 'Memuat infografik'
+                    : variant === 'rubrik'
+                      ? 'Memuat rubrik'
+                  : 'Memuat profil tokoh'
         "
     >
         <div
@@ -107,6 +115,84 @@ defineProps({
                     <div class="h-4 w-4/5 rounded bg-neutral-200"></div>
                 </section>
             </aside>
+        </div>
+
+        <!-- Kategori (/artikel/{kategori}): bentuk = RubrikView -->
+        <div v-if="variant === 'rubrik'" class="space-y-10">
+            <header>
+                <div class="h-11 border-b border-neutral-300">
+                    <div class="mt-4 h-3 w-24 rounded bg-neutral-300"></div>
+                </div>
+                <div class="mt-4 h-10 w-2/5 rounded bg-neutral-300"></div>
+                <div class="mt-3 h-5 w-3/5 rounded bg-neutral-200"></div>
+            </header>
+            <section class="border border-neutral-300 border-t-[3px] border-t-isf-red bg-white">
+                <div class="flex h-[3.75rem] items-center border-b border-neutral-300 px-3 lg:px-4 xl:px-[30px]"><div class="h-6 w-40 rounded bg-neutral-300"></div></div>
+                <div class="grid grid-cols-1 gap-5 px-3 py-5 lg:grid-cols-12 lg:gap-8 lg:px-4 lg:py-6 xl:px-[30px]">
+                    <div class="aspect-[16/10] bg-neutral-200 lg:col-span-7"></div>
+                    <div class="space-y-3 lg:col-span-5">
+                        <div class="h-3 w-20 rounded bg-neutral-300"></div>
+                        <div class="h-8 w-full rounded bg-neutral-300"></div>
+                        <div class="h-8 w-3/4 rounded bg-neutral-300"></div>
+                        <div class="h-4 w-full rounded bg-neutral-200"></div>
+                        <div class="h-4 w-5/6 rounded bg-neutral-200"></div>
+                    </div>
+                </div>
+            </section>
+            <section class="border border-neutral-300 bg-[#fbf9f4]">
+                <div class="flex h-[3.75rem] items-center border-b border-neutral-300 px-3 lg:px-4 xl:px-[30px]"><div class="h-6 w-44 rounded bg-neutral-300"></div></div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                    <div v-for="n in 4" :key="n" class="space-y-3 border-b border-neutral-300 px-3 py-4 lg:px-4 lg:py-5 xl:px-[30px]">
+                        <div class="aspect-[3/2] bg-neutral-200"></div>
+                        <div class="h-3 w-16 rounded bg-neutral-300"></div>
+                        <div class="h-5 w-full rounded bg-neutral-300"></div>
+                        <div class="h-4 w-4/5 rounded bg-neutral-200"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Detail artikel (/artikel/{kategori}/{slug}): bentuk = ArticleDetailView -->
+        <div
+            v-else-if="variant === 'artikel' || variant === 'infografik'"
+            class="space-y-10"
+        >
+            <div class="h-11 border-b border-neutral-300">
+                <div class="mt-4 h-3 w-40 rounded bg-neutral-300"></div>
+            </div>
+            <div class="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:items-start">
+                <div class="grid grid-cols-1 gap-12 lg:col-span-8">
+                    <section class="border border-neutral-300 border-t-[3px] border-t-isf-red bg-white">
+                        <div class="flex h-[3.75rem] items-center border-b border-neutral-300 px-3 lg:px-4 xl:px-[30px]"><div class="h-6 w-32 rounded bg-neutral-300"></div></div>
+                        <div class="space-y-4 px-3 py-5 lg:px-4 lg:py-6 xl:px-[30px]">
+                            <div class="h-9 w-full rounded bg-neutral-300"></div>
+                            <div class="h-9 w-3/4 rounded bg-neutral-300"></div>
+                            <div class="h-5 w-full rounded bg-neutral-200"></div>
+                            <div class="h-5 w-5/6 rounded bg-neutral-200"></div>
+                            <div class="h-12 border-y border-neutral-300"></div>
+                        </div>
+                        <div class="aspect-[16/10] bg-neutral-200"></div>
+                        <div class="space-y-3 px-3 py-6 lg:px-4 lg:py-8 xl:px-[30px]">
+                            <div v-for="n in 6" :key="n" class="h-4 rounded bg-neutral-200" :class="n % 3 === 0 ? 'w-4/5' : 'w-full'"></div>
+                        </div>
+                    </section>
+                </div>
+                <aside class="grid grid-cols-1 gap-12 lg:col-span-4">
+                    <section class="border border-neutral-300 border-t-[3px] border-t-isf-red bg-white">
+                        <div class="flex h-[3.75rem] items-center border-b border-neutral-300 px-3 lg:px-4 xl:px-[30px]"><div class="h-6 w-28 rounded bg-neutral-300"></div></div>
+                        <div class="divide-y divide-neutral-200 px-3 lg:px-4 xl:px-[30px]">
+                            <div v-for="n in 4" :key="n" class="grid grid-cols-[minmax(0,1fr)_5.5rem] gap-3 py-3">
+                                <div class="space-y-2">
+                                    <div class="h-3 w-16 rounded bg-neutral-300"></div>
+                                    <div class="h-4 w-full rounded bg-neutral-200"></div>
+                                    <div class="h-4 w-3/4 rounded bg-neutral-200"></div>
+                                </div>
+                                <div class="aspect-square bg-neutral-200"></div>
+                            </div>
+                        </div>
+                    </section>
+                </aside>
+            </div>
         </div>
 
         <div v-else class="space-y-10">

@@ -1,11 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { getBeranda, getAnggota, getInfografik, getTokoh, getMediaDetail } from '@/api/services/isfPublicService'
+import { getBeranda, getAnggota, getInfografik, getTokoh, getMediaDetail, getArtikel, getInfografikDetail, getKategori } from '@/api/services/isfPublicService'
 
 const CmsLayout = () => import('../Pages/Cms/layouts/CmsLayout.vue')
 const InvitationLayout = () => import('../Pages/Landing/invitation/layouts/InvitationLayout.vue')
 const IsfPublicLayout = () => import('../Layouts/IsfPublicLayout.vue')
 const IsfMemberLayout = () => import('../Layouts/IsfMemberLayout.vue')
 const BerandaView = () => import('../Pages/Isf/views/BerandaView.vue')
+const RubrikView = () => import('../Pages/Isf/views/RubrikView.vue')
+const ArticleDetailView = () => import('../Pages/Isf/views/ArticleDetailView.vue')
 
 const routes = [
   {
@@ -185,6 +187,18 @@ const routes = [
     ]
   },
   {
+    path: '/infografik/:slug',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-infografik-detail',
+        component: () => import('../Pages/Isf/views/InfografikDetailView.vue'),
+        meta: { title: 'Infografik · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
     path: '/tokoh/:slug',
     component: IsfPublicLayout,
     children: [
@@ -207,6 +221,44 @@ const routes = [
         meta: { title: 'Media Sorotan & Video Analisis · Indonesia Strategy Forum' }
       }
     ]
+  },
+  {
+    // Artikel per kategori: /artikel/{kategori} = daftar, /artikel/{kategori}/{slug} = detail.
+    // Detail = child route, jadi menu navbar kategori tetap aktif (router-link-active).
+    path: '/artikel/:kategori(politik|hukum|kebijakan)',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-kategori',
+        component: RubrikView,
+        meta: { title: 'Artikel · Indonesia Strategy Forum' }
+      },
+      {
+        path: ':slug',
+        name: 'isf-artikel',
+        component: ArticleDetailView,
+        meta: { title: 'Artikel · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
+    // Tautan lama /artikel/{slug} (tanpa kategori): halaman detail mengganti URL ke URL kanonis.
+    path: '/artikel/:slug',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-artikel-plain',
+        component: ArticleDetailView,
+        meta: { title: 'Artikel · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
+    // Tautan lama Anatomi Isu (dihapus di #34) diarahkan ke detail artikel.
+    path: '/isu/:slug',
+    redirect: (to) => ({ name: 'isf-artikel-plain', params: { slug: to.params.slug } })
   },
   {
     path: '/pencarian',
@@ -251,7 +303,15 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
+  // Pindah halaman → mulai dari atas (detail tidak lagi terbuka di posisi scroll halaman sebelumnya).
+  // Tombol Kembali/Maju memulihkan posisi lama; ganti query/hash di halaman yang sama tidak menggulir.
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) return savedPosition
+    if (to.hash) return { el: to.hash }
+    if (to.path === from.path) return false
+    return { top: 0, left: 0 }
+  }
 })
 
 // Navigation guard for CMS slug validation and ACL check
@@ -303,6 +363,12 @@ router.beforeResolve((to) => {
       getTokoh(to.params.slug)
     } else if (to.name === 'isf-media-detail' && to.params.id) {
       getMediaDetail(to.params.id)
+    } else if ((to.name === 'isf-artikel' || to.name === 'isf-artikel-plain') && to.params.slug) {
+      getArtikel(to.params.slug)
+    } else if (to.name === 'isf-infografik-detail' && to.params.slug) {
+      getInfografikDetail(to.params.slug)
+    } else if (to.name === 'isf-kategori' && to.params.kategori) {
+      getKategori(to.params.kategori)
     }
   } catch {}
 })

@@ -1,6 +1,7 @@
 <script setup>
 /**
- * CategoryLabel — colored category label (Politik, Ekonomi, Kebijakan, Hukum, RUU).
+ * CategoryLabel — category label (Politik, Hukum, Kebijakan Publik = menu navbar).
+ * Nilai lama "ekonomi" & "ruu" (sudah digabung) tetap tampil sebagai Kebijakan Publik & Hukum.
  */
 import { computed } from "vue";
 import { cn } from "@/lib/utils";
@@ -18,10 +19,10 @@ const props = defineProps({
 
 const LABELS = {
     politik: "Politik",
-    ekonomi: "Ekonomi",
-    kebijakan: "Kebijakan",
+    ekonomi: "Kebijakan Publik",
+    kebijakan: "Kebijakan Publik",
     hukum: "Hukum",
-    ruu: "RUU",
+    ruu: "Hukum",
 };
 
 const key = computed(() => String(props.category).toLowerCase());

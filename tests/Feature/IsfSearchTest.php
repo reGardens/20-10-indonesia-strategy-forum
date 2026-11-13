@@ -39,13 +39,13 @@ class IsfSearchTest extends TestCase
             'total',
             'counts' => ['semua', 'artikel', 'tokoh', 'infografik', 'briefing', 'video'],
             'data',
-            'suggestions' => ['Politik', 'Hukum', 'Kebijakan & Ekonomi', 'Geopolitik', 'Tokoh'],
+            'suggestions' => ['Politik', 'Hukum', 'Kebijakan', 'Geopolitik', 'Tokoh'],
             'popularKeywords',
         ]);
 
         $json = $response->json();
         $this->assertContains('RUU Perampasan Aset', $json['popularKeywords']);
-        $this->assertContains('Hilirisasi Nikel', $json['suggestions']['Kebijakan & Ekonomi']);
+        $this->assertContains('Hilirisasi Nikel', $json['suggestions']['Kebijakan']);
     }
 
     public function test_search_with_query_returns_relevant_aggregated_results(): void

@@ -28,7 +28,7 @@ class IsfContentSeeder extends Seeder
      * Categories for the "Isu Terpopuler" entries that only exist in the sidebar
      * (the sample data has no category for them; it is not displayed there).
      */
-    private const POPULER_CATEGORIES = ['ruu', 'kebijakan', 'ekonomi', 'politik'];
+    private const POPULER_CATEGORIES = ['hukum', 'kebijakan', 'politik'];
 
     public function run(): void
     {

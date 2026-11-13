@@ -138,11 +138,14 @@ function closeImage() {
             <article
                 v-for="item in filteredList"
                 :key="item.id || item.title"
-                class="group flex flex-col justify-between border border-neutral-300 bg-white rounded-xs overflow-hidden shadow-2xs hover:shadow-md hover:border-neutral-400 transition-all cursor-pointer"
-                @click="openImage(item)"
+                class="group flex flex-col justify-between border border-neutral-300 bg-white rounded-xs overflow-hidden shadow-2xs hover:shadow-md hover:border-neutral-400 transition-all"
             >
-                <div
-                    class="relative aspect-[4/3] bg-neutral-100 overflow-hidden"
+                <!-- Gambar: tetap membuka lightbox "Perbesar Visual" -->
+                <button
+                    type="button"
+                    class="relative block w-full aspect-[4/3] bg-neutral-100 overflow-hidden cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-isf-red"
+                    :aria-label="`Perbesar visual: ${item.title}`"
+                    @click="openImage(item)"
                 >
                     <img
                         v-if="item.imageUrl"
@@ -167,7 +170,7 @@ function closeImage() {
                             🔍 Perbesar Visual
                         </span>
                     </div>
-                </div>
+                </button>
 
                 <div
                     class="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3"
@@ -175,18 +178,35 @@ function closeImage() {
                     <div>
                         <CategoryLabel :category="item.category" />
                         <h2
-                            class="isf-headline mt-1.5 text-[17px] sm:text-[18px] leading-snug font-bold text-neutral-900 group-hover:text-isf-red transition-colors"
+                            class="isf-headline mt-1.5 text-[17px] sm:text-[18px] leading-snug font-bold text-neutral-900"
                         >
-                            {{ item.title }}
+                            <!-- Judul menuju halaman detail infografik -->
+                            <IsfLink
+                                :to="item.to || '/infografik'"
+                                class="hover:text-isf-red transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red focus-visible:ring-offset-2"
+                            >
+                                {{ item.title }}
+                            </IsfLink>
                         </h2>
                     </div>
-                    <time
-                        v-if="item.publishedAt"
-                        :datetime="item.publishedAt"
-                        class="isf-byline block text-xs text-neutral-500 border-t border-neutral-200 pt-2.5"
+                    <div
+                        class="flex items-center justify-between gap-3 border-t border-neutral-200 pt-2.5"
                     >
-                        {{ formatDate(item.publishedAt) }}
-                    </time>
+                        <time
+                            v-if="item.publishedAt"
+                            :datetime="item.publishedAt"
+                            class="isf-byline block text-xs text-neutral-500"
+                        >
+                            {{ formatDate(item.publishedAt) }}
+                        </time>
+                        <IsfLink
+                            :to="item.to || '/infografik'"
+                            class="ml-auto shrink-0 font-ui text-[11px] font-bold uppercase tracking-[0.12em] text-isf-red hover:text-isf-red-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red focus-visible:ring-offset-2"
+                            :aria-label="`Lihat detail infografik: ${item.title}`"
+                        >
+                            Lihat detail →
+                        </IsfLink>
+                    </div>
                 </div>
             </article>
         </div>

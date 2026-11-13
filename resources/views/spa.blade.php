@@ -565,6 +565,68 @@
                         </aside>
                     </div>
                 </main>
+            @elseif(in_array(request()->path(), array_map(fn ($k) => 'artikel/' . $k, \App\Support\IsfRubrik::keys()), true))
+                @include('partials.isf-masthead')
+                <main class="isf-skel-article isf-skel-article--full isf-skel-pulse" aria-busy="true" aria-label="Memuat rubrik">
+                    <div class="isf-skel-el" style="width: 100px; height: 12px; margin-bottom: 16px;"></div>
+                    <div class="isf-skel-el" style="width: 40%; height: 42px; margin-bottom: 12px;"></div>
+                    <div class="isf-skel-el" style="width: 60%; height: 18px; margin-bottom: 40px;"></div>
+                    {{-- = RubrikView: Sorotan Utama (accent) + Artikel Terbaru (krem), jarak 48px --}}
+                    <div class="isf-skel-stack">
+                        <section class="isf-skel-frame isf-skel-frame--accent">
+                            <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 160px; height: 26px;"></div></div>
+                            <div class="isf-skel-framebody isf-skel-lines">
+                                <div class="isf-skel-el" style="height: 320px;"></div>
+                                <div class="isf-skel-el" style="width: 70%; height: 30px;"></div>
+                                <div class="isf-skel-el" style="height: 16px;"></div>
+                            </div>
+                        </section>
+                        <section class="isf-skel-frame isf-skel-frame--cream">
+                            <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 180px; height: 26px;"></div></div>
+                            <div class="isf-skel-framebody isf-skel-lines">
+                                @for ($i = 0; $i < 3; $i++)
+                                    <div class="isf-skel-el" style="height: 72px;"></div>
+                                @endfor
+                            </div>
+                        </section>
+                    </div>
+                </main>
+            @elseif(request()->is('artikel/*') || request()->is('infografik/*'))
+                @include('partials.isf-masthead')
+                <main class="isf-skel-article isf-skel-article--full isf-skel-pulse" aria-busy="true" aria-label="{{ request()->is('infografik/*') ? 'Memuat infografik' : 'Memuat artikel' }}">
+                    <div class="isf-skel-el" style="width: 160px; height: 12px; margin-bottom: 32px;"></div>
+                    {{-- = ArticleDetailView / InfografikDetailView: section berbingkai (accent) + sidebar Terbaru, jarak 48px --}}
+                    <div class="isf-skel-article-grid isf-skel-tokoh">
+                        <article class="isf-skel-stack">
+                            <section class="isf-skel-frame isf-skel-frame--accent">
+                                <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 130px; height: 26px;"></div></div>
+                                <div class="isf-skel-framebody isf-skel-lines">
+                                    <div class="isf-skel-el" style="height: 36px;"></div>
+                                    <div class="isf-skel-el" style="width: 75%; height: 36px;"></div>
+                                    <div class="isf-skel-el" style="height: 18px;"></div>
+                                    <div class="isf-skel-el" style="width: 85%; height: 18px;"></div>
+                                    <div class="isf-skel-el" style="height: 44px;"></div>
+                                </div>
+                                <div class="isf-skel-el" style="height: 320px; border-radius: 0;"></div>
+                                <div class="isf-skel-framebody isf-skel-lines">
+                                    @for ($i = 1; $i <= 6; $i++)
+                                        <div class="isf-skel-el" style="width: {{ $i % 3 === 0 ? '80%' : '100%' }}; height: 16px;"></div>
+                                    @endfor
+                                </div>
+                            </section>
+                        </article>
+                        <aside class="isf-skel-stack">
+                            <section class="isf-skel-frame isf-skel-frame--accent">
+                                <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 120px; height: 26px;"></div></div>
+                                <div class="isf-skel-framebody isf-skel-lines">
+                                    @for ($i = 0; $i < 4; $i++)
+                                        <div class="isf-skel-el" style="height: 64px;"></div>
+                                    @endfor
+                                </div>
+                            </section>
+                        </aside>
+                    </div>
+                </main>
             @elseif(request()->is('tokoh/*'))
                 @include('partials.isf-masthead')
                 <main class="isf-skel-article isf-skel-article--full isf-skel-pulse" aria-busy="true" aria-label="Memuat profil tokoh">

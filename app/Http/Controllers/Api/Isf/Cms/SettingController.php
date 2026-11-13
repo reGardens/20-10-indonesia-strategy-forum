@@ -246,6 +246,11 @@ class SettingController extends Controller
             'content' => 'nullable|string',
             'author' => 'nullable|string|max:255',
             'is_popular' => 'nullable|boolean',
+            // Tampilan section Multimedia & Video Beranda (kosong = nilai bawaan lama).
+            'duration' => ['nullable', 'string', 'max:8', 'regex:/^\d{1,2}:[0-5]\d(:[0-5]\d)?$/'],
+            'label' => 'nullable|string|max:40',
+        ], [
+            'duration.regex' => 'Format durasi mm:ss atau jj:mm:ss, contoh 18:45.',
         ]);
 
         $beranda = Setting::get('beranda', []);
@@ -270,6 +275,8 @@ class SettingController extends Controller
             'content' => $validated['content'] ?? '',
             'author' => $validated['author'] ?? 'Tim Redaksi ISF',
             'is_popular' => (bool) ($validated['is_popular'] ?? false),
+            'duration' => $validated['duration'] ?? '',
+            'label' => $validated['label'] ?? '',
         ];
 
         $mediaSorotan[] = $newItem;
@@ -294,6 +301,11 @@ class SettingController extends Controller
             'content' => 'nullable|string',
             'author' => 'nullable|string|max:255',
             'is_popular' => 'nullable|boolean',
+            // Tampilan section Multimedia & Video Beranda (kosong = nilai bawaan lama).
+            'duration' => ['nullable', 'string', 'max:8', 'regex:/^\d{1,2}:[0-5]\d(:[0-5]\d)?$/'],
+            'label' => 'nullable|string|max:40',
+        ], [
+            'duration.regex' => 'Format durasi mm:ss atau jj:mm:ss, contoh 18:45.',
         ]);
 
         $beranda = Setting::get('beranda', []);
@@ -316,6 +328,9 @@ class SettingController extends Controller
             'content' => $validated['content'] ?? ($mediaSorotan[$index]['content'] ?? ''),
             'author' => $validated['author'] ?? ($mediaSorotan[$index]['author'] ?? 'Tim Redaksi ISF'),
             'is_popular' => isset($validated['is_popular']) ? (bool) $validated['is_popular'] : ($mediaSorotan[$index]['is_popular'] ?? false),
+            // Field tidak dikirim → nilai lama dipertahankan; dikirim kosong → dikosongkan.
+            'duration' => $request->has('duration') ? ($validated['duration'] ?? '') : ($mediaSorotan[$index]['duration'] ?? ''),
+            'label' => $request->has('label') ? ($validated['label'] ?? '') : ($mediaSorotan[$index]['label'] ?? ''),
         ]);
 
         usort($mediaSorotan, fn ($a, $b) => ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0)));
@@ -356,11 +371,14 @@ class SettingController extends Controller
 
         $categoryMap = [
             'hukum & regulasi' => 'Hukum',
-            'kebijakan publik' => 'Kebijakan',
-            'ekonomi & pasar' => 'Ekonomi',
-            'ruu' => 'RUU',
-            'kebijakan' => 'Kebijakan',
-            'ekonomi' => 'Ekonomi',
+            'kebijakan publik' => 'Kebijakan Publik',
+            // RUU & Ekonomi digabung ke Hukum & Kebijakan (migration 2026_11_14_000003).
+            'ekonomi & pasar' => 'Kebijakan Publik',
+            'ruu' => 'Hukum',
+            'kebijakan' => 'Kebijakan Publik',
+            'ekonomi' => 'Kebijakan Publik',
+            'politik & parlemen' => 'Politik',
+            'kebijakan publik & fiskal' => 'Kebijakan Publik',
             'politik' => 'Politik',
             'hukum' => 'Hukum',
         ];
@@ -524,16 +542,17 @@ class SettingController extends Controller
             ->orderByDesc('published_at')
             ->orderByDesc('id')
             ->limit(15)
-            ->get(['id', 'title', 'category', 'link_url', 'published_at'])
+            ->get(['id', 'slug', 'title', 'category', 'link_url', 'published_at'])
             ->map(function ($a) use ($categoriesBySlug) {
                 $catSlug = strtolower(trim((string) $a->category));
-                $catLabel = $categoriesBySlug[$catSlug] ?? ($a->category ? ucfirst($a->category) : 'Berita Utama');
+                // Label pendek kategori (Politik / Hukum / Kebijakan) agar ticker tetap ringkas.
+                $catLabel = $a->categoryKey() ? \App\Support\IsfRubrik::label($a->categoryKey()) : ($categoriesBySlug[$catSlug] ?? ($a->category ? ucfirst($a->category) : 'Berita Utama'));
                 return [
                     'id' => $a->id,
                     'title' => $a->title,
                     'category' => $catLabel,
-                    'to' => $a->link_url ?: '/beranda',
-                    'url' => $a->link_url ?: '/beranda',
+                    'to' => $a->publicUrl(),
+                    'url' => $a->publicUrl(),
                     'published_at' => $a->published_at ? $a->published_at->format('d M Y') : date('d M Y'),
                 ];
             });
@@ -555,13 +574,14 @@ class SettingController extends Controller
         $id = 1;
         foreach ($articles as $a) {
             $catSlug = strtolower(trim((string) $a->category));
-            $catLabel = $categoriesBySlug[$catSlug] ?? ($a->category ? ucfirst($a->category) : 'Berita Utama');
+            // Label pendek kategori (Politik / Hukum / Kebijakan) agar ticker tetap ringkas.
+                $catLabel = $a->categoryKey() ? \App\Support\IsfRubrik::label($a->categoryKey()) : ($categoriesBySlug[$catSlug] ?? ($a->category ? ucfirst($a->category) : 'Berita Utama'));
             $hotNews[] = [
                 'id' => $id++,
                 'title' => $a->title,
                 'category' => $catLabel,
-                'to' => $a->link_url ?: '/beranda',
-                'url' => $a->link_url ?: '/beranda',
+                'to' => $a->publicUrl(),
+                'url' => $a->publicUrl(),
                 'published_at' => $a->published_at ? $a->published_at->format('d M Y') : date('d M Y'),
                 'status' => 'terbit',
             ];
@@ -674,7 +694,7 @@ class SettingController extends Controller
                     'title' => 'IHSG Menguat ke Level 7.450 Didorong Sektor Keuangan dan Konsumer',
                     'to' => '/beranda',
                     'url' => '/beranda',
-                    'category' => 'Ekonomi',
+                    'category' => 'Kebijakan',
                     'published_at' => date('d M Y'),
                     'status' => 'terbit',
                 ],

@@ -25,7 +25,7 @@ class ArticleResource extends JsonResource
             'publishedAt' => $this->published_at?->format('Y-m-d'),
             // Thumbnail untuk daftar Terkini (sidebar halaman Media); null bila belum ada gambar.
             'imageUrl' => $this->image_url,
-            ...($this->link_url ? ['to' => $this->link_url] : []),
+            'to' => $this->publicUrl(),
         ];
     }
 
@@ -36,7 +36,7 @@ class ArticleResource extends JsonResource
     {
         return [
             'slug' => $this->slug,
-            'to' => $this->link_url,
+            'to' => $this->publicUrl(),
             'category' => $this->category,
             'publishedAt' => $this->published_at?->format('Y-m-d'),
             'title' => $this->title,
@@ -58,7 +58,7 @@ class ArticleResource extends JsonResource
     {
         return [
             'title' => $this->title,
-            ...($this->link_url ? ['to' => $this->link_url] : []),
+            'to' => $this->publicUrl(),
         ];
     }
 }

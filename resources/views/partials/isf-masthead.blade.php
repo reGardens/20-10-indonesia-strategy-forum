@@ -176,7 +176,7 @@ html[data-isf-layout="row-3"] .isf-ssr-masthead { padding-top: 0.875rem; padding
                         $isfPath = '/' . trim(request()->path(), '/');
                         if ($isfPath === '/') { $isfPath = '/beranda'; }
                         $isfNavGroups = [
-                            [['Beranda', '/beranda'], ['Politik', '#'], ['Hukum', '#'], ['Kebijakan Publik', '#'], ['Sosok', '/tokoh/budi-santoso'], ['Opini Publik', '#'], ['Survei', '#']],
+                            [['Beranda', '/beranda'], ['Politik', '/artikel/politik'], ['Hukum', '/artikel/hukum'], ['Kebijakan Publik', '/artikel/kebijakan'], ['Sosok', '/tokoh/budi-santoso'], ['Opini Publik', '#'], ['Survei', '#']],
                             [['Portal Anggota', '/anggota']],
                         ];
                     @endphp
@@ -185,7 +185,7 @@ html[data-isf-layout="row-3"] .isf-ssr-masthead { padding-top: 0.875rem; padding
                     <li aria-hidden="true" class="mx-1 h-3.5 w-px bg-neutral-700 shrink-0" style="width: 1px; height: 14px; background-color: #404040; margin: 0 4px;"></li>
                         @endif
                         @foreach ($isfGroup as [$isfLabel, $isfTo])
-                            @if ($isfTo !== '#' && $isfTo === $isfPath)
+                            @if ($isfTo !== '#' && ($isfTo === $isfPath || str_starts_with($isfPath, $isfTo . '/')))
                     <li class="shrink-0"><a href="{{ $isfTo }}" class="inline-block whitespace-nowrap py-1 border-b-2 !border-isf-red !text-white font-bold" style="color: #ffffff; text-decoration: none; border-bottom: 2px solid #E10600; padding-top: 4px; padding-bottom: 4px; font-weight: 700;">{{ $isfLabel }}</a></li>
                             @else
                     <li class="shrink-0"><a href="{{ $isfTo }}" class="inline-block whitespace-nowrap py-1 border-b-2 border-transparent text-neutral-300" style="color: #d4d4d4; text-decoration: none; padding-top: 4px; padding-bottom: 4px;">{{ $isfLabel }}</a></li>

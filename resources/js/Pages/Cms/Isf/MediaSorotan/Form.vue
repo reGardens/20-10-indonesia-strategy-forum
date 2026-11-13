@@ -50,7 +50,10 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
     author: 'Tim Redaksi & Dewan Pakar ISF',
     summary: '',
     content: '',
-    is_popular: false
+    is_popular: false,
+    // Tampilan section "Multimedia & Video" di Beranda (kosong = nilai bawaan)
+    label: '',
+    duration: ''
   }
 })
 
@@ -205,6 +208,39 @@ onMounted(async () => {
               <p class="text-[11px] text-muted-foreground">
                 Jika dicentang, tayangan ini akan diutamakan saat tab "Popular" dipilih di Beranda.
               </p>
+            </div>
+          </div>
+
+          <!-- Label Konten & Durasi (section Multimedia & Video di Beranda) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+              <Label for="label" class="text-xs font-medium text-foreground">Label Konten</Label>
+              <Input
+                id="label"
+                v-model="form.label"
+                maxlength="40"
+                placeholder="Contoh: Diskusi Strategis, Wawancara Eksklusif, Video Analisis..."
+                class="h-9 text-xs"
+              />
+              <p class="text-[11px] text-muted-foreground">
+                Tampil di kartu section Multimedia &amp; Video Beranda. Kosongkan untuk label bawaan.
+              </p>
+              <p v-if="err('label')" class="text-xs text-red-400 mt-1">{{ err('label') }}</p>
+            </div>
+            <div class="space-y-1.5">
+              <Label for="duration" class="text-xs font-medium text-foreground">Durasi Video</Label>
+              <Input
+                id="duration"
+                v-model="form.duration"
+                inputmode="numeric"
+                maxlength="8"
+                placeholder="mm:ss, contoh 18:45"
+                class="h-9 text-xs font-mono"
+              />
+              <p class="text-[11px] text-muted-foreground">
+                Format mm:ss atau jj:mm:ss. Kosongkan untuk durasi bawaan.
+              </p>
+              <p v-if="err('duration')" class="text-xs text-red-400 mt-1">{{ err('duration') }}</p>
             </div>
           </div>
 

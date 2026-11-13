@@ -15,6 +15,7 @@ use App\Models\Isf\Briefing;
 use App\Models\Isf\Category;
 use App\Models\Isf\Chart;
 use App\Models\Isf\Infographic;
+use App\Support\IsfRubrik;
 use App\Models\Isf\Setting;
 use App\Models\Isf\Tokoh;
 use App\Services\Isf\IsfCacheService;
@@ -133,11 +134,14 @@ class PublicContentController extends Controller
 
             $categoryMap = [
                 'hukum & regulasi' => 'Hukum',
-                'kebijakan publik' => 'Kebijakan',
-                'ekonomi & pasar' => 'Ekonomi',
-                'ruu' => 'RUU',
-                'kebijakan' => 'Kebijakan',
-                'ekonomi' => 'Ekonomi',
+                'kebijakan publik' => 'Kebijakan Publik',
+                // RUU & Ekonomi digabung ke Hukum & Kebijakan (migration 2026_11_14_000003).
+                'ekonomi & pasar' => 'Kebijakan Publik',
+                'ruu' => 'Hukum',
+                'kebijakan' => 'Kebijakan Publik',
+                'ekonomi' => 'Kebijakan Publik',
+                'politik & parlemen' => 'Politik',
+                'kebijakan publik & fiskal' => 'Kebijakan Publik',
                 'politik' => 'Politik',
                 'hukum' => 'Hukum',
             ];
@@ -160,13 +164,14 @@ class PublicContentController extends Controller
                     ->get()
                     ->map(function (Article $a) use ($categoriesBySlug) {
                         $catSlug = strtolower(trim((string) $a->category));
-                        $catLabel = $categoriesBySlug[$catSlug] ?? ($a->category ? ucfirst($a->category) : 'Berita Utama');
+                        // Label pendek kategori (Politik / Hukum / Kebijakan) agar ticker tetap ringkas.
+                $catLabel = $a->categoryKey() ? \App\Support\IsfRubrik::label($a->categoryKey()) : ($categoriesBySlug[$catSlug] ?? ($a->category ? ucfirst($a->category) : 'Berita Utama'));
                         return [
                             'id' => (string) $a->id,
                             'title' => $a->title,
                             'category' => $catLabel,
-                            'to' => $a->link_url ?: '/beranda',
-                            'url' => $a->link_url ?: '/beranda',
+                            'to' => $a->publicUrl(),
+                            'url' => $a->publicUrl(),
                             'published_at' => $a->published_at ? $a->published_at->format('d M Y') : date('d M Y'),
                             'status' => 'terbit',
                         ];
@@ -410,6 +415,44 @@ class PublicContentController extends Controller
     }
 
     /**
+     * GET /api/isf/infografik/{slug}
+     *
+     * Detail infografik publik (hanya status terbit) + infografik lain
+     * (kategori sama didahulukan, dilengkapi yang terbaru).
+     */
+    public function infografikDetail(Request $request, string $slug): JsonResponse
+    {
+        $item = Infographic::query()->terbit()->where('slug', $slug)->first();
+
+        if (!$item) {
+            return $this->notFound('Infografik tidak ditemukan.');
+        }
+
+        $sameCategory = $item->category
+            ? Infographic::query()->terbit()
+                ->where('category', $item->category)
+                ->whereKeyNot($item->getKey())
+                ->orderByDesc('published_at')->orderByDesc('id')
+                ->take(4)->get()
+            : collect();
+
+        $others = $sameCategory;
+        if ($others->count() < 4) {
+            $fill = Infographic::query()->terbit()
+                ->whereKeyNot($item->getKey())
+                ->whereNotIn('id', $sameCategory->modelKeys())
+                ->orderByDesc('published_at')->orderByDesc('id')
+                ->take(4 - $others->count())->get();
+            $others = $others->concat($fill);
+        }
+
+        return response()->json([
+            'data' => (new InfographicResource($item))->resolve($request),
+            'related' => InfographicResource::collection($others->values())->resolve($request),
+        ]);
+    }
+
+    /**
      * GET /api/isf/tokoh/{slug}
      */
     public function tokoh(Request $request, string $slug): JsonResponse
@@ -543,6 +586,147 @@ class PublicContentController extends Controller
     }
 
     /**
+     * GET /api/isf/artikel/{slug}
+     *
+     * Detail artikel publik (hanya status terbit) beserta artikel terkait
+     * (kategori sama) dan artikel terbaru untuk sidebar.
+     */
+    public function artikel(Request $request, string $slug): JsonResponse
+    {
+        $article = Article::query()->terbit()->where('slug', $slug)->first();
+
+        if (!$article) {
+            return $this->notFound('Artikel tidak ditemukan.');
+        }
+
+        $categoryLabel = $this->categoryLabeler();
+        $card = $this->articleCardMapper($categoryLabel);
+
+        // Terkait: artikel lain dalam kategori yang sama.
+        $categoryKey = $article->categoryKey();
+        $relatedCategories = $categoryKey ? IsfRubrik::categories($categoryKey) : array_filter([$article->category]);
+
+        $related = $relatedCategories
+            ? Article::query()->terbit()
+                ->whereIn('category', $relatedCategories)
+                ->whereKeyNot($article->getKey())
+                ->orderByDesc('published_at')->orderByDesc('id')
+                ->take(3)->get()
+            : collect();
+
+        $recent = Article::query()->terbit()
+            ->whereKeyNot($article->getKey())
+            ->orderByDesc('published_at')->orderByDesc('id')
+            ->take(5)->get();
+
+        $factBlocks = collect(is_array($article->fact_blocks) ? $article->fact_blocks : [])
+            ->filter(fn($b) => is_array($b) && trim((string) ($b['claim'] ?? '')) !== '')
+            ->map(fn($b) => [
+                'claim' => (string) $b['claim'],
+                'sourceUrl' => (string) ($b['sourceUrl'] ?? ''),
+                'sourceTitle' => (string) ($b['sourceTitle'] ?? ''),
+                'sourceDate' => (string) ($b['sourceDate'] ?? ''),
+            ])
+            ->values()
+            ->all();
+
+        return response()->json([
+            'data' => [
+                'slug' => $article->slug,
+                'title' => $article->title,
+                'category' => $categoryKey ? IsfRubrik::label($categoryKey) : $categoryLabel($article->category),
+                'categorySlug' => $categoryKey ?? $article->category,
+                // URL kanonis /artikel/{kategori}/{slug} + kategori untuk breadcrumb (→ /artikel/{kategori}).
+                'path' => $article->detailPath(),
+                'kategori' => $categoryKey ? IsfRubrik::summary($categoryKey) : null,
+                'summary' => $article->summary ?? '',
+                'body' => $article->body ?? '',
+                'publishedAt' => $article->published_at?->format('Y-m-d'),
+                'readingMinutes' => $article->reading_minutes,
+                'imageUrl' => $article->image_url,
+                'imageAlt' => $article->image_alt ?: $article->title,
+                'author' => [
+                    'name' => $article->author_name ?: 'Tim Riset ISF',
+                    'role' => $article->author_role ?? '',
+                ],
+                'factBlocks' => $factBlocks,
+            ],
+            'related' => $related->map($card)->values()->all(),
+            'recentArticles' => $recent->map($card)->values()->all(),
+        ]);
+    }
+
+    /**
+     * GET /api/isf/kategori/{kategori}?offset=N&limit=N
+     *
+     * Daftar artikel terbit satu kategori (terbaru dulu) untuk halaman /artikel/{kategori}.
+     * Default 7 = 1 Sorotan Utama + 6 Artikel Terbaru; "Lihat lainnya" memuat 6 berikutnya (offset).
+     */
+    public function kategori(Request $request, string $kategori): JsonResponse
+    {
+        if (!IsfRubrik::exists($kategori)) {
+            return $this->notFound('Kategori tidak ditemukan.');
+        }
+
+        $offset = max(0, (int) $request->input('offset', 0));
+        $limit = min(24, max(1, (int) $request->input('limit', 7)));
+
+        $query = Article::query()->terbit()->whereIn('category', IsfRubrik::categories($kategori));
+        $total = (clone $query)->count();
+        $items = $query->orderByDesc('published_at')->orderByDesc('id')
+            ->skip($offset)->take($limit)->get();
+
+        $card = $this->articleCardMapper($this->categoryLabeler());
+        $next = $offset + $items->count();
+
+        return response()->json([
+            'kategori' => IsfRubrik::summary($kategori),
+            'data' => $items->map($card)->values()->all(),
+            'meta' => [
+                'offset' => $offset,
+                'total' => $total,
+                'nextOffset' => $next < $total ? $next : null,
+            ],
+        ]);
+    }
+
+    /**
+     * Label kategori artikel (nama Kategori CMS bila ada).
+     */
+    private function categoryLabeler(): \Closure
+    {
+        $categoriesBySlug = Category::query()->terbit()->pluck('name', 'slug')->all();
+
+        return function (?string $category) use ($categoriesBySlug): string {
+            $key = strtolower(trim((string) $category));
+            if ($key === '') {
+                return 'Analisis';
+            }
+
+            return $categoriesBySlug[$key] ?? ucfirst($key);
+        };
+    }
+
+    /**
+     * Bentuk kartu artikel publik (detail terkait, sidebar, rubrik).
+     */
+    private function articleCardMapper(\Closure $categoryLabel): \Closure
+    {
+        return fn(Article $a) => [
+            'slug' => $a->slug,
+            'title' => $a->title,
+            'category' => $a->categoryKey() ? IsfRubrik::label($a->categoryKey()) : $categoryLabel($a->category),
+            'summary' => $a->summary ?? '',
+            'publishedAt' => $a->published_at?->format('Y-m-d'),
+            'readingMinutes' => $a->reading_minutes,
+            'imageUrl' => $a->image_url,
+            'imageAlt' => $a->image_alt ?: $a->title,
+            'author' => $a->author_name ?: 'Tim Riset ISF',
+            'to' => $a->publicUrl(),
+        ];
+    }
+
+    /**
      * GET /api/isf/search
      *
      * Mesin pencarian terpadu lintas modul konten ISF:
@@ -576,7 +760,7 @@ class PublicContentController extends Controller
                 'Penegakan Tipikor',
                 'Reformasi Kepolisian',
             ],
-            'Kebijakan & Ekonomi' => [
+            'Kebijakan' => [
                 'Hilirisasi Nikel',
                 'Transisi Energi Hijau',
                 'Defisit APBN',
@@ -643,7 +827,7 @@ class PublicContentController extends Controller
                 'publishedAt' => $a->published_at ? $a->published_at->format('Y-m-d') : null,
                 'author' => $a->author_name ?: 'Tim Riset ISF',
                 'imageUrl' => $a->image_url ?: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?q=80&w=800&auto=format&fit=crop',
-                'to' => $a->link_url ?: '/beranda',
+                'to' => $a->publicUrl(),
                 'readingMinutes' => $a->reading_minutes ?: 5,
             ];
         });
@@ -699,7 +883,7 @@ class PublicContentController extends Controller
                 'publishedAt' => $inf->published_at ? $inf->published_at->format('Y-m-d') : null,
                 'author' => 'Tim Data & Riset ISF',
                 'imageUrl' => $inf->image_url ?: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop',
-                'to' => '/infografik',
+                'to' => $inf->publicUrl(),
                 'readingMinutes' => null,
             ];
         });
@@ -1210,7 +1394,7 @@ HTML;
     {
         // 1. Politik
         $politikArticles = Article::query()->terbit()
-            ->where('category', 'politik')
+            ->whereIn('category', IsfRubrik::categories('politik'))
             ->orderByDesc('published_at')
             ->orderByDesc('id')
             ->take(5)
@@ -1224,7 +1408,8 @@ HTML;
             $politikLead = [
                 'id' => (string) $first->id,
                 'title' => $first->title,
-                'kicker' => 'ANALISIS POLITIK',
+                // Label = kategori CMS artikel (bukan teks tetap), sama dengan breadcrumb /artikel/{kategori}.
+                'kicker' => $first->categoryLabel(),
                 'category' => 'Politik',
                 'summary' => $first->summary ?: 'Telaah peta koalisi parlemen dan dinamika lobi antar-fraksi terkait prioritas legislasi nasional.',
                 'publishedAt' => $first->published_at ? $first->published_at->format('Y-m-d') : date('Y-m-d'),
@@ -1234,18 +1419,18 @@ HTML;
                 ],
                 'readingMinutes' => $first->reading_minutes ?: 5,
                 'imageUrl' => $first->image_url ?: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?q=80&w=1200&auto=format&fit=crop',
-                'to' => $first->link_url ?: '/beranda',
+                'to' => $first->publicUrl(),
             ];
 
             foreach ($politikArticles as $art) {
                 $politikItems[] = [
                     'id' => (string) $art->id,
                     'title' => $art->title,
-                    'kicker' => 'PARLEMEN',
+                    'kicker' => $art->categoryLabel(),
                     'publishedAt' => $art->published_at ? $art->published_at->format('Y-m-d') : date('Y-m-d'),
                     'summary' => $art->summary ?: '',
                     'imageUrl' => $art->image_url ?: '',
-                    'to' => $art->link_url ?: '/beranda',
+                    'to' => $art->publicUrl(),
                 ];
             }
         }
@@ -1307,7 +1492,7 @@ HTML;
 
         // 2. Hukum (4-Column Ruled Grid ala EU Reporter)
         $hukumArticles = Article::query()->terbit()
-            ->whereIn('category', ['hukum', 'ruu'])
+            ->whereIn('category', IsfRubrik::categories('hukum'))
             ->orderByDesc('published_at')
             ->orderByDesc('id')
             ->take(4)
@@ -1318,11 +1503,11 @@ HTML;
             $hukumItems[] = [
                 'id' => (string) $art->id,
                 'title' => $art->title,
-                'kicker' => strtoupper($art->category ?: 'Hukum'),
+                'kicker' => $art->categoryLabel(),
                 'publishedAt' => $art->published_at ? $art->published_at->format('Y-m-d') : date('Y-m-d'),
                 'summary' => $art->summary ?: 'Ulasan mendalam aspek yuridis, kepatuhan tata kelola, dan konsekuensi hukum bagi pemangku kepentingan.',
                 'imageUrl' => $art->image_url ?: '',
-                'to' => $art->link_url ?: '/beranda',
+                'to' => $art->publicUrl(),
             ];
         }
 
@@ -1373,6 +1558,17 @@ HTML;
         }
 
         // 3. Kebijakan (3-Column Asymmetric Analytical Grid)
+        // Dari CMS Artikel kategori "kebijakan" (termasuk eks-"ekonomi") (terbit, terbaru): artikel ke-1 = utama,
+        // ke-2 = Dampak Regulasi (poin dari Fact Block / ringkasan), ke-3 = Policy Brief (kutipan = ringkasan).
+        // Slot tanpa artikel tetap memakai konten contoh di bawah (perilaku lama tidak berubah).
+        $kebijakanArticles = Article::query()->terbit()
+            ->whereIn('category', IsfRubrik::categories('kebijakan'))
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
+            ->take(3)
+            ->get()
+            ->values();
+
         $kebijakanLead = [
             'id' => 'kbj-lead-1',
             'title' => 'Kebijakan Fiskal Hijau: Skema Insentif Pajak & Transisi Energi Bersih 2026',
@@ -1407,6 +1603,55 @@ HTML;
             'to' => '/beranda',
         ];
 
+        if ($lead = $kebijakanArticles->get(0)) {
+            $kebijakanLead = [
+                'id' => (string) $lead->id,
+                'title' => $lead->title,
+                'kicker' => $lead->categoryLabel(),
+                'category' => 'Kebijakan',
+                // Tanpa ringkasan → kosong (jangan campur teks contoh dengan judul artikel asli).
+                'summary' => $lead->summary ?: '',
+                'imageUrl' => $lead->image_url ?: $kebijakanLead['imageUrl'],
+                'publishedAt' => $lead->published_at ? $lead->published_at->format('Y-m-d') : date('Y-m-d'),
+                'author' => trim(($lead->author_name ?: 'Tim Riset Kebijakan ISF') . ($lead->author_role ? ', ' . $lead->author_role : '')),
+                'to' => $lead->publicUrl(),
+            ];
+        }
+
+        if ($impact = $kebijakanArticles->get(1)) {
+            // Poin = klaim Fact Block artikel (maks. 3); tanpa Fact Block → ringkasan sebagai satu poin.
+            $points = collect($impact->fact_blocks ?? [])
+                ->pluck('claim')
+                ->filter(fn ($claim) => is_string($claim) && trim($claim) !== '')
+                ->take(3)
+                ->values()
+                ->all();
+            if (empty($points) && $impact->summary) {
+                $points = [$impact->summary];
+            }
+
+            $kebijakanImpact = [
+                'title' => $impact->title,
+                'kicker' => $impact->categoryLabel(),
+                'publishedAt' => $impact->published_at ? $impact->published_at->format('Y-m-d') : date('Y-m-d'),
+                'keyPoints' => $points,
+                'to' => $impact->publicUrl(),
+            ];
+        }
+
+        if ($brief = $kebijakanArticles->get(2)) {
+            $kebijakanBrief = [
+                'title' => $brief->title,
+                'kicker' => $brief->categoryLabel(),
+                'publishedAt' => $brief->published_at ? $brief->published_at->format('Y-m-d') : date('Y-m-d'),
+                'author' => $brief->author_name ?: 'Tim Riset Kebijakan ISF',
+                'authorRole' => $brief->author_role ?: '',
+                // Artikel belum punya field kutipan: ringkasan dipakai sebagai kutipan Policy Brief.
+                'quote' => $brief->summary ?: '',
+                'to' => $brief->publicUrl(),
+            ];
+        }
+
         // 4. Video (Multimedia Hub)
         $videoFeatured = null;
         $videoPlaylist = [];
@@ -1417,8 +1662,9 @@ HTML;
                 'id' => $firstMedia['id'] ?? 1,
                 'title' => $firstMedia['title'] ?? 'Diskusi Panel: Transformasi Digital dan Kepatuhan Regulasi',
                 'summary' => $firstMedia['summary'] ?? 'Kajian mendalam pakar regulator dan praktisi terkait kepatuhan tata kelola digital.',
-                'category' => 'Diskusi Strategis',
-                'duration' => '18:45',
+                // Label & durasi dari CMS Media Sorotan; kosong → nilai lama.
+                'category' => ! empty($firstMedia['label']) ? $firstMedia['label'] : 'Diskusi Strategis',
+                'duration' => ! empty($firstMedia['duration']) ? $firstMedia['duration'] : '18:45',
                 'author' => $firstMedia['author'] ?? 'Dewan Pakar ISF',
                 'publishedAt' => $firstMedia['publishedAt'] ?? date('Y-m-d'),
                 'mediaUrl' => $firstMedia['mediaUrl'] ?? '',
@@ -1431,8 +1677,9 @@ HTML;
                 $videoPlaylist[] = [
                     'id' => $m['id'] ?? ($idx + 2),
                     'title' => $m['title'] ?? 'Sorotan Kilat Media Analisis',
-                    'category' => $m['category'] ?? 'Video Analisis',
-                    'duration' => $idx === 0 ? '08:20' : ($idx === 1 ? '12:15' : '05:40'),
+                    // Label & durasi dari CMS Media Sorotan; kosong → nilai lama (platform / durasi contoh).
+                    'category' => ! empty($m['label']) ? $m['label'] : ($m['category'] ?? 'Video Analisis'),
+                    'duration' => ! empty($m['duration']) ? $m['duration'] : ($idx === 0 ? '08:20' : ($idx === 1 ? '12:15' : '05:40')),
                     'author' => $m['author'] ?? 'Redaksi ISF',
                     'publishedAt' => $m['publishedAt'] ?? date('Y-m-d'),
                     'imageUrl' => !empty($m['imageUrl']) ? $m['imageUrl'] : 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=600&auto=format&fit=crop',

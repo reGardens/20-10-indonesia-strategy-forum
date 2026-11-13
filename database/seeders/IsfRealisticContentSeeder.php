@@ -148,7 +148,7 @@ class IsfRealisticContentSeeder extends Seeder
             [
                 'slug' => 'tren-investasi-asing-per-sektor-2026',
                 'title' => 'Tren investasi asing per sektor 2026',
-                'category' => 'ekonomi',
+                'category' => 'kebijakan',
                 'published_at' => '2026-10-28',
                 'image_alt' => 'Infografik tren penanaman modal asing per sektor usaha',
                 'image_url' => self::img('1518186285589-2f7649de83e0', 1200),

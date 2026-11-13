@@ -15,6 +15,8 @@ class InfographicResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'slug' => $this->slug,
+            'to' => $this->publicUrl(),
             'title' => $this->title,
             'category' => $this->category,
             'publishedAt' => $this->published_at?->format('Y-m-d'),

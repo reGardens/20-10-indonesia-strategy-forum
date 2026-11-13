@@ -305,13 +305,13 @@ const videoData = computed(() => {
         >
             <SectionHeading
                 id="section-politik"
-                title="Politik & Parlemen"
+                title="Politik"
                 size="lg"
                 :class="cellPad"
             >
                 <template #action>
                     <IsfLink
-                        to="/beranda"
+                        to="/artikel/politik"
                         :class="[
                             linkClass,
                             'font-ui text-[12px] font-bold uppercase tracking-[0.12em] text-isf-red hover:text-isf-red-dark',
@@ -362,13 +362,13 @@ const videoData = computed(() => {
         <section aria-labelledby="section-hukum" class="isf-full-layer-section isf-full-layer-section--navy">
             <SectionHeading
                 id="section-hukum"
-                title="Hukum & Regulasi"
+                title="Hukum"
                 size="lg"
                 :class="cellPad"
             >
                 <template #action>
                     <IsfLink
-                        to="/beranda"
+                        to="/artikel/hukum"
                         :class="[
                             linkClass,
                             'font-ui text-[12px] font-bold uppercase tracking-[0.12em] text-isf-red hover:text-isf-red-dark',
@@ -435,13 +435,13 @@ const videoData = computed(() => {
         >
             <SectionHeading
                 id="section-kebijakan"
-                title="Kebijakan Publik & Fiskal"
+                title="Kebijakan Publik"
                 size="lg"
                 :class="cellPad"
             >
                 <template #action>
                     <IsfLink
-                        to="/beranda"
+                        to="/artikel/kebijakan"
                         :class="[
                             linkClass,
                             'font-ui text-[12px] font-bold uppercase tracking-[0.12em] text-isf-red hover:text-isf-red-dark',
@@ -483,6 +483,7 @@ const videoData = computed(() => {
                             </IsfLink>
                         </h3>
                         <p
+                            v-if="kebijakanData.lead.summary"
                             class="mt-2.5 font-serif text-[15px] leading-[1.5] text-neutral-600"
                         >
                             {{ kebijakanData.lead.summary }}
@@ -525,6 +526,7 @@ const videoData = computed(() => {
                             </IsfLink>
                         </h3>
                         <ul
+                            v-if="kebijakanData.impact.keyPoints?.length"
                             class="mt-3.5 space-y-2.5 font-serif text-[14px] text-neutral-700 leading-relaxed"
                         >
                             <li
@@ -571,6 +573,7 @@ const videoData = computed(() => {
                             </IsfLink>
                         </h3>
                         <blockquote
+                            v-if="kebijakanData.brief.quote"
                             class="mt-3.5 border-l-2 border-isf-red pl-3.5 italic text-neutral-700 font-serif text-[14.5px] leading-relaxed"
                         >
                             "{{ kebijakanData.brief.quote }}"
@@ -580,7 +583,10 @@ const videoData = computed(() => {
                         <p class="text-xs font-bold text-neutral-900 font-ui">
                             {{ kebijakanData.brief.author }}
                         </p>
-                        <p class="text-[11px] text-neutral-500 font-ui">
+                        <p
+                            v-if="kebijakanData.brief.authorRole"
+                            class="text-[11px] text-neutral-500 font-ui"
+                        >
                             {{ kebijakanData.brief.authorRole }}
                         </p>
                     </div>

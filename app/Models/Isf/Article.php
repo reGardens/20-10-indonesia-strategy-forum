@@ -3,6 +3,7 @@
 namespace App\Models\Isf;
 
 use App\Models\Concerns\HasPublishStatus;
+use App\Support\IsfRubrik;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -46,6 +47,55 @@ class Article extends Model
             'is_popular' => 'boolean',
             'popular_rank' => 'integer',
         ];
+    }
+
+    /**
+     * Kategori publik artikel (politik | hukum | kebijakan); nilai lama ruu/ekonomi ikut dipetakan.
+     */
+    public function categoryKey(): ?string
+    {
+        return IsfRubrik::resolve($this->category);
+    }
+
+    /**
+     * Label kategori untuk kicker kartu (mis. "HUKUM") = kategori yang dipilih di CMS.
+     */
+    public function categoryLabel(): string
+    {
+        $key = $this->categoryKey();
+
+        return mb_strtoupper($key ? IsfRubrik::label($key) : ((string) $this->category ?: 'Analisis'));
+    }
+
+    /**
+     * Path halaman detail artikel: /artikel/{kategori}/{slug} (mis. /artikel/hukum/{slug}).
+     */
+    public function detailPath(): string
+    {
+        $category = $this->categoryKey();
+
+        if (! $this->slug || ! $category) {
+            return '/beranda';
+        }
+
+        return IsfRubrik::path($category) . '/' . $this->slug;
+    }
+
+    /**
+     * Public URL of the article.
+     *
+     * Uses the CMS `link_url` override when set, except legacy `/isu/...` and
+     * `/artikel/...` links (those resolve to the detail page) — otherwise detailPath().
+     */
+    public function publicUrl(): string
+    {
+        $link = trim((string) $this->link_url);
+
+        if ($link !== '' && $link !== '/isu' && ! str_starts_with($link, '/isu/') && ! str_starts_with($link, '/artikel/')) {
+            return $link;
+        }
+
+        return $this->detailPath();
     }
 
     /**
