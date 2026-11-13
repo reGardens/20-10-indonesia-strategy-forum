@@ -128,7 +128,7 @@ function onSlugInput() {
                 id="name"
                 v-model="form.name"
                 @input="onNameInput"
-                placeholder="Contoh: Politik, Ekonomi, Kebijakan..."
+                placeholder="Contoh: Politik, Hukum, Kebijakan Publik..."
                 class="h-9 text-xs font-medium"
               />
               <p v-if="err('name')" class="text-xs text-red-400 mt-1">{{ err('name') }}</p>
@@ -141,7 +141,7 @@ function onSlugInput() {
                 id="slug"
                 v-model="form.slug"
                 @input="onSlugInput"
-                placeholder="Contoh: politik, ekonomi, kebijakan..."
+                placeholder="Contoh: politik, hukum, kebijakan..."
                 class="h-9 text-xs font-mono"
               />
               <p class="text-[11px] text-muted-foreground">

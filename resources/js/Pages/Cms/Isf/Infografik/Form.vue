@@ -37,7 +37,7 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
   defaults: {
     slug: '',
     title: '',
-    category: 'ekonomi',
+    category: 'kebijakan',
     published_at: new Date().toISOString().slice(0, 10),
     image_alt: '',
     image_url: '',

@@ -73,7 +73,8 @@ describe("IsfLink", () => {
 
     it("not-yet-available target → placeholder href='#' that does not navigate", async () => {
         const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-        const { link } = await render("/artikel/belum-ada");
+        // /artikel/:slug sekarang ada; pakai rute rubrik yang memang belum dibuat.
+        const { link } = await render("/rubrik/belum-ada");
         warn.mockRestore();
         expect(link.getAttribute("href")).toBe("#");
         expect(link.getAttribute("aria-disabled")).toBe("true");

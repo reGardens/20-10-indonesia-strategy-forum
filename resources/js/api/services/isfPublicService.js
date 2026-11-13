@@ -55,6 +55,19 @@ export function getMediaDetail(id) {
   return get('/isf/media/' + encodeURIComponent(id))
 }
 
+export function getArtikel(slug) {
+  return get('/isf/artikel/' + encodeURIComponent(slug))
+}
+
+export function getInfografikDetail(slug) {
+  return get('/isf/infografik/' + encodeURIComponent(slug))
+}
+
+// offset 0 = 1 Sorotan Utama + 6 Artikel Terbaru (limit 7); "Lihat lainnya" = 6 berikutnya.
+export function getKategori(kategori, offset = 0, limit = 7) {
+  return get('/isf/kategori/' + encodeURIComponent(kategori) + '?offset=' + Number(offset) + '&limit=' + Number(limit))
+}
+
 export function searchContent(params = {}) {
   const query = typeof params === 'string' ? { q: params } : params
   const qs = new URLSearchParams()
@@ -69,4 +82,4 @@ export function isNotFound(error) {
   return error?.response?.status === 404
 }
 
-export default { getBeranda, getTokoh, getAnggota, getInfografik, getMediaDetail, searchContent, isNotFound }
+export default { getBeranda, getTokoh, getAnggota, getInfografik, getMediaDetail, getArtikel, getInfografikDetail, getKategori, searchContent, isNotFound }

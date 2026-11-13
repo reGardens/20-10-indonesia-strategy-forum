@@ -30,4 +30,12 @@ class Infographic extends Model
             'published_at' => 'date:Y-m-d',
         ];
     }
+
+    /**
+     * Public URL of the infographic detail page (/infografik/{slug}); falls back to the list page.
+     */
+    public function publicUrl(): string
+    {
+        return $this->slug ? '/infografik/' . $this->slug : '/infografik';
+    }
 }

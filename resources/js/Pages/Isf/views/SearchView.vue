@@ -6,7 +6,7 @@
  * - Mengagregasi: Artikel, Profil Tokoh, Infografik, Briefing, dan Video.
  * - Filter cepat per tipe konten dengan counter badges.
  * - Rekomendasi Kata Kunci Populer (AI Suggestions) 5 pilar strategis:
- *   (Politik, Hukum, Kebijakan & Ekonomi, Geopolitik, Tokoh).
+ *   (Politik, Hukum, Kebijakan, Geopolitik, Tokoh).
  * - Tampilan kartu hasil dengan cuplikan (snippet), kicker, byline, dan gambar.
  */
 import { ref, computed, watch } from "vue";
@@ -50,7 +50,7 @@ const defaultSuggestions = {
         "Penegakan Tipikor",
         "Reformasi Kepolisian",
     ],
-    "Kebijakan & Ekonomi": [
+    Kebijakan: [
         "Hilirisasi Nikel",
         "Transisi Energi Hijau",
         "Defisit APBN",

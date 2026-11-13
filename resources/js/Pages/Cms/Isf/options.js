@@ -3,16 +3,15 @@ import http from '@/api/http'
 
 /**
  * Option lists for ISF CMS forms and filters.
- * Initialized with default categories (Politik, Ekonomi, Kebijakan, Hukum, RUU)
+ * Initialized with default categories (Politik, Hukum, Kebijakan Publik = menu navbar;
+ * RUU & Ekonomi sudah digabung dan dihapus)
  * and can be dynamically refreshed from the database.
  */
 
 export const CATEGORIES = [
   { value: 'politik', label: 'Politik' },
-  { value: 'ekonomi', label: 'Ekonomi' },
-  { value: 'kebijakan', label: 'Kebijakan' },
-  { value: 'hukum', label: 'Hukum' },
-  { value: 'ruu', label: 'RUU' }
+  { value: 'kebijakan', label: 'Kebijakan Publik' },
+  { value: 'hukum', label: 'Hukum' }
 ]
 
 export const activeCategories = ref([...CATEGORIES])

@@ -37,7 +37,10 @@ Route::middleware(['web'])->prefix('isf')->group(function () {
         ->middleware(['auth', 'throttle:10,1'])
         ->name('api.isf.tokoh.ulasan.store');
     Route::get('/media/{id}', [PublicContentController::class, 'mediaDetail'])->name('api.isf.media');
+    Route::get('/artikel/{slug}', [PublicContentController::class, 'artikel'])->name('api.isf.artikel');
+    Route::get('/kategori/{kategori}', [PublicContentController::class, 'kategori'])->name('api.isf.kategori');
     Route::get('/infografik', [PublicContentController::class, 'infografik'])->name('api.isf.infografik');
+    Route::get('/infografik/{slug}', [PublicContentController::class, 'infografikDetail'])->name('api.isf.infografik.show');
     Route::get('/anggota', [PublicContentController::class, 'anggota'])->name('api.isf.anggota');
     Route::get('/cache-heal', [PublicContentController::class, 'cacheHeal'])->name('api.isf.cache-heal');
     Route::get('/captcha', [IsfCaptchaController::class, 'generate'])->name('api.isf.captcha');

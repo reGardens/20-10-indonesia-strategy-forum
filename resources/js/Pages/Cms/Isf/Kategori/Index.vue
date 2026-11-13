@@ -84,7 +84,7 @@ onMounted(loadData)
           Kelola Kategori Konten
         </h1>
         <p class="text-xs text-muted-foreground mt-0.5">
-          Kelola daftar kategori (Politik, Ekonomi, Kebijakan, Hukum, RUU, dll.) yang digunakan pada Artikel, Infografik, Isu Mingguan, dan Banner.
+          Kelola daftar kategori (Politik, Hukum, Kebijakan Publik) yang digunakan pada Artikel, Infografik, Isu Mingguan, dan Banner.
         </p>
       </div>
       <div>

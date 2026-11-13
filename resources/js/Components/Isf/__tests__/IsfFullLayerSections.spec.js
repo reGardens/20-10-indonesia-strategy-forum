@@ -46,17 +46,20 @@ describe("IsfFullLayerSections", () => {
         // 1. Pilar Politik
         const secPolitik = root.querySelector("#section-politik");
         expect(secPolitik).not.toBeNull();
-        expect(root.textContent).toContain("Politik & Parlemen");
+        // Judul section = nama kategori / menu navbar.
+        expect(root.querySelector("#section-politik").textContent.trim()).toBe("Politik");
 
         // 2. Pilar Hukum
         const secHukum = root.querySelector("#section-hukum");
         expect(secHukum).not.toBeNull();
-        expect(root.textContent).toContain("Hukum & Regulasi");
+        // Judul section = nama kategori / menu navbar.
+        expect(root.querySelector("#section-hukum").textContent.trim()).toBe("Hukum");
 
         // 3. Pilar Kebijakan
         const secKebijakan = root.querySelector("#section-kebijakan");
         expect(secKebijakan).not.toBeNull();
-        expect(root.textContent).toContain("Kebijakan Publik & Fiskal");
+        // Judul section = nama kategori / menu navbar.
+        expect(root.querySelector("#section-kebijakan").textContent.trim()).toBe("Kebijakan Publik");
 
         // 4. Pilar Video
         const secVideo = root.querySelector("#section-video");

@@ -51,7 +51,7 @@ const DEFAULT_NEWS = [
         id: 3,
         title: "Bank Indonesia Pertahankan BI-Rate: Stabilitas Moneter Hadapi Volatilitas Global",
         to: "/beranda",
-        category: "Ekonomi",
+        category: "Kebijakan Publik",
         published_at: "09 Nov 2026",
         status: "terbit",
     },

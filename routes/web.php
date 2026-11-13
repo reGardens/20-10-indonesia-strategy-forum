@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Cms\IsfPageController;
+use App\Http\Controllers\Isf\ArticlePageController;
 use App\Http\Controllers\Isf\BriefingPreviewController;
+use App\Support\IsfRubrik;
 use App\Http\Controllers\SpaController;
 use Illuminate\Support\Facades\Route;
 
@@ -17,8 +19,18 @@ Route::redirect('/', '/beranda');
 Route::get('/beranda', [SpaController::class, 'index'])->name('isf.beranda');
 Route::get('/register', [SpaController::class, 'index'])->name('isf.register');
 Route::get('/infografik', [SpaController::class, 'index'])->name('isf.infografik');
+Route::get('/infografik/{slug}', [SpaController::class, 'index'])->name('isf.infografik.show');
 Route::get('/tokoh/{slug}', [SpaController::class, 'index'])->name('isf.tokoh.show');
 Route::get('/media/{id}', [SpaController::class, 'index'])->name('isf.media.show');
+// Artikel per kategori: /artikel/{kategori} = daftar (mis. /artikel/ruu), /artikel/{kategori}/{slug} = detail.
+Route::get('/artikel/{kategori}', [SpaController::class, 'index'])->whereIn('kategori', IsfRubrik::keys())->name('isf.kategori');
+Route::get('/artikel/{kategori}/{slug}', [ArticlePageController::class, 'show'])->whereIn('kategori', IsfRubrik::keys())->name('isf.artikel.show');
+// Kategori lama yang digabung (ruu → hukum, ekonomi → kebijakan): 301 ke URL kanonis.
+Route::get('/artikel/{lama}/{slug}', [ArticlePageController::class, 'legacyCategory'])->whereIn('lama', array_keys(IsfRubrik::LEGACY))->name('isf.artikel.legacy-category');
+// Tautan lama /artikel/{slug} (tanpa kategori) dialihkan (301) ke URL kategori kanonis.
+Route::get('/artikel/{slug}', [ArticlePageController::class, 'plain'])->name('isf.artikel.plain');
+// Tautan lama Anatomi Isu (/isu/{slug}, dihapus di #34) diarahkan ke detail artikel.
+Route::get('/isu/{slug}', [ArticlePageController::class, 'legacyIsu'])->name('isf.isu.legacy');
 Route::get('/pencarian', [SpaController::class, 'index'])->name('isf.pencarian');
 Route::get('/search', [SpaController::class, 'index'])->name('isf.search');
 // ISF member portal (B2B) — NOT protected by auth yet (UI preview only)
