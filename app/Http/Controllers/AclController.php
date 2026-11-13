@@ -11,11 +11,11 @@ use Inertia\Response;
 class AclController extends Controller
 {
     /**
-     * Show all standard users with their feature permissions.
+     * Show all non super-admin users (admin & member) with their feature permissions.
      */
     public function index(): Response
     {
-        $users = User::role('user')
+        $users = User::withoutRole('super-admin')
             ->latest()
             ->get()
             ->map(function ($u) {

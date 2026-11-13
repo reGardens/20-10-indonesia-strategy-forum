@@ -17,8 +17,8 @@ class IsfRegistrationTest extends TestCase
     {
         parent::setUp();
 
-        // Ensure 'user' role exists
-        Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
+        // Ensure 'member' role exists (Issue #42: dulu 'user')
+        Role::firstOrCreate(['name' => 'member', 'guard_name' => 'web']);
 
         // Bypass rate limiting during test executions
         $this->withoutMiddleware(ThrottleRequests::class);
@@ -51,7 +51,7 @@ class IsfRegistrationTest extends TestCase
             ->assertJsonValidationErrors([
                 'first_name',
                 'last_name',
-                'zip_code',
+                'whatsapp',
                 'age_requirement',
                 'email',
                 'password',
@@ -69,7 +69,7 @@ class IsfRegistrationTest extends TestCase
         $response = $this->postJson('/api/isf/register', [
             'first_name' => 'Budi',
             'last_name' => 'Santoso',
-            'zip_code' => '12345',
+            'whatsapp' => '081234567890',
             'age_requirement' => true,
             'email' => 'budi_' . uniqid() . '@example.com',
             'password' => 'Rahasia123',
@@ -90,7 +90,7 @@ class IsfRegistrationTest extends TestCase
         $response = $this->postJson('/api/isf/register', [
             'first_name' => 'Budi',
             'last_name' => 'Santoso',
-            'zip_code' => '12345',
+            'whatsapp' => '081234567890',
             'age_requirement' => false,
             'email' => 'budi_' . uniqid() . '@example.com',
             'password' => 'Rahasia123',
@@ -119,7 +119,7 @@ class IsfRegistrationTest extends TestCase
         $response = $this->postJson('/api/isf/register', [
             'first_name' => 'Ahmad',
             'last_name' => 'Hidayat',
-            'zip_code' => '10110',
+            'whatsapp' => '+62 812-3456-7891',
             'age_requirement' => true,
             'email' => $email,
             'password' => 'Katasandi123',
@@ -142,10 +142,12 @@ class IsfRegistrationTest extends TestCase
         $this->assertSame('Ahmad Hidayat', $user->name);
         $this->assertSame('Ahmad', $user->first_name);
         $this->assertSame('Hidayat', $user->last_name);
-        $this->assertSame('10110', $user->zip_code);
+        // Nomor dinormalisasi ke 62xxx dan belum terverifikasi (verifikasi OTP setelah login)
+        $this->assertSame('6281234567891', $user->whatsapp);
+        $this->assertNull($user->whatsapp_verified_at);
         $this->assertTrue((bool) $user->age_verified);
 
-        // Verify Spatie role 'user' is automatically assigned
-        $this->assertTrue($user->hasRole('user'));
+        // Verify Spatie role 'member' is automatically assigned
+        $this->assertTrue($user->hasRole('member'));
     }
 }

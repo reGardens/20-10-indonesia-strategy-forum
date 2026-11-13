@@ -26,10 +26,10 @@ const form = useForm({
     name: props.user.name || "",
     first_name: props.user.first_name || "",
     last_name: props.user.last_name || "",
-    zip_code: props.user.zip_code || "",
+    whatsapp: props.user.whatsapp || "",
     email: props.user.email || "",
     password: "",
-    role: props.user.roles?.[0]?.name || "user",
+    role: props.user.roles?.[0]?.name || "member",
 });
 
 async function submit() {
@@ -102,14 +102,24 @@ async function submit() {
                     </div>
 
                     <div class="space-y-2">
-                        <Label for="zip_code">Kode Pos (Zip Code)</Label>
+                        <Label for="whatsapp">Nomor WhatsApp</Label>
                         <Input
-                            id="zip_code"
-                            v-model="form.zip_code"
-                            placeholder="Kode pos"
+                            id="whatsapp"
+                            v-model="form.whatsapp"
+                            type="tel"
+                            inputmode="tel"
+                            autocomplete="tel"
+                            placeholder="0812xxxxxxxx"
                         />
-                        <p v-if="form.errors.zip_code" class="text-sm text-destructive">
-                            {{ form.errors.zip_code }}
+                        <p v-if="form.errors.whatsapp" class="text-sm text-destructive">
+                            {{ form.errors.whatsapp }}
+                        </p>
+                        <p
+                            v-else-if="$page.props.auth?.user?.whatsapp_verification"
+                            class="text-xs text-muted-foreground"
+                        >
+                            {{ props.user.whatsapp_verified_at ? "Terverifikasi." : "Belum terverifikasi." }}
+                            Mengubah nomor akan mereset status verifikasi.
                         </p>
                     </div>
                 </div>

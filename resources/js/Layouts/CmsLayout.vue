@@ -5,6 +5,7 @@ import IconComponent from "@/Components/IconComponent/IconComponent.vue";
 import Sidebar from "@/Components/Cms/Sidebar.vue";
 import { useI18n } from "@/Composables/useI18n";
 import { useDarkMode } from "@/Composables/useDarkMode";
+import WhatsAppVerifyDialog from "@/Components/Isf/WhatsAppVerifyDialog.vue";
 
 const { t, locale, toggleLocale } = useI18n();
 const { isDark, toggleDarkMode } = useDarkMode();
@@ -12,7 +13,24 @@ const { isDark, toggleDarkMode } = useDarkMode();
 const page = usePage();
 const auth = computed(() => page.props.auth);
 const user = computed(() => auth.value?.user);
-const userRole = computed(() => user.value?.roles?.[0] || "user");
+const userRole = computed(() => user.value?.roles?.[0] || "member");
+
+// Issue #42: alert "perbarui Nomor WhatsApp" di dropdown profil bila nomor kosong / belum terverifikasi.
+const whatsappStatus = computed(() => {
+    if (!user.value?.whatsapp) return "missing";
+    // Verifikasi OTP dimatikan (default) → nomor terisi dianggap cukup, tidak ada alert.
+    if (!user.value?.whatsapp_verification) return "verified";
+    return user.value?.whatsapp_verified ? "verified" : "unverified";
+});
+const waDialogOpen = ref(false);
+function openWhatsAppDialog() {
+    profileOpen.value = false;
+    waDialogOpen.value = true;
+}
+// Setelah nomor disimpan/diverifikasi: muat ulang props auth saja (tanpa reload halaman).
+function onWhatsAppUpdated() {
+    router.reload({ only: ["auth"] });
+}
 
 const sidebarOpen = ref(false);
 const profileOpen = ref(false);
@@ -238,6 +256,24 @@ function logout() {
                                 </p>
                             </div>
 
+                            <!-- Issue #42: alert Nomor WhatsApp -->
+                            <div
+                                v-if="whatsappStatus !== 'verified'"
+                                class="px-4 py-3 border-b border-border bg-amber-50 dark:bg-amber-950/30"
+                                data-testid="cms-wa-alert"
+                            >
+                                <p class="text-xs font-medium text-amber-800 dark:text-amber-300">
+                                    {{ whatsappStatus === "missing" ? "Nomor WhatsApp belum diisi." : "Nomor WhatsApp belum diverifikasi." }}
+                                </p>
+                                <button
+                                    type="button"
+                                    class="mt-2 w-full rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 transition-colors cursor-pointer"
+                                    @click="openWhatsAppDialog"
+                                >
+                                    {{ whatsappStatus === "missing" ? "Tambahkan nomor" : "Verifikasi sekarang" }}
+                                </button>
+                            </div>
+
                             <!-- Logout -->
                             <form method="POST" action="/logout">
                                 <input
@@ -264,6 +300,15 @@ function logout() {
             <main class="flex-1 min-h-0 overflow-auto overflow-x-hidden">
                 <slot />
             </main>
+
+            <WhatsAppVerifyDialog
+                v-if="user"
+                v-model:open="waDialogOpen"
+                :whatsapp="user.whatsapp || ''"
+                :verified="Boolean(user.whatsapp_verified)"
+                :verification="Boolean(user.whatsapp_verification)"
+                @updated="onWhatsAppUpdated"
+            />
         </div>
     </div>
 </template>
