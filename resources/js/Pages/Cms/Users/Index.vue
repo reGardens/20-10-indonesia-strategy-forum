@@ -58,6 +58,7 @@ function formatDate(dateString) {
             <Table>
                 <TableHeader>
                     <TableRow>
+                        <TableHead class="w-12 text-center text-xs">#</TableHead>
                         <TableHead>{{ t("users.name") }}</TableHead>
                         <TableHead>{{ t("users.email") }}</TableHead>
                         <TableHead>{{ t("users.role") }}</TableHead>
@@ -69,7 +70,10 @@ function formatDate(dateString) {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    <TableRow v-for="user in users.data" :key="user.id">
+                    <TableRow v-for="(user, idx) in users.data" :key="user.id">
+                        <TableCell class="text-center text-xs font-mono text-muted-foreground">
+                            {{ ((users.current_page || 1) - 1) * (users.per_page || users.data.length) + idx + 1 }}
+                        </TableCell>
                         <TableCell class="font-medium">
                             <div class="line-clamp-2">{{ user.name }}</div>
                         </TableCell>
@@ -147,7 +151,7 @@ function formatDate(dateString) {
                     </TableRow>
                     <TableRow v-if="users.data.length === 0">
                         <TableCell
-                            colspan="6"
+                            colspan="7"
                             class="text-center py-8 text-muted-foreground"
                             >{{ t("common.no_data") }}</TableCell
                         >

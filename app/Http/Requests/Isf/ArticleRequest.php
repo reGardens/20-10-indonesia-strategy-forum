@@ -15,6 +15,17 @@ class ArticleRequest extends FormRequest
         return true;
     }
 
+    /**
+     * Gambar diisi tetapi Alt Text kosong → pakai title sebagai Alt Text
+     * (sebelumnya ditolak validasi sehingga gambar tidak tersimpan).
+     */
+    protected function prepareForValidation(): void
+    {
+        if (trim((string) $this->input('image_url')) !== '' && trim((string) $this->input('image_alt')) === '') {
+            $this->merge(['image_alt' => mb_substr((string) $this->input('title'), 0, 255)]);
+        }
+    }
+
     public function rules(): array
     {
         return [

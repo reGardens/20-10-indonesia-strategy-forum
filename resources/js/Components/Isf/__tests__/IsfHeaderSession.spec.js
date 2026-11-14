@@ -131,11 +131,11 @@ describe("IsfHeader — status login", { timeout: 90000 }, () => {
         expect(root.querySelector('[data-testid="profile-menu-trigger"]')).not.toBeNull();
     });
 
-    it("tamu di /anggota: pratinjau lama tetap (nama contoh, tanpa menu profil)", async () => {
+    it("tamu di /anggota: tanpa nama contoh, tampil tombol Login (tanpa menu profil)", async () => {
         session.value = { authenticated: false, name: null, initials: null };
         const root = await renderAt("/anggota");
-
-        expect(root.textContent).toContain("Anindya Putri");
+        expect(root.textContent).not.toContain("Anindya Putri");
+        expect(root.querySelector('a[href="/login"]')).not.toBeNull();
         expect(root.querySelector('[data-testid="profile-menu-trigger"]')).toBeNull();
     });
 });

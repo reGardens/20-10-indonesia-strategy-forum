@@ -213,9 +213,9 @@
 }
 
 .isf-theme .isf-full-layer-section--video {
-    /* Panel navy (lebih terang dari navy Hukum) supaya dua blok gelap tidak identik. */
-    background-color: #111a2e;
-    border-color: #111a2e;
+    /* Navy identitas ISF (#0B1220) = header & section Hukum. */
+    background-color: #0b1220;
+    border-color: #0b1220;
 }
 
 /* ---- Varian warna identitas per section (60% putih/krem, 30% navy, 10% merah) ---- */
@@ -302,7 +302,9 @@
 
 .isf-theme .isf-full-layer-section--navy .isf-col-head,
 .isf-theme .isf-full-layer-section--navy .border-neutral-200,
-.isf-theme .isf-full-layer-section--navy .border-neutral-300 {
+.isf-theme .isf-full-layer-section--navy .border-neutral-300,
+/* Garis vertikal desktop (lg:border-neutral-300) = warna garis horizontal, agar tidak tampak lebih tebal. */
+.isf-theme .isf-full-layer-section--navy .lg\:border-neutral-300 {
     border-color: rgb(255 255 255 / 0.1);
 }
 

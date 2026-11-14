@@ -79,6 +79,8 @@ function generateSlug(val) {
 }
 
 function onTitleInput() {
+  // Edit: slug tidak ikut berubah dari judul (URL artikel yang sudah terbit tetap).
+  if (isEdit.value) return
   if (!form.title || !form.title.trim()) {
     form.slug = ''
     isSlugManual.value = false
@@ -103,6 +105,7 @@ onMounted(loadCategories)
 watch(
   () => form.title,
   (newVal) => {
+    if (isEdit.value) return
     if (!newVal || !newVal.trim()) {
       form.slug = ''
       isSlugManual.value = false

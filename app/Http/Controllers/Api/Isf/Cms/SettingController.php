@@ -464,7 +464,7 @@ class SettingController extends Controller
         $hotNews[] = $newItem;
         $beranda['hotNews'] = $hotNews;
         Setting::put('beranda', $beranda);
-        IsfCacheService::forget(IsfCacheService::KEY_BERANDA);
+        IsfCacheService::clearBeranda();
 
         return response()->json(['data' => $newItem], 201);
     }
@@ -505,7 +505,7 @@ class SettingController extends Controller
 
         $beranda['hotNews'] = array_values($hotNews);
         Setting::put('beranda', $beranda);
-        IsfCacheService::forget(IsfCacheService::KEY_BERANDA);
+        IsfCacheService::clearBeranda();
 
         return response()->json(['data' => $hotNews[$index]]);
     }
@@ -518,7 +518,7 @@ class SettingController extends Controller
         $hotNews = array_values(array_filter($hotNews, fn ($it) => (int) ($it['id'] ?? 0) !== $id));
         $beranda['hotNews'] = $hotNews;
         Setting::put('beranda', $beranda);
-        IsfCacheService::forget(IsfCacheService::KEY_BERANDA);
+        IsfCacheService::clearBeranda();
 
         return response()->json(['message' => 'Hot news berhasil dihapus.']);
     }
@@ -529,7 +529,7 @@ class SettingController extends Controller
         $beranda = Setting::get('beranda', []);
         $beranda['hotNews'] = is_array($items) ? array_values($items) : [];
         Setting::put('beranda', $beranda);
-        IsfCacheService::forget(IsfCacheService::KEY_BERANDA);
+        IsfCacheService::clearBeranda();
 
         return response()->json(['data' => $beranda['hotNews']]);
     }
@@ -613,7 +613,7 @@ class SettingController extends Controller
         $beranda = Setting::get('beranda', []);
         $beranda['hotNews'] = $hotNews;
         Setting::put('beranda', $beranda);
-        IsfCacheService::forget(IsfCacheService::KEY_BERANDA);
+        IsfCacheService::clearBeranda();
 
         return response()->json([
             'message' => 'Hot news berhasil disinkronkan dengan artikel terkini.',
@@ -1080,6 +1080,8 @@ class SettingController extends Controller
             'video_url' => 'nullable|string|max:1000',
             'video_duration' => 'nullable|integer|min:5|max:300',
             'interval_minutes' => 'nullable|integer|min:0|max:1440',
+            // Jeda (detik) sebelum popup urutan pertama muncul setelah halaman dimuat; kosong = default 5 detik.
+            'first_delay_seconds' => 'nullable|integer|min:0|max:3600',
             'target_url' => 'nullable|string|max:1000',
             'status' => 'nullable|string|in:terbit,draf',
             'is_active' => 'nullable|boolean',
@@ -1139,7 +1141,9 @@ class SettingController extends Controller
             'image_url' => $validated['image_url'] ?? '',
             'video_url' => $validated['video_url'] ?? '',
             'video_duration' => (int) ($validated['video_duration'] ?? 30),
-            'interval_minutes' => (int) ($validated['interval_minutes'] ?? 10),
+            // Kosong → default 30 menit.
+            'interval_minutes' => (int) ($validated['interval_minutes'] ?? 30),
+            'first_delay_seconds' => isset($validated['first_delay_seconds']) ? (int) $validated['first_delay_seconds'] : null,
             'target_url' => $validated['target_url'] ?? '/register',
             'status' => $validated['status'] ?: 'terbit',
             'is_active' => $newItemIsActive,
@@ -1185,6 +1189,8 @@ class SettingController extends Controller
             'video_url' => 'nullable|string|max:1000',
             'video_duration' => 'nullable|integer|min:5|max:300',
             'interval_minutes' => 'nullable|integer|min:0|max:1440',
+            // Jeda (detik) sebelum popup urutan pertama muncul setelah halaman dimuat; kosong = default 5 detik.
+            'first_delay_seconds' => 'nullable|integer|min:0|max:3600',
             'target_url' => 'nullable|string|max:1000',
             'status' => 'nullable|string|in:terbit,draf',
             'is_active' => 'nullable|boolean',
@@ -1243,7 +1249,14 @@ class SettingController extends Controller
             'image_url' => $validated['image_url'] ?? '',
             'video_url' => $validated['video_url'] ?? '',
             'video_duration' => (int) ($validated['video_duration'] ?? ($items[$index]['video_duration'] ?? 30)),
-            'interval_minutes' => (int) ($validated['interval_minutes'] ?? ($items[$index]['interval_minutes'] ?? 10)),
+            // Dikirim kosong → default 30 menit; tidak dikirim → nilai lama.
+            'interval_minutes' => array_key_exists('interval_minutes', $validated)
+                ? (int) ($validated['interval_minutes'] ?? 30)
+                : (int) ($items[$index]['interval_minutes'] ?? 30),
+            // Dikirim kosong → default (null); tidak dikirim → nilai lama dipertahankan.
+            'first_delay_seconds' => array_key_exists('first_delay_seconds', $validated)
+                ? (isset($validated['first_delay_seconds']) ? (int) $validated['first_delay_seconds'] : null)
+                : ($items[$index]['first_delay_seconds'] ?? null),
             'target_url' => $validated['target_url'] ?? '/register',
             'status' => $validated['status'] ?: 'terbit',
             'is_active' => $updatedIsActive,

@@ -194,6 +194,7 @@ onMounted(() => {
       <Table>
         <TableHeader>
           <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
+            <TableHead class="w-12 text-center text-xs">#</TableHead>
             <TableHead class="w-[50%]">Judul & Slug</TableHead>
             <TableHead>Kategori</TableHead>
             <TableHead>Status</TableHead>
@@ -203,15 +204,18 @@ onMounted(() => {
         </TableHeader>
         <TableBody>
           <TableRow v-if="items.length === 0">
-            <TableCell colspan="5" class="text-center py-10 text-muted-foreground text-sm">
+            <TableCell colspan="6" class="text-center py-10 text-muted-foreground text-sm">
               Tidak ada infografik ditemukan.
             </TableCell>
           </TableRow>
           <TableRow
-            v-for="item in items"
+            v-for="(item, idx) in items"
             :key="item.id"
             class="hover:bg-muted/30 transition border-b border-border/50"
           >
+            <TableCell class="text-center text-xs font-mono text-muted-foreground">
+              {{ (meta.current_page - 1) * meta.per_page + idx + 1 }}
+            </TableCell>
             <TableCell class="py-3">
               <div class="font-semibold text-foreground text-sm leading-snug line-clamp-2">
                 {{ item.title }}

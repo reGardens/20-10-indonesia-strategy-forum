@@ -21,6 +21,7 @@ import { BERANDA_INSIGHT_DUMMY } from "@/Pages/Isf/data/berandaInsightDummy";
 import { formatDate } from "@/Utils/formatters";
 import { getBeranda } from "@/api/services/isfPublicService";
 import { useIsfContent } from "@/Composables/useIsfContent";
+import { useIsfPopupQueue } from "@/Composables/useIsfPopupQueue";
 import { useIsfHeaderLayout } from "@/Composables/useIsfHeaderLayout";
 
 const { layout: headerLayout, setLayout: setHeaderLayout } =
@@ -42,7 +43,7 @@ const chart = computed(() => data.value?.chart);
 const terkini = computed(() => data.value?.terkini || []);
 const sections = computed(() => data.value?.sections || {});
 const latestNews = computed(() => terkini.value.slice(0, 3));
-const activeMediaTab = ref('latest');
+const activeMediaTab = ref('popular');
 
 const adBanner = computed(() => {
     return data.value?.iklan?.banner || {
@@ -68,8 +69,16 @@ const adPopup = computed(() => {
     };
 });
 
-const adPopupVideo = computed(() => data.value?.iklan?.popup_video);
-const adPopupBanner = computed(() => data.value?.iklan?.popup_banner);
+// Antrean popup berulang: semua popup aktif (urut CMS). API lama tanpa "popups" → popup tunggal.
+const popupList = computed(() => {
+    // Tunggu data Beranda termuat: jangan memulai antrean dengan popup contoh (akan menimpa jadwal tersimpan).
+    if (!data.value) return [];
+    const list = data.value?.iklan?.popups;
+    if (Array.isArray(list)) return list;
+    const single = data.value.iklan ? data.value.iklan.popup : adPopup.value;
+    return single && single.isActive !== false ? [{ id: "popup", ...single }] : [];
+});
+const { current: currentPopup, onClose: onPopupClose } = useIsfPopupQueue(popupList);
 
 const allMediaSorotan = computed(() => {
     if (data.value?.mediaSorotan?.length) {
@@ -123,7 +132,7 @@ const allMediaSorotan = computed(() => {
  * Membatasi tampilan hanya pada 2 kartu:
  * 1. Horizontal: Video / thumbnail YouTube terbaru
  * 2. Vertikal: Video / thumbnail TikTok terbaru
- * Terhubung dengan tab LATEST (default) & POPULAR.
+ * Terhubung dengan tab POPULAR (default, 2 kartu besar) & LATEST (daftar kecil, maks. 5).
  */
 const mediaSorotan = computed(() => {
     const list = [...allMediaSorotan.value];
@@ -149,25 +158,10 @@ const mediaSorotan = computed(() => {
         return cards.slice(0, 2);
     }
 
-    // Default: LATEST (urut tanggal rilis terbaru)
-    const sorted = [...list].sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0));
-
-    const latestYouTube = sorted.find((it) => !isVerticalMedia(it.category));
-    const latestTikTok = sorted.find((it) => isVerticalMedia(it.category));
-
-    const cards = [];
-    if (latestYouTube) cards.push(latestYouTube);
-    if (latestTikTok) cards.push(latestTikTok);
-
-    if (cards.length < 2) {
-        for (const it of sorted) {
-            if (!cards.some((c) => c.id === it.id)) {
-                cards.push(it);
-                if (cards.length === 2) break;
-            }
-        }
-    }
-    return cards.slice(0, 2);
+    // LATEST: beberapa media terbaru (urut tanggal rilis), ditampilkan sebagai daftar kecil.
+    return [...list]
+        .sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0))
+        .slice(0, 5);
 });
 
 function isVerticalMedia(category) {
@@ -449,25 +443,13 @@ const sectionPad = "px-3 lg:px-4 xl:px-[30px]";
                         <div
                             class="order-2 min-w-0 border-t border-neutral-300 lg:order-3 lg:border-t-0"
                         >
-                            <!-- Tab Navigation: LATEST & POPULAR (default LATEST) -->
+                            <!-- Tab Navigation: POPULAR & LATEST (default POPULAR) -->
                             <div
                                 :class="[
                                     'isf-col-head flex items-center gap-4',
                                     cellPad,
                                 ]"
                             >
-                                <button
-                                    type="button"
-                                    @click="activeMediaTab = 'latest'"
-                                    :class="[
-                                        'cursor-pointer py-2 text-[11px] font-bold uppercase tracking-wider transition-colors border-b-2 -mb-[1px]',
-                                        activeMediaTab === 'latest'
-                                            ? 'border-isf-red text-neutral-900 font-extrabold'
-                                            : 'border-transparent text-neutral-500 hover:text-neutral-800'
-                                    ]"
-                                >
-                                    Latest
-                                </button>
                                 <button
                                     type="button"
                                     @click="activeMediaTab = 'popular'"
@@ -479,6 +461,18 @@ const sectionPad = "px-3 lg:px-4 xl:px-[30px]";
                                     ]"
                                 >
                                     Popular
+                                </button>
+                                <button
+                                    type="button"
+                                    @click="activeMediaTab = 'latest'"
+                                    :class="[
+                                        'cursor-pointer py-2 text-[11px] font-bold uppercase tracking-wider transition-colors border-b-2 -mb-[1px]',
+                                        activeMediaTab === 'latest'
+                                            ? 'border-isf-red text-neutral-900 font-extrabold'
+                                            : 'border-transparent text-neutral-500 hover:text-neutral-800'
+                                    ]"
+                                >
+                                    Latest
                                 </button>
                             </div>
 
@@ -496,16 +490,62 @@ const sectionPad = "px-3 lg:px-4 xl:px-[30px]";
                                     <li
                                         v-for="item in mediaSorotan"
                                         :key="item.id || item.title"
-                                        class="py-4 lg:py-5"
+                                        :class="
+                                            activeMediaTab === 'latest'
+                                                ? 'py-3'
+                                                : 'py-4 lg:py-5'
+                                        "
                                     >
-                                        <!-- Thumbnail with Platform category badge & Link to Detail Embed Page (/media/:id) -->
+                                        <!-- LATEST: baris kecil (= Daftar Putar Terkait di section Multimedia & Video) -->
+                                        <router-link
+                                            v-if="activeMediaTab === 'latest'"
+                                            :to="'/media/' + item.id"
+                                            class="group flex items-start gap-3"
+                                        >
+                                            <div
+                                                class="relative w-28 shrink-0 overflow-hidden bg-neutral-100 lg:w-20 xl:w-24"
+                                            >
+                                                <ImagePlaceholder
+                                                    :label="item.title"
+                                                    :src="getMediaThumbnail(item)"
+                                                    aspect="video"
+                                                    bare
+                                                    class="transition-transform duration-300 group-hover:scale-105"
+                                                />
+                                                <span
+                                                    v-if="item.duration"
+                                                    class="pointer-events-none absolute bottom-1 right-1 rounded bg-black/85 px-1.5 font-ui text-[10px] font-semibold text-white"
+                                                >
+                                                    {{ item.duration }}
+                                                </span>
+                                            </div>
+                                            <div class="min-w-0 flex-1">
+                                                <span
+                                                    class="isf-kicker block text-isf-red"
+                                                >
+                                                    {{ item.category || (isVerticalMedia(item.category) ? 'TikTok' : 'YouTube') }}
+                                                </span>
+                                                <h3
+                                                    class="isf-headline mt-0.5 line-clamp-3 text-[15px] leading-[1.25] transition-colors group-hover:text-isf-red"
+                                                >
+                                                    {{ item.title }}
+                                                </h3>
+                                                <time
+                                                    v-if="item.publishedAt"
+                                                    :datetime="item.publishedAt"
+                                                    class="isf-byline mt-1 block text-neutral-500"
+                                                >
+                                                    {{ formatDate(item.publishedAt) }}
+                                                </time>
+                                            </div>
+                                        </router-link>
+                                        <template v-else>
+                                        <!-- POPULAR: Thumbnail with Platform category badge & Link to Detail Embed Page (/media/:id) -->
                                         <router-link
                                             :to="'/media/' + item.id"
                                             :class="[
-                                                'group relative block overflow-hidden rounded-xs',
-                                                isVerticalMedia(item.category)
-                                                    ? 'max-w-[240px] mx-auto'
-                                                    : 'w-full',
+                                                // Vertikal & horizontal sama lebar (lebar kolom); vertikal tetap 9:16 agar thumbnail tampil utuh.
+                                                'group relative block w-full overflow-hidden rounded-xs',
                                             ]"
                                         >
                                             <ImagePlaceholder
@@ -551,6 +591,7 @@ const sectionPad = "px-3 lg:px-4 xl:px-[30px]";
                                                 }}
                                             </time>
                                         </div>
+                                        </template>
                                     </li>
                                 </ol>
                                 <p
@@ -755,20 +796,13 @@ const sectionPad = "px-3 lg:px-4 xl:px-[30px]";
             </div>
         </template>
 
-        <!-- Modal Popup Iklan Saat Akses Pertama: Kategori 3 (Video durasi) & Kategori 2 (Banner statis) -->
+        <!-- Iklan popup berulang: urut CMS, muncul ulang sesuai "Jeda Waktu Muncul Kembali" (useIsfPopupQueue) -->
         <IsfAdPopupModal
-            v-if="adPopupVideo && adPopupVideo.isActive"
-            :ad="adPopupVideo"
-            storage-key="isf_popup_video_seen"
-        />
-        <IsfAdPopupModal
-            v-else-if="adPopupBanner && adPopupBanner.isActive"
-            :ad="adPopupBanner"
-            storage-key="isf_popup_banner_seen"
-        />
-        <IsfAdPopupModal
-            v-else
-            :ad="adPopup"
+            v-if="currentPopup"
+            :key="currentPopup.id"
+            :ad="currentPopup"
+            controlled
+            @close="onPopupClose"
         />
     </div>
 </template>

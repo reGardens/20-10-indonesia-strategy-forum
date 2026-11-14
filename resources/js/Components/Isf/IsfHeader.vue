@@ -25,7 +25,6 @@ import {
 } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useIsfHeaderLayout } from "@/Composables/useIsfHeaderLayout";
-import { getAnggota } from "@/api/services/isfPublicService";
 import { logout } from "@/api/services/isfSessionService";
 import { useIsfSession } from "@/Composables/useIsfSession";
 import IsfProfileMenu from "@/Components/Isf/IsfProfileMenu.vue";
@@ -51,21 +50,6 @@ const route = useRoute();
 const router = useRouter();
 
 const isMemberRoute = computed(() => Boolean(route?.path?.startsWith("/anggota")));
-const memberUser = ref({ name: "" });
-
-async function loadMemberUser() {
-    if (isMemberRoute.value && !memberUser.value?.name) {
-        try {
-            const res = await getAnggota();
-            if (res?.user) {
-                memberUser.value = res.user;
-            }
-        } catch {
-            // fallback if guest
-        }
-    }
-}
-
 /* Status login sebenarnya (sesi Laravel). Login → avatar + nama + Keluar di semua halaman publik. */
 // State bersama (useIsfSession): langsung benar dari data server (window.__ISF_SESSION__),
 // tidak di-reset saat header di-mount ulang ketika pindah halaman → tidak ada "Login" sekejap.
@@ -93,18 +77,9 @@ async function handleLogout() {
     window.location.reload();
 }
 
-// Nama yang tampil: user login → nama akunnya; tamu di /anggota → nama contoh (perilaku lama).
-const displayName = computed(() =>
-    isLoggedIn.value && sessionUser.value.name
-        ? sessionUser.value.name
-        : memberUser.value?.name || "Anindya Putri",
-);
-
+// Inisial avatar = nama akun yang login (tidak ada lagi nama contoh untuk tamu).
 const memberInitials = computed(() => {
-    const name =
-        (isLoggedIn.value && sessionUser.value.name) ||
-        memberUser.value?.name ||
-        (isMemberRoute.value ? "Anindya Putri" : "");
+    const name = (isLoggedIn.value && sessionUser.value.name) || "";
     return (
         name
             .split(" ")
@@ -286,7 +261,6 @@ onMounted(() => {
     }
     // Seed initial state without waiting for a scroll event
     handleScroll();
-    loadMemberUser();
     loadSession();
 });
 
@@ -308,7 +282,6 @@ watch(
 
 watch(() => route?.fullPath, () => {
     menuOpen.value = false;
-    loadMemberUser();
 });
 
 defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
@@ -507,7 +480,7 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
 
                 <!-- Portal Anggota / Login / Search / Member Profile (kanan) -->
                 <div class="flex items-center gap-2 sm:gap-3 shrink-0 justify-end lg:min-w-[220px]">
-                    <template v-if="isLoggedIn || isMemberRoute || memberUser?.name">
+                    <template v-if="isLoggedIn">
                         <button
                             type="button"
                             aria-label="Notifikasi"
@@ -521,7 +494,6 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
                         </button>
                         <!-- User login: ikon avatar saja; klik → menu berisi nama + Keluar (seperti CMS) -->
                         <IsfProfileMenu
-                            v-if="isLoggedIn"
                             :name="sessionUser.name"
                             :initials="memberInitials"
                             :logging-out="loggingOut"
@@ -529,23 +501,6 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
                             @logout="handleLogout"
                             @verify-whatsapp="waDialogOpen = true"
                         />
-                        <!-- Tamu di /anggota: pratinjau lama (nama contoh) tidak diubah -->
-                        <router-link
-                            v-else
-                            to="/anggota"
-                            :class="['flex items-center gap-2 select-none group', focusRing]"
-                            title="Portal Anggota"
-                        >
-                            <span
-                                v-if="memberInitials"
-                                class="inline-flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xs bg-isf-red text-[11px] sm:text-xs font-bold text-white tracking-wider shadow-xs"
-                                aria-hidden="true"
-                            >{{ memberInitials }}</span>
-                            <span
-                                v-if="memberUser?.name || isMemberRoute"
-                                class="hidden max-w-[120px] truncate text-[12px] font-space-grotesk font-semibold text-neutral-200 group-hover:text-white transition-colors sm:inline"
-                            >{{ displayName }}</span>
-                        </router-link>
                     </template>
                     <template v-else>
                         <a
@@ -597,10 +552,10 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
                 </ul>
                 <div class="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-neutral-800 pt-3">
                     <div class="flex items-center gap-4">
-                        <template v-if="isLoggedIn || isMemberRoute || memberUser?.name">
+                        <template v-if="isLoggedIn">
                             <router-link to="/anggota" :class="['flex items-center gap-2 font-space-grotesk text-[12px] font-bold text-white hover:text-isf-red transition-colors', focusRing]">
                                 <span class="inline-flex h-6 w-6 items-center justify-center rounded-xs bg-isf-red text-[10px] font-bold text-white">{{ memberInitials }}</span>
-                                <span>{{ isLoggedIn && sessionUser.name ? sessionUser.name : memberUser?.name || "Portal Anggota" }}</span>
+                                <span>{{ sessionUser.name || "Portal Anggota" }}</span>
                             </router-link>
                             <template v-if="isLoggedIn">
                                 <span class="text-neutral-500">|</span>

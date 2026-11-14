@@ -52,6 +52,8 @@ function generateSlug(val) {
 }
 
 function onTitleInput(e) {
+  // Edit: slug tidak ikut berubah dari judul (URL infografik yang sudah terbit tetap).
+  if (isEdit.value) return
   const val = e.target.value
   if (!val || !val.trim()) {
     form.slug = ''

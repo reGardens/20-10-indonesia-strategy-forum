@@ -27,17 +27,25 @@ abstract class CmsResourceController extends Controller
     /** Columns matched by ?q= */
     protected array $searchColumns = ['title'];
 
+    /** Kolom yang boleh difilter persis lewat query string (mis. ['category'] → ?category=hukum). */
+    protected array $filterColumns = [];
+
+    /** true = baris yang sedang tayang (liveId) selalu di urutan paling atas daftar. */
+    protected bool $liveFirst = false;
+
     /** [column => direction] ordering for index(). */
     protected array $order = ['id' => 'desc'];
 
     /**
      * GET  ?q=keyword&status=draf|terbit&page=N  → paginated list (15 per page).
+     *      + ?{kolom}=nilai untuk kolom di $filterColumns (mis. ?category=hukum).
      */
     public function index(Request $request): JsonResponse
     {
         $request->validate([
             'q' => ['nullable', 'string', 'max:100'],
             'status' => ['nullable', 'in:'.implode(',', IsfOptions::STATUSES)],
+            ...array_fill_keys($this->filterColumns, ['nullable', 'string', 'max:100']),
         ]);
 
         /** @var Builder $query */
@@ -56,13 +64,24 @@ abstract class CmsResourceController extends Controller
             $query->where('status', $status);
         }
 
+        foreach ($this->filterColumns as $column) {
+            if (($value = $request->query($column)) !== null && $value !== '') {
+                $query->where($column, $value);
+            }
+        }
+
+        $liveId = $this->liveId();
+        if ($this->liveFirst && $liveId) {
+            $query->orderByRaw('CASE WHEN id = ? THEN 0 ELSE 1 END', [$liveId]);
+        }
+
         foreach ($this->order as $column => $direction) {
             $query->orderBy($column, $direction);
         }
 
         return response()->json(array_merge(
             $query->paginate(15)->withQueryString()->toArray(),
-            ['live_id' => $this->liveId()],
+            ['live_id' => $liveId],
         ));
     }
 

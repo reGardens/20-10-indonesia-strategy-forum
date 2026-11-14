@@ -45,7 +45,8 @@ const { form, err, loading, loadError, saving, save: baseSave, load } = useCmsFo
     image_url: '',
     video_url: '',
     video_duration: 30,
-    interval_minutes: 10,
+    interval_minutes: '',     // kosong = default 30 menit
+    first_delay_seconds: '',  // kosong = default 5 detik
     status: 'terbit',
     is_active: true,
     start_date: '',
@@ -174,6 +175,11 @@ function computeAutoIsActive() {
   return form.is_active !== undefined ? Boolean(form.is_active) : true
 }
 
+// Isian waktu boleh kosong (= default); angka 0 tetap dipertahankan.
+function optionalNumber(value) {
+  return value === '' || value === null || value === undefined ? '' : Number(value)
+}
+
 async function handleSave() {
   if (!form.placement) {
     alertError('Silakan pilih kategori penempatan iklan terlebih dahulu.')
@@ -195,19 +201,20 @@ async function handleSave() {
     form.video_url = ''
     form.video_duration = 30
     form.interval_minutes = 0
+    form.first_delay_seconds = ''
     form.type = 'banner'
   } else if (isVideoType.value) {
     // Popup video hanya memerlukan video
     form.image_url = ''
     form.type = 'video'
     form.video_duration = Number(form.video_duration) || 30
-    form.interval_minutes = Number(form.interval_minutes) || 10
+    form.interval_minutes = optionalNumber(form.interval_minutes)
   } else {
     // Popup gambar hanya memerlukan image
     form.video_url = ''
     form.video_duration = 30
     form.type = 'banner'
-    form.interval_minutes = Number(form.interval_minutes) || 10
+    form.interval_minutes = optionalNumber(form.interval_minutes)
   }
 
   await baseSave()
@@ -373,27 +380,46 @@ onMounted(async () => {
             <p v-if="err('placement')" class="text-xs text-red-400 mt-1">{{ err('placement') }}</p>
           </div>
 
-          <!-- Jeda Waktu Muncul Popup (Hanya jika Kategori Modal Popup) -->
-          <div v-if="form.placement === 'popup'" class="space-y-1.5 pt-1">
-            <Label for="interval_minutes" class="text-xs font-semibold text-foreground">
-              Jeda Waktu Muncul Kembali (Menit)
-            </Label>
-            <div class="flex items-center gap-2 max-w-xs">
-              <Input
-                id="interval_minutes"
-                type="number"
-                min="0"
-                max="1440"
-                v-model.number="form.interval_minutes"
-                placeholder="10"
-                class="h-9 text-xs font-mono w-28"
-              />
-              <span class="text-xs text-muted-foreground font-mono">Menit</span>
+          <!-- Waktu Tampil Popup (hanya Modal Popup). Kosong = default. -->
+          <div v-if="form.placement === 'popup'" class="space-y-2 pt-1">
+            <p class="text-xs font-semibold text-foreground">Waktu Tampil Popup</p>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 max-w-xl">
+              <div class="space-y-1">
+                <Label for="first_delay_seconds" class="text-xs text-foreground">Tampil pertama setelah</Label>
+                <div class="flex items-center gap-2">
+                  <Input
+                    id="first_delay_seconds"
+                    type="number"
+                    min="0"
+                    max="3600"
+                    v-model="form.first_delay_seconds"
+                    placeholder="5"
+                    class="h-9 text-xs font-mono w-24"
+                  />
+                  <span class="text-xs text-muted-foreground">detik</span>
+                </div>
+                <p class="text-[11px] text-muted-foreground">Sejak halaman dibuka. Hanya untuk iklan urutan pertama.</p>
+                <p v-if="err('first_delay_seconds')" class="text-xs text-red-400">{{ err('first_delay_seconds') }}</p>
+              </div>
+              <div class="space-y-1">
+                <Label for="interval_minutes" class="text-xs text-foreground">Tampil lagi setelah</Label>
+                <div class="flex items-center gap-2">
+                  <Input
+                    id="interval_minutes"
+                    type="number"
+                    min="0"
+                    max="1440"
+                    v-model="form.interval_minutes"
+                    placeholder="30"
+                    class="h-9 text-xs font-mono w-24"
+                  />
+                  <span class="text-xs text-muted-foreground">menit</span>
+                </div>
+                <p class="text-[11px] text-muted-foreground">Sejak iklan sebelumnya ditutup.</p>
+                <p v-if="err('interval_minutes')" class="text-xs text-red-400">{{ err('interval_minutes') }}</p>
+              </div>
             </div>
-            <p class="text-[11px] text-muted-foreground">
-              Rentang jeda waktu setelah popup sebelumnya ditutup sebelum popup ini muncul kembali (popup aktif urutan pertama adalah default awal).
-            </p>
-            <p v-if="err('interval_minutes')" class="text-xs text-red-400 mt-1">{{ err('interval_minutes') }}</p>
+            <p class="text-[11px] text-muted-foreground">Kosongkan untuk memakai bawaan: 5 detik &amp; 30 menit.</p>
           </div>
         </CardContent>
       </Card>

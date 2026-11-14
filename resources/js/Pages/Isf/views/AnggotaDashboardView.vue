@@ -2,6 +2,7 @@
 /**
  * Portal Khusus Anggota B2B — Dasbor Umpan Peringatan (Cetak Biru ISF, bagian 08).
  * Content: GET /api/isf/anggota (published alerts, member profile setting, Tautan Langsung).
+ * Kartu profil: nama = akun yang login (useIsfSession); tamu melihat ajakan Login, bukan nama contoh.
  * UI preview: client-side filtering, NO auth gating yet.
  * Priority filter is synced to the URL query (?prioritas=semua|merah|kuning).
  */
@@ -29,6 +30,7 @@ import { AnggotaSkeleton, IsfLink, PriorityBadge } from "@/Components/Isf";
 import ErrorMessage from "@/Pages/Cms/components/shared/ErrorMessage.vue";
 import { formatDate } from "@/Utils/formatters";
 import { getAnggota } from "@/api/services/isfPublicService";
+import { useIsfSession } from "@/Composables/useIsfSession";
 import { useIsfContent } from "@/Composables/useIsfContent";
 
 const route = useRoute();
@@ -88,8 +90,12 @@ const user = computed(
             sektor: [],
         },
 );
+// Identitas kartu profil = akun yang login (bukan nama contoh dari Pengaturan Halaman).
+const { session, isLoggedIn, ensureLoaded: loadSession } = useIsfSession();
+onMounted(loadSession);
+const loginHref = `/login?redirect=${encodeURIComponent("/anggota")}`;
 const initials = computed(() =>
-    (user.value.name || "")
+    (session.value.name || "")
         .split(" ")
         .filter(Boolean)
         .slice(0, 2)
@@ -246,6 +252,29 @@ const linkClass =
             <aside class="space-y-6 lg:col-span-4">
                 <!-- User / organization card -->
                 <Card class="isf-editorial-card isf-editorial-compact">
+                    <!-- Tamu: tidak ada nama contoh, tampilkan ajakan Login -->
+                    <CardContent
+                        v-if="!isLoggedIn"
+                        class="space-y-3 pt-5 text-sm"
+                        data-testid="anggota-login-prompt"
+                    >
+                        <p class="isf-headline font-headline text-lg">
+                            Profil Anggota
+                        </p>
+                        <p class="text-neutral-600">
+                            Masuk dengan akun ISF untuk melihat profil keanggotaan
+                            Anda.
+                        </p>
+                        <a
+                            :href="loginHref"
+                            :class="[
+                                'inline-flex h-9 items-center rounded-sm bg-isf-red px-4 font-ui text-[12px] font-bold uppercase tracking-[0.12em] text-white hover:bg-isf-red-dark',
+                                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red focus-visible:ring-offset-2',
+                            ]"
+                            >Login</a
+                        >
+                    </CardContent>
+                    <template v-else>
                     <CardHeader
                         class="isf-hairline-bottom flex-row items-center gap-4 space-y-0"
                     >
@@ -258,11 +287,8 @@ const linkClass =
                         <div>
                             <CardTitle
                                 class="isf-headline font-headline text-lg"
-                                >{{ user.name }}</CardTitle
+                                >{{ session.name }}</CardTitle
                             >
-                            <p class="text-sm text-neutral-600">
-                                {{ user.role }}
-                            </p>
                         </div>
                     </CardHeader>
                     <CardContent class="space-y-3 pt-4 text-sm">
@@ -310,6 +336,7 @@ const linkClass =
                             >
                         </div>
                     </CardContent>
+                    </template>
                 </Card>
 
                 <!-- Tautan Langsung -->

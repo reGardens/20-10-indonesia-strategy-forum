@@ -4,7 +4,8 @@
  *
  * Full-Layer Editorial Sections (ala EU Reporter & ISF broadsheet standard):
  * 1. Pilar Politik: 60/40 Split — Hero Lead Story + 3 Ruled Sub-stories
- * 2. Pilar Hukum: 4-Column Ruled Grid matching Infografik style
+ * 2. Pilar Hukum: 3 kolom (23/54/23) seperti modul ISF Insight / Top News / Media Sorotan:
+ *    urut terbaru dari kiri: kiri 2 berita → tengah 1 berita utama → kanan 4 berita
  * 3. Pilar Kebijakan: 3-Column Ruled Grid (In-depth policy, impact bullet matrix, policy brief)
  * 4. Pilar Video: High-contrast ISF Navy (#0B1220) Multimedia Band (Featured Player + Playlist)
  */
@@ -164,6 +165,12 @@ const hukumItems = computed(() => {
         },
     ];
 });
+
+// Hukum 3 kolom, urut terbaru dari kiri: [0..1] = kiri (2 baris), [2] = tengah (utama),
+// [3..6] = kanan (4 baris). Backend memastikan artikel Top News tidak berada di slot tengah.
+const hukumLeft = computed(() => hukumItems.value.slice(0, 2));
+const hukumLead = computed(() => hukumItems.value[2] || null);
+const hukumRight = computed(() => hukumItems.value.slice(3, 7));
 
 const kebijakanData = computed(() => {
     const sec = props.sections?.kebijakan || {};
@@ -357,7 +364,7 @@ const videoData = computed(() => {
         </section>
 
         <!-- =================================================================== -->
-        <!-- PILAR 2: HUKUM & REGULASI (EU Reporter 4-Column Ruled Grid)         -->
+        <!-- PILAR 2: HUKUM (3 kolom 23/54/23, urut terbaru: kiri 2 → tengah 1 → kanan 4) -->
         <!-- =================================================================== -->
         <section aria-labelledby="section-hukum" class="isf-full-layer-section isf-full-layer-section--navy">
             <SectionHeading
@@ -379,24 +386,199 @@ const videoData = computed(() => {
                 </template>
             </SectionHeading>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            <!-- Grid = modul ISF Insight / Top News / Media Sorotan (23 / 54 / 23).
+                 Mobile: utama → kanan → kiri (urutan sama dengan modul tersebut). -->
+            <div
+                class="grid grid-cols-1 lg:grid-cols-[minmax(0,23fr)_minmax(0,54fr)_minmax(0,23fr)]"
+            >
+                <!-- TENGAH: berita utama (penuh) -->
                 <article
-                    v-for="(item, idx) in hukumItems"
-                    :key="item.id || idx"
-                    class="border-b border-neutral-300 py-4 last:border-b-0 px-3 lg:border-b-0 lg:border-r lg:px-4 lg:py-5 lg:last:border-r-0 xl:px-[30px] flex flex-col justify-between"
+                    v-if="hukumLead"
+                    :class="[
+                        'order-1 min-w-0 px-3 py-4 lg:order-2 lg:border-x lg:border-neutral-300 lg:py-5',
+                        cellPad,
+                    ]"
                 >
-                    <div>
+                    <!-- Teks di dalam gambar (= kartu Infografik Terbaru) -->
+                    <IsfLink
+                        v-if="hukumLead.imageUrl"
+                        :to="hukumLead.to || '#'"
+                        :class="[
+                            linkClass,
+                            'group relative block min-w-0 overflow-hidden bg-isf-navy',
+                        ]"
+                        ><ImagePlaceholder
+                            :label="hukumLead.title"
+                            :src="hukumLead.imageUrl"
+                            aspect="photo"
+                            bare
+                            priority
+                            class="transition-transform duration-500 group-hover:scale-[1.03]"
+                        />
                         <div
-                            v-if="item.imageUrl"
-                            class="overflow-hidden bg-neutral-100 mb-3"
+                            class="pointer-events-none absolute inset-0 flex flex-col justify-end overflow-hidden bg-gradient-to-t from-black/90 via-black/45 to-transparent p-4 sm:p-5"
                         >
-                            <ImagePlaceholder
+                            <p class="isf-byline !text-neutral-200">
+                                <span class="isf-kicker !text-[#f87171]">{{
+                                    hukumLead.kicker
+                                }}</span>
+                                /
+                                <time :datetime="hukumLead.publishedAt">{{
+                                    formatDate(hukumLead.publishedAt)
+                                }}</time>
+                            </p>
+                            <h3
+                                class="isf-headline mt-1.5 text-[22px] leading-[1.15] !text-white sm:text-[28px] xl:text-[32px]"
+                            >
+                                {{ hukumLead.title }}
+                            </h3>
+                            <p
+                                v-if="hukumLead.summary"
+                                class="mt-2 font-serif text-[15px] leading-[1.45] text-neutral-200 line-clamp-3 xl:text-[16px]"
+                            >
+                                {{ hukumLead.summary }}
+                            </p>
+                        </div></IsfLink
+                    >
+                    <template v-else>
+                    <span class="isf-kicker text-isf-red">{{
+                        hukumLead.kicker
+                    }}</span>
+                    <h3
+                        class="isf-headline mt-1 text-[24px] leading-[1.15] sm:text-[28px] xl:text-[32px]"
+                    >
+                        <IsfLink
+                            :to="hukumLead.to || '#'"
+                            :class="[linkClass, 'hover:text-isf-red']"
+                        >
+                            {{ hukumLead.title }}
+                        </IsfLink>
+                    </h3>
+                    <p
+                        v-if="hukumLead.summary"
+                        class="mt-3 font-serif text-[16px] leading-[1.5] text-neutral-600 xl:text-[17px]"
+                    >
+                        {{ hukumLead.summary }}
+                    </p>
+                    <time
+                        :datetime="hukumLead.publishedAt"
+                        class="isf-byline mt-3 block border-t border-neutral-200 pt-2"
+                    >
+                        {{ formatDate(hukumLead.publishedAt) }}
+                    </time>
+                    </template>
+                </article>
+
+                <!-- KANAN: 4 baris -->
+                <div
+                    v-if="hukumRight.length"
+                    class="order-2 min-w-0 border-t border-neutral-300 lg:order-3 lg:border-t-0"
+                >
+                    <article
+                        v-for="(item, idx) in hukumRight"
+                        :key="item.id || idx"
+                        :class="[
+                            'border-b border-neutral-300 px-3 py-4 last:border-b-0 lg:py-5',
+                            cellPad,
+                        ]"
+                    >
+                        <div
+                            :class="
+                                item.imageUrl
+                                    ? 'grid grid-cols-[minmax(0,1fr)_4.5rem] items-start gap-3'
+                                    : ''
+                            "
+                        >
+                            <div class="min-w-0">
+                                <span class="isf-kicker text-isf-red">{{
+                                    item.kicker
+                                }}</span>
+                                <h3
+                                    class="isf-headline mt-1 text-[16px] leading-[1.25] xl:text-[17px]"
+                                >
+                                    <IsfLink
+                                        :to="item.to || '#'"
+                                        :class="[linkClass, 'hover:text-isf-red']"
+                                    >
+                                        {{ item.title }}
+                                    </IsfLink>
+                                </h3>
+                                <time
+                                    :datetime="item.publishedAt"
+                                    class="isf-byline mt-1.5 block"
+                                >
+                                    {{ formatDate(item.publishedAt) }}
+                                </time>
+                            </div>
+                            <div
+                                v-if="item.imageUrl"
+                                class="overflow-hidden bg-neutral-100"
+                            >
+                                <ImagePlaceholder
+                                    :label="item.title"
+                                    :src="item.imageUrl"
+                                    aspect="square"
+                                    bare
+                                />
+                            </div>
+                        </div>
+                    </article>
+                </div>
+
+                <!-- KIRI: 2 baris (gambar 4:3 agar teks di dalam gambar tidak terpotong) -->
+                <div
+                    v-if="hukumLeft.length"
+                    class="order-3 min-w-0 border-t border-neutral-300 lg:order-1 lg:border-t-0"
+                >
+                    <article
+                        v-for="(item, idx) in hukumLeft"
+                        :key="item.id || idx"
+                        :class="[
+                            'border-b border-neutral-300 px-3 py-4 last:border-b-0 lg:py-5',
+                            cellPad,
+                        ]"
+                    >
+                        <!-- Teks di dalam gambar (= kartu Infografik Terbaru) -->
+                        <IsfLink
+                            v-if="item.imageUrl"
+                            :to="item.to || '#'"
+                            :class="[
+                                linkClass,
+                                'group relative block min-w-0 overflow-hidden bg-isf-navy',
+                            ]"
+                            ><ImagePlaceholder
                                 :label="item.title"
                                 :src="item.imageUrl"
-                                aspect="photo"
+                                aspect="card"
                                 bare
+                                class="transition-transform duration-500 group-hover:scale-[1.03]"
                             />
-                        </div>
+                            <div
+                                class="pointer-events-none absolute inset-0 flex flex-col justify-end overflow-hidden bg-gradient-to-t from-black/90 via-black/55 to-transparent p-3 sm:p-4 lg:p-3 xl:p-4"
+                            >
+                                <p class="isf-byline !text-neutral-200">
+                                    <span class="isf-kicker !text-[#f87171]">{{
+                                        item.kicker
+                                    }}</span>
+                                    /
+                                    <time :datetime="item.publishedAt">{{
+                                        formatDate(item.publishedAt)
+                                    }}</time>
+                                </p>
+                                <h3
+                                    class="isf-headline mt-1 text-[16px] leading-[1.2] !text-white line-clamp-3 xl:text-[18px]"
+                                >
+                                    {{ item.title }}
+                                </h3>
+                                <p
+                                    v-if="item.summary"
+                                    class="mt-1.5 font-serif text-[13px] leading-[1.4] text-neutral-200 line-clamp-2"
+                                >
+                                    {{ item.summary }}
+                                </p>
+                            </div></IsfLink
+                        >
+                        <template v-else>
                         <span class="isf-kicker text-isf-red">{{
                             item.kicker
                         }}</span>
@@ -411,18 +593,20 @@ const videoData = computed(() => {
                             </IsfLink>
                         </h3>
                         <p
+                            v-if="item.summary"
                             class="mt-2 font-serif text-[14px] leading-[1.45] text-neutral-600 line-clamp-3"
                         >
                             {{ item.summary }}
                         </p>
-                    </div>
-                    <time
-                        :datetime="item.publishedAt"
-                        class="isf-byline mt-3 block pt-2 border-t border-neutral-200"
-                    >
-                        {{ formatDate(item.publishedAt) }}
-                    </time>
-                </article>
+                        <time
+                            :datetime="item.publishedAt"
+                            class="isf-byline mt-3 block border-t border-neutral-200 pt-2"
+                        >
+                            {{ formatDate(item.publishedAt) }}
+                        </time>
+                        </template>
+                    </article>
+                </div>
             </div>
         </section>
 
@@ -507,6 +691,16 @@ const videoData = computed(() => {
                     :class="cellPad"
                 >
                     <div>
+                        <div
+                            v-if="kebijakanData.impact.imageUrl"
+                            class="overflow-hidden bg-neutral-100 mb-3"
+                        >
+                            <ImagePlaceholder
+                                :label="kebijakanData.impact.title"
+                                :src="kebijakanData.impact.imageUrl"
+                                aspect="photo"
+                            />
+                        </div>
                         <div class="flex items-center gap-2">
                             <span
                                 class="h-2 w-2 rounded-full bg-isf-red"
@@ -559,6 +753,16 @@ const videoData = computed(() => {
                     :class="cellPad"
                 >
                     <div>
+                        <div
+                            v-if="kebijakanData.brief.imageUrl"
+                            class="overflow-hidden bg-neutral-100 mb-3"
+                        >
+                            <ImagePlaceholder
+                                :label="kebijakanData.brief.title"
+                                :src="kebijakanData.brief.imageUrl"
+                                aspect="photo"
+                            />
+                        </div>
                         <span class="isf-kicker text-neutral-900">{{
                             kebijakanData.brief.kicker
                         }}</span>

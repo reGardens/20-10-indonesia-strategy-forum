@@ -15,6 +15,17 @@ class TokohRequest extends FormRequest
         return true;
     }
 
+    /**
+     * Gambar diisi tetapi Alt Text kosong → pakai name sebagai Alt Text
+     * (sebelumnya ditolak validasi sehingga gambar tidak tersimpan).
+     */
+    protected function prepareForValidation(): void
+    {
+        if (trim((string) $this->input('photo_url')) !== '' && trim((string) $this->input('photo_alt')) === '') {
+            $this->merge(['photo_alt' => mb_substr((string) $this->input('name'), 0, 255)]);
+        }
+    }
+
     public function rules(): array
     {
         // Every matrix row has one involvement flag per column.

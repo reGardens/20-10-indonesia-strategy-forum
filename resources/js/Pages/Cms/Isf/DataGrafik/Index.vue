@@ -228,6 +228,7 @@ onMounted(() => {
       <Table>
         <TableHeader>
           <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
+            <TableHead class="w-12 text-center text-xs">#</TableHead>
             <TableHead class="w-[40%]">Judul Grafik & Analis</TableHead>
             <TableHead>Satuan</TableHead>
             <TableHead class="w-24 text-center">Urutan</TableHead>
@@ -238,7 +239,7 @@ onMounted(() => {
         </TableHeader>
         <TableBody>
           <TableRow v-if="items.length === 0">
-            <TableCell colspan="6" class="text-center py-10 text-muted-foreground text-sm">
+            <TableCell colspan="7" class="text-center py-10 text-muted-foreground text-sm">
               Tidak ada dataset grafik ditemukan.
             </TableCell>
           </TableRow>
@@ -247,6 +248,9 @@ onMounted(() => {
             :key="item.id"
             class="hover:bg-muted/30 transition border-b border-border/50"
           >
+            <TableCell class="text-center text-xs font-mono text-muted-foreground">
+              {{ (meta.current_page - 1) * meta.per_page + idx + 1 }}
+            </TableCell>
             <TableCell class="py-3 text-foreground text-sm">
               <div class="font-semibold line-clamp-2">{{ item.title }}</div>
               <div v-if="item.author_name" class="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
