@@ -287,6 +287,14 @@ class PublicContentController extends Controller
                 $popupBannerConfig = $activePopupBannerItem ?: array_merge($defaultIklan['popup'], ['type' => 'banner']);
                 $popupVideoConfig = $activePopupVideoItem ?: array_merge($defaultIklan['popup'], ['type' => 'video', 'video_duration' => 30]);
 
+                // Semua popup aktif (urut kolom Urutan) untuk antrean popup berulang di Beranda.
+                $activePopupList = collect($iklanItems)
+                    ->filter(fn($it) => in_array($it['placement'], ['popup_banner', 'popup_video', 'popup_duration', 'popup']))
+                    ->filter($isItemActive)
+                    ->sortBy('order')
+                    ->values()
+                    ->all();
+
                 $bannerConfig['is_active'] = !empty($activeBannerItem);
                 $popupConfig['is_active'] = !empty($activeTopPopup);
                 $popupBannerConfig['is_active'] = !empty($activePopupBannerItem);
@@ -326,7 +334,24 @@ class PublicContentController extends Controller
                 $popupConfig['is_active'] = $popupActive;
                 $popupBannerConfig['is_active'] = $popupActive && ($popupConfig['type'] ?? 'banner') === 'banner';
                 $popupVideoConfig['is_active'] = $popupActive && ($popupConfig['type'] ?? '') === 'video';
+                $activePopupList = $popupActive ? [$popupConfig] : [];
             }
+
+            $popupPayload = fn(array $it) => [
+                'id' => $it['id'] ?? 'popup',
+                'title' => $it['title'] ?? '',
+                'type' => ($it['type'] ?? '') === 'video' || in_array($it['placement'] ?? '', ['popup_video', 'popup_duration']) ? 'video' : 'banner',
+                'imageUrl' => $it['image_url'] ?? '',
+                'videoUrl' => $it['video_url'] ?? '',
+                'videoDuration' => (int) ($it['video_duration'] ?? 30),
+                'targetUrl' => $it['target_url'] ?? '',
+                // "Jeda Waktu Muncul Kembali" (menit) dari CMS; null = default di frontend.
+                'intervalMinutes' => isset($it['interval_minutes']) ? (int) $it['interval_minutes'] : null,
+                // "Jeda Tampil Pertama" (detik); dipakai dari popup urutan pertama. null = default di frontend.
+                'firstDelaySeconds' => isset($it['first_delay_seconds']) ? (int) $it['first_delay_seconds'] : null,
+                'status' => $it['status'] ?? 'terbit',
+                'isActive' => true,
+            ];
 
             return [
                 'topBar' => $settings['topBar'] ?? null,
@@ -372,6 +397,8 @@ class PublicContentController extends Controller
                         'startDate' => $popupBannerConfig['start_date'] ?? null,
                         'endDate' => $popupBannerConfig['end_date'] ?? null,
                     ],
+                    // Antrean popup berulang (urut CMS); dipakai Beranda.
+                    'popups' => array_map($popupPayload, $activePopupList),
                     'popup_video' => [
                         'title' => $popupVideoConfig['title'] ?? '',
                         'type' => 'video',
@@ -1490,13 +1517,25 @@ HTML;
             }
         }
 
-        // 2. Hukum (4-Column Ruled Grid ala EU Reporter)
+        // 2. Hukum (3 kolom, maks. 7 artikel): semua artikel Hukum terbit, urut terbaru,
+        // diisi kiri (2) → tengah (1) → kanan (4). Artikel Top News (hero) tidak boleh di tengah:
+        // bila jatuh di slot tengah, ditukar dengan artikel berikutnya.
+        // Bila artikel < 4, slot diisi konten contoh sampai 4 (perilaku lama tidak berubah).
+        $heroId = Article::currentHero()?->id;
         $hukumArticles = Article::query()->terbit()
             ->whereIn('category', IsfRubrik::categories('hukum'))
             ->orderByDesc('published_at')
             ->orderByDesc('id')
-            ->take(4)
-            ->get();
+            ->take(7)
+            ->get()
+            ->values();
+        $centerIndex = 2;
+        if ($heroId && $hukumArticles->count() > $centerIndex && $hukumArticles[$centerIndex]->id === $heroId) {
+            $swapIndex = $hukumArticles->count() > $centerIndex + 1 ? $centerIndex + 1 : $centerIndex - 1;
+            $all = $hukumArticles->all();
+            [$all[$centerIndex], $all[$swapIndex]] = [$all[$swapIndex], $all[$centerIndex]];
+            $hukumArticles = collect($all);
+        }
 
         $hukumItems = [];
         foreach ($hukumArticles as $art) {
@@ -1635,6 +1674,7 @@ HTML;
                 'kicker' => $impact->categoryLabel(),
                 'publishedAt' => $impact->published_at ? $impact->published_at->format('Y-m-d') : date('Y-m-d'),
                 'keyPoints' => $points,
+                'imageUrl' => $impact->image_url ?: '',
                 'to' => $impact->publicUrl(),
             ];
         }
@@ -1648,6 +1688,7 @@ HTML;
                 'authorRole' => $brief->author_role ?: '',
                 // Artikel belum punya field kutipan: ringkasan dipakai sebagai kutipan Policy Brief.
                 'quote' => $brief->summary ?: '',
+                'imageUrl' => $brief->image_url ?: '',
                 'to' => $brief->publicUrl(),
             ];
         }

@@ -356,12 +356,15 @@ async function handleImageUpload(event) {
         const csrfToken = document.querySelector(
             'meta[name="csrf-token"]',
         )?.content;
-        const headers = {};
+        const headers = {
+            Accept: "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+        };
         if (csrfToken) {
             headers["X-CSRF-TOKEN"] = csrfToken;
         }
 
-        const response = await fetch("/cms/upload-image", {
+        const response = await fetch("/api/cms/media/upload", { // endpoint unggah media CMS (sama dengan ImageUpload)
             method: "POST",
             headers,
             credentials: "same-origin",
@@ -373,7 +376,7 @@ async function handleImageUpload(event) {
             editor.value.chain().focus().setImage({ src: data.url }).run();
         } else {
             alert(
-                "Gagal upload gambar. Pastikan format JPG/PNG/WebP/SVG dan ukuran max 2MB.",
+                "Gagal upload gambar. Pastikan format JPG/PNG/WebP/GIF/SVG dan ukuran max 5MB.",
             );
         }
     } catch (error) {

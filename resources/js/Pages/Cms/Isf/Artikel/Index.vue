@@ -3,6 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import { Head, Link } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
 import { cmsResources } from '@/api/services/isfCmsService'
+import { activeCategories as CATEGORIES, loadCategories } from '@/Pages/Cms/Isf/options'
 import { confirmDelete, alertSuccess, alertError } from '@/Composables/useAlert'
 import StatusBadge from '@/Pages/Cms/components/shared/StatusBadge.vue'
 import LiveBadge from '@/Pages/Cms/components/shared/LiveBadge.vue'
@@ -32,6 +33,7 @@ const errorMsg = ref('')
 
 const search = ref('')
 const statusFilter = ref('')
+const categoryFilter = ref('')
 const page = ref(1)
 
 let searchTimeout = null
@@ -43,7 +45,8 @@ async function loadData() {
     const res = await cmsResources.artikel.list({
       page: page.value,
       q: search.value || undefined,
-      status: statusFilter.value || undefined
+      status: statusFilter.value || undefined,
+      category: categoryFilter.value || undefined
     })
     items.value = res.data || []
     meta.value = {
@@ -70,6 +73,11 @@ function onSearchInput() {
 
 function onStatusChange(val) {
   statusFilter.value = val
+  page.value = 1
+  loadData()
+}
+
+function onCategoryChange() {
   page.value = 1
   loadData()
 }
@@ -116,6 +124,7 @@ function formatDate(val) {
 }
 
 onMounted(() => {
+  loadCategories()
   loadData()
 })
 </script>
@@ -161,7 +170,31 @@ onMounted(() => {
         />
       </div>
 
-      <div class="flex items-center gap-2 overflow-x-auto w-full sm:w-auto justify-start py-0.5">
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 w-full sm:w-auto justify-start py-0.5">
+      <!-- Filter Kategori (opsi sama dengan form artikel) -->
+      <div class="flex items-center gap-2">
+        <label for="filter-kategori" class="text-xs text-muted-foreground whitespace-nowrap">Kategori:</label>
+        <div class="relative">
+          <select
+            id="filter-kategori"
+            v-model="categoryFilter"
+            @change="onCategoryChange"
+            class="h-8 rounded-md border border-input bg-background pl-2.5 pr-8 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring appearance-none"
+          >
+            <option value="">Semua</option>
+            <option v-for="cat in CATEGORIES" :key="cat.value" :value="cat.value">
+              {{ cat.label }}
+            </option>
+          </select>
+          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-muted-foreground">
+            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 overflow-x-auto justify-start">
         <span class="text-xs text-muted-foreground whitespace-nowrap">Status:</span>
         <div class="flex gap-1">
           <button
@@ -202,6 +235,7 @@ onMounted(() => {
           </button>
         </div>
       </div>
+      </div>
     </div>
 
     <!-- Loading & Error -->
@@ -213,6 +247,7 @@ onMounted(() => {
       <Table>
         <TableHeader>
           <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
+            <TableHead class="w-12 text-center text-xs">#</TableHead>
             <TableHead class="w-[40%]">Judul & Slug</TableHead>
             <TableHead>Kategori</TableHead>
             <TableHead>Status</TableHead>
@@ -223,15 +258,18 @@ onMounted(() => {
         </TableHeader>
         <TableBody>
           <TableRow v-if="items.length === 0">
-            <TableCell colspan="6" class="text-center py-10 text-muted-foreground text-sm">
+            <TableCell colspan="7" class="text-center py-10 text-muted-foreground text-sm">
               Tidak ada artikel ditemukan.
             </TableCell>
           </TableRow>
           <TableRow
-            v-for="item in items"
+            v-for="(item, idx) in items"
             :key="item.id"
             class="hover:bg-muted/30 transition border-b border-border/50"
           >
+            <TableCell class="text-center text-xs font-mono text-muted-foreground">
+              {{ (meta.current_page - 1) * meta.per_page + idx + 1 }}
+            </TableCell>
             <TableCell class="py-3">
               <div class="font-semibold text-foreground text-sm leading-snug line-clamp-2">
                 {{ item.title }}

@@ -6,7 +6,7 @@
  * - Gesture support: swipe up / drag up for next, swipe down / drag down for prev
  *   (also supports swipe left/right gracefully)
  * - Real-time vertical drag feedback (translateY)
- * - Clean layout with no cluttered indicator/arrow buttons
+ * - Indikator posisi berita di pojok kanan (titik, dapat diklik)
  * - Auto-advances every `interval` ms (pauses on hover, focus, drag, reduced-motion)
  * - Clickable headline with drag-safe click suppression
  * - Aligned with ISF editorial styling (Politico-inspired)
@@ -102,6 +102,13 @@ function next() {
 
 function prev() {
     go(activeIndex.value - 1, "prev");
+}
+
+/** Lompat ke berita tertentu dari indikator; arah animasi mengikuti posisi. */
+function goTo(index) {
+    if (index === activeIndex.value) return;
+    go(index, index > activeIndex.value ? "next" : "prev");
+    startTimer();
 }
 
 // Timer
@@ -319,7 +326,7 @@ function onFocusOut(event) {
         <!-- Center & Full Track: Headline Track with Vertical Touch Swipe & Mouse Drag -->
         <div
             ref="trackRef"
-            class="flex-1 min-w-0 mx-2 sm:mx-3 overflow-hidden relative flex items-center cursor-grab active:cursor-grabbing touch-none"
+            class="flex-1 min-w-0 mx-2 sm:mx-3 h-6 overflow-hidden relative flex items-center cursor-grab active:cursor-grabbing touch-none"
             :aria-live="isRunning ? 'off' : 'polite'"
             @mousedown="onMouseDown"
             @touchstart="onTouchStart"
@@ -327,19 +334,19 @@ function onFocusOut(event) {
             @touchend="onTouchEnd"
             @click.capture="handleClickCapture"
         >
-            <Transition :name="`ticker-${slideDirection}`" mode="out-in">
+            <Transition :name="`ticker-${slideDirection}`">
                 <div
                     v-if="currentItem"
                     :key="currentItem.id || activeIndex"
                     class="flex items-center gap-2 truncate w-full will-change-transform"
-                    :style="{
-                        transform: isDragging
-                            ? `translateY(${dragDeltaY}px)`
-                            : 'none',
-                        transition: isDragging
-                            ? 'none'
-                            : 'transform 200ms ease-out',
-                    }"
+                    :style="
+                        isDragging
+                            ? {
+                                  transform: `translateY(${dragDeltaY}px)`,
+                                  transition: 'none',
+                              }
+                            : null
+                    "
                 >
                     <span
                         v-if="currentItem.category"
@@ -364,6 +371,38 @@ function onFocusOut(event) {
                 </div>
             </Transition>
         </div>
+
+        <!-- Right: indikator posisi berita -->
+        <div
+            v-if="canRotate"
+            class="flex shrink-0 items-center gap-1.5 select-none"
+            role="group"
+            aria-label="Pilih berita Hot News"
+        >
+            <span
+                class="font-ui text-[11px] font-semibold tabular-nums text-neutral-500 sm:hidden"
+                aria-hidden="true"
+                >{{ activeIndex + 1 }}/{{ totalItems }}</span
+            >
+            <button
+                v-for="(item, idx) in activeItems"
+                :key="item.id || idx"
+                type="button"
+                :aria-label="`Berita ${idx + 1}: ${item.title}`"
+                :aria-current="idx === activeIndex ? 'true' : undefined"
+                class="hidden h-4 items-center justify-center sm:inline-flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red"
+                @click="goTo(idx)"
+            >
+                <span
+                    :class="[
+                        'block h-1.5 rounded-full transition-all duration-300',
+                        idx === activeIndex
+                            ? 'w-4 bg-isf-red'
+                            : 'w-1.5 bg-neutral-300 hover:bg-neutral-400',
+                    ]"
+                ></span>
+            </button>
+        </div>
     </div>
 </template>
 
@@ -372,26 +411,44 @@ function onFocusOut(event) {
 .ticker-next-leave-active,
 .ticker-prev-enter-active,
 .ticker-prev-leave-active {
-    transition: opacity 220ms ease-out, transform 220ms cubic-bezier(0.25, 1, 0.5, 1);
+    transition:
+        transform 450ms cubic-bezier(0.65, 0, 0.35, 1),
+        opacity 450ms cubic-bezier(0.65, 0, 0.35, 1);
 }
 
-/* Next: slide up from bottom to top */
+/* Berita yang keluar ditumpuk di posisi yang sama agar keluar & masuk berjalan bersamaan. */
+.ticker-next-leave-active,
+.ticker-prev-leave-active {
+    position: absolute;
+    inset: 0;
+}
+
+/* Next: berita baru naik dari bawah, berita lama naik keluar ke atas. */
 .ticker-next-enter-from {
     opacity: 0;
-    transform: translateY(18px);
+    transform: translateY(100%);
 }
 .ticker-next-leave-to {
     opacity: 0;
-    transform: translateY(-18px);
+    transform: translateY(-100%);
 }
 
-/* Prev: slide down from top to bottom */
+/* Prev: kebalikannya (turun). */
 .ticker-prev-enter-from {
     opacity: 0;
-    transform: translateY(-18px);
+    transform: translateY(-100%);
 }
 .ticker-prev-leave-to {
     opacity: 0;
-    transform: translateY(18px);
+    transform: translateY(100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ticker-next-enter-active,
+    .ticker-next-leave-active,
+    .ticker-prev-enter-active,
+    .ticker-prev-leave-active {
+        transition: none;
+    }
 }
 </style>

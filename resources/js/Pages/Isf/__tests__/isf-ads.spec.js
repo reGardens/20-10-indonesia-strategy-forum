@@ -406,7 +406,10 @@ describe('ISF Ads Unit Tests (Issue #38)', () => {
             // Muncul tab Gambar / Banner vs Video (Durasi) di card materi media di atas wording
             expect(root.textContent).toContain('Gambar / Banner');
             expect(root.textContent).toContain('Video (Durasi)');
-            expect(root.textContent).toContain('Jeda Waktu Muncul Kembali (Menit)');
+            // Pengaturan waktu popup (disederhanakan): tampil pertama (detik) & tampil lagi (menit).
+            expect(root.textContent).toContain('Waktu Tampil Popup');
+            expect(root.textContent).toContain('Tampil pertama setelah');
+            expect(root.textContent).toContain('Tampil lagi setelah');
 
             // Pilih kategori 'spanduk' -> Tidak memunculkan popup konfirmasi lagi (karena spanduk sekarang bisa banyak)
             select.value = 'spanduk';

@@ -22,7 +22,14 @@ class ArticleController extends CmsResourceController
 
     protected array $searchColumns = ['title', 'slug'];
 
-    protected array $order = ['id' => 'desc'];
+    /** Filter daftar CMS: ?category=politik|hukum|kebijakan */
+    protected array $filterColumns = ['category'];
+
+    /** Hero yang sedang tayang selalu paling atas. */
+    protected bool $liveFirst = true;
+
+    /** Terbaru di atas: tanggal terbit terbaru, lalu yang terakhir diunggah. */
+    protected array $order = ['published_at' => 'desc', 'id' => 'desc'];
 
     /** Beranda hero currently shown on the public page. */
     protected function liveId(): ?int

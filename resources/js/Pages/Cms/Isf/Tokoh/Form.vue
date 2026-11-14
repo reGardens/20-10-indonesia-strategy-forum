@@ -86,6 +86,8 @@ function generateSlug(val) {
 }
 
 function onNameInput(e) {
+  // Edit: slug tidak ikut berubah dari nama (URL profil tokoh yang sudah terbit tetap).
+  if (props.id) return
   const val = e.target.value
   if (!val || !val.trim()) {
     form.slug = ''
@@ -109,6 +111,7 @@ function onSlugInput(e) {
 watch(
   () => form.name,
   (newVal) => {
+    if (props.id) return
     if (!newVal || !newVal.trim()) {
       form.slug = ''
       slugCustomized.value = false

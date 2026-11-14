@@ -4,7 +4,9 @@
  * Mendukung:
  * - Tipe A (Banner Statis): Gambar iklan dengan tombol close (X) di bagian bawah popup.
  * - Tipe B (Cuplikan Video 30 Detik): Video pendek yang otomatis tertutup (auto-close) saat durasi habis, disertai kontrol manual.
- * Menggunakan sessionStorage agar popup tidak muncul berulang di setiap refresh halaman.
+ * Mode mandiri (default): sessionStorage agar popup tidak muncul berulang di setiap refresh halaman.
+ * Mode `controlled`: dibuka saat di-mount dan menutup dengan emit('close'); jadwal muncul ulang
+ * diatur pemanggil (useIsfPopupQueue), tanpa flag "sudah dilihat".
  */
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 
@@ -20,6 +22,11 @@ const props = defineProps({
     storageKey: {
         type: String,
         default: '',
+    },
+    // Dikendalikan antrean popup (Beranda): tanpa sessionStorage/cookie "sudah dilihat".
+    controlled: {
+        type: Boolean,
+        default: false,
     },
 });
 
@@ -105,8 +112,7 @@ function startVideoCountdown() {
 function closeModal() {
     isVisible.value = false;
     clearInterval(timerInterval);
-
-    if (!props.forcePreview) {
+    if (!props.forcePreview && !props.controlled) {
         try {
             sessionStorage.setItem(effectiveStorageKey.value, 'true');
             sessionStorage.setItem('isf_popup_ad_seen', 'true');
@@ -142,11 +148,10 @@ function handleKeydown(e) {
 onMounted(() => {
     window.addEventListener('keydown', handleKeydown);
 
-    if (props.forcePreview) {
+    if (props.forcePreview || props.controlled) {
         openModal();
         return;
     }
-
     try {
         const seenInSession = sessionStorage.getItem(effectiveStorageKey.value) || sessionStorage.getItem('isf_popup_ad_seen');
         const seenInCookie = document.cookie.split('; ').some((row) => row.startsWith(`${effectiveStorageKey.value}=`) || row.startsWith('isf_popup_ad_seen='));

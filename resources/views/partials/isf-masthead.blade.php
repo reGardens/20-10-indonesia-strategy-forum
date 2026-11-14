@@ -7,20 +7,12 @@
     $isfMember = request()->is('anggota*');
     // = isLoggedIn di IsfHeader.vue (GET /api/isf/me): user login → avatar + nama + Keluar di semua halaman.
     $isfAuthUser = auth()->user();
-    $isfShowMemberArea = $isfMember || $isfAuthUser;
-    $isfMemberName = 'Anindya Putri'; // fallback yang sama dengan IsfHeader.vue
-    if ($isfAuthUser && trim((string) $isfAuthUser->name) !== '') {
-        $isfMemberName = (string) $isfAuthUser->name;
-    } elseif ($isfMember) {
-        try {
-            $isfMemberName = (\App\Models\Isf\Setting::get('anggota', [])['name'] ?? '') ?: $isfMemberName;
-        } catch (\Throwable $e) {
-            // shell tetap tampil walau DB tidak tersedia
-        }
-    }
+    // Avatar & nama hanya untuk user yang benar-benar login (tamu di /anggota → tombol Login, tanpa nama contoh).
+    $isfShowMemberArea = (bool) $isfAuthUser;
+    $isfMemberName = $isfAuthUser ? trim((string) $isfAuthUser->name) : '';
     // = memberInitials di IsfHeader.vue
     $isfMemberInitials = collect(preg_split('/\s+/', trim($isfMemberName)))->filter()->take(2)
-        ->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->implode('') ?: 'AP';
+        ->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->implode('') ?: 'A';
 @endphp
 <style>
 /* ── Initial SSR state synced with localStorage data-isf-layout ──────────── */
@@ -204,15 +196,8 @@ html[data-isf-layout="row-3"] .isf-ssr-masthead { padding-top: 0.875rem; padding
                         <path d="M9 17v1a3 3 0 0 0 6 0v-1" />
                     </svg>
                 </button>
-                @if ($isfAuthUser)
                 {{-- = pemicu IsfProfileMenu (menu nama + Keluar dibuka oleh Vue) --}}
                 <button type="button" aria-haspopup="menu" aria-expanded="false" aria-label="Menu akun {{ $isfMemberName }}" title="{{ $isfMemberName }}" class="inline-flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xs bg-isf-red text-[11px] sm:text-xs font-bold text-white tracking-wider shadow-xs">{{ $isfMemberInitials }}</button>
-                @else
-                <a href="/anggota" class="flex items-center gap-2 select-none group" title="Portal Anggota">
-                    <span class="inline-flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xs bg-isf-red text-[11px] sm:text-xs font-bold text-white tracking-wider shadow-xs" aria-hidden="true">{{ $isfMemberInitials }}</span>
-                    <span class="hidden max-w-[120px] truncate text-[12px] font-space-grotesk font-semibold text-neutral-200 sm:inline">{{ $isfMemberName }}</span>
-                </a>
-                @endif
                 @else
                 <a href="/login" class="isf-ssr-login whitespace-nowrap font-space-grotesk text-[11px] md:text-[12px] font-bold uppercase tracking-[0.1em] rounded-md border border-white/30 px-2.5 py-1 text-white sm:inline shadow-2xs" style="font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.3); padding: 4px 10px; color: #ffffff; text-decoration: none;">Login</a>
                 @endif
