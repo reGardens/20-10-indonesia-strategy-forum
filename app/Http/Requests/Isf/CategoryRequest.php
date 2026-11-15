@@ -20,6 +20,11 @@ class CategoryRequest extends FormRequest
         $id = $this->route('category')?->id ?? $this->route('category') ?? $this->route('kategori')?->id ?? $this->route('kategori');
 
         return [
+            'parent_id' => ['nullable', 'integer', 'exists:isf_categories,id', function ($attribute, $value, $fail) use ($id) {
+                if ($id && (int) $value === (int) $id) {
+                    $fail('Kategori tidak dapat menjadi induk bagi dirinya sendiri.');
+                }
+            }],
             'name' => $this->textRules(true, 100),
             'slug' => [
                 'required',

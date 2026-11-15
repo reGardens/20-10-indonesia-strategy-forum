@@ -565,6 +565,44 @@
                         </aside>
                     </div>
                 </main>
+            @elseif(request()->is('politik') || request()->is('politik/*'))
+                @include('partials.isf-masthead')
+                <main class="isf-skel-article isf-skel-article--full isf-skel-pulse" aria-busy="true" aria-label="Memuat rubrik politik">
+                    <div class="isf-skel-el" style="width: 140px; height: 12px; margin-bottom: 16px;"></div>
+                    <div class="isf-skel-el" style="width: 260px; height: 42px; margin-bottom: 12px;"></div>
+                    <div class="isf-skel-el" style="width: 55%; height: 18px; margin-bottom: 24px;"></div>
+                    <div style="display: flex; gap: 8px; margin-bottom: 40px; flex-wrap: wrap;">
+                        @for ($i = 0; $i < 5; $i++)
+                            <div class="isf-skel-el" style="width: 110px; height: 36px; border-radius: 9999px;"></div>
+                        @endfor
+                    </div>
+                    <div class="isf-skel-stack">
+                        <section class="isf-skel-frame isf-skel-frame--accent">
+                            <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 160px; height: 26px;"></div></div>
+                            <div class="isf-skel-framebody isf-skel-lines">
+                                <div class="isf-skel-el" style="height: 320px;"></div>
+                                <div class="isf-skel-el" style="width: 70%; height: 30px;"></div>
+                                <div class="isf-skel-el" style="height: 16px;"></div>
+                            </div>
+                        </section>
+                        <section class="isf-skel-frame isf-skel-frame--cream">
+                            <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 220px; height: 26px;"></div></div>
+                            <div class="isf-skel-framebody" style="padding: 24px;">
+                                <div class="isf-skel-el" style="height: 280px; width: 100%;"></div>
+                            </div>
+                        </section>
+                        <section class="isf-skel-frame isf-skel-frame--accent">
+                            <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 180px; height: 26px;"></div></div>
+                            <div class="isf-skel-framebody isf-skel-lines">
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                                    @for ($i = 0; $i < 6; $i++)
+                                        <div class="isf-skel-el" style="height: 220px;"></div>
+                                    @endfor
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </main>
             @elseif(in_array(request()->path(), array_map(fn ($k) => 'artikel/' . $k, \App\Support\IsfRubrik::keys()), true))
                 @include('partials.isf-masthead')
                 <main class="isf-skel-article isf-skel-article--full isf-skel-pulse" aria-busy="true" aria-label="Memuat rubrik">

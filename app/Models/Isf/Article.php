@@ -19,6 +19,7 @@ class Article extends Model
         'slug',
         'title',
         'category',
+        'subcategory',
         'published_at',
         'summary',
         'body',

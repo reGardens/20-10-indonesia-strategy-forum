@@ -32,6 +32,7 @@ class Tokoh extends Model
         'calendar_events',
         'teaser',
         'is_featured',
+        'show_in_politik',
         'status',
     ];
 
@@ -47,6 +48,7 @@ class Tokoh extends Model
             'calendar_month' => 'integer',
             'calendar_events' => 'array',
             'is_featured' => 'boolean',
+            'show_in_politik' => 'boolean',
         ];
     }
 

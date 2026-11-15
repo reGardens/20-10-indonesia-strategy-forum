@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Head, Link } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
 import { cmsResources } from '@/api/services/isfCmsService'
@@ -27,18 +27,37 @@ const props = defineProps({
 
 const isEdit = computed(() => Boolean(props.id))
 let slugTouched = false
+const allCategories = ref([])
 
 const { form, err, loading, loadError, saving, save, load } = useCmsForm({
   resource: cmsResources.kategori,
   id: props.id,
   indexHref: '/cms/kategori',
   defaults: {
+    parent_id: null,
     name: '',
     slug: '',
     description: '',
     order: 0,
     status: 'terbit'
   }
+})
+
+async function loadParentCategories() {
+  try {
+    const res = await cmsResources.kategori.list({ per_page: 100 })
+    allCategories.value = Array.isArray(res) ? res : (res?.data || [])
+  } catch {}
+}
+
+onMounted(loadParentCategories)
+
+const availableParents = computed(() => {
+  return allCategories.value.filter(c => {
+    // Tidak boleh memilih dirinya sendiri atau sesama sub-kategori
+    if (props.id && c.id === props.id) return false
+    return !c.parent_id
+  })
 })
 
 function generateSlug(val) {
@@ -149,6 +168,36 @@ function onSlugInput() {
               </p>
               <p v-if="err('slug')" class="text-xs text-red-400 mt-1">{{ err('slug') }}</p>
             </div>
+          </div>
+
+          <!-- Kategori Induk (Parent) -->
+          <div class="space-y-1.5">
+            <Label for="parent_id" class="text-xs font-medium text-foreground">Kategori Induk (Opsional)</Label>
+            <div class="relative">
+              <select
+                id="parent_id"
+                v-model="form.parent_id"
+                class="w-full h-9 rounded-md border border-input bg-background pl-3 pr-9 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring appearance-none"
+              >
+                <option :value="null">-- Kategori Utama (Tanpa Induk) --</option>
+                <option
+                  v-for="parent in availableParents"
+                  :key="parent.id"
+                  :value="parent.id"
+                >
+                  {{ parent.name }}
+                </option>
+              </select>
+              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-muted-foreground">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+            <p class="text-[11px] text-muted-foreground">
+              Pilih kategori induk jika kategori ini merupakan sub-kategori (misal: sub-kategori dari Politik). Kosongkan jika merupakan kategori utama.
+            </p>
+            <p v-if="err('parent_id')" class="text-xs text-red-400 mt-1">{{ err('parent_id') }}</p>
           </div>
 
           <!-- Deskripsi -->

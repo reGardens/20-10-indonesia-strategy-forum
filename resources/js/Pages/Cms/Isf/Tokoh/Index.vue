@@ -225,14 +225,22 @@ onMounted(() => {
               <StatusBadge :status="item.status" />
             </TableCell>
             <TableCell>
-              <LiveBadge v-if="item.id === liveId" label="Pekan Ini Tayang" />
-              <span
-                v-else-if="item.is_featured"
-                class="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium"
-              >
-                Flag Featured
-              </span>
-              <span v-else class="text-xs text-muted-foreground">-</span>
+              <div class="flex flex-col items-start gap-1">
+                <LiveBadge v-if="item.id === liveId" label="Pekan Ini Tayang" />
+                <span
+                  v-else-if="item.is_featured"
+                  class="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium"
+                >
+                  Flag Featured
+                </span>
+                <span
+                  v-if="item.show_in_politik"
+                  class="text-[9px] px-1.5 py-0.5 rounded bg-red-500/10 text-red-600 font-semibold border border-red-500/20"
+                >
+                  Profil Politik
+                </span>
+                <span v-if="!item.is_featured && !item.show_in_politik && item.id !== liveId" class="text-xs text-muted-foreground">-</span>
+              </div>
             </TableCell>
             <TableCell class="text-right">
               <div class="flex items-center justify-end gap-1.5">

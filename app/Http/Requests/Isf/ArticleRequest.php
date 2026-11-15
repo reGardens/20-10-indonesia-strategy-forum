@@ -32,6 +32,7 @@ class ArticleRequest extends FormRequest
             'slug' => $this->slugRules('isf_articles', $this->route('article')?->id),
             'title' => $this->textRules(),
             'category' => $this->categoryRules(),
+            'subcategory' => ['nullable', 'string', 'max:50'],
             'published_at' => $this->dateRules(),
             'summary' => $this->textRules(false, 2000),
             'body' => ['nullable', 'string', 'max:100000'],

@@ -279,12 +279,20 @@ onMounted(() => {
               </div>
             </TableCell>
             <TableCell>
-              <Badge
-                variant="outline"
-                class="pointer-events-none select-none bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-[9.5px] px-1.5 py-0.5 capitalize font-medium"
-              >
-                {{ item.category }}
-              </Badge>
+              <div class="flex flex-col items-start gap-1">
+                <Badge
+                  variant="outline"
+                  class="pointer-events-none select-none bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-[9.5px] px-1.5 py-0.5 capitalize font-medium"
+                >
+                  {{ item.category }}
+                </Badge>
+                <span
+                  v-if="item.subcategory"
+                  class="inline-block text-[9.5px] text-muted-foreground font-mono bg-muted/60 px-1 py-0.2 rounded"
+                >
+                  /{{ item.subcategory }}
+                </span>
+              </div>
             </TableCell>
             <TableCell>
               <StatusBadge :status="item.status" />

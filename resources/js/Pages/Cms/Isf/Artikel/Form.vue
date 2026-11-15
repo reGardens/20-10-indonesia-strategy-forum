@@ -50,6 +50,7 @@ const { form, errors, err, loading, loadError, saving, save, load } = useCmsForm
     slug: '',
     title: '',
     category: 'kebijakan',
+    subcategory: '',
     published_at: new Date().toISOString().slice(0, 10),
     summary: '',
     body: '',
@@ -101,6 +102,38 @@ function onSlugInput() {
 }
 
 onMounted(loadCategories)
+
+const availableSubcategories = computed(() => {
+  const currentCat = (CATEGORIES.value || []).find((c) => c.value === form.category)
+  if (currentCat?.id) {
+    const subs = (CATEGORIES.value || []).filter((c) => c.parent_id === currentCat.id)
+    if (subs.length > 0) {
+      return subs.map((c) => ({
+        value: c.value || c.slug,
+        label: c.label || c.name,
+      }))
+    }
+  }
+  if (form.category === 'politik') {
+    return [
+      { value: 'pemilu', label: 'Pemilu & Pilkada' },
+      { value: 'parlemen', label: 'DPR/DPD/MPR' },
+      { value: 'pemerintahan', label: 'Eksekutif' },
+      { value: 'partai', label: 'Dinamika Partai' },
+    ]
+  }
+  return []
+})
+
+watch(
+  () => form.category,
+  () => {
+    const validValues = availableSubcategories.value.map((s) => s.value)
+    if (form.subcategory && !validValues.includes(form.subcategory)) {
+      form.subcategory = ''
+    }
+  }
+)
 
 watch(
   () => form.title,
@@ -217,6 +250,32 @@ watch(
                 </div>
               </div>
               <p v-if="err('category')" class="text-xs text-red-500 font-medium">{{ err('category') }}</p>
+            </div>
+
+            <!-- Sub-Kategori (jika ada) -->
+            <div v-if="availableSubcategories.length > 0" class="space-y-1.5 sm:col-span-2">
+              <Label for="subcategory" class="text-xs font-medium">Sub-Kategori</Label>
+              <div class="relative">
+                <select
+                  id="subcategory"
+                  v-model="form.subcategory"
+                  class="w-full h-9 rounded-md border border-input bg-background pl-3 pr-9 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring appearance-none"
+                >
+                  <option value="">-- Tanpa Sub-Kategori (Utama) --</option>
+                  <option v-for="sub in availableSubcategories" :key="sub.value" :value="sub.value">
+                    {{ sub.label }}
+                  </option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground">
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+              <p class="text-[11px] text-muted-foreground">
+                Tentukan sub-rubrik artikel (mis. Pemilu & Pilkada, DPR/DPD/MPR, Eksekutif, Dinamika Partai).
+              </p>
+              <p v-if="err('subcategory')" class="text-xs text-red-500 font-medium">{{ err('subcategory') }}</p>
             </div>
           </div>
 

@@ -15,6 +15,7 @@ use App\Models\Isf\Briefing;
 use App\Models\Isf\Category;
 use App\Models\Isf\Chart;
 use App\Models\Isf\Infographic;
+use App\Models\Isf\ParliamentSeat;
 use App\Support\IsfRubrik;
 use App\Models\Isf\Setting;
 use App\Models\Isf\Tokoh;
@@ -545,6 +546,7 @@ class PublicContentController extends Controller
             'slug' => $a->slug,
             'title' => $a->title,
             'category' => $a->categoryKey() ? IsfRubrik::label($a->categoryKey()) : $categoryLabel($a->category),
+            'subcategory' => $a->subcategory,
             'summary' => $a->summary ?? '',
             'publishedAt' => $a->published_at?->format('Y-m-d'),
             'readingMinutes' => $a->reading_minutes,
@@ -553,6 +555,193 @@ class PublicContentController extends Controller
             'author' => $a->author_name ?: 'Tim Riset ISF',
             'to' => $a->publicUrl(),
         ];
+    }
+
+    /**
+     * GET /api/isf/politik
+     *
+     * Halaman Rubrik Politik:
+     * - Daftar artikel politik terbit dengan headline utama
+     * - Sub-kategori: Pemilu & Pilkada, DPR/DPD/MPR, Eksekutif, Dinamika Partai
+     * - Pagination: page, limit, total, lastPage
+     * - Infografis interaktif: Peta Kursi Parlemen
+     * - Profil Tokoh Politik: kartu biodata tokoh terpilih (show_in_politik = true)
+     */
+    public function politik(Request $request): JsonResponse
+    {
+        $subkategori = $request->query('subkategori') ? strtolower(trim((string) $request->query('subkategori'))) : null;
+        $page = max(1, (int) $request->input('page', 1));
+        $limit = min(24, max(1, (int) $request->input('limit', 9)));
+
+        // Kategori induk Politik
+        $politikCat = Category::query()->terbit()->where('slug', 'politik')->first();
+        $subcategories = [];
+        if ($politikCat) {
+            $subcategories = Category::query()
+                ->terbit()
+                ->where('parent_id', $politikCat->id)
+                ->orderBy('order', 'asc')
+                ->orderBy('id', 'asc')
+                ->get(['id', 'name', 'slug', 'description', 'color'])
+                ->map(fn (Category $c) => [
+                    'id' => $c->id,
+                    'name' => $c->name,
+                    'slug' => $c->slug,
+                    'description' => $c->description,
+                    'color' => $c->color,
+                ])
+                ->values()
+                ->all();
+        }
+
+        // Fallback subcategories bila belum ada di DB
+        if (empty($subcategories)) {
+            $subcategories = [
+                ['name' => 'Pemilu & Pilkada', 'slug' => 'pemilu', 'description' => 'Isu dinamika Pemilu, Pilpres, Pilkada, dan kepemiluan.'],
+                ['name' => 'DPR/DPD/MPR', 'slug' => 'parlemen', 'description' => 'Kinerja legislasi, rapat komisi, dan dinamika parlemen.'],
+                ['name' => 'Eksekutif', 'slug' => 'pemerintahan', 'description' => 'Kebijakan kementerian, kabinet, dan lembaga eksekutif.'],
+                ['name' => 'Dinamika Partai', 'slug' => 'partai', 'description' => 'Perkembangan internal, suksesi, dan peta koalisi partai politik.'],
+            ];
+        }
+
+        // Query artikel
+        $query = Article::query()->terbit()->where('category', 'politik');
+
+        if ($subkategori) {
+            $query->where(function ($q) use ($subkategori) {
+                $q->where('subcategory', $subkategori)
+                    ->orWhere('category', $subkategori);
+            });
+        }
+
+        $total = (clone $query)->count();
+        $lastPage = max(1, (int) ceil($total / $limit));
+        $articles = $query->orderByDesc('published_at')->orderByDesc('id')
+            ->forPage($page, $limit)
+            ->get();
+
+        $categoryLabel = $this->categoryLabeler();
+        $cardMapper = $this->articleCardMapper($categoryLabel);
+        $mappedArticles = $articles->map($cardMapper)->values()->all();
+
+        // Headline: pada halaman 1, artikel pertama dijadikan headline
+        $headline = null;
+        $listArticles = $mappedArticles;
+        if ($page === 1 && count($mappedArticles) > 0) {
+            $headline = $mappedArticles[0];
+            $listArticles = array_slice($mappedArticles, 1);
+        }
+
+        // Peta Kursi Parlemen default (DPR 2024-2029)
+        $seatRows = ParliamentSeat::query()
+            ->terbit()
+            ->where('periode', '2024-2029')
+            ->where('lembaga', 'DPR')
+            ->orderBy('urutan', 'asc')
+            ->orderByDesc('jumlah_kursi')
+            ->get();
+
+        $totalKursi = (int) $seatRows->sum('jumlah_kursi');
+        $seatItems = $seatRows->map(function (ParliamentSeat $s) use ($totalKursi) {
+            $pct = $totalKursi > 0 ? round(($s->jumlah_kursi / $totalKursi) * 100, 2) : 0;
+            return [
+                'id' => $s->id,
+                'partai' => $s->partai,
+                'singkatan' => $s->singkatan ?: $s->partai,
+                'jumlah_kursi' => (int) $s->jumlah_kursi,
+                'persentase' => $pct,
+                'warna_partai' => $s->warna_partai,
+                'urutan' => $s->urutan,
+            ];
+        })->values()->all();
+
+        // Tokoh Politik
+        $tokohQuery = Tokoh::query()->terbit()->where('show_in_politik', true);
+        if ($tokohQuery->count() === 0) {
+            $tokohQuery = Tokoh::query()->terbit()->take(3);
+        }
+        $tokohPolitik = $tokohQuery->orderByDesc('updated_at')->take(4)->get()->map(function (Tokoh $t) {
+            return [
+                'id' => $t->id,
+                'slug' => $t->slug,
+                'name' => $t->name,
+                'position' => $t->position,
+                'photoUrl' => $t->photo_url,
+                'photoAlt' => $t->photo_alt ?: $t->name,
+                'teaser' => $t->teaser ?: "Profil dan rekam jejak kepemimpinan serta analisis kebijakan {$t->name}.",
+                'stats' => $t->stats ?: [],
+                'to' => "/tokoh/{$t->slug}",
+            ];
+        })->values()->all();
+
+        return response()->json([
+            'rubrik' => [
+                'key' => 'politik',
+                'title' => 'Politik',
+                'label' => 'Politik',
+                'description' => 'Dinamika politik nasional, parlemen, partai, pemilu, dan lembaga negara.',
+                'subkategori' => $subcategories,
+                'activeSubkategori' => $subkategori,
+            ],
+            'headline' => $headline,
+            'articles' => $listArticles,
+            'meta' => [
+                'currentPage' => $page,
+                'lastPage' => $lastPage,
+                'total' => $total,
+                'perPage' => $limit,
+            ],
+            'petaKursi' => [
+                'periode' => '2024-2029',
+                'lembaga' => 'DPR',
+                'totalKursi' => $totalKursi,
+                'items' => $seatItems,
+            ],
+            'tokohPolitik' => $tokohPolitik,
+        ]);
+    }
+
+    /**
+     * GET /api/isf/peta-kursi
+     *
+     * Data interaktif komposisi kursi parlemen (DPR / DPD / MPR) per periode.
+     */
+    public function petaKursi(Request $request): JsonResponse
+    {
+        $lembaga = strtoupper(trim((string) $request->input('lembaga', 'DPR')));
+        if (!in_array($lembaga, ['DPR', 'DPD', 'MPR'])) {
+            $lembaga = 'DPR';
+        }
+        $periode = trim((string) $request->input('periode', '2024-2029'));
+
+        $seats = ParliamentSeat::query()
+            ->terbit()
+            ->where('lembaga', $lembaga)
+            ->where('periode', $periode)
+            ->orderBy('urutan', 'asc')
+            ->orderByDesc('jumlah_kursi')
+            ->get();
+
+        $totalKursi = (int) $seats->sum('jumlah_kursi');
+        $items = $seats->map(function (ParliamentSeat $s) use ($totalKursi) {
+            $pct = $totalKursi > 0 ? round(($s->jumlah_kursi / $totalKursi) * 100, 2) : 0;
+            return [
+                'id' => $s->id,
+                'partai' => $s->partai,
+                'singkatan' => $s->singkatan ?: $s->partai,
+                'jumlah_kursi' => (int) $s->jumlah_kursi,
+                'persentase' => $pct,
+                'warna_partai' => $s->warna_partai,
+                'urutan' => $s->urutan,
+            ];
+        })->values()->all();
+
+        return response()->json([
+            'lembaga' => $lembaga,
+            'periode' => $periode,
+            'totalKursi' => $totalKursi,
+            'items' => $items,
+        ]);
     }
 
     /**

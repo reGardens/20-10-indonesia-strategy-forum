@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { getBeranda, getAnggota, getInfografik, getTokoh, getMediaDetail, getArtikel, getInfografikDetail, getKategori } from '@/api/services/isfPublicService'
+import { getBeranda, getAnggota, getInfografik, getTokoh, getMediaDetail, getArtikel, getInfografikDetail, getKategori, getPolitik } from '@/api/services/isfPublicService'
 
 const CmsLayout = () => import('../Pages/Cms/layouts/CmsLayout.vue')
 const InvitationLayout = () => import('../Pages/Landing/invitation/layouts/InvitationLayout.vue')
@@ -223,9 +223,31 @@ const routes = [
     ]
   },
   {
+    path: '/politik',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-politik',
+        component: () => import('../Pages/Isf/views/PolitikView.vue'),
+        meta: { title: 'Politik · Indonesia Strategy Forum' }
+      },
+      {
+        path: ':subkategori(pemilu|parlemen|pemerintahan|partai)',
+        name: 'isf-politik-subkategori',
+        component: () => import('../Pages/Isf/views/PolitikView.vue'),
+        meta: { title: 'Politik · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
+    path: '/artikel/politik',
+    redirect: '/politik'
+  },
+  {
     // Artikel per kategori: /artikel/{kategori} = daftar, /artikel/{kategori}/{slug} = detail.
     // Detail = child route, jadi menu navbar kategori tetap aktif (router-link-active).
-    path: '/artikel/:kategori(politik|hukum|kebijakan)',
+    path: '/artikel/:kategori(hukum|kebijakan)',
     component: IsfPublicLayout,
     children: [
       {
@@ -369,6 +391,8 @@ router.beforeResolve((to) => {
       getInfografikDetail(to.params.slug)
     } else if (to.name === 'isf-kategori' && to.params.kategori) {
       getKategori(to.params.kategori)
+    } else if (to.name === 'isf-politik' || to.name === 'isf-politik-subkategori') {
+      getPolitik(to.params.subkategori)
     }
   } catch {}
 })
