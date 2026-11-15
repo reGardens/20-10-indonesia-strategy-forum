@@ -14,7 +14,7 @@ class CategoryController extends CmsResourceController
 {
     protected string $model = Category::class;
 
-    protected array $listColumns = ['id', 'name', 'slug', 'description', 'color', 'order', 'status', 'updated_at'];
+    protected array $listColumns = ['id', 'parent_id', 'name', 'slug', 'description', 'color', 'order', 'status', 'updated_at'];
 
     protected array $searchColumns = ['name', 'slug', 'description'];
 
@@ -49,9 +49,10 @@ class CategoryController extends CmsResourceController
             ->terbit()
             ->orderBy('order', 'asc')
             ->orderBy('id', 'asc')
-            ->get(['id', 'name', 'slug', 'color', 'description'])
+            ->get(['id', 'parent_id', 'name', 'slug', 'color', 'description'])
             ->map(fn (Category $c) => [
                 'id' => $c->id,
+                'parent_id' => $c->parent_id,
                 'value' => $c->slug,
                 'label' => $c->name,
                 'color' => $c->color,

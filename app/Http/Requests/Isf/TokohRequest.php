@@ -68,6 +68,7 @@ class TokohRequest extends FormRequest
 
             'teaser' => $this->textRules(false, 1000),
             'is_featured' => ['boolean'],
+            'show_in_politik' => ['boolean'],
             'status' => $this->statusRules(),
         ];
     }

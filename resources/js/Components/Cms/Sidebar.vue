@@ -96,6 +96,12 @@ const menuGroups = computed(() => [
                 visible: hasFeature("tokoh"),
             },
             {
+                label: "Kursi Parlemen",
+                href: "/cms/kursi-parlemen",
+                icon: "BuildingBank",
+                visible: hasFeature("kursi_parlemen"),
+            },
+            {
                 label: "ISF Insight (Grafik)",
                 href: "/cms/data-grafik",
                 icon: "ChartBar",

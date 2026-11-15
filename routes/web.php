@@ -22,6 +22,8 @@ Route::get('/infografik', [SpaController::class, 'index'])->name('isf.infografik
 Route::get('/infografik/{slug}', [SpaController::class, 'index'])->name('isf.infografik.show');
 Route::get('/tokoh/{slug}', [SpaController::class, 'index'])->name('isf.tokoh.show');
 Route::get('/media/{id}', [SpaController::class, 'index'])->name('isf.media.show');
+Route::get('/politik', [SpaController::class, 'index'])->name('isf.politik');
+Route::get('/politik/{subkategori}', [SpaController::class, 'index'])->whereIn('subkategori', ['pemilu', 'parlemen', 'pemerintahan', 'partai'])->name('isf.politik.subkategori');
 // Artikel per kategori: /artikel/{kategori} = daftar (mis. /artikel/ruu), /artikel/{kategori}/{slug} = detail.
 Route::get('/artikel/{kategori}', [SpaController::class, 'index'])->whereIn('kategori', IsfRubrik::keys())->name('isf.kategori');
 Route::get('/artikel/{kategori}/{slug}', [ArticlePageController::class, 'show'])->whereIn('kategori', IsfRubrik::keys())->name('isf.artikel.show');
@@ -93,6 +95,7 @@ Route::middleware('auth')->group(function () {
         'alert' => 'alert',
         'email-briefing' => 'email_briefing',
         'kategori' => 'kategori',
+        'kursi-parlemen' => 'kursi_parlemen',
     ];
     foreach ($isfModules as $segment => $feature) {
         Route::middleware("feature:{$feature}")->prefix("cms/{$segment}")->group(function () use ($segment) {

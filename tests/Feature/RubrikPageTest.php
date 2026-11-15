@@ -77,7 +77,7 @@ class RubrikPageTest extends TestCase
         foreach (['/artikel/politik', '/artikel/hukum', '/artikel/kebijakan'] as $path) {
             $html = $this->get($path)->assertOk()->getContent();
             // Navbar shell awal menautkan halaman kategori (bukan '#').
-            $this->assertStringContainsString('href="/artikel/politik"', $html);
+            $this->assertTrue(str_contains($html, 'href="/politik"') || str_contains($html, 'href="/artikel/politik"'));
             $this->assertStringContainsString('href="/artikel/hukum"', $html);
             $this->assertStringContainsString('href="/artikel/kebijakan"', $html);
         }

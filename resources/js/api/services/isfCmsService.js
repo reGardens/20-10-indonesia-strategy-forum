@@ -47,6 +47,7 @@ export const cmsResources = {
     syncArticles: () => http.post('/cms/hot-news/sync-articles').then((r) => r.data.data)
   },
   kategori: createCmsResource('kategori'),
+  kursiParlemen: createCmsResource('kursi-parlemen'),
   iklan: {
     ...createCmsResource('iklan'),
     reorder: (items) => http.post('/cms/iklan/reorder', { items }).then((r) => r.data),

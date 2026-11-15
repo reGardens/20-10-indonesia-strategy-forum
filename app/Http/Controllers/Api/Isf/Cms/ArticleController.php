@@ -16,14 +16,14 @@ class ArticleController extends CmsResourceController
     protected string $model = Article::class;
 
     protected array $listColumns = [
-        'id', 'slug', 'title', 'category', 'published_at',
+        'id', 'slug', 'title', 'category', 'subcategory', 'published_at',
         'is_hero', 'show_in_terkini', 'is_popular', 'status', 'updated_at',
     ];
 
     protected array $searchColumns = ['title', 'slug'];
 
-    /** Filter daftar CMS: ?category=politik|hukum|kebijakan */
-    protected array $filterColumns = ['category'];
+    /** Filter daftar CMS: ?category=politik|hukum|kebijakan & ?subcategory=... */
+    protected array $filterColumns = ['category', 'subcategory'];
 
     /** Hero yang sedang tayang selalu paling atas. */
     protected bool $liveFirst = true;

@@ -74,6 +74,7 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
     calendar_events: [],
     teaser: '',
     is_featured: false,
+    show_in_politik: false,
     status: 'draf'
   }
 })
@@ -269,7 +270,7 @@ function onMatrixColumnsChange(newColumns) {
             </div>
           </div>
 
-          <div class="pt-2">
+          <div class="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label class="flex items-start gap-2.5 p-3 rounded-lg border border-border bg-card cursor-pointer hover:border-red-500/50 transition">
               <input
                 type="checkbox"
@@ -279,6 +280,18 @@ function onMatrixColumnsChange(newColumns) {
               <div>
                 <div class="text-xs font-semibold text-foreground">Tokoh Pekan Ini (Featured on Beranda)</div>
                 <div class="text-[11px] text-muted-foreground mt-0.5">Tampilkan profil tokoh ini di section "Pekan Ini" halaman depan Beranda.</div>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-2.5 p-3 rounded-lg border border-border bg-card cursor-pointer hover:border-red-500/50 transition">
+              <input
+                type="checkbox"
+                v-model="form.show_in_politik"
+                class="mt-0.5 rounded border-input text-red-600 focus:ring-red-500 h-4 w-4"
+              />
+              <div>
+                <div class="text-xs font-semibold text-foreground">Profil Tokoh Politik (Rubrik Politik)</div>
+                <div class="text-[11px] text-muted-foreground mt-0.5">Tampilkan profil tokoh ini di widget "Profil Tokoh Politik" halaman /politik/.</div>
               </div>
             </label>
           </div>

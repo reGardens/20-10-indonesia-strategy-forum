@@ -68,6 +68,22 @@ export function getKategori(kategori, offset = 0, limit = 7) {
   return get('/isf/kategori/' + encodeURIComponent(kategori) + '?offset=' + Number(offset) + '&limit=' + Number(limit))
 }
 
+export function getPolitik(subkategori = null, page = 1, limit = 9) {
+  const qs = new URLSearchParams()
+  if (subkategori) qs.set('subkategori', subkategori)
+  if (page) qs.set('page', String(page))
+  if (limit) qs.set('limit', String(limit))
+  const queryString = qs.toString()
+  return get('/isf/politik' + (queryString ? `?${queryString}` : ''))
+}
+
+export function getPetaKursi(lembaga = 'DPR', periode = '2024-2029') {
+  const qs = new URLSearchParams()
+  if (lembaga) qs.set('lembaga', lembaga)
+  if (periode) qs.set('periode', periode)
+  return get('/isf/peta-kursi?' + qs.toString())
+}
+
 export function searchContent(params = {}) {
   const query = typeof params === 'string' ? { q: params } : params
   const qs = new URLSearchParams()
@@ -123,4 +139,4 @@ export function isNotFound(error) {
   return error?.response?.status === 404
 }
 
-export default { getBeranda, getTokoh, getAnggota, getInfografik, getMediaDetail, getArtikel, getInfografikDetail, getKategori, searchContent, getAds, trackAdImpression, trackAdClick, isNotFound }
+export default { getBeranda, getTokoh, getAnggota, getInfografik, getMediaDetail, getArtikel, getInfografikDetail, getKategori, getPolitik, getPetaKursi, searchContent, getAds, trackAdImpression, trackAdClick, isNotFound }

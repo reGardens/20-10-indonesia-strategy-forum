@@ -181,7 +181,7 @@ const quickSuggestions = [
 
 const NAV_LINKS = [
     { label: "Beranda", to: "/beranda", group: "rubrik" },
-    { label: "Politik", to: "/artikel/politik", group: "rubrik" },
+    { label: "Politik", to: "/politik", group: "rubrik" },
     { label: "Hukum", to: "/artikel/hukum", group: "rubrik" },
     { label: "Kebijakan Publik", to: "/artikel/kebijakan", group: "rubrik" },
     { label: "Sosok", to: "/tokoh/budi-santoso", group: "rubrik" },

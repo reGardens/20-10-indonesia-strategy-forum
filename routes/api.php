@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Isf\Cms\CategoryController;
 use App\Http\Controllers\Api\Isf\Cms\ChartController;
 use App\Http\Controllers\Api\Isf\Cms\InfographicController;
 use App\Http\Controllers\Api\Isf\Cms\MediaUploadController;
+use App\Http\Controllers\Api\Isf\Cms\ParliamentSeatController;
 use App\Http\Controllers\Api\Isf\Cms\SettingController;
 use App\Http\Controllers\Api\Isf\Cms\TokohController;
 use App\Http\Controllers\Api\Isf\PublicAdController;
@@ -46,6 +47,8 @@ Route::middleware(['web'])->prefix('isf')->group(function () {
         ->name('api.isf.tokoh.ulasan.store');
     Route::get('/media/{id}', [PublicContentController::class, 'mediaDetail'])->name('api.isf.media');
     Route::get('/artikel/{slug}', [PublicContentController::class, 'artikel'])->name('api.isf.artikel');
+    Route::get('/politik', [PublicContentController::class, 'politik'])->name('api.isf.politik');
+    Route::get('/peta-kursi', [PublicContentController::class, 'petaKursi'])->name('api.isf.peta-kursi');
     Route::get('/kategori/{kategori}', [PublicContentController::class, 'kategori'])->name('api.isf.kategori');
     Route::get('/infografik', [PublicContentController::class, 'infografik'])->name('api.isf.infografik');
     Route::get('/infografik/{slug}', [PublicContentController::class, 'infografikDetail'])->name('api.isf.infografik.show');
@@ -81,6 +84,8 @@ Route::middleware(['web', 'auth'])->prefix('cms')->name('api.cms.')->group(funct
         ->parameters(['email-briefing' => 'briefing'])->middleware('feature:email_briefing');
     Route::apiResource('kategori', CategoryController::class)
         ->parameters(['kategori' => 'category']);
+    Route::apiResource('kursi-parlemen', ParliamentSeatController::class)
+        ->parameters(['kursi-parlemen' => 'parliamentSeat'])->middleware('feature:kursi_parlemen');
 
     Route::get('/pengaturan-halaman', [SettingController::class, 'show'])
         ->middleware('feature:pengaturan_halaman')->name('pengaturan-halaman.show');

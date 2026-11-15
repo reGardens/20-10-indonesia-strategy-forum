@@ -25,3 +25,4 @@ export { default as ReviewCard } from './ReviewCard.vue';
 export { default as IsfProfileMenu } from './IsfProfileMenu.vue';
 export { default as WhatsAppVerifyDialog } from './WhatsAppVerifyDialog.vue';
 export { default as IsfShareBar } from './IsfShareBar.vue';
+export { default as PetaKursiParlemen } from './PetaKursiParlemen.vue';

@@ -37,7 +37,9 @@ const features = [
     { key: "data_grafik", label: "Data Grafik", desc: "Polling, survei, data visual beranda, dan grafik visual isu" },
     { key: "alert", label: "Alert Peringatan Dini", desc: "Feed peringatan dini regulasi, tingkat urgensi, dan status kepatuhan B2B" },
     { key: "email_briefing", label: "Email Briefing", desc: "Briefing eksklusif anggota, ringkasan eksekutif, dan pratinjau newsletter" },
-    { key: "pengaturan_halaman", label: "Pengaturan Halaman", desc: "Baris sorotan (topBar), teks pengumuman, dan rentang tanggal pekan ini" }
+    { key: "pengaturan_halaman", label: "Pengaturan Halaman", desc: "Baris sorotan (topBar), teks pengumuman, dan rentang tanggal pekan ini" },
+    { key: "kategori", label: "Kategori & Sub-Kategori", desc: "Kelola struktur kategori dan sub-kategori konten (Politik, Hukum, Kebijakan, Pemilu, Parlemen, dll.)" },
+    { key: "kursi_parlemen", label: "Peta Kursi Parlemen", desc: "Kelola data komposisi kursi parlemen DPR/DPD/MPR per partai, warna, dan status publikasi" }
 ];
 
 function toggleFeature(featureKey) {

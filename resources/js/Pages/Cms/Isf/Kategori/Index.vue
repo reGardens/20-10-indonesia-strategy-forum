@@ -56,6 +56,12 @@ function onStatusChange(status) {
   loadData()
 }
 
+function parentName(parentId) {
+  if (!parentId) return ''
+  const parent = items.value.find(i => i.id === parentId)
+  return parent ? parent.name : `ID #${parentId}`
+}
+
 async function handleDelete(item) {
   const confirmed = await confirmDelete(item.name || 'Kategori')
   if (!confirmed) return
@@ -199,9 +205,15 @@ onMounted(loadData)
               {{ idx + 1 }}
             </TableCell>
             <TableCell>
-              <span class="font-semibold text-xs text-foreground line-clamp-2">
-                {{ item.name }}
-              </span>
+              <div class="flex flex-col">
+                <span class="font-semibold text-xs text-foreground line-clamp-2">
+                  {{ item.name }}
+                </span>
+                <span v-if="item.parent_id" class="inline-flex items-center gap-1 text-[10px] text-muted-foreground mt-0.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                  Sub dari: {{ parentName(item.parent_id) }}
+                </span>
+              </div>
             </TableCell>
             <TableCell>
               <span class="font-mono text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
