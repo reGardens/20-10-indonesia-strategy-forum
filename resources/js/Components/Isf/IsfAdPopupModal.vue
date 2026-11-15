@@ -30,7 +30,8 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['close']);
+// ad-click: tautan iklan diklik (untuk statistik klik).
+const emit = defineEmits(['close', 'ad-click']);
 
 const isVisible = ref(false);
 const timeLeft = ref(30);
@@ -80,7 +81,9 @@ const youtubeId = computed(() => {
 
 const youtubeEmbedUrl = computed(() => {
     if (!youtubeId.value) return '';
-    return `https://www.youtube.com/embed/${youtubeId.value}?autoplay=1&mute=0&controls=1&rel=0&playsinline=1`;
+    // Browser memblokir autoplay bersuara bila popup muncul tanpa klik pengguna (timer), jadi video
+    // diputar tanpa suara (mute=1); pengunjung bisa menyalakan suara lewat kontrol player.
+    return `https://www.youtube.com/embed/${youtubeId.value}?autoplay=1&mute=1&controls=1&rel=0&playsinline=1`;
 });
 
 const isDirectVideo = computed(() => {
@@ -217,6 +220,7 @@ watch(() => props.forcePreview, (newVal) => {
                             :target="isExternal ? '_blank' : undefined"
                             :rel="isExternal ? 'noopener noreferrer' : undefined"
                             class="group block relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red"
+                            @click="emit('ad-click')"
                         >
                             <img
                                 :src="imageUrl"
@@ -304,6 +308,7 @@ watch(() => props.forcePreview, (newVal) => {
                             v-if="isDirectVideo"
                             :src="videoUrl"
                             autoplay
+                            muted
                             controls
                             playsinline
                             class="w-full h-full object-contain"
@@ -346,6 +351,7 @@ watch(() => props.forcePreview, (newVal) => {
                                 :target="isExternal ? '_blank' : undefined"
                                 :rel="isExternal ? 'noopener noreferrer' : undefined"
                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-isf-red hover:bg-isf-red-dark text-white text-xs font-bold font-space-grotesk transition-all shadow-xs"
+                                @click="emit('ad-click')"
                             >
                                 <span>Kunjungi Sponsor</span>
                                 <span>&rarr;</span>

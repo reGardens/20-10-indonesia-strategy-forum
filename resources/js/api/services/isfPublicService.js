@@ -77,9 +77,50 @@ export function searchContent(params = {}) {
   return get('/isf/search' + (queryString ? `?${queryString}` : ''))
 }
 
+/**
+ * Iklan Beranda yang sedang tayang (tanpa cache agar rotasi spanduk & jam tayang akurat).
+ * slot "spanduk" → satu iklan (atau null), slot "popup" → daftar popup urut CMS.
+ */
+export function getAds(slot) {
+  return http.get('/isf/ads', { params: { slot } }).then((response) => response.data?.data ?? null)
+}
+
+function readCookie(name) {
+  if (typeof document === 'undefined') return ''
+  const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'))
+  return match ? decodeURIComponent(match[1]) : ''
+}
+
+// fetch keepalive: tetap terkirim walau halaman berpindah (klik tautan iklan). Gagal = diabaikan.
+function sendAdEvent(id, event) {
+  if (!id || typeof fetch !== 'function') return
+  try {
+    fetch(`/api/isf/ads/${encodeURIComponent(id)}/${event}`, {
+      method: 'POST',
+      keepalive: true,
+      credentials: 'same-origin',
+      headers: {
+        Accept: 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-XSRF-TOKEN': readCookie('XSRF-TOKEN'),
+      },
+    }).catch(() => {})
+  } catch {
+    // abaikan
+  }
+}
+
+export function trackAdImpression(id) {
+  sendAdEvent(id, 'impression')
+}
+
+export function trackAdClick(id) {
+  sendAdEvent(id, 'click')
+}
+
 /** True when the error is an API "not found" (missing or unpublished content). */
 export function isNotFound(error) {
   return error?.response?.status === 404
 }
 
-export default { getBeranda, getTokoh, getAnggota, getInfografik, getMediaDetail, getArtikel, getInfografikDetail, getKategori, searchContent, isNotFound }
+export default { getBeranda, getTokoh, getAnggota, getInfografik, getMediaDetail, getArtikel, getInfografikDetail, getKategori, searchContent, getAds, trackAdImpression, trackAdClick, isNotFound }

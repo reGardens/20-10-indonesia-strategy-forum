@@ -37,6 +37,7 @@ import IsfAdPopupModal from '@/Components/Isf/IsfAdPopupModal.vue';
 import CmsIklanIndex from '@/Pages/Cms/Isf/Iklan/Index.vue';
 import CmsIklanForm from '@/Pages/Cms/Isf/Iklan/Form.vue';
 import { iklanService, cmsResources } from '@/api/services/isfCmsService';
+import { useIsfPopupQueue, POPUP_QUEUE_STORAGE_KEY } from '@/Composables/useIsfPopupQueue';
 
 async function renderComponent(component, props = {}) {
     const root = document.createElement('div');
@@ -65,6 +66,8 @@ async function renderComponent(component, props = {}) {
 describe('ISF Ads Unit Tests (Issue #38)', () => {
     beforeEach(() => {
         sessionStorage.clear();
+        // Tab Kelola Iklan disimpan di URL (?tab=); mulai tiap uji dari URL bersih.
+        window.history.replaceState(null, '', '/');
         document.cookie = 'isf_popup_ad_seen=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         document.body.innerHTML = '';
         vi.restoreAllMocks();
@@ -223,52 +226,63 @@ describe('ISF Ads Unit Tests (Issue #38)', () => {
         });
     });
 
-    describe('CMS Kelola Iklan — 2 Tab Pemisah, Tabel Khusus, Urutan & Toggle Konfirmasi', () => {
-        it('merender 2 tab (Iklan Body & Iklan Popup) dengan masing-masing tabel dan kolomnya', async () => {
+    describe('CMS Kelola Iklan — tabel isf_ads: 2 tab, status, statistik & toggle Aktif/Dijeda', () => {
+        const baseAd = {
+            kicker: 'SPONSOR RESMI',
+            target_url: '/register',
+            video_url: '',
+            video_duration: null,
+            start_at: null,
+            end_at: null,
+            active_hours_start: null,
+            active_hours_end: null,
+            status: 'active',
+            display_state: 'live',
+            impressions: 0,
+            clicks: 0,
+            ctr: 0,
+        };
+
+        it('merender 2 tab (Iklan Body & Iklan Popup) dengan kolom jadwal, statistik, dan antrean popup', async () => {
             const mockAds = [
                 {
+                    ...baseAd,
                     id: 1,
                     placement: 'spanduk',
                     type: 'banner',
                     title: 'Kemitraan Strategis & Solusi Riset Kebijakan ISF 2026',
-                    kicker: 'SPONSOR RESMI',
-                    target_url: '/register',
                     image_url: 'https://example.com/banner.jpg',
-                    video_url: '',
-                    video_duration: 30,
-                    status: 'terbit',
-                    is_active: true,
+                    start_at: '2026-11-01 08:00',
+                    end_at: '2026-11-30 23:59',
+                    active_hours_start: '08:00',
+                    active_hours_end: '17:00',
+                    impressions: 1200,
+                    clicks: 30,
+                    ctr: 2.5,
                     order: 1,
                 },
                 {
+                    ...baseAd,
                     id: 2,
                     placement: 'popup',
                     type: 'banner',
                     title: 'Indonesia Strategy Forum Annual Summit 2026',
-                    kicker: 'SPONSOR RESMI',
-                    target_url: '/register',
                     image_url: 'https://example.com/popup.jpg',
-                    video_url: '',
-                    video_duration: 30,
+                    first_delay_seconds: null,
                     interval_minutes: 0,
-                    status: 'terbit',
-                    is_active: true,
-                    order: 1,
+                    order: 2,
                 },
                 {
+                    ...baseAd,
                     id: 3,
                     placement: 'popup',
                     type: 'video',
                     title: 'Teaser Video Kebijakan ISF 2026',
-                    kicker: 'SPONSOR RESMI',
-                    target_url: '/register',
                     image_url: '',
                     video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
                     video_duration: 30,
                     interval_minutes: 10,
-                    status: 'terbit',
-                    is_active: true,
-                    order: 2,
+                    order: 3,
                 },
             ];
 
@@ -277,109 +291,168 @@ describe('ISF Ads Unit Tests (Issue #38)', () => {
             const { root } = await renderComponent(CmsIklanIndex);
             await new Promise((r) => setTimeout(r, 50));
 
-            // 1. Header: Bebas dari kata 'pengganti latest news', tombol Tambah Iklan berupa Link ke /cms/iklan/create
             expect(root.textContent).toContain('Kelola Iklan & Monetisasi');
-            expect(root.textContent).not.toContain('pengganti Latest News');
-            expect(root.textContent).not.toContain('pengganti latest news');
             expect(root.textContent).toContain('Tambah Iklan');
-
-            // 2. Memiliki 2 tab pemisah: Iklan Body & Iklan Popup
             expect(root.textContent).toContain('Iklan Body (Spanduk Beranda)');
             expect(root.textContent).toContain('Iklan Popup (Modal Popup)');
 
             // Default tab: 'body'
             const thBodyList = Array.from(root.querySelectorAll('th')).map((th) => th.textContent.trim());
-            expect(thBodyList).toContain('Urutan');
-            expect(thBodyList).toContain('Materi Media');
-            expect(thBodyList).toContain('Judul Kampanye & Tautan');
-            expect(thBodyList).toContain('Status Periode & Sisa Waktu');
-            expect(thBodyList).not.toContain('Status');
-            expect(thBodyList).toContain('Status Aktif');
-            expect(thBodyList).toContain('Aksi');
+            expect(thBodyList).toEqual(expect.arrayContaining([
+                'No', 'Materi Media', 'Judul Kampanye & Tautan', 'Jadwal & Status Tayang', 'Statistik', 'Status Aktif', 'Aksi',
+            ]));
+            expect(thBodyList).not.toContain('Format & Penayangan');
+            // Spanduk dirotasi acak: nomor biasa tanpa tombol naik/turun.
+            expect(thBodyList).not.toContain('Urutan');
+            expect(root.querySelector('[data-testid="iklan-no"]').textContent.trim()).toBe('1');
+            expect(root.querySelector('button[title="Pindah Urutan Naik"]')).toBeNull();
 
-            // Baris tabel body hanya berisi 1 spanduk
             const bodyRows = root.querySelectorAll('tbody tr');
             expect(bodyRows.length).toBe(1);
             expect(bodyRows[0].textContent).toContain('Kemitraan Strategis & Solusi Riset Kebijakan ISF 2026');
+            expect(bodyRows[0].textContent).toContain('Jam 08:00–17:00');
+            expect(bodyRows[0].textContent).toContain('Sedang Tayang');
+            const stats = bodyRows[0].querySelector('[data-testid="iklan-stats"]').textContent;
+            expect(stats).toContain('Tayangan');
+            expect(stats).toContain('1.200');
+            expect(stats).toContain('Klik');
+            expect(stats).toContain('30');
+            expect(stats).toContain('2,5%');
+            expect(stats).not.toContain('Bobot');
 
-            // 3. Pindah ke tab 'popup'
+            // Pindah ke tab 'popup'
             const popupTabBtn = Array.from(root.querySelectorAll('button')).find((b) => b.textContent.includes('Iklan Popup'));
-            expect(popupTabBtn).not.toBeUndefined();
             popupTabBtn.click();
             await nextTick();
 
-            // Tabel popup memiliki kolom Format & Penayangan dan Status Periode & Sisa Waktu
             const thPopupList = Array.from(root.querySelectorAll('th')).map((th) => th.textContent.trim());
             expect(thPopupList).toContain('Format & Penayangan');
-            expect(thPopupList).toContain('Status Periode & Sisa Waktu');
-            expect(thPopupList).not.toContain('Status');
+            expect(thPopupList).toContain('Urutan');
+            // Urutan popup dihitung per tab (order 2 & 3 di data → tampil 1 & 2).
+            expect(Array.from(root.querySelectorAll('[data-testid="iklan-urutan"]')).map((el) => el.textContent.trim())).toEqual(['1', '2']);
+            expect(root.querySelectorAll('button[title="Pindah Urutan Naik"]').length).toBe(2);
 
-            // Baris tabel popup berisi 2 item (popup banner & popup video)
             const popupRows = root.querySelectorAll('tbody tr');
             expect(popupRows.length).toBe(2);
             expect(popupRows[0].textContent).toContain('Indonesia Strategy Forum Annual Summit 2026');
-            expect(popupRows[0].textContent).toContain('Default #1 (Muncul Pertama)');
+            expect(popupRows[0].textContent).toContain('Pertama · 5 detik setelah halaman dibuka');
             expect(popupRows[1].textContent).toContain('Teaser Video Kebijakan ISF 2026');
-            expect(popupRows[1].textContent).toContain('Jeda 10 Menit');
+            expect(popupRows[1].textContent).toContain('10 menit setelah popup sebelumnya ditutup');
+            expect(popupRows[1].textContent).toContain('Video (30s)');
         });
 
-        it('memunculkan SweetAlert konfirmasi dengan wording simpel saat toggle aktif / non-aktif diklik', async () => {
+        it('menampilkan status tayang dari server (Terjadwal, Di Luar Jam Tayang, Dijeda, Kedaluwarsa)', async () => {
             const mockAds = [
-                {
-                    id: 1,
-                    placement: 'spanduk',
-                    type: 'banner',
-                    title: 'Kemitraan Strategis ISF',
-                    status: 'terbit',
-                    is_active: true,
-                    order: 1,
-                },
+                { ...baseAd, id: 1, placement: 'spanduk', type: 'banner', title: 'A', display_state: 'scheduled', order: 1 },
+                { ...baseAd, id: 2, placement: 'spanduk', type: 'banner', title: 'B', display_state: 'off_hours', order: 2 },
+                { ...baseAd, id: 3, placement: 'spanduk', type: 'banner', title: 'C', status: 'paused', display_state: 'paused', order: 3 },
+                { ...baseAd, id: 4, placement: 'spanduk', type: 'banner', title: 'D', status: 'expired', display_state: 'expired', order: 4 },
             ];
-
             vi.spyOn(iklanService, 'get').mockResolvedValue(mockAds);
-            const toggleSpy = vi.spyOn(iklanService, 'toggleActive').mockResolvedValue({ id: 1, is_active: false });
 
             const { root } = await renderComponent(CmsIklanIndex);
             await new Promise((r) => setTimeout(r, 50));
 
-            const toggle = root.querySelector('button[role="switch"]');
-            expect(toggle).not.toBeNull();
+            const states = Array.from(root.querySelectorAll('[data-testid="iklan-display-state"]')).map((el) => el.textContent.trim());
+            expect(states).toEqual(['Terjadwal', 'Di Luar Jam Tayang', 'Dijeda', 'Kedaluwarsa']);
 
-            toggle.click();
+            // Filter status "Dijeda"
+            Array.from(root.querySelectorAll('button')).find((b) => b.textContent.trim() === 'Dijeda').click();
+            await nextTick();
+            const rows = root.querySelectorAll('[data-testid="iklan-row"]');
+            expect(rows.length).toBe(1);
+            expect(rows[0].textContent).toContain('C');
+        });
+
+        it('menyimpan tab aktif di URL (?tab=popup) agar tetap saat refresh', async () => {
+            vi.spyOn(iklanService, 'get').mockResolvedValue([
+                { ...baseAd, id: 1, placement: 'spanduk', type: 'banner', title: 'Spanduk', order: 1 },
+                { ...baseAd, id: 2, placement: 'popup', type: 'banner', title: 'Popup', order: 2 },
+            ]);
+
+            let view = await renderComponent(CmsIklanIndex);
+            await new Promise((r) => setTimeout(r, 50));
+            Array.from(view.root.querySelectorAll('button')).find((b) => b.textContent.includes('Iklan Popup')).click();
+            await nextTick();
+            expect(window.location.search).toBe('?tab=popup');
+
+            // "Refresh": mount ulang dengan URL yang sama → tab popup tetap aktif.
+            view.unmount();
+            view = await renderComponent(CmsIklanIndex);
+            await new Promise((r) => setTimeout(r, 50));
+            expect(view.root.querySelector('tbody').textContent).toContain('Popup');
+            expect(Array.from(view.root.querySelectorAll('th')).map((th) => th.textContent.trim())).toContain('Format & Penayangan');
+
+            // Kembali ke tab body → query dihapus.
+            Array.from(view.root.querySelectorAll('button')).find((b) => b.textContent.includes('Iklan Body')).click();
+            await nextTick();
+            expect(window.location.search).toBe('');
+            view.unmount();
+
+            // Dibuka dari menu lain (URL tanpa ?tab) → tab body.
+            window.history.replaceState(null, '', '/cms/iklan');
+            view = await renderComponent(CmsIklanIndex);
+            await new Promise((r) => setTimeout(r, 50));
+            expect(Array.from(view.root.querySelectorAll('th')).map((th) => th.textContent.trim())).not.toContain('Format & Penayangan');
+        });
+
+        it('pindah urutan popup hanya menomori ulang popup (1..n), tidak ikut spanduk', async () => {
+            vi.spyOn(iklanService, 'get').mockResolvedValue([
+                { ...baseAd, id: 1, placement: 'spanduk', type: 'banner', title: 'Spanduk', order: 1 },
+                { ...baseAd, id: 2, placement: 'popup', type: 'banner', title: 'Popup A', order: 2 },
+                { ...baseAd, id: 3, placement: 'popup', type: 'banner', title: 'Popup B', order: 3 },
+            ]);
+            const reorderSpy = vi.spyOn(iklanService, 'reorder').mockResolvedValue({});
+
+            const { root } = await renderComponent(CmsIklanIndex);
+            await new Promise((r) => setTimeout(r, 50));
+            Array.from(root.querySelectorAll('button')).find((b) => b.textContent.includes('Iklan Popup')).click();
+            await nextTick();
+
+            root.querySelectorAll('button[title="Pindah Urutan Naik"]')[1].click();
+            await new Promise((r) => setTimeout(r, 50));
+            expect(reorderSpy).toHaveBeenCalledWith([{ id: 3, order: 1 }, { id: 2, order: 2 }]);
+        });
+
+        it('memunculkan konfirmasi Jeda / Aktifkan saat toggle diklik', async () => {
+            const mockAds = [
+                { ...baseAd, id: 1, placement: 'spanduk', type: 'banner', title: 'Kemitraan Strategis ISF', order: 1 },
+                { ...baseAd, id: 2, placement: 'spanduk', type: 'banner', title: 'Spanduk Dijeda', status: 'paused', display_state: 'paused', order: 2 },
+            ];
+
+            vi.spyOn(iklanService, 'get').mockResolvedValue(mockAds);
+            const toggleSpy = vi.spyOn(iklanService, 'toggleActive').mockResolvedValue({ id: 1, status: 'paused' });
+
+            const { root } = await renderComponent(CmsIklanIndex);
             await new Promise((r) => setTimeout(r, 50));
 
-            // Menampilkan SweetAlert konfirmasi dengan wording simpel
+            const toggles = root.querySelectorAll('button[role="switch"]');
+            expect(toggles.length).toBe(2);
+            expect(toggles[0].getAttribute('aria-checked')).toBe('true');
+            expect(toggles[1].getAttribute('aria-checked')).toBe('false');
+
+            toggles[0].click();
+            await new Promise((r) => setTimeout(r, 50));
             expect(confirmAction).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    title: 'Nonaktifkan Iklan?',
+                    title: 'Jeda Iklan?',
                     text: expect.stringContaining('Kemitraan Strategis ISF'),
-                    confirmText: 'Ya, Nonaktifkan',
+                    confirmText: 'Ya, Jeda',
                 })
             );
             expect(toggleSpy).toHaveBeenCalledWith(1);
+
+            // Mengaktifkan spanduk lain tidak lagi menonaktifkan spanduk aktif (rotasi acak).
+            root.querySelectorAll('button[role="switch"]')[1].click();
+            await new Promise((r) => setTimeout(r, 50));
+            expect(confirmAction).toHaveBeenLastCalledWith(
+                expect.objectContaining({ title: 'Aktifkan Iklan?', confirmText: 'Ya, Aktifkan' })
+            );
+            expect(toggleSpy).toHaveBeenCalledWith(2);
         });
 
-        it('merender CmsIklanForm dengan 2 pilihan kategori penempatan dan tab Gambar vs Video pada card materi media saat memilih Modal Popup', async () => {
-            const mockExistingAds = [
-                {
-                    id: 1,
-                    placement: 'spanduk',
-                    type: 'banner',
-                    title: 'Iklan Spanduk Aktif',
-                    status: 'terbit',
-                    is_active: true,
-                },
-                {
-                    id: 2,
-                    placement: 'popup',
-                    type: 'banner',
-                    title: 'Iklan Popup Aktif',
-                    status: 'terbit',
-                    is_active: true,
-                },
-            ];
-
-            vi.spyOn(cmsResources.iklan, 'list').mockResolvedValue(mockExistingAds);
+        it('merender CmsIklanForm dengan kategori penempatan, tab Gambar vs Video, status, jadwal jam, jam tayang harian, tanpa bobot', async () => {
+            vi.spyOn(cmsResources.iklan, 'list').mockResolvedValue([]);
 
             const { root } = await renderComponent(CmsIklanForm, { id: null });
             await new Promise((r) => setTimeout(r, 50));
@@ -387,52 +460,47 @@ describe('ISF Ads Unit Tests (Issue #38)', () => {
             expect(root.textContent).toContain('Tambah Iklan Baru');
             expect(root.textContent).toContain('Kategori Penempatan Iklan');
 
-            // Select element exists and default is ""
             const select = root.querySelector('select#placement');
-            expect(select).not.toBeNull();
             expect(select.value).toBe('');
-
             const options = Array.from(select.querySelectorAll('option')).map((o) => o.value);
-            expect(options).toContain('');
-            expect(options).toContain('spanduk');
-            expect(options).toContain('popup');
-            expect(options).not.toContain('popup_duration');
+            expect(options).toEqual(['', 'spanduk', 'popup']);
 
-            // Pilih kategori 'popup'
+            // Status: Aktif / Dijeda / Kedaluwarsa (default Aktif)
+            const status = root.querySelector('select#status');
+            expect(status.value).toBe('active');
+            expect(Array.from(status.querySelectorAll('option')).map((o) => o.textContent.trim())).toEqual(['Aktif', 'Dijeda', 'Kedaluwarsa']);
+
+            // Jadwal tanggal + jam & jam tayang harian
+            expect(root.textContent).toContain('Rentang Penayangan');
+            expect(root.querySelector('input#start_time')).not.toBeNull();
+            expect(root.querySelector('input#end_time')).not.toBeNull();
+            expect(root.textContent).toContain('Jam Tayang Harian');
+            expect(root.querySelector('input#active_hours_start')).not.toBeNull();
+            expect(root.querySelector('input#active_hours_end')).not.toBeNull();
+
+            // Popup → tab media & waktu tampil popup
             select.value = 'popup';
             select.dispatchEvent(new Event('change'));
             await nextTick();
-
-            // Muncul tab Gambar / Banner vs Video (Durasi) di card materi media di atas wording
             expect(root.textContent).toContain('Gambar / Banner');
             expect(root.textContent).toContain('Video (Durasi)');
-            // Pengaturan waktu popup (disederhanakan): tampil pertama (detik) & tampil lagi (menit).
             expect(root.textContent).toContain('Waktu Tampil Popup');
             expect(root.textContent).toContain('Tampil pertama setelah');
             expect(root.textContent).toContain('Tampil lagi setelah');
 
-            // Pilih kategori 'spanduk' -> Tidak memunculkan popup konfirmasi lagi (karena spanduk sekarang bisa banyak)
+            // Spanduk → tanpa waktu tampil popup & tanpa bobot rotasi
             select.value = 'spanduk';
             select.dispatchEvent(new Event('change'));
             await nextTick();
-            expect(confirmAction).not.toHaveBeenCalled();
+            expect(root.textContent).not.toContain('Bobot Rotasi');
+            expect(root.querySelector('input#weight')).toBeNull();
+            expect(root.textContent).not.toContain('Waktu Tampil Popup');
+            expect(root.textContent).not.toContain('bertabrakan');
         });
 
-        it('menonaktifkan tanggal yang sudah terpakai pada date range picker iklan body dan mencegah tanggal bertabrakan (double)', async () => {
-            const mockExistingAds = [
-                {
-                    id: 1,
-                    placement: 'spanduk',
-                    type: 'banner',
-                    title: 'Iklan Spanduk A',
-                    start_date: '2026-11-01',
-                    end_date: '2026-11-15',
-                    status: 'terbit',
-                    is_active: true,
-                },
-            ];
-
-            vi.spyOn(cmsResources.iklan, 'list').mockResolvedValue(mockExistingAds);
+        it('menggabungkan tanggal + jam menjadi start_at / end_at saat menyimpan', async () => {
+            vi.spyOn(cmsResources.iklan, 'list').mockResolvedValue([]);
+            const createSpy = vi.spyOn(cmsResources.iklan, 'create').mockResolvedValue({ id: 9 });
 
             const { root } = await renderComponent(CmsIklanForm, { id: null });
             await new Promise((r) => setTimeout(r, 50));
@@ -442,88 +510,118 @@ describe('ISF Ads Unit Tests (Issue #38)', () => {
             select.dispatchEvent(new Event('change'));
             await nextTick();
 
-            // Memeriksa keberadaan label Rentang Tanggal Penayangan (Date Range)
-            expect(root.textContent).toContain('Rentang Tanggal Penayangan (Date Range)');
-
-            // Buka popover date range picker dengan mengklik input bar
-            const rangeTrigger = root.querySelector('[data-testid="date-range-trigger"]');
-            expect(rangeTrigger).not.toBeNull();
-            rangeTrigger.click();
+            const setInput = (sel, value) => {
+                const el = root.querySelector(sel);
+                el.value = value;
+                el.dispatchEvent(new Event('input'));
+            };
+            setInput('input#title', 'Spanduk Uji');
+            // Tanggal diisi lewat input di popover date picker.
+            root.querySelector('[data-testid="date-range-trigger"]').click();
             await nextTick();
-
-            // Popover terbuka dan merender jadwal iklan body lain dengan status terdisable
-            expect(root.textContent).toContain('Jadwal iklan body lain terpakai');
-            expect(root.textContent).toContain('1 Nov 2026');
-
-            const disabledButtons = root.querySelectorAll('button[disabled]');
-            expect(disabledButtons.length).toBeGreaterThan(0);
-
-            // Masukkan tanggal yang bertabrakan (misal 5 Nov 2026) melalui input di popover
             const startInput = root.querySelector('input#pop_start_date');
-            expect(startInput).not.toBeNull();
-            startInput.value = '2026-11-05';
+            startInput.value = '2099-01-01';
             startInput.dispatchEvent(new Event('change'));
             await nextTick();
+            const endInput = root.querySelector('input#pop_end_date');
+            endInput.value = '2099-01-31';
+            endInput.dispatchEvent(new Event('change'));
+            await nextTick();
+            setInput('input#start_time', '08:30');
+            setInput('input#active_hours_start', '22:00');
+            setInput('input#active_hours_end', '02:00');
+            await nextTick();
 
-            expect(root.textContent).toContain('Tanggal penayangan bertabrakan dengan jadwal iklan body lain');
+            const saveBtn = Array.from(root.querySelectorAll('button')).find((b) => b.textContent.includes('Simpan Iklan'));
+            saveBtn.click();
+            await new Promise((r) => setTimeout(r, 50));
+
+            expect(createSpy).toHaveBeenCalledWith(expect.objectContaining({
+                placement: 'spanduk',
+                title: 'Spanduk Uji',
+                start_at: '2099-01-01 08:30',
+                end_at: '2099-01-31 23:59',
+                active_hours_start: '22:00',
+                active_hours_end: '02:00',
+                status: 'active',
+            }));
+        });
+    });
+
+    describe('useIsfPopupQueue — frequency capping (localStorage)', () => {
+        const Harness = {
+            props: ['list'],
+            setup(props) {
+                const queue = useIsfPopupQueue(() => props.list);
+                return () => h('div', { 'data-current': queue.current.value?.id ?? '' }, [
+                    h('button', { 'data-testid': 'close', onClick: queue.onClose }),
+                ]);
+            },
+        };
+        const popups = [
+            { id: 11, firstDelaySeconds: 5, intervalMinutes: 30 },
+            { id: 12, firstDelaySeconds: null, intervalMinutes: 10 },
+        ];
+        const current = (root) => root.querySelector('[data-current]').getAttribute('data-current');
+
+        beforeEach(() => {
+            localStorage.clear();
+            vi.useFakeTimers();
+        });
+        afterEach(() => {
+            vi.useRealTimers();
         });
 
-        it('menampilkan status Non-Aktif pada tabel jika is_active false, dan mengonfirmasi penonaktifan iklan body lain jika mengaktifkan iklan body baru', async () => {
-            const mockAds = [
-                {
-                    id: 1,
-                    placement: 'spanduk',
-                    type: 'banner',
-                    title: 'Iklan Spanduk 1',
-                    start_date: '2026-11-01',
-                    end_date: '2026-11-15',
-                    status: 'terbit',
-                    is_active: false, // Diset non-aktif
-                    order: 1,
-                },
-                {
-                    id: 4,
-                    placement: 'spanduk',
-                    type: 'banner',
-                    title: 'Iklan Spanduk 2',
-                    start_date: '2026-11-16',
-                    end_date: '2026-11-30',
-                    status: 'terbit',
-                    is_active: true,
-                    order: 2,
-                },
-            ];
+        it('popup pertama muncul setelah jeda pertama, popup berikutnya setelah interval, dan tidak muncul lagi saat refresh', async () => {
+            let view = await renderComponent(Harness, { list: popups });
+            expect(current(view.root)).toBe('');
+            vi.advanceTimersByTime(5000);
+            await nextTick();
+            expect(current(view.root)).toBe('11');
 
-            vi.spyOn(iklanService, 'get').mockResolvedValue(mockAds);
-            const toggleSpy = vi.spyOn(iklanService, 'toggleActive').mockResolvedValue({ id: 1, is_active: true });
+            view.root.querySelector('[data-testid="close"]').click();
+            await nextTick();
+            expect(current(view.root)).toBe('');
+            const saved = JSON.parse(localStorage.getItem(POPUP_QUEUE_STORAGE_KEY));
+            expect(saved.nextId).toBe(12);
 
-            const { root } = await renderComponent(CmsIklanIndex);
-            await new Promise((r) => setTimeout(r, 50));
+            // "Refresh": mount ulang → popup 11 tidak muncul lagi; popup 12 menunggu 10 menit sejak ditutup.
+            view.unmount();
+            view = await renderComponent(Harness, { list: popups });
+            vi.advanceTimersByTime(60 * 1000);
+            await nextTick();
+            expect(current(view.root)).toBe('');
+            vi.advanceTimersByTime(9 * 60 * 1000);
+            await nextTick();
+            expect(current(view.root)).toBe('12');
 
-            const rows = root.querySelectorAll('tbody tr');
-            expect(rows.length).toBe(2);
+            // Setelah popup terakhir ditutup → kembali ke popup pertama setelah 30 menit.
+            view.root.querySelector('[data-testid="close"]').click();
+            await nextTick();
+            vi.advanceTimersByTime(29 * 60 * 1000);
+            await nextTick();
+            expect(current(view.root)).toBe('');
+            vi.advanceTimersByTime(60 * 1000);
+            await nextTick();
+            expect(current(view.root)).toBe('11');
+            view.unmount();
+        });
 
-            // Baris 1 yang is_active = false HARUS menampilkan "Non-Aktif", BUKAN "Aktif Tayang"
-            expect(rows[0].textContent).toContain('Non-Aktif');
-            expect(rows[0].textContent).not.toContain('Aktif Tayang');
+        it('refresh saat popup terbuka tidak memunculkannya lagi sebelum jedanya habis', async () => {
+            let view = await renderComponent(Harness, { list: [popups[0]] });
+            vi.advanceTimersByTime(5000);
+            await nextTick();
+            expect(current(view.root)).toBe('11');
 
-            // Baris 2 yang tanggalnya di masa depan menampilkan "Terjadwal"
-            expect(rows[1].textContent).toContain('Terjadwal');
-
-            // Saat admin mencoba mengaktifkan baris 1 (iklan body), muncul peringatan bahwa hanya 1 iklan body yang dapat aktif
-            const toggleBtn1 = rows[0].querySelector('button[role="switch"]');
-            expect(toggleBtn1).not.toBeNull();
-            toggleBtn1.click();
-            await new Promise((r) => setTimeout(r, 50));
-
-            expect(confirmAction).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    title: 'Aktifkan Iklan Body?',
-                    text: expect.stringContaining('Hanya 1 iklan body yang dapat aktif'),
-                    confirmText: 'Ya, Aktifkan',
-                })
-            );
-            expect(toggleSpy).toHaveBeenCalledWith(1);
+            view.unmount();
+            view = await renderComponent(Harness, { list: [popups[0]] });
+            vi.advanceTimersByTime(10 * 60 * 1000);
+            await nextTick();
+            expect(current(view.root)).toBe('');
+            vi.advanceTimersByTime(20 * 60 * 1000);
+            await nextTick();
+            expect(current(view.root)).toBe('11');
+            view.unmount();
         });
     });
 });

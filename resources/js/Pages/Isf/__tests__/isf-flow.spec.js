@@ -88,6 +88,12 @@ vi.mock("@/api/services/isfPublicService", async () => {
         getMediaDetail,
         searchContent,
         isNotFound,
+        // Iklan Beranda (GET /api/isf/ads): satu spanduk tayang, tanpa popup.
+        getAds: (slot) => Promise.resolve(slot === "spanduk"
+            ? { id: 1, title: "Sponsor Uji", kicker: "SPONSOR RESMI", imageUrl: "https://example.com/ad.jpg", targetUrl: "/register", isActive: true }
+            : []),
+        trackAdImpression: () => {},
+        trackAdClick: () => {},
         default: {
             getBeranda,
             getAnggota,

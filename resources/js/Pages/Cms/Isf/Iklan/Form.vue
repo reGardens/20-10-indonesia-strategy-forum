@@ -5,7 +5,7 @@ import CmsLayout from '@/Layouts/CmsLayout.vue'
 import http from '@/api/http'
 import { cmsResources, errorMessage } from '@/api/services/isfCmsService'
 import { useCmsForm } from '@/Composables/useCmsForm'
-import { alertSuccess, alertError, confirmAction } from '@/Composables/useAlert'
+import { alertSuccess, alertError } from '@/Composables/useAlert'
 import LoadingIndicator from '@/Pages/Cms/components/shared/LoadingIndicator.vue'
 import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
 import ImageUploadTab from '@/Components/Cms/ImageUploadTab.vue'
@@ -30,7 +30,6 @@ const props = defineProps({
 
 const isEdit = computed(() => Boolean(props.id))
 const videoUploading = ref(false)
-const existingAds = ref([])
 
 const { form, err, loading, loadError, saving, save: baseSave, load } = useCmsForm({
   resource: cmsResources.iklan,
@@ -40,30 +39,33 @@ const { form, err, loading, loadError, saving, save: baseSave, load } = useCmsFo
     placement: '',        // default tidak memilih salah satu kategori
     type: 'banner',       // 'banner' | 'video'
     title: '',
-    kicker: 'SPONSOR RESMI',
-    target_url: '/register',
+    kicker: '',       // kosong → "SPONSOR RESMI" (diisi server)
+    target_url: '',   // kosong → /register (diisi server)
     image_url: '',
     video_url: '',
     video_duration: 30,
     interval_minutes: '',     // kosong = default 30 menit
     first_delay_seconds: '',  // kosong = default 5 detik
-    status: 'terbit',
-    is_active: true,
+    status: 'active',         // active | paused | expired
+    // Jadwal: tanggal (date picker) + jam; digabung menjadi start_at / end_at saat disimpan.
     start_date: '',
+    start_time: '',
     end_date: '',
+    end_time: '',
+    start_at: '',
+    end_at: '',
+    // Jam tayang harian (kosong = sepanjang hari).
+    active_hours_start: '',
+    active_hours_end: '',
     order: 1
   }
 })
 
-function normalizeCategory(placement, type = '') {
-  if (placement === 'spanduk' || placement === 'banner') return 'spanduk'
-  return 'popup'
-}
-
-const placementLabels = {
-  spanduk: 'Spanduk Beranda',
-  popup: 'Modal Popup'
-}
+const statusOptions = [
+  { value: 'active', label: 'Aktif' },
+  { value: 'paused', label: 'Dijeda' },
+  { value: 'expired', label: 'Kedaluwarsa' }
+]
 
 async function handlePlacementChange(val) {
   if (val === form.placement) return
@@ -87,98 +89,19 @@ const isVideoType = computed(() => {
   return form.placement === 'popup' && form.type === 'video'
 })
 
-const occupiedBodyRanges = computed(() => {
-  if (form.placement !== 'spanduk') return []
-  const currentId = props.id ? Number(props.id) : null
-
-  return existingAds.value
-    .filter((ad) => {
-      const isBody = ad.placement === 'spanduk' || ad.placement === 'banner'
-      const isOther = Number(ad.id) !== currentId
-      const hasDate = Boolean(ad.start_date)
-      return isBody && isOther && hasDate
-    })
-    .map((ad) => ({
-      id: ad.id,
-      title: ad.title,
-      start_date: ad.start_date,
-      end_date: ad.end_date || null
-    }))
-})
-
-function formatDateShort(dateStr) {
-  if (!dateStr) return '-'
-  try {
-    const parts = dateStr.split('-')
-    if (parts.length === 3) {
-      const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]))
-      return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
-    }
-    return dateStr
-  } catch {
-    return dateStr
-  }
-}
-
-function findRangeConflict(startStr, endStr) {
-  if (!startStr || form.placement !== 'spanduk') return null
-  const sA = new Date(startStr)
-  sA.setHours(0, 0, 0, 0)
-  const eA = endStr ? new Date(endStr) : new Date('2099-12-31')
-  eA.setHours(0, 0, 0, 0)
-
-  for (const range of occupiedBodyRanges.value) {
-    const sB = new Date(range.start_date)
-    sB.setHours(0, 0, 0, 0)
-    const eB = range.end_date ? new Date(range.end_date) : new Date('2099-12-31')
-    eB.setHours(0, 0, 0, 0)
-
-    if (sA <= eB && eA >= sB) {
-      return range
-    }
-  }
-  return null
-}
-
-const dateConflictError = computed(() => {
-  if (form.placement !== 'spanduk' || !form.start_date) return ''
-  const conflict = findRangeConflict(form.start_date, form.end_date)
-  if (conflict) {
-    const rangeText = `${formatDateShort(conflict.start_date)} – ${conflict.end_date ? formatDateShort(conflict.end_date) : 'Seterusnya'}`
-    return `Tanggal penayangan bertabrakan dengan jadwal iklan body lain "${conflict.title}" (${rangeText}). Iklan body tidak boleh memiliki tanggal tayang ganda.`
-  }
-  return ''
-})
-
-function computeAutoStatus() {
-  const today = new Date().toISOString().split('T')[0]
-  if (form.end_date && form.end_date < today) {
-    return 'draf'
-  }
-  if (form.start_date && form.start_date > today) {
-    return 'draf'
-  }
-  return 'terbit'
-}
-
-function computeAutoIsActive() {
-  if (form.placement === 'spanduk') {
-    const today = new Date().toISOString().split('T')[0]
-    if (form.end_date && form.end_date < today) {
-      return false
-    }
-    if (form.start_date && form.start_date > today) {
-      return false
-    }
-    return true
-  }
-  return form.is_active !== undefined ? Boolean(form.is_active) : true
-}
-
 // Isian waktu boleh kosong (= default); angka 0 tetap dipertahankan.
 function optionalNumber(value) {
   return value === '' || value === null || value === undefined ? '' : Number(value)
 }
+
+// "2026-11-15" + "08:30" → "2026-11-15 08:30"; tanggal kosong → '' (tanpa batas).
+function joinDateTime(date, time, fallbackTime) {
+  if (!date) return ''
+  return `${date} ${time || fallbackTime}`
+}
+
+const scheduleError = computed(() => err('start_at') || err('end_at'))
+const activeHoursError = computed(() => err('active_hours_start') || err('active_hours_end'))
 
 async function handleSave() {
   if (!form.placement) {
@@ -186,21 +109,14 @@ async function handleSave() {
     return
   }
 
-  // Validasi tabrakan tanggal iklan body (tidak bisa double)
-  if (form.placement === 'spanduk' && dateConflictError.value) {
-    alertError(dateConflictError.value)
-    return
-  }
-
-  // Poin 4: Otomatis tentukan status publikasi dan status aktif berdasarkan hari berjalan
-  form.status = computeAutoStatus()
-  form.is_active = computeAutoIsActive()
+  form.start_at = joinDateTime(form.start_date, form.start_time, '00:00')
+  form.end_at = joinDateTime(form.end_date, form.end_time, '23:59')
 
   // Sanitasi payload ketat berdasarkan kategori penempatan yang aktif
   if (form.placement === 'spanduk') {
     form.video_url = ''
     form.video_duration = 30
-    form.interval_minutes = 0
+    form.interval_minutes = ''
     form.first_delay_seconds = ''
     form.type = 'banner'
   } else if (isVideoType.value) {
@@ -209,12 +125,14 @@ async function handleSave() {
     form.type = 'video'
     form.video_duration = Number(form.video_duration) || 30
     form.interval_minutes = optionalNumber(form.interval_minutes)
+    form.first_delay_seconds = optionalNumber(form.first_delay_seconds)
   } else {
     // Popup gambar hanya memerlukan image
     form.video_url = ''
     form.video_duration = 30
     form.type = 'banner'
     form.interval_minutes = optionalNumber(form.interval_minutes)
+    form.first_delay_seconds = optionalNumber(form.first_delay_seconds)
   }
 
   await baseSave()
@@ -251,14 +169,12 @@ async function handleVideoUpload(event) {
 }
 
 onMounted(async () => {
+  if (isEdit.value) return
   try {
     const res = await cmsResources.iklan.list()
     const list = Array.isArray(res) ? res : (res?.data || res?.items || [])
-    existingAds.value = list
-    if (!isEdit.value) {
-      const maxOrder = list.reduce((max, it) => Math.max(max, Number(it.order) || 0), 0)
-      form.order = maxOrder + 1
-    }
+    const maxOrder = list.reduce((max, it) => Math.max(max, Number(it.order) || 0), 0)
+    form.order = maxOrder + 1
   } catch {
     // Fallback
   }
@@ -332,6 +248,7 @@ onMounted(async () => {
                 placeholder="Contoh: SPONSOR RESMI, KEMITRAAN..."
                 class="h-9 text-xs font-medium"
               />
+              <p class="text-[11px] text-muted-foreground">Kosongkan untuk memakai "SPONSOR RESMI".</p>
               <p v-if="err('kicker')" class="text-xs text-red-400 mt-1">{{ err('kicker') }}</p>
             </div>
 
@@ -344,6 +261,7 @@ onMounted(async () => {
                 placeholder="Contoh: /register atau https://mitra.com"
                 class="h-9 text-xs font-mono"
               />
+              <p class="text-[11px] text-muted-foreground">Kosongkan untuk memakai /register.</p>
               <p v-if="err('target_url')" class="text-xs text-red-400 mt-1">{{ err('target_url') }}</p>
             </div>
           </div>
@@ -538,29 +456,92 @@ onMounted(async () => {
         </CardContent>
       </Card>
 
-      <!-- Card 3: Jadwal Penayangan -->
+      <!-- Card 3: Jadwal & Status Penayangan (2 kolom) -->
       <Card class="bg-card border-border shadow-sm">
         <CardHeader class="pb-3">
-          <CardTitle class="text-base font-semibold text-foreground">Jadwal Penayangan</CardTitle>
+          <CardTitle class="text-base font-semibold text-foreground">Jadwal &amp; Status Penayangan</CardTitle>
           <CardDescription class="text-xs text-muted-foreground">
-            {{ form.placement === 'spanduk'
-              ? 'Atur rentang tanggal penayangan iklan body (tanggal yang sudah terpakai dinonaktifkan otomatis).'
-              : 'Atur rentang tanggal penayangan popup sponsor (opsional).' }}
+            Iklan tayang bila statusnya Aktif, waktu sekarang berada di rentang mulai–selesai, dan di dalam jam tayang harian.
+            Iklan yang lewat waktu selesai otomatis menjadi Kedaluwarsa.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div class="space-y-1.5 max-w-lg">
-            <Label class="text-xs font-medium text-foreground">
-              Rentang Tanggal Penayangan (Date Range)
-            </Label>
-            <IklanCalendarPicker
-              v-model:start-date="form.start_date"
-              v-model:end-date="form.end_date"
-              :occupied-ranges="occupiedBodyRanges"
-              :is-body="form.placement === 'spanduk'"
-              :error="dateConflictError"
-              placeholder="Pilih rentang tanggal penayangan (Mulai s/d Selesai)..."
-            />
+          <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <!-- Kolom kiri: rentang tanggal + jam mulai/selesai -->
+            <div class="space-y-1.5">
+              <Label class="text-xs font-medium text-foreground">Rentang Penayangan</Label>
+              <IklanCalendarPicker
+                v-model:start-date="form.start_date"
+                v-model:end-date="form.end_date"
+                :is-body="false"
+                :error="scheduleError"
+                placeholder="Pilih rentang tanggal penayangan (Mulai s/d Selesai)..."
+              />
+              <div class="grid grid-cols-2 gap-3 pt-1">
+                <div class="space-y-1">
+                  <Label for="start_time" class="text-xs text-foreground">Jam mulai</Label>
+                  <Input
+                    id="start_time"
+                    type="time"
+                    v-model="form.start_time"
+                    :disabled="!form.start_date"
+                    class="h-9 text-xs font-mono"
+                  />
+                </div>
+                <div class="space-y-1">
+                  <Label for="end_time" class="text-xs text-foreground">Jam selesai</Label>
+                  <Input
+                    id="end_time"
+                    type="time"
+                    v-model="form.end_time"
+                    :disabled="!form.end_date"
+                    class="h-9 text-xs font-mono"
+                  />
+                </div>
+              </div>
+              <p class="text-[11px] text-muted-foreground">
+                Kosongkan tanggal untuk tanpa batas. Jam kosong = mulai 00:00 / selesai 23:59.
+              </p>
+              <p v-if="scheduleError" class="text-xs text-red-400">{{ scheduleError }}</p>
+            </div>
+
+            <!-- Kolom kanan: status & jam tayang harian -->
+            <div class="space-y-5">
+              <div class="space-y-1.5">
+                <Label for="status" class="text-xs font-medium text-foreground">Status Iklan</Label>
+                <select
+                  id="status"
+                  v-model="form.status"
+                  class="w-full h-9 px-3 rounded-md border border-border bg-background text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors cursor-pointer"
+                >
+                  <option v-for="opt in statusOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                </select>
+                <p v-if="err('status')" class="text-xs text-red-400 mt-1">{{ err('status') }}</p>
+              </div>
+
+              <div class="space-y-1.5">
+                <Label class="text-xs font-medium text-foreground">Jam Tayang Harian</Label>
+                <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                  <Input
+                    id="active_hours_start"
+                    type="time"
+                    v-model="form.active_hours_start"
+                    class="h-9 text-xs font-mono"
+                  />
+                  <span class="text-xs text-muted-foreground">s/d</span>
+                  <Input
+                    id="active_hours_end"
+                    type="time"
+                    v-model="form.active_hours_end"
+                    class="h-9 text-xs font-mono"
+                  />
+                </div>
+                <p class="text-[11px] text-muted-foreground">
+                  Kosongkan untuk tayang sepanjang hari. Boleh melewati tengah malam, misalnya 22:00 s/d 02:00.
+                </p>
+                <p v-if="activeHoursError" class="text-xs text-red-400">{{ activeHoursError }}</p>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

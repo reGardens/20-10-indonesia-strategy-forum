@@ -154,6 +154,10 @@ vi.mock("@/api/services/isfPublicService", async () => {
         getMediaDetail,
         searchContent,
         isNotFound,
+        // Iklan Beranda (GET /api/isf/ads): tanpa iklan pada uji alur.
+        getAds: () => Promise.resolve(null),
+        trackAdImpression: () => {},
+        trackAdClick: () => {},
         default: {
             getBeranda,
             getAnggota,
