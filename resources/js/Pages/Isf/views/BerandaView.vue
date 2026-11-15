@@ -1,6 +1,6 @@
 <script setup>
 /** Public front page driven by GET /api/isf/beranda (Politico-style 3-column module). */
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import {
     BerandaSkeleton,
     CategoryLabel,
@@ -19,7 +19,7 @@ import ErrorMessage from "@/Pages/Cms/components/shared/ErrorMessage.vue";
 import { BERANDA_BANNER_DUMMY } from "@/Pages/Isf/data/berandaBannerDummy";
 import { BERANDA_INSIGHT_DUMMY } from "@/Pages/Isf/data/berandaInsightDummy";
 import { formatDate } from "@/Utils/formatters";
-import { getBeranda } from "@/api/services/isfPublicService";
+import { getAds, getBeranda, trackAdClick, trackAdImpression } from "@/api/services/isfPublicService";
 import { useIsfContent } from "@/Composables/useIsfContent";
 import { useIsfPopupQueue } from "@/Composables/useIsfPopupQueue";
 import { useIsfHeaderLayout } from "@/Composables/useIsfHeaderLayout";
@@ -45,40 +45,23 @@ const sections = computed(() => data.value?.sections || {});
 const latestNews = computed(() => terkini.value.slice(0, 3));
 const activeMediaTab = ref('popular');
 
-const adBanner = computed(() => {
-    return data.value?.iklan?.banner || {
-        title: "Kemitraan Strategis & Solusi Riset Kebijakan ISF 2026",
-        kicker: "SPONSOR RESMI",
-        imageUrl: "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80",
-        targetUrl: "/register",
-        status: "terbit",
-        isActive: true,
-    };
-});
+// Iklan dari tabel isf_ads (GET /api/isf/ads): spanduk dipilih acak tiap halaman dibuka,
+// popup = antrean urut CMS dengan frequency capping (useIsfPopupQueue). Tidak ada iklan → slot "ADS".
+const adBanner = ref(null);
+const popupList = ref([]);
+async function loadAds() {
+    const [spanduk, popups] = await Promise.allSettled([getAds("spanduk"), getAds("popup")]);
+    adBanner.value = spanduk.status === "fulfilled" ? spanduk.value : null;
+    popupList.value = popups.status === "fulfilled" && Array.isArray(popups.value) ? popups.value : [];
+    if (adBanner.value?.id) trackAdImpression(adBanner.value.id);
+}
+onMounted(loadAds);
 
-const adPopup = computed(() => {
-    return data.value?.iklan?.popup || {
-        title: "Indonesia Strategy Forum — Annual Summit & Briefing 2026",
-        type: "banner",
-        imageUrl: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=80",
-        videoUrl: "https://www.youtube.com/watch?v=aBxlmrCPjBA",
-        videoDuration: 30,
-        targetUrl: "/register",
-        status: "terbit",
-        isActive: true,
-    };
-});
-
-// Antrean popup berulang: semua popup aktif (urut CMS). API lama tanpa "popups" → popup tunggal.
-const popupList = computed(() => {
-    // Tunggu data Beranda termuat: jangan memulai antrean dengan popup contoh (akan menimpa jadwal tersimpan).
-    if (!data.value) return [];
-    const list = data.value?.iklan?.popups;
-    if (Array.isArray(list)) return list;
-    const single = data.value.iklan ? data.value.iklan.popup : adPopup.value;
-    return single && single.isActive !== false ? [{ id: "popup", ...single }] : [];
-});
 const { current: currentPopup, onClose: onPopupClose } = useIsfPopupQueue(popupList);
+// Tayangan popup dihitung setiap kali popup muncul.
+watch(currentPopup, (popup) => {
+    if (popup?.id) trackAdImpression(popup.id);
+});
 
 const allMediaSorotan = computed(() => {
     if (data.value?.mediaSorotan?.length) {
@@ -614,8 +597,9 @@ const sectionPad = "px-3 lg:px-4 xl:px-[30px]";
                             />
                             <!-- Slot Iklan Spanduk Sponsor -->
                             <IsfAdBanner
-                                :ad="adBanner"
+                                :ad="adBanner || {}"
                                 :cell-pad="cellPad"
+                                @ad-click="trackAdClick(adBanner?.id)"
                             />
                         </aside>
                     </div>
@@ -803,6 +787,7 @@ const sectionPad = "px-3 lg:px-4 xl:px-[30px]";
             :ad="currentPopup"
             controlled
             @close="onPopupClose"
+            @ad-click="trackAdClick(currentPopup.id)"
         />
     </div>
 </template>

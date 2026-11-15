@@ -86,8 +86,7 @@ export const iklanService = {
   updateItem: (id, data) => http.put(`/cms/iklan/${id}`, data).then((r) => r.data.data),
   remove: (id) => http.delete(`/cms/iklan/${id}`).then((r) => r.data),
   reorder: (items) => http.post('/cms/iklan/reorder', { items }).then((r) => r.data),
-  toggleActive: (id) => http.post(`/cms/iklan/${id}/toggle`).then((r) => r.data.data),
-  update: (data) => http.put('/cms/iklan', data).then((r) => r.data.data)
+  toggleActive: (id) => http.post(`/cms/iklan/${id}/toggle`).then((r) => r.data.data)
 }
 
 /** Category options for dropdown pickers across CMS modules: [{ id, value, label, color }] */

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Isf\Cms\AdController;
 use App\Http\Controllers\Api\Isf\Cms\AlertController;
 use App\Http\Controllers\Api\Isf\Cms\ArticleController;
 use App\Http\Controllers\Api\Isf\Cms\BannerController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\Api\Isf\Cms\InfographicController;
 use App\Http\Controllers\Api\Isf\Cms\MediaUploadController;
 use App\Http\Controllers\Api\Isf\Cms\SettingController;
 use App\Http\Controllers\Api\Isf\Cms\TokohController;
+use App\Http\Controllers\Api\Isf\PublicAdController;
 use App\Http\Controllers\Api\Isf\PublicContentController;
 use App\Http\Controllers\Api\Isf\SessionController;
 use App\Http\Controllers\Api\Isf\TokohReviewController;
@@ -21,6 +23,12 @@ use Illuminate\Support\Facades\Route;
 // Public ISF content API (read-only, published content only)
 Route::middleware(['web'])->prefix('isf')->group(function () {
     Route::get('/beranda', [PublicContentController::class, 'beranda'])->name('api.isf.beranda');
+    // Iklan Beranda (tabel isf_ads): spanduk acak berbobot / antrean popup + statistik tayangan & klik.
+    Route::get('/ads', [PublicAdController::class, 'index'])->name('api.isf.ads');
+    Route::middleware('throttle:120,1')->group(function () {
+        Route::post('/ads/{id}/impression', [PublicAdController::class, 'impression'])->whereNumber('id')->name('api.isf.ads.impression');
+        Route::post('/ads/{id}/click', [PublicAdController::class, 'click'])->whereNumber('id')->name('api.isf.ads.click');
+    });
     // Status login untuk header publik (nama & inisial saja, no-store).
     Route::get('/me', [SessionController::class, 'me'])->name('api.isf.me');
     // Nomor WhatsApp Aktif milik user login + verifikasi OTP (Issue #42).
@@ -102,14 +110,13 @@ Route::middleware(['web', 'auth'])->prefix('cms')->name('api.cms.')->group(funct
     Route::delete('/hot-news/{id}', [SettingController::class, 'deleteHotNewsItem'])->whereNumber('id')->name('hot-news.destroy');
     Route::put('/hot-news', [SettingController::class, 'updateHotNews'])->name('hot-news.update');
 
-    Route::get('/iklan', [SettingController::class, 'getIklan'])->name('iklan.index');
-    Route::post('/iklan', [SettingController::class, 'createIklan'])->name('iklan.store');
-    Route::post('/iklan/reorder', [SettingController::class, 'reorderIklan'])->name('iklan.reorder');
-    Route::post('/iklan/{id}/toggle', [SettingController::class, 'toggleIklanActive'])->whereNumber('id')->name('iklan.toggle');
-    Route::get('/iklan/{id}', [SettingController::class, 'showIklan'])->whereNumber('id')->name('iklan.show');
-    Route::put('/iklan/{id}', [SettingController::class, 'updateIklanItem'])->whereNumber('id')->name('iklan.update-item');
-    Route::delete('/iklan/{id}', [SettingController::class, 'deleteIklanItem'])->whereNumber('id')->name('iklan.destroy');
-    Route::put('/iklan', [SettingController::class, 'updateIklan'])->name('iklan.update');
+    Route::get('/iklan', [AdController::class, 'index'])->name('iklan.index');
+    Route::post('/iklan', [AdController::class, 'store'])->name('iklan.store');
+    Route::post('/iklan/reorder', [AdController::class, 'reorder'])->name('iklan.reorder');
+    Route::post('/iklan/{id}/toggle', [AdController::class, 'toggle'])->whereNumber('id')->name('iklan.toggle');
+    Route::get('/iklan/{id}', [AdController::class, 'show'])->whereNumber('id')->name('iklan.show');
+    Route::put('/iklan/{id}', [AdController::class, 'update'])->whereNumber('id')->name('iklan.update-item');
+    Route::delete('/iklan/{id}', [AdController::class, 'destroy'])->whereNumber('id')->name('iklan.destroy');
 
     // Media image upload for CMS modules
     Route::post('/media/upload', [MediaUploadController::class, 'upload'])->name('media.upload');

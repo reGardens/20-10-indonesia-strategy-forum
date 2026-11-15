@@ -15,7 +15,9 @@ function hasRole(role) {
 }
 
 function isActive(path) {
-    return page.url === path || page.url.startsWith(path + "/");
+    // Abaikan query/hash (mis. /cms/iklan?tab=popup) agar menu tetap aktif.
+    const url = page.url.split(/[?#]/)[0];
+    return url === path || url.startsWith(path + "/");
 }
 
 const userFeatures = computed(() => auth.value?.user?.features || []);
