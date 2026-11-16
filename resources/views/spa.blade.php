@@ -567,36 +567,90 @@
                 </main>
             @elseif(request()->is('politik') || request()->is('politik/*'))
                 @include('partials.isf-masthead')
-                <main class="isf-skel-article isf-skel-article--full isf-skel-pulse" aria-busy="true" aria-label="Memuat rubrik politik">
-                    <div class="isf-skel-el" style="width: 140px; height: 12px; margin-bottom: 16px;"></div>
-                    <div class="isf-skel-el" style="width: 260px; height: 42px; margin-bottom: 12px;"></div>
-                    <div class="isf-skel-el" style="width: 55%; height: 18px; margin-bottom: 24px;"></div>
-                    <div style="display: flex; gap: 8px; margin-bottom: 40px; flex-wrap: wrap;">
-                        @for ($i = 0; $i < 5; $i++)
-                            <div class="isf-skel-el" style="width: 110px; height: 36px; border-radius: 9999px;"></div>
-                        @endfor
+                {{-- Hero Header Rubrik Politik (Navy Identik dengan Hukum) --}}
+                <div style="background-color: #0B1220; border-bottom: 1px solid #262626; padding: 2rem 1rem 2rem; color: #fff;">
+                    <div style="max-width: 1440px; margin: 0 auto; padding: 0 1rem;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 1rem;">
+                            <div class="isf-skel-el" style="width: 60px; height: 12px; background: rgba(255,255,255,0.15);"></div>
+                            <span style="color: rgba(255,255,255,0.3); font-size: 11px;">/</span>
+                            <div class="isf-skel-el" style="width: 48px; height: 12px; background: rgba(255,255,255,0.25);"></div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1.5rem;">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                                    <span style="display: inline-block; width: 10px; height: 10px; background-color: #E10600; border-radius: 2px;"></span>
+                                    <span style="font-family: monospace; font-size: 11px; font-weight: bold; color: #E10600; text-transform: uppercase; letter-spacing: 0.1em;">Rubrik Dinamika Politik & Parlemen</span>
+                                </div>
+                                <div class="isf-skel-el" style="width: 220px; height: 48px; background: rgba(255,255,255,0.2); margin-bottom: 8px;"></div>
+                                <div class="isf-skel-el" style="width: min(600px, 90%); height: 16px; background: rgba(255,255,255,0.15);"></div>
+                            </div>
+                            <div style="display: flex; gap: 8px; overflow-x: auto; padding-top: 4px;">
+                                <div class="isf-skel-el" style="width: 110px; height: 32px; border-radius: 9999px; background: #E10600; flex-shrink: 0;"></div>
+                                @for ($i = 0; $i < 4; $i++)
+                                    <div class="isf-skel-el" style="width: 120px; height: 32px; border-radius: 9999px; background: rgba(255,255,255,0.1); flex-shrink: 0;"></div>
+                                @endfor
+                            </div>
+                        </div>
                     </div>
+                </div>
+
+                <main class="isf-skel-article isf-skel-article--full isf-skel-pulse" aria-busy="true" aria-label="Memuat rubrik politik">
                     <div class="isf-skel-stack">
+                        {{-- Section 1: Headline --}}
                         <section class="isf-skel-frame isf-skel-frame--accent">
-                            <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 160px; height: 26px;"></div></div>
+                            <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 160px; height: 24px;"></div></div>
                             <div class="isf-skel-framebody isf-skel-lines">
                                 <div class="isf-skel-el" style="height: 320px;"></div>
-                                <div class="isf-skel-el" style="width: 70%; height: 30px;"></div>
+                                <div class="isf-skel-el" style="width: 70%; height: 28px;"></div>
                                 <div class="isf-skel-el" style="height: 16px;"></div>
                             </div>
                         </section>
-                        <section class="isf-skel-frame isf-skel-frame--cream">
-                            <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 220px; height: 26px;"></div></div>
-                            <div class="isf-skel-framebody" style="padding: 24px;">
-                                <div class="isf-skel-el" style="height: 280px; width: 100%;"></div>
+                        {{-- Section 2: Peta Kursi Parlemen Navy --}}
+                        <section class="isf-skel-frame isf-skel-frame--navy">
+                            <div class="isf-skel-sechead" style="display: flex; align-items: center; gap: 8px;">
+                                <span style="display: inline-block; width: 10px; height: 10px; background-color: #E10600; border-radius: 2px;"></span>
+                                <div class="isf-skel-el" style="width: 220px; height: 24px; background: rgba(255,255,255,0.2);"></div>
+                            </div>
+                            <div class="isf-skel-framebody" style="padding: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; align-items: center;">
+                                <div style="display: flex; justify-content: center;">
+                                    <div class="isf-skel-el" style="width: 220px; height: 220px; border-radius: 9999px; background: rgba(255,255,255,0.1);"></div>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 8px;">
+                                    @for ($i = 0; $i < 6; $i++)
+                                        <div class="isf-skel-el" style="height: 36px; border-radius: 6px; background: rgba(255,255,255,0.08);"></div>
+                                    @endfor
+                                </div>
                             </div>
                         </section>
+                        {{-- Section 3: Profil Tokoh Politik Cream --}}
+                        <section class="isf-skel-frame isf-skel-frame--cream">
+                            <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 180px; height: 24px;"></div></div>
+                            <div class="isf-skel-framebody" style="padding: 20px;">
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                                    @for ($i = 0; $i < 4; $i++)
+                                        <div style="background: rgba(0,0,0,0.03); padding: 12px; border-radius: 6px; border: 1px solid rgba(0,0,0,0.06);">
+                                            <div class="isf-skel-el" style="height: 160px; margin-bottom: 12px;"></div>
+                                            <div class="isf-skel-el" style="width: 70%; height: 18px; margin-bottom: 6px;"></div>
+                                            <div class="isf-skel-el" style="width: 50%; height: 14px;"></div>
+                                        </div>
+                                    @endfor
+                                </div>
+                            </div>
+                        </section>
+                        {{-- Section 4: Artikel Terbaru Grid 2 Kolom --}}
                         <section class="isf-skel-frame isf-skel-frame--accent">
-                            <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 180px; height: 26px;"></div></div>
+                            <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 150px; height: 24px;"></div></div>
                             <div class="isf-skel-framebody isf-skel-lines">
-                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
-                                    @for ($i = 0; $i < 6; $i++)
-                                        <div class="isf-skel-el" style="height: 220px;"></div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+                                    @for ($i = 0; $i < 4; $i++)
+                                        <div style="display: flex; gap: 12px; padding: 12px; border-bottom: 1px solid #e5e7eb;">
+                                            <div class="isf-skel-el" style="width: 120px; height: 80px; flex-shrink: 0;"></div>
+                                            <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                                                <div class="isf-skel-el" style="width: 85%; height: 18px;"></div>
+                                                <div class="isf-skel-el" style="width: 100%; height: 14px;"></div>
+                                                <div class="isf-skel-el" style="width: 40%; height: 12px;"></div>
+                                            </div>
+                                        </div>
                                     @endfor
                                 </div>
                             </div>
@@ -605,38 +659,87 @@
                 </main>
             @elseif(request()->is('hukum') || request()->is('hukum/*'))
                 @include('partials.isf-masthead')
-                <main class="isf-skel-article isf-skel-article--full isf-skel-pulse" aria-busy="true" aria-label="Memuat rubrik hukum">
-                    <div class="isf-skel-el" style="width: 140px; height: 12px; margin-bottom: 16px;"></div>
-                    <div class="isf-skel-el" style="width: 240px; height: 42px; margin-bottom: 12px;"></div>
-                    <div class="isf-skel-el" style="width: 50%; height: 18px; margin-bottom: 24px;"></div>
-                    <div style="display: flex; gap: 8px; margin-bottom: 40px; flex-wrap: wrap;">
-                        @for ($i = 0; $i < 4; $i++)
-                            <div class="isf-skel-el" style="width: 120px; height: 36px; border-radius: 9999px;"></div>
-                        @endfor
+                {{-- Hero Header Rubrik Hukum (Navy Identik dengan Politik) --}}
+                <div style="background-color: #0B1220; border-bottom: 1px solid #262626; padding: 2rem 1rem 2rem; color: #fff;">
+                    <div style="max-width: 1440px; margin: 0 auto; padding: 0 1rem;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 1rem;">
+                            <div class="isf-skel-el" style="width: 60px; height: 12px; background: rgba(255,255,255,0.15);"></div>
+                            <span style="color: rgba(255,255,255,0.3); font-size: 11px;">/</span>
+                            <div class="isf-skel-el" style="width: 48px; height: 12px; background: rgba(255,255,255,0.25);"></div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1.5rem;">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                                    <span style="display: inline-block; width: 10px; height: 10px; background-color: #E10600; border-radius: 2px;"></span>
+                                    <span style="font-family: monospace; font-size: 11px; font-weight: bold; color: #E10600; text-transform: uppercase; letter-spacing: 0.1em;">Rubrik Kajian Yuridis & Regulasi</span>
+                                </div>
+                                <div class="isf-skel-el" style="width: 200px; height: 48px; background: rgba(255,255,255,0.2); margin-bottom: 8px;"></div>
+                                <div class="isf-skel-el" style="width: min(600px, 90%); height: 16px; background: rgba(255,255,255,0.15);"></div>
+                            </div>
+                            <div style="display: flex; gap: 8px; overflow-x: auto; padding-top: 4px;">
+                                <div class="isf-skel-el" style="width: 110px; height: 32px; border-radius: 9999px; background: #E10600; flex-shrink: 0;"></div>
+                                @for ($i = 0; $i < 3; $i++)
+                                    <div class="isf-skel-el" style="width: 130px; height: 32px; border-radius: 9999px; background: rgba(255,255,255,0.1); flex-shrink: 0;"></div>
+                                @endfor
+                                <div class="isf-skel-el" style="width: 110px; height: 32px; border-radius: 9999px; background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.4); flex-shrink: 0;"></div>
+                            </div>
+                        </div>
                     </div>
+                </div>
+
+                <main class="isf-skel-article isf-skel-article--full isf-skel-pulse" aria-busy="true" aria-label="Memuat rubrik hukum">
                     <div class="isf-skel-stack">
+                        {{-- Section 1: Headline --}}
                         <section class="isf-skel-frame isf-skel-frame--accent">
-                            <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 180px; height: 26px;"></div></div>
+                            <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 160px; height: 24px;"></div></div>
                             <div class="isf-skel-framebody isf-skel-lines">
-                                <div class="isf-skel-el" style="height: 300px;"></div>
-                                <div class="isf-skel-el" style="width: 75%; height: 28px;"></div>
+                                <div class="isf-skel-el" style="height: 320px;"></div>
+                                <div class="isf-skel-el" style="width: 70%; height: 28px;"></div>
                                 <div class="isf-skel-el" style="height: 16px;"></div>
                             </div>
                         </section>
+                        {{-- Section 2: Timeline Kasus Navy --}}
+                        <section class="isf-skel-frame isf-skel-frame--navy">
+                            <div class="isf-skel-sechead" style="display: flex; align-items: center; gap: 8px;">
+                                <span style="display: inline-block; width: 10px; height: 10px; background-color: #E10600; border-radius: 2px;"></span>
+                                <div class="isf-skel-el" style="width: 240px; height: 24px; background: rgba(255,255,255,0.2);"></div>
+                            </div>
+                            <div class="isf-skel-framebody" style="padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+                                <div class="isf-skel-el" style="height: 48px; border-radius: 6px; background: rgba(255,255,255,0.08);"></div>
+                                <div class="isf-skel-el" style="height: 80px; border-radius: 6px; background: rgba(255,255,255,0.05);"></div>
+                            </div>
+                        </section>
+                        {{-- Section 3: Opini Pakar Hukum Cream --}}
                         <section class="isf-skel-frame isf-skel-frame--cream">
-                            <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 200px; height: 26px;"></div></div>
-                            <div class="isf-skel-framebody" style="padding: 24px;">
-                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
-                                    @for ($i = 0; $i < 2; $i++)
-                                        <div class="isf-skel-el" style="height: 180px;"></div>
+                            <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 180px; height: 24px;"></div></div>
+                            <div class="isf-skel-framebody" style="padding: 20px;">
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                                    @for ($i = 0; $i < 4; $i++)
+                                        <div style="background: rgba(0,0,0,0.03); padding: 12px; border-radius: 6px; border: 1px solid rgba(0,0,0,0.06);">
+                                            <div class="isf-skel-el" style="width: 56px; height: 56px; border-radius: 9999px; margin-bottom: 12px;"></div>
+                                            <div class="isf-skel-el" style="width: 70%; height: 18px; margin-bottom: 6px;"></div>
+                                            <div class="isf-skel-el" style="width: 50%; height: 14px;"></div>
+                                        </div>
                                     @endfor
                                 </div>
                             </div>
                         </section>
+                        {{-- Section 5: Artikel Terbaru Grid 2 Kolom --}}
                         <section class="isf-skel-frame isf-skel-frame--accent">
-                            <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 220px; height: 26px;"></div></div>
+                            <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 150px; height: 24px;"></div></div>
                             <div class="isf-skel-framebody isf-skel-lines">
-                                <div class="isf-skel-el" style="height: 240px;"></div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+                                    @for ($i = 0; $i < 4; $i++)
+                                        <div style="display: flex; gap: 12px; padding: 12px; border-bottom: 1px solid #e5e7eb;">
+                                            <div class="isf-skel-el" style="width: 120px; height: 80px; flex-shrink: 0;"></div>
+                                            <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                                                <div class="isf-skel-el" style="width: 85%; height: 18px;"></div>
+                                                <div class="isf-skel-el" style="width: 100%; height: 14px;"></div>
+                                                <div class="isf-skel-el" style="width: 40%; height: 12px;"></div>
+                                            </div>
+                                        </div>
+                                    @endfor
+                                </div>
                             </div>
                         </section>
                     </div>
@@ -648,11 +751,12 @@
                     <div class="isf-skel-el" style="width: 280px; height: 42px; margin-bottom: 12px;"></div>
                     <div class="isf-skel-el" style="width: 55%; height: 18px; margin-bottom: 24px;"></div>
                     <div style="display: flex; gap: 8px; margin-bottom: 40px; flex-wrap: wrap;">
-                        @for ($i = 0; $i < 6; $i++)
+                        @for ($i = 0; $i < 7; $i++)
                             <div class="isf-skel-el" style="width: 130px; height: 36px; border-radius: 9999px;"></div>
                         @endfor
                     </div>
                     <div class="isf-skel-stack">
+                        {{-- Section 1: Headline --}}
                         <section class="isf-skel-frame isf-skel-frame--accent">
                             <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 200px; height: 26px;"></div></div>
                             <div class="isf-skel-framebody isf-skel-lines">
@@ -661,6 +765,7 @@
                                 <div class="isf-skel-el" style="height: 16px;"></div>
                             </div>
                         </section>
+                        {{-- Section 2: Policy Brief Cream --}}
                         <section class="isf-skel-frame isf-skel-frame--cream">
                             <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 220px; height: 26px;"></div></div>
                             <div class="isf-skel-framebody" style="padding: 24px;">
@@ -671,10 +776,33 @@
                                 </div>
                             </div>
                         </section>
+                        {{-- Section 3: Monitoring Kebijakan Navy --}}
                         <section class="isf-skel-frame isf-skel-frame--navy">
-                            <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 240px; height: 26px;"></div></div>
+                            <div class="isf-skel-sechead" style="display: flex; align-items: center; gap: 8px;">
+                                <span style="display: inline-block; width: 10px; height: 10px; background-color: #E10600; border-radius: 2px;"></span>
+                                <div class="isf-skel-el" style="width: 240px; height: 24px; background: rgba(255,255,255,0.2);"></div>
+                            </div>
+                            <div class="isf-skel-framebody" style="padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+                                <div class="isf-skel-el" style="height: 48px; border-radius: 6px; background: rgba(255,255,255,0.08);"></div>
+                                <div class="isf-skel-el" style="height: 80px; border-radius: 6px; background: rgba(255,255,255,0.05);"></div>
+                            </div>
+                        </section>
+                        {{-- Section 5: Artikel Terbaru Grid 2 Kolom --}}
+                        <section class="isf-skel-frame isf-skel-frame--accent">
+                            <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 150px; height: 24px;"></div></div>
                             <div class="isf-skel-framebody isf-skel-lines">
-                                <div class="isf-skel-el" style="height: 260px;"></div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+                                    @for ($i = 0; $i < 4; $i++)
+                                        <div style="display: flex; gap: 12px; padding: 12px; border-bottom: 1px solid #e5e7eb;">
+                                            <div class="isf-skel-el" style="width: 120px; height: 80px; flex-shrink: 0;"></div>
+                                            <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                                                <div class="isf-skel-el" style="width: 85%; height: 18px;"></div>
+                                                <div class="isf-skel-el" style="width: 100%; height: 14px;"></div>
+                                                <div class="isf-skel-el" style="width: 40%; height: 12px;"></div>
+                                            </div>
+                                        </div>
+                                    @endfor
+                                </div>
                             </div>
                         </section>
                     </div>
@@ -691,6 +819,7 @@
                         @endfor
                     </div>
                     <div class="isf-skel-stack">
+                        {{-- Section 1: Headline --}}
                         <section class="isf-skel-frame isf-skel-frame--accent">
                             <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 200px; height: 26px;"></div></div>
                             <div class="isf-skel-framebody isf-skel-lines">
@@ -699,10 +828,48 @@
                                 <div class="isf-skel-el" style="height: 16px;"></div>
                             </div>
                         </section>
+                        {{-- Section 2: Reader Poll Navy --}}
                         <section class="isf-skel-frame isf-skel-frame--navy">
                             <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 220px; height: 26px;"></div></div>
                             <div class="isf-skel-framebody" style="padding: 24px;">
-                                <div class="isf-skel-el" style="height: 240px;"></div>
+                                <div class="isf-skel-el" style="height: 180px;"></div>
+                            </div>
+                        </section>
+                        {{-- Section 3: Kutipan Publik Cream --}}
+                        <section class="isf-skel-frame isf-skel-frame--cream">
+                            <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 200px; height: 26px;"></div></div>
+                            <div class="isf-skel-framebody" style="padding: 24px;">
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                                    @for ($i = 0; $i < 3; $i++)
+                                        <div class="isf-skel-el" style="height: 160px;"></div>
+                                    @endfor
+                                </div>
+                            </div>
+                        </section>
+                        {{-- Section 4: Surat Pembaca White --}}
+                        <section class="isf-skel-frame isf-skel-frame--accent">
+                            <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 200px; height: 26px;"></div></div>
+                            <div class="isf-skel-framebody isf-skel-lines" style="padding: 24px;">
+                                <div class="isf-skel-el" style="height: 100px; margin-bottom: 12px;"></div>
+                                <div class="isf-skel-el" style="height: 100px;"></div>
+                            </div>
+                        </section>
+                        {{-- Section 5: Artikel Terbaru Grid 2 Kolom --}}
+                        <section class="isf-skel-frame isf-skel-frame--accent">
+                            <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 150px; height: 24px;"></div></div>
+                            <div class="isf-skel-framebody isf-skel-lines">
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+                                    @for ($i = 0; $i < 4; $i++)
+                                        <div style="display: flex; gap: 12px; padding: 12px; border-bottom: 1px solid #e5e7eb;">
+                                            <div class="isf-skel-el" style="width: 120px; height: 80px; flex-shrink: 0;"></div>
+                                            <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                                                <div class="isf-skel-el" style="width: 85%; height: 18px;"></div>
+                                                <div class="isf-skel-el" style="width: 100%; height: 14px;"></div>
+                                                <div class="isf-skel-el" style="width: 40%; height: 12px;"></div>
+                                            </div>
+                                        </div>
+                                    @endfor
+                                </div>
                             </div>
                         </section>
                     </div>

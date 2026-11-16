@@ -6,6 +6,7 @@ import { cmsResources, errorMessage } from '@/api/services/isfCmsService'
 import { alertSuccess, alertError } from '@/Composables/useAlert'
 import LoadingIndicator from '@/Pages/Cms/components/shared/LoadingIndicator.vue'
 import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
+import StatusSelectWithBadge from '@/Components/Cms/StatusSelectWithBadge.vue'
 import {
   Button,
   Input,
@@ -86,12 +87,12 @@ async function loadData() {
       status_label: data.status_label || 'dalam_proses',
       source_title: data.source_title || '',
       source_url: data.source_url || '',
-      last_updated_date: data.last_updated_date ? data.last_updated_date.slice(0, 10) : '',
+      last_updated_date: data.last_updated_date ? data.last_updated_date.slice(0, 10) : new Date().toISOString().slice(0, 10),
       order: Number(data.order) || 0,
       status: data.status || 'terbit',
     }
   } catch (err) {
-    loadError.value = errorMessage(err, 'Gagal memuat data monitoring kebijakan.')
+    loadError.value = errorMessage(err, 'Gagal memuat data program monitoring kebijakan.')
   } finally {
     loading.value = false
   }
@@ -119,7 +120,6 @@ async function handleSubmit() {
   } catch (err) {
     if (err?.response?.status === 422 && err.response.data?.errors) {
       errors.value = err.response.data.errors
-      alertError('Harap periksa kembali inputan form yang bertanda merah.')
     } else {
       alertError(errorMessage(err, 'Gagal menyimpan program monitoring kebijakan.'))
     }
@@ -134,214 +134,191 @@ onMounted(() => {
 </script>
 
 <template>
-  <Head :title="`${isEdit ? 'Edit' : 'Tambah'} Program Monitoring — CMS ISF`" />
+  <Head :title="isEdit ? 'Edit Monitoring Kebijakan — Indonesia Strategy Forum' : 'Tambah Monitoring Kebijakan — Indonesia Strategy Forum'" />
 
-  <div class="max-w-4xl mx-auto space-y-6">
-    <!-- Breadcrumb & Top Bar -->
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-2 text-xs text-neutral-500">
-        <Link href="/cms/monitoring-kebijakan" class="hover:text-neutral-900 transition-colors">
-          Monitoring Kebijakan
-        </Link>
-        <span>/</span>
-        <span class="text-neutral-900 font-medium">
-          {{ isEdit ? 'Edit Program' : 'Tambah Baru' }}
-        </span>
+  <div class="p-6 space-y-6 max-w-4xl mx-auto w-full">
+    <!-- Header -->
+    <div class="flex items-center justify-between gap-4 pb-4 border-b border-border">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+          {{ isEdit ? 'Edit Program Monitoring Kebijakan' : 'Tambah Program Monitoring Kebijakan' }}
+        </h1>
+        <p class="text-sm text-muted-foreground mt-1">
+          Pantau implementasi program strategis, janji kampanye, indikator capaian, dan sumber data resmi.
+        </p>
       </div>
       <Link href="/cms/monitoring-kebijakan">
-        <Button variant="outline" size="sm" class="text-xs">
-          Kembali
+        <Button variant="outline" size="sm" class="inline-flex items-center gap-1.5">
+          <IconComponent name="ArrowLeft" :size="14" />
+          <span>Kembali</span>
         </Button>
       </Link>
     </div>
 
-    <!-- Main Card Form -->
-    <div class="bg-white rounded-xl border border-neutral-200/80 shadow-2xs p-6">
-      <div class="mb-6 pb-4 border-b border-neutral-100">
-        <h1 class="text-xl font-bold tracking-tight text-neutral-900">
-          {{ isEdit ? 'Edit Program Monitoring Kebijakan' : 'Form Program Monitoring Baru' }}
-        </h1>
-        <p class="text-xs text-neutral-500 mt-1">
-          Lengkapi data komparasi janji kampanye/RPJMN vs realisasi lapangan, progres persentase, dan status evaluasi.
-        </p>
-      </div>
+    <LoadingIndicator v-if="loading" text="Memuat formulir monitoring kebijakan..." />
 
-      <LoadingIndicator v-if="loading" message="Memuat formulir..." />
+    <ErrorMessage
+      v-else-if="loadError"
+      :message="loadError"
+      @retry="loadData"
+    />
 
-      <ErrorMessage
-        v-else-if="loadError"
-        :message="loadError"
-        :retry="loadData"
-        class="mb-6"
-      />
-
-      <form v-else @submit.prevent="handleSubmit" class="space-y-6">
+    <!-- Form Card -->
+    <div v-else class="bg-card rounded-xl border border-border p-6 sm:p-8 shadow-xs">
+      <form @submit.prevent="handleSubmit" class="space-y-6">
         <!-- Nama Program & Slug -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="space-y-1.5 md:col-span-2">
-            <Label for="program_name" class="text-xs font-semibold text-neutral-700">
-              Nama Program Pemerintah <span class="text-red-500">*</span>
+        <div class="space-y-4">
+          <div class="space-y-1.5">
+            <Label for="program_name" class="font-medium text-xs">
+              Nama Program Strategis / Janji Kebijakan <span class="text-red-500">*</span>
             </Label>
             <Input
               id="program_name"
               v-model="form.program_name"
               @blur="autoSlug"
-              placeholder="Contoh: Pembangunan 3 Juta Unit Rumah Subsidi & Layak Huni"
+              placeholder="Contoh: Pembangunan 3 Juta Rumah per Tahun"
               required
-              class="text-sm font-medium"
             />
             <p v-if="errors.program_name" class="text-xs text-red-600 font-medium">{{ errors.program_name[0] }}</p>
           </div>
 
-          <div class="space-y-1.5">
-            <Label for="slug" class="text-xs font-semibold text-neutral-700">
-              Slug URL (opsional, auto)
-            </Label>
-            <Input
-              id="slug"
-              v-model="form.slug"
-              placeholder="program-3-juta-rumah-subsidi"
-              class="text-xs font-mono"
-            />
-            <p v-if="errors.slug" class="text-xs text-red-600 font-medium">{{ errors.slug[0] }}</p>
-          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+              <Label for="slug" class="font-medium text-xs">
+                Slug URL / Identifier
+              </Label>
+              <Input
+                id="slug"
+                v-model="form.slug"
+                placeholder="pembangunan-3-juta-rumah"
+                class="font-mono text-xs"
+              />
+              <p v-if="errors.slug" class="text-xs text-red-600 font-medium">{{ errors.slug[0] }}</p>
+            </div>
 
-          <div class="space-y-1.5">
-            <Label for="sector" class="text-xs font-semibold text-neutral-700">
-              Sektor Kebijakan <span class="text-red-500">*</span>
-            </Label>
-            <select
-              id="sector"
-              v-model="form.sector"
-              required
-              class="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-xs font-medium text-neutral-800 shadow-xs focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-            >
-              <option v-for="s in sectorOptions" :key="s.value" :value="s.value">
-                {{ s.label }}
-              </option>
-            </select>
-            <p v-if="errors.sector" class="text-xs text-red-600 font-medium">{{ errors.sector[0] }}</p>
+            <div class="space-y-1.5">
+              <Label for="sector" class="font-medium text-xs">
+                Sektor Kebijakan <span class="text-red-500">*</span>
+              </Label>
+              <select
+                id="sector"
+                v-model="form.sector"
+                required
+                class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-xs font-medium focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+              >
+                <option v-for="sec in sectorOptions" :key="sec.value" :value="sec.value">
+                  {{ sec.label }}
+                </option>
+              </select>
+              <p v-if="errors.sector" class="text-xs text-red-600 font-medium">{{ errors.sector[0] }}</p>
+            </div>
           </div>
         </div>
 
-        <!-- Janji vs Realisasi (Side by Side Comparison) -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-xl bg-neutral-50/70 border border-neutral-200/70">
+        <!-- Janji & Realisasi -->
+        <div class="space-y-4">
           <div class="space-y-1.5">
-            <div class="flex items-center gap-1.5 text-xs font-semibold text-neutral-800">
-              <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-              <Label for="promise" class="cursor-pointer">Target Janji / Komitmen Pemerintah <span class="text-red-500">*</span></Label>
-            </div>
+            <Label for="promise" class="font-medium text-xs">
+              Janji / Target Awal Pemerintah <span class="text-red-500">*</span>
+            </Label>
             <textarea
               id="promise"
               v-model="form.promise"
-              rows="4"
-              placeholder="Jelaskan target angka, tenggat waktu, atau janji resmi yang dicantumkan dalam visi-misi / RPJMN..."
+              rows="3"
               required
-              class="w-full rounded-md border border-neutral-300 p-2.5 text-xs leading-relaxed text-neutral-800 shadow-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 font-sans"
+              placeholder="Uraikan janji kampanye, target RPJMN, atau target kuantitatif yang dicanangkan..."
+              class="w-full rounded-md border border-input bg-background text-foreground p-3 text-xs leading-relaxed focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
             ></textarea>
             <p v-if="errors.promise" class="text-xs text-red-600 font-medium">{{ errors.promise[0] }}</p>
           </div>
 
           <div class="space-y-1.5">
-            <div class="flex items-center gap-1.5 text-xs font-semibold text-neutral-800">
-              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <Label for="realization" class="cursor-pointer">Realisasi & Kondisi Lapangan <span class="text-red-500">*</span></Label>
-            </div>
+            <Label for="realization" class="font-medium text-xs">
+              Realisasi Saat Ini / Temuan Lapangan <span class="text-red-500">*</span>
+            </Label>
             <textarea
               id="realization"
               v-model="form.realization"
-              rows="4"
-              placeholder="Jelaskan capaian riil di lapangan berdasarkan data BPS, audit BPK, atau laporan kementerian terkini..."
+              rows="3"
               required
-              class="w-full rounded-md border border-neutral-300 p-2.5 text-xs leading-relaxed text-neutral-800 shadow-xs focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-sans"
+              placeholder="Uraikan fakta pencapaian riil, jumlah unit terbangun, anggaran terserap, dll..."
+              class="w-full rounded-md border border-input bg-background text-foreground p-3 text-xs leading-relaxed focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
             ></textarea>
             <p v-if="errors.realization" class="text-xs text-red-600 font-medium">{{ errors.realization[0] }}</p>
           </div>
         </div>
 
-        <!-- Progres & Status Evaluasi -->
+        <!-- Persentase & Status Label -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="space-y-1.5">
-            <div class="flex items-center justify-between">
-              <Label for="progress_percent" class="text-xs font-semibold text-neutral-700">
-                Progres Capaian (%) <span class="text-red-500">*</span>
-              </Label>
-              <span class="text-xs font-mono font-bold text-neutral-900">{{ form.progress_percent }}%</span>
-            </div>
-            <div class="flex items-center gap-3">
-              <input
-                type="range"
-                v-model.number="form.progress_percent"
-                min="0"
-                max="100"
-                step="1"
-                class="w-full accent-isf-red cursor-pointer"
-              />
-              <Input
-                id="progress_percent"
-                v-model.number="form.progress_percent"
-                type="number"
-                min="0"
-                max="100"
-                required
-                class="w-20 text-xs font-mono text-center"
-              />
-            </div>
+            <Label for="progress_percent" class="font-medium text-xs">
+              Persentase Capaian (%) (0 - 100) <span class="text-red-500">*</span>
+            </Label>
+            <Input
+              id="progress_percent"
+              v-model.number="form.progress_percent"
+              type="number"
+              min="0"
+              max="100"
+              step="1"
+              required
+              class="text-xs font-mono"
+            />
             <p v-if="errors.progress_percent" class="text-xs text-red-600 font-medium">{{ errors.progress_percent[0] }}</p>
           </div>
 
           <div class="space-y-1.5">
-            <Label for="status_label" class="text-xs font-semibold text-neutral-700">
-              Status Evaluasi <span class="text-red-500">*</span>
+            <Label for="status_label" class="font-medium text-xs">
+              Status Capaian / Progres <span class="text-red-500">*</span>
             </Label>
             <select
               id="status_label"
               v-model="form.status_label"
               required
-              class="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-xs font-medium text-neutral-800 shadow-xs focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+              class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-xs font-medium focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
             >
-              <option v-for="sl in statusLabelOptions" :key="sl.value" :value="sl.value">
-                {{ sl.label }}
+              <option v-for="st in statusLabelOptions" :key="st.value" :value="st.value">
+                {{ st.label }}
               </option>
             </select>
             <p v-if="errors.status_label" class="text-xs text-red-600 font-medium">{{ errors.status_label[0] }}</p>
           </div>
         </div>
 
-        <!-- Sumber Data & Tautan -->
+        <!-- Sumber & Verifikasi Data -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="space-y-1.5">
-            <Label for="source_title" class="text-xs font-semibold text-neutral-700">
-              Judul Sumber Data / Dokumen Resmi
+            <Label for="source_title" class="font-medium text-xs">
+              Nama Sumber Data Resmi <span class="text-red-500">*</span>
             </Label>
             <Input
               id="source_title"
               v-model="form.source_title"
-              placeholder="Contoh: Laporan Kinerja Kementerian PUPR 2025 & Data BPS"
-              class="text-xs"
+              placeholder="Contoh: Laporan Kinerja Kementerian PUPR Q3 2026"
+              required
             />
             <p v-if="errors.source_title" class="text-xs text-red-600 font-medium">{{ errors.source_title[0] }}</p>
           </div>
 
           <div class="space-y-1.5">
-            <Label for="source_url" class="text-xs font-semibold text-neutral-700">
+            <Label for="source_url" class="font-medium text-xs">
               Tautan URL Sumber Resmi
             </Label>
             <Input
               id="source_url"
               v-model="form.source_url"
-              placeholder="https://..."
-              class="text-xs font-mono"
+              placeholder="https://pu.go.id/publikasi/..."
+              class="font-mono text-xs"
             />
             <p v-if="errors.source_url" class="text-xs text-red-600 font-medium">{{ errors.source_url[0] }}</p>
           </div>
         </div>
 
-        <!-- Tanggal Pembaruan, Urutan, Status -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-neutral-100">
+        <!-- Tanggal Update, Urutan, Status -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-border">
           <div class="space-y-1.5">
-            <Label for="last_updated_date" class="text-xs font-semibold text-neutral-700">
-              Tanggal Pembaruan Data <span class="text-red-500">*</span>
+            <Label for="last_updated_date" class="font-medium text-xs">
+              Tanggal Pemutakhiran Data <span class="text-red-500">*</span>
             </Label>
             <Input
               id="last_updated_date"
@@ -354,7 +331,7 @@ onMounted(() => {
           </div>
 
           <div class="space-y-1.5">
-            <Label for="order" class="text-xs font-semibold text-neutral-700">
+            <Label for="order" class="font-medium text-xs">
               Urutan Prioritas
             </Label>
             <Input
@@ -369,36 +346,31 @@ onMounted(() => {
           </div>
 
           <div class="space-y-1.5">
-            <Label for="status" class="text-xs font-semibold text-neutral-700">
+            <Label for="status" class="font-medium text-xs">
               Status Publikasi <span class="text-red-500">*</span>
             </Label>
-            <select
+            <StatusSelectWithBadge
               id="status"
               v-model="form.status"
-              required
-              class="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-xs font-medium text-neutral-800 shadow-xs focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-            >
-              <option value="terbit">Terbit (Aktif)</option>
-              <option value="draft">Draft (Arsip)</option>
-            </select>
+            />
             <p v-if="errors.status" class="text-xs text-red-600 font-medium">{{ errors.status[0] }}</p>
           </div>
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex items-center justify-end gap-3 pt-6 border-t border-neutral-100">
+        <div class="flex items-center justify-end gap-3 pt-6 border-t border-border">
           <Link href="/cms/monitoring-kebijakan">
-            <Button type="button" variant="outline" class="text-xs">
+            <Button type="button" variant="outline" size="sm">
               Batal
             </Button>
           </Link>
           <Button
             type="submit"
             :disabled="saving"
-            class="text-xs font-semibold inline-flex items-center gap-2"
+            class="bg-red-600 hover:bg-red-700 text-white font-medium text-sm shadow-sm inline-flex items-center gap-1.5"
           >
-            <IconComponent v-if="saving" name="IconRefresh" class="w-4 h-4 animate-spin" />
-            <IconComponent v-else name="IconDeviceFloppy" class="w-4 h-4" />
+            <IconComponent v-if="saving" name="Refresh" :size="16" class="animate-spin" />
+            <IconComponent v-else name="DeviceFloppy" :size="16" />
             <span>{{ saving ? 'Menyimpan...' : (isEdit ? 'Perbarui Program' : 'Simpan Program') }}</span>
           </Button>
         </div>
@@ -406,4 +378,3 @@ onMounted(() => {
     </div>
   </div>
 </template>
-

@@ -16,7 +16,8 @@ import {
   TableBody,
   TableRow,
   TableHead,
-  TableCell
+  TableCell,
+  FilterSelect
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -31,6 +32,10 @@ const statusFilter = ref('')
 let searchTimeout = null
 
 const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+const abjadOptions = [
+  { value: '', label: 'Semua Abjad (A-Z)' },
+  ...alphabet.map((char) => ({ value: char, label: `Huruf ${char}` }))
+]
 
 async function loadData() {
   loading.value = true
@@ -56,13 +61,12 @@ function onSearchInput() {
   }, 350)
 }
 
-function onAbjadChange(abjad) {
-  abjadFilter.value = abjadFilter.value === abjad ? '' : abjad
+function onAbjadChange() {
   loadData()
 }
 
 function onStatusChange(status) {
-  statusFilter.value = statusFilter.value === status ? '' : status
+  statusFilter.value = status
   loadData()
 }
 
@@ -87,195 +91,195 @@ onMounted(() => {
 </script>
 
 <template>
-  <Head title="Glosarium Hukum — CMS ISF" />
+  <Head title="Kelola Glosarium Hukum — Indonesia Strategy Forum" />
 
-  <div class="space-y-6">
-    <!-- Header & Action Button -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+  <div class="p-6 space-y-6 w-full">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
       <div>
-        <h1 class="text-2xl font-bold tracking-tight text-neutral-900">
-          Glosarium Hukum
+        <h1 class="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+          <span>Kelola Glosarium Hukum</span>
+          <Badge class="bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 text-xs">
+            {{ items.length }} Total
+          </Badge>
         </h1>
-        <p class="text-sm text-neutral-500 mt-1">
+        <p class="text-sm text-muted-foreground mt-1">
           Kamus istilah hukum interaktif, definisi yuridis, dasar hukum perundang-undangan, dan istilah terkait.
         </p>
       </div>
       <Link href="/cms/glosarium-hukum/create">
-        <Button class="inline-flex items-center gap-2">
-          <IconComponent name="IconPlus" class="w-4 h-4" />
+        <Button class="bg-red-600 hover:bg-red-700 text-white font-medium text-sm shadow-sm inline-flex items-center gap-1.5">
+          <IconComponent name="Plus" :size="16" />
           <span>Tambah Istilah</span>
         </Button>
       </Link>
     </div>
 
     <!-- Filters & Search Toolbar -->
-    <div class="p-4 bg-white rounded-xl border border-neutral-200/80 shadow-2xs space-y-3">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <!-- Search Input -->
-        <div class="relative w-full md:w-80">
-          <IconComponent
-            name="IconSearch"
-            class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none"
-          />
-          <Input
-            v-model="search"
-            @input="onSearchInput"
-            placeholder="Cari istilah, definisi, dasar hukum..."
-            class="pl-9 text-xs"
-          />
-        </div>
-
-        <!-- Status Filter Buttons -->
-        <div class="flex items-center gap-2 shrink-0">
-          <Button
-            size="sm"
-            :variant="statusFilter === '' ? 'default' : 'outline'"
-            @click="onStatusChange('')"
-            class="text-xs"
-          >
-            Semua
-          </Button>
-          <Button
-            size="sm"
-            :variant="statusFilter === 'terbit' ? 'default' : 'outline'"
-            @click="onStatusChange('terbit')"
-            class="text-xs"
-          >
-            Terbit
-          </Button>
-          <Button
-            size="sm"
-            :variant="statusFilter === 'draft' ? 'default' : 'outline'"
-            @click="onStatusChange('draft')"
-            class="text-xs"
-          >
-            Draft
-          </Button>
-        </div>
+    <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+      <div class="relative w-full sm:w-80">
+        <Input
+          v-model="search"
+          @input="onSearchInput"
+          placeholder="Cari istilah, definisi, dasar hukum..."
+          class="pl-9 h-9 text-xs"
+        />
+        <IconComponent
+          name="Search"
+          :size="16"
+          class="absolute left-3 top-2.5 text-muted-foreground pointer-events-none"
+        />
       </div>
 
-      <!-- Alphabet Filter Buttons -->
-      <div class="pt-2 border-t border-neutral-100 flex items-center gap-1 overflow-x-auto pb-1 isf-no-scrollbar">
-        <button
-          type="button"
-          @click="onAbjadChange('')"
-          :class="[
-            'px-2 py-0.5 rounded text-[11px] font-bold transition-all shrink-0 cursor-pointer',
-            abjadFilter === ''
-              ? 'bg-neutral-900 text-white'
-              : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-          ]"
-        >
-          Semua Huruf
-        </button>
-        <button
-          v-for="char in alphabet"
-          :key="char"
-          type="button"
-          @click="onAbjadChange(char)"
-          :class="[
-            'w-6 h-6 flex items-center justify-center rounded text-[11px] font-mono font-bold transition-all shrink-0 cursor-pointer',
-            abjadFilter === char
-              ? 'bg-isf-red text-white'
-              : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
-          ]"
-        >
-          {{ char }}
-        </button>
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 w-full sm:w-auto justify-start py-0.5">
+        <div class="flex items-center gap-2">
+          <label for="filter-abjad" class="text-xs text-muted-foreground whitespace-nowrap">Abjad:</label>
+          <FilterSelect
+            id="filter-abjad"
+            v-model="abjadFilter"
+            placeholder="Semua Abjad"
+            :options="abjadOptions"
+            @change="onAbjadChange"
+          />
+        </div>
+
+        <div class="flex items-center gap-2 overflow-x-auto justify-start">
+          <span class="text-xs text-muted-foreground whitespace-nowrap">Status:</span>
+          <div class="flex gap-1">
+            <button
+              type="button"
+              @click="onStatusChange('')"
+              :class="[
+                'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+                statusFilter === ''
+                  ? 'bg-red-600 text-white'
+                  : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+              ]"
+            >
+              Semua
+            </button>
+            <button
+              type="button"
+              @click="onStatusChange('terbit')"
+              :class="[
+                'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+                statusFilter === 'terbit'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+              ]"
+            >
+              Terbit
+            </button>
+            <button
+              type="button"
+              @click="onStatusChange('draf')"
+              :class="[
+                'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+                statusFilter === 'draf'
+                  ? 'bg-amber-600 text-white'
+                  : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+              ]"
+            >
+              Draf
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Data Table Container -->
-    <div class="bg-white rounded-xl border border-neutral-200/80 shadow-2xs overflow-hidden">
-      <LoadingIndicator v-if="loading" message="Memuat data glosarium hukum..." />
+    <LoadingIndicator v-if="loading && items.length === 0" text="Memuat data glosarium hukum..." />
+    <ErrorMessage
+      v-else-if="loadError"
+      :message="loadError"
+      @retry="loadData"
+    />
 
-      <ErrorMessage
-        v-else-if="loadError"
-        :message="loadError"
-        :retry="loadData"
-        class="m-6"
-      />
-
-      <div v-else-if="items.length === 0" class="py-16 text-center text-neutral-500">
-        <IconComponent name="IconBook" class="w-10 h-10 mx-auto text-neutral-300 mb-2" />
-        <p class="font-medium text-neutral-700">Belum ada istilah glosarium hukum</p>
-        <p class="text-xs text-neutral-400 mt-1">
-          Tambahkan istilah baru untuk kamus hukum interaktif ISF.
-        </p>
-      </div>
-
-      <div v-else class="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead class="w-12 text-center">#</TableHead>
-              <TableHead class="w-16 text-center">Abjad</TableHead>
-              <TableHead class="min-w-[180px]">Istilah</TableHead>
-              <TableHead class="min-w-[280px]">Definisi</TableHead>
-              <TableHead class="min-w-[180px]">Dasar Hukum</TableHead>
-              <TableHead class="min-w-[150px]">Istilah Terkait</TableHead>
-              <TableHead class="w-24 text-center">Status</TableHead>
-              <TableHead class="w-28 text-right pr-4">Aksi</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow v-for="(item, idx) in items" :key="item.id" class="hover:bg-neutral-50/70">
-              <TableCell class="text-center font-mono text-xs text-neutral-400">
-                {{ idx + 1 }}
-              </TableCell>
-              <TableCell class="text-center">
-                <span class="inline-flex items-center justify-center w-7 h-7 rounded bg-amber-50 text-amber-700 font-mono font-bold text-xs border border-amber-200">
-                  {{ item.abjad }}
-                </span>
-              </TableCell>
-              <TableCell class="font-semibold text-neutral-900 text-sm">
+    <div v-else class="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
+      <Table>
+        <TableHeader>
+          <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
+            <TableHead class="w-12 text-center text-xs">#</TableHead>
+            <TableHead class="w-16 text-center text-xs">Abjad</TableHead>
+            <TableHead class="min-w-[180px]">Istilah & Slug</TableHead>
+            <TableHead class="min-w-[280px]">Definisi</TableHead>
+            <TableHead class="min-w-[180px]">Dasar Hukum</TableHead>
+            <TableHead class="min-w-[150px]">Istilah Terkait</TableHead>
+            <TableHead class="w-24 text-center">Status</TableHead>
+            <TableHead class="text-right">Aksi</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow v-if="items.length === 0">
+            <TableCell colspan="8" class="text-center py-10 text-muted-foreground text-sm">
+              Tidak ada istilah glosarium hukum ditemukan.
+            </TableCell>
+          </TableRow>
+          <TableRow
+            v-for="(item, idx) in items"
+            :key="item.id"
+            class="hover:bg-muted/30 transition border-b border-border/50"
+          >
+            <TableCell class="text-center font-mono text-xs text-muted-foreground">
+              {{ idx + 1 }}
+            </TableCell>
+            <TableCell class="text-center">
+              <span class="inline-flex items-center justify-center w-7 h-7 rounded bg-amber-500/10 text-amber-600 font-mono font-bold text-xs border border-amber-500/20">
+                {{ item.abjad }}
+              </span>
+            </TableCell>
+            <TableCell class="py-3">
+              <div class="font-semibold text-foreground text-sm">
                 {{ item.istilah }}
-              </TableCell>
-              <TableCell class="text-xs text-neutral-600 line-clamp-2 max-w-xs leading-relaxed">
-                {{ item.definisi }}
-              </TableCell>
-              <TableCell class="text-xs text-neutral-600">
-                {{ item.dasar_hukum || '-' }}
-              </TableCell>
-              <TableCell>
-                <div v-if="Array.isArray(item.istilah_terkait) && item.istilah_terkait.length > 0" class="flex flex-wrap gap-1">
-                  <Badge
-                    v-for="rel in item.istilah_terkait"
-                    :key="rel"
-                    variant="secondary"
-                    class="text-[10px] px-1.5 py-0"
-                  >
-                    {{ rel }}
-                  </Badge>
-                </div>
-                <span v-else class="text-xs text-neutral-400">-</span>
-              </TableCell>
-              <TableCell class="text-center">
-                <StatusBadge :status="item.status" />
-              </TableCell>
-              <TableCell class="text-right pr-4">
-                <div class="inline-flex items-center gap-1 justify-end">
-                  <Link :href="`/cms/glosarium-hukum/${item.id}/edit`">
-                    <Button variant="ghost" size="sm" class="h-8 w-8 p-0" title="Edit Istilah">
-                      <IconComponent name="IconEdit" class="w-4 h-4 text-neutral-600" />
-                    </Button>
-                  </Link>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    class="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                    title="Hapus Istilah"
-                    @click="handleDelete(item)"
-                  >
-                    <IconComponent name="IconTrash" class="w-4 h-4" />
+              </div>
+              <div class="text-xs text-muted-foreground font-mono mt-0.5 truncate">
+                #istilah-{{ item.slug }}
+              </div>
+            </TableCell>
+            <TableCell class="text-xs text-muted-foreground line-clamp-2 max-w-xs leading-relaxed">
+              {{ item.definisi }}
+            </TableCell>
+            <TableCell class="text-xs text-muted-foreground">
+              {{ item.dasar_hukum || '-' }}
+            </TableCell>
+            <TableCell>
+              <div v-if="Array.isArray(item.istilah_terkait) && item.istilah_terkait.length > 0" class="flex flex-wrap gap-1">
+                <Badge
+                  v-for="rel in item.istilah_terkait"
+                  :key="rel"
+                  variant="secondary"
+                  class="text-[10px] px-1.5 py-0"
+                >
+                  {{ rel }}
+                </Badge>
+              </div>
+              <span v-else class="text-xs text-muted-foreground">-</span>
+            </TableCell>
+            <TableCell class="text-center">
+              <StatusBadge :status="item.status" />
+            </TableCell>
+            <TableCell class="text-right">
+              <div class="flex items-center justify-end gap-1.5">
+                <Link :href="`/cms/glosarium-hukum/${item.id}/edit`">
+                  <Button variant="outline" size="sm" class="h-8 px-2.5 text-xs font-medium hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center">
+                    <IconComponent name="Edit" :size="14" class="mr-1" />
+                    Edit
                   </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </div>
+                </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="h-8 px-2.5 text-xs font-medium text-red-500 border-red-500/30 hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center"
+                  @click="handleDelete(item)"
+                >
+                  <IconComponent name="Trash" :size="14" class="mr-1" />
+                  Hapus
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
     </div>
   </div>
 </template>
-

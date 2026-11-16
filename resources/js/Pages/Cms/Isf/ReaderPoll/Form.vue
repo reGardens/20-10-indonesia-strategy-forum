@@ -164,24 +164,23 @@ onMounted(() => {
 <template>
   <Head :title="isEdit ? 'Edit Reader Poll · CMS ISF' : 'Tambah Reader Poll · CMS ISF'" />
 
-  <div class="space-y-6 max-w-4xl mx-auto">
+  <div class="p-6 space-y-6 max-w-4xl mx-auto w-full">
     <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <Link href="/cms/reader-poll">
-          <Button variant="ghost" size="icon" class="h-9 w-9">
-            <IconComponent name="IconArrowLeft" class="w-5 h-5" />
-          </Button>
-        </Link>
-        <div>
-          <h1 class="text-2xl font-bold tracking-tight text-foreground">
-            {{ isEdit ? 'Edit Reader Poll' : 'Tambah Reader Poll Baru' }}
-          </h1>
-          <p class="text-sm text-muted-foreground mt-0.5">
-            Jajak pendapat publik interaktif dengan label ketat non-ilmiah.
-          </p>
-        </div>
+    <div class="flex items-center justify-between gap-4 pb-4 border-b border-border">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+          {{ isEdit ? 'Edit Reader Poll' : 'Tambah Reader Poll' }}
+        </h1>
+        <p class="text-sm text-muted-foreground mt-0.5">
+          Jajak pendapat publik interaktif dengan label ketat non-ilmiah.
+        </p>
       </div>
+      <Link href="/cms/reader-poll">
+        <Button variant="outline" size="sm" class="inline-flex items-center gap-1.5">
+          <IconComponent name="ArrowLeft" :size="14" />
+          <span>Kembali</span>
+        </Button>
+      </Link>
     </div>
 
     <LoadingIndicator v-if="loading" text="Memuat data polling..." />
@@ -199,7 +198,7 @@ onMounted(() => {
     >
       <div class="flex items-center justify-between">
         <h3 class="text-sm font-semibold text-foreground flex items-center gap-2">
-          <IconComponent name="IconChartBar" class="w-4 h-4 text-primary" />
+          <IconComponent name="ChartBar" :size="16" class="text-primary" />
           Rekapitulasi Suara Terkini
         </h3>
         <span class="text-xs font-mono font-bold text-primary">
@@ -283,7 +282,7 @@ onMounted(() => {
               @click="addOption"
               class="gap-1 text-xs"
             >
-              <IconComponent name="IconPlus" class="w-3.5 h-3.5" />
+              <IconComponent name="Plus" :size="14" />
               <span>Tambah Opsi</span>
             </Button>
           </div>
@@ -308,7 +307,7 @@ onMounted(() => {
                 :disabled="form.options.length <= 2"
                 @click="removeOption(idx)"
               >
-                <IconComponent name="IconTrash" class="w-4 h-4" />
+                <IconComponent name="Trash" :size="15" />
               </Button>
             </div>
           </div>
@@ -349,7 +348,7 @@ onMounted(() => {
             >
               <option value="aktif">Aktif (Bisa Divote)</option>
               <option value="selesai">Selesai (Hanya Hasil)</option>
-              <option value="draft">Draft (Tersimpan)</option>
+              <option value="draf">Draf (Tersimpan)</option>
             </select>
           </div>
         </div>
@@ -369,15 +368,19 @@ onMounted(() => {
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex items-center justify-end gap-3">
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-border">
         <Link href="/cms/reader-poll">
-          <Button type="button" variant="outline" :disabled="saving">
+          <Button type="button" variant="outline" size="sm" :disabled="saving">
             Batal
           </Button>
         </Link>
-        <Button type="submit" :disabled="saving" class="gap-2">
-          <IconComponent v-if="saving" name="IconLoader" class="w-4 h-4 animate-spin" />
-          <IconComponent v-else name="IconCheck" class="w-4 h-4" />
+        <Button
+          type="submit"
+          :disabled="saving"
+          class="bg-red-600 hover:bg-red-700 text-white font-medium text-sm shadow-sm inline-flex items-center gap-1.5"
+        >
+          <IconComponent v-if="saving" name="Refresh" :size="16" class="animate-spin" />
+          <IconComponent v-else name="DeviceFloppy" :size="16" />
           <span>{{ saving ? 'Menyimpan...' : (isEdit ? 'Simpan Perubahan' : 'Buat Polling') }}</span>
         </Button>
       </div>

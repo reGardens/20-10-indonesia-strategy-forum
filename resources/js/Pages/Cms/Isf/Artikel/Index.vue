@@ -19,7 +19,8 @@ import {
   TableRow,
   TableHead,
   TableCell,
-  Pagination
+  Pagination,
+  FilterSelect
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -174,24 +175,13 @@ onMounted(() => {
       <!-- Filter Kategori (opsi sama dengan form artikel) -->
       <div class="flex items-center gap-2">
         <label for="filter-kategori" class="text-xs text-muted-foreground whitespace-nowrap">Kategori:</label>
-        <div class="relative">
-          <select
-            id="filter-kategori"
-            v-model="categoryFilter"
-            @change="onCategoryChange"
-            class="h-8 rounded-md border border-input bg-background pl-2.5 pr-8 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring appearance-none"
-          >
-            <option value="">Semua</option>
-            <option v-for="cat in CATEGORIES" :key="cat.value" :value="cat.value">
-              {{ cat.label }}
-            </option>
-          </select>
-          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-muted-foreground">
-            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        </div>
+        <FilterSelect
+          id="filter-kategori"
+          v-model="categoryFilter"
+          placeholder="Semua"
+          :options="CATEGORIES"
+          @change="onCategoryChange"
+        />
       </div>
 
       <div class="flex items-center gap-2 overflow-x-auto justify-start">

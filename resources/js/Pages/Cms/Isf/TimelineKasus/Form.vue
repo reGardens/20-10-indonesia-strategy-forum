@@ -6,6 +6,7 @@ import { cmsResources, errorMessage } from '@/api/services/isfCmsService'
 import { alertSuccess, alertError } from '@/Composables/useAlert'
 import LoadingIndicator from '@/Pages/Cms/components/shared/LoadingIndicator.vue'
 import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
+import StatusSelectWithBadge from '@/Components/Cms/StatusSelectWithBadge.vue'
 import {
   Button,
   Input,
@@ -78,14 +79,14 @@ async function loadData() {
       urutan: Number(data.urutan) || 0,
       status: data.status || 'terbit',
       events: Array.isArray(data.events)
-        ? data.events.map((e, idx) => ({
+        ? data.events.map((e) => ({
             id: e.id,
-            tanggal_peristiwa: e.tanggal_peristiwa ? e.tanggal_peristiwa.substring(0, 10) : '',
+            tanggal_peristiwa: e.tanggal_peristiwa ? String(e.tanggal_peristiwa).substring(0, 10) : '',
             tahap: e.tahap || '',
             judul: e.judul || '',
             deskripsi: e.deskripsi || '',
             sumber_tautan: e.sumber_tautan || '',
-            urutan: Number(e.urutan) || (idx + 1),
+            urutan: Number(e.urutan) || 0,
             status: e.status || 'terbit',
           }))
         : [],
@@ -94,7 +95,7 @@ async function loadData() {
       addEvent()
     }
   } catch (err) {
-    loadError.value = errorMessage(err, 'Gagal memuat data timeline kasus.')
+    loadError.value = errorMessage(err, 'Gagal memuat detail timeline kasus.')
   } finally {
     loading.value = false
   }
@@ -109,7 +110,7 @@ async function handleSubmit() {
     urutan: Number(form.value.urutan) || 0,
     events: form.value.events.map((e, idx) => ({
       ...e,
-      urutan: Number(e.urutan) || (idx + 1),
+      urutan: idx + 1,
     })),
   }
 
@@ -139,47 +140,40 @@ onMounted(() => {
 </script>
 
 <template>
-  <Head :title="isEdit ? 'Edit Timeline Kasus — CMS ISF' : 'Tambah Timeline Kasus — CMS ISF'" />
+  <Head :title="isEdit ? 'Edit Timeline Kasus — Indonesia Strategy Forum' : 'Tambah Timeline Kasus — Indonesia Strategy Forum'" />
 
-  <div class="max-w-4xl mx-auto space-y-6">
-    <!-- Breadcrumb & Header -->
-    <div class="flex items-center justify-between gap-4">
+  <div class="p-6 space-y-6 max-w-5xl mx-auto w-full">
+    <!-- Header -->
+    <div class="flex items-center justify-between gap-4 pb-4 border-b border-border">
       <div>
-        <div class="flex items-center gap-2 text-xs text-neutral-500 mb-1">
-          <Link href="/cms/timeline-kasus" class="hover:text-neutral-900 transition-colors">
-            Timeline Kasus
-          </Link>
-          <span>/</span>
-          <span class="text-neutral-900 font-medium">
-            {{ isEdit ? 'Edit Kasus' : 'Tambah Kasus' }}
-          </span>
-        </div>
-        <h1 class="text-2xl font-bold tracking-tight text-neutral-900">
+        <h1 class="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
           {{ isEdit ? 'Edit Timeline Kasus' : 'Tambah Timeline Kasus' }}
         </h1>
+        <p class="text-sm text-muted-foreground mt-1">
+          Kelola perkara hukum besar, sengketa konstitusi, dan kronologi sidang.
+        </p>
       </div>
       <Link href="/cms/timeline-kasus">
         <Button variant="outline" size="sm" class="inline-flex items-center gap-1.5">
-          <IconComponent name="IconArrowLeft" class="w-4 h-4" />
+          <IconComponent name="ArrowLeft" :size="14" />
           <span>Kembali</span>
         </Button>
       </Link>
     </div>
 
-    <LoadingIndicator v-if="loading" message="Memuat formulir timeline..." />
+    <LoadingIndicator v-if="loading" text="Memuat formulir timeline..." />
 
     <ErrorMessage
       v-else-if="loadError"
       :message="loadError"
-      :retry="loadData"
-      class="m-6"
+      @retry="loadData"
     />
 
     <!-- Form Container -->
-    <form v-else @submit.prevent="handleSubmit" class="space-y-8">
+    <form v-else @submit.prevent="handleSubmit" class="space-y-6">
       <!-- Section 1: Kasus Induk -->
-      <div class="bg-white p-6 sm:p-8 rounded-xl border border-neutral-200/80 shadow-2xs space-y-5">
-        <h2 class="text-base font-bold text-neutral-900 border-b border-neutral-200 pb-3">
+      <div class="bg-card p-6 sm:p-8 rounded-xl border border-border shadow-xs space-y-5">
+        <h2 class="text-base font-bold text-foreground border-b border-border pb-3">
           1. Data Kasus Induk
         </h2>
 
@@ -241,52 +235,53 @@ onMounted(() => {
               v-model="form.deskripsi"
               rows="3"
               placeholder="Jelaskan pokok persoalan hukum, pihak terkait, dan esensi perkaranya..."
-              class="w-full rounded-md border border-neutral-300 p-3 text-sm focus:border-isf-red focus:ring-1 focus:ring-isf-red outline-none"
+              class="w-full rounded-md border border-input bg-background text-foreground p-3 text-sm focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none"
             ></textarea>
             <p v-if="errors.deskripsi" class="text-xs text-red-600 mt-1">
               {{ errors.deskripsi[0] }}
             </p>
           </div>
 
-          <!-- Urutan & Status Publikasi -->
+          <!-- Slug Kasus (Col 6) -->
           <div class="md:col-span-6 space-y-1.5">
-            <Label for="urutan" class="font-medium text-xs">
-              Urutan Prioritas
+            <Label for="slug" class="font-medium text-xs">
+              Slug URL / Anchor
             </Label>
             <Input
-              id="urutan"
-              type="number"
-              v-model.number="form.urutan"
-              min="0"
-              placeholder="0"
+              id="slug"
+              v-model="form.slug"
+              placeholder="Dihasilkan otomatis jika dikosongkan (contoh: ambang-batas-parlemen)"
             />
+            <p v-if="errors.slug" class="text-xs text-red-600 mt-1">
+              {{ errors.slug[0] }}
+            </p>
           </div>
 
+          <!-- Status Publikasi Kasus (Col 6) -->
           <div class="md:col-span-6 space-y-1.5">
             <Label for="status" class="font-medium text-xs">
-              Status Publikasi Kasus
+              Status Publikasi
             </Label>
-            <select
+            <StatusSelectWithBadge
               id="status"
               v-model="form.status"
-              class="w-full rounded-md border border-neutral-300 p-2 text-sm focus:border-isf-red focus:ring-1 focus:ring-isf-red outline-none bg-white"
-            >
-              <option value="terbit">Terbit (Tampil di rubrik hukum)</option>
-              <option value="draft">Draft (Disembunyikan)</option>
-            </select>
+            />
+            <p v-if="errors.status" class="text-xs text-red-600 mt-1">
+              {{ errors.status[0] }}
+            </p>
           </div>
         </div>
       </div>
 
-      <!-- Section 2: Kronologi Peristiwa -->
-      <div class="bg-white p-6 sm:p-8 rounded-xl border border-neutral-200/80 shadow-2xs space-y-5">
-        <div class="flex items-center justify-between border-b border-neutral-200 pb-3">
+      <!-- Section 2: Kronologi Peristiwa (Events) -->
+      <div class="bg-card p-6 sm:p-8 rounded-xl border border-border shadow-xs space-y-5">
+        <div class="flex items-center justify-between border-b border-border pb-3">
           <div>
-            <h2 class="text-base font-bold text-neutral-900">
-              2. Alur Waktu / Peristiwa Kronologis
+            <h2 class="text-base font-bold text-foreground">
+              2. Alur Kronologi & Tahapan Sidang
             </h2>
-            <p class="text-xs text-neutral-500 mt-0.5">
-              Urutan sidang, putusan, pelimpahan berkas, atau penetapan penting dalam perkara ini.
+            <p class="text-xs text-muted-foreground mt-0.5">
+              Tambahkan setiap peristiwa bersejarah atau tahapan sidang secara kronologis.
             </p>
           </div>
           <Button
@@ -294,32 +289,40 @@ onMounted(() => {
             variant="outline"
             size="sm"
             @click="addEvent"
-            class="inline-flex items-center gap-1.5"
+            class="inline-flex items-center gap-1.5 text-xs"
           >
-            <IconComponent name="IconPlus" class="w-4 h-4 text-isf-red" />
+            <IconComponent name="Plus" :size="14" />
             <span>Tambah Peristiwa</span>
           </Button>
         </div>
 
-        <div class="space-y-4">
+        <div v-if="form.events.length === 0" class="py-8 text-center text-muted-foreground text-xs">
+          Belum ada peristiwa dalam timeline ini. Klik tombol di atas untuk menambahkan peristiwa pertama.
+        </div>
+
+        <div v-else class="space-y-4">
           <div
-            v-for="(event, index) in form.events"
-            :key="index"
-            class="p-4 rounded-lg border border-neutral-200 bg-neutral-50/60 relative space-y-3"
+            v-for="(event, eIdx) in form.events"
+            :key="eIdx"
+            class="p-4 rounded-lg border border-border/80 bg-muted/20 relative space-y-3"
           >
-            <div class="flex items-center justify-between pb-2 border-b border-neutral-200">
-              <span class="font-mono text-xs font-bold text-isf-red">
-                Peristiwa #{{ index + 1 }}
+            <div class="flex items-center justify-between border-b border-border/60 pb-2">
+              <span class="inline-flex items-center gap-1.5 font-bold text-xs text-foreground">
+                <span class="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px]">
+                  {{ eIdx + 1 }}
+                </span>
+                Peristiwa #{{ eIdx + 1 }}
               </span>
-              <button
-                v-if="form.events.length > 1"
+              <Button
                 type="button"
-                @click="removeEvent(index)"
-                class="text-xs text-red-600 hover:text-red-700 hover:underline flex items-center gap-1 cursor-pointer"
+                variant="ghost"
+                size="sm"
+                @click="removeEvent(eIdx)"
+                class="h-7 px-2 text-xs text-red-500 hover:text-red-600 hover:bg-red-500/10 inline-flex items-center"
               >
-                <IconComponent name="IconTrash" class="w-3.5 h-3.5" />
-                <span>Hapus</span>
-              </button>
+                <IconComponent name="Trash" :size="13" class="mr-1" />
+                Hapus
+              </Button>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
@@ -333,26 +336,22 @@ onMounted(() => {
                 />
               </div>
 
-              <!-- Tahap (Col 4) -->
+              <!-- Tahap Sidang (Col 4) -->
               <div class="md:col-span-4 space-y-1">
-                <Label class="text-[11px] font-medium">Tahap Sidang / Proses <span class="text-red-500">*</span></Label>
+                <Label class="text-[11px] font-medium">Tahap / Agenda Sidang <span class="text-red-500">*</span></Label>
                 <Input
                   v-model="event.tahap"
-                  placeholder="Contoh: Sidang Pleno, Putusan MK, Dakwaan"
+                  placeholder="Contoh: Sidang Pleno, Putusan Akhir"
                   required
                 />
               </div>
 
-              <!-- Status Peristiwa (Col 4) -->
+              <!-- Status Event (Col 4) -->
               <div class="md:col-span-4 space-y-1">
-                <Label class="text-[11px] font-medium">Status Tampil</Label>
-                <select
+                <Label class="text-[11px] font-medium">Status Event</Label>
+                <StatusSelectWithBadge
                   v-model="event.status"
-                  class="w-full rounded-md border border-neutral-300 p-2 text-xs focus:border-isf-red outline-none bg-white"
-                >
-                  <option value="terbit">Terbit</option>
-                  <option value="draft">Draft</option>
-                </select>
+                />
               </div>
 
               <!-- Judul Peristiwa (Col 12) -->
@@ -372,7 +371,7 @@ onMounted(() => {
                   v-model="event.deskripsi"
                   rows="2"
                   placeholder="Ringkasan pertimbangan hakim, dalil pemohon, atau keterangan amar putusan..."
-                  class="w-full rounded-md border border-neutral-300 p-2 text-xs focus:border-isf-red outline-none"
+                  class="w-full rounded-md border border-input bg-background text-foreground p-2.5 text-xs focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none"
                 ></textarea>
               </div>
 
@@ -390,18 +389,22 @@ onMounted(() => {
       </div>
 
       <!-- Submit Bar -->
-      <div class="flex items-center justify-end gap-3 pt-4">
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-border">
         <Link href="/cms/timeline-kasus">
-          <Button type="button" variant="outline" :disabled="saving">
+          <Button type="button" variant="outline" size="sm" :disabled="saving">
             Batal
           </Button>
         </Link>
-        <Button type="submit" :disabled="saving" class="inline-flex items-center gap-2">
-          <IconComponent name="IconDeviceFloppy" class="w-4 h-4" />
+        <Button
+          type="submit"
+          :disabled="saving"
+          class="bg-red-600 hover:bg-red-700 text-white font-medium text-sm shadow-sm inline-flex items-center gap-1.5"
+        >
+          <IconComponent v-if="saving" name="Refresh" :size="16" class="animate-spin" />
+          <IconComponent v-else name="DeviceFloppy" :size="16" />
           <span>{{ saving ? 'Menyimpan...' : (isEdit ? 'Perbarui Timeline Kasus' : 'Simpan Timeline Kasus') }}</span>
         </Button>
       </div>
     </form>
   </div>
 </template>
-

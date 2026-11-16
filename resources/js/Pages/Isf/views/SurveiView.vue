@@ -3,10 +3,15 @@
  * SurveiView.vue — Dashboard Rilis Survei Opini Publik Nasional & Regional (/survei).
  *
  * Mengimplementasikan:
- * - Filter Isu (Politik, Ekonomi, Sosial, Hukum) dan Wilayah (Nasional, Jawa, Sumatera, dll.)
- * - Filter tersimpan di URL (query string) supaya bisa dibagikan (shareable).
- * - Headline Featured Survey dengan angka metrik utama.
- * - Grid kartu survei lengkap dengan sumber lembaga (ISF / Eksternal), sampel, margin of error, dan PDF link.
+ * - Header Hero bergaya editorial navy konsisten dengan rubrik Politik, Hukum, Kebijakan Publik, dan Opini Publik:
+ *   Breadcrumb responsif (whitespace-nowrap & truncate), red kicker badge, serif heading, dan quick pill tabs.
+ * - Filter Isu (Politik, Ekonomi, Sosial, Hukum) dan Wilayah menggunakan FilterSelect terstandar.
+ * - Filter tersimpan di URL (query string) sehingga shareable.
+ * - Seksi 1: Sorotan Riset / Featured Survey dengan border-t-4 border-t-isf-red dan tata letak editorial 12-kolom.
+ * - Seksi 2: Linimasa Rilis Survei Nasional bergaya shadcn UI (minimalist vertical hairline track, node dot indicator, pulse rilis terkini).
+ * - Seksi 3: Basis Data Laporan Survei Terkini dengan grid 3-kolom SurveiCard dan Pagination terpusat.
+ * - Seksi 4: Standar Metodologi & Integritas Data ISF (WAPOR/ESOMAR) pada frame krem.
+ * - Skeleton loader desktop dan mobile yang presisi mencerminkan struktur konten.
  * - Identitas visual: Navy #0B1220, Crimson Red #E10600, Cream #FBF9F4, serif editorial headline, Space Grotesk UI.
  */
 import { computed, ref, watch } from 'vue'
@@ -14,21 +19,21 @@ import { useRoute, useRouter, RouterLink } from 'vue-router'
 import {
   IconChartBar,
   IconChevronRight,
-  IconFilter,
   IconSearch,
   IconMapPin,
   IconUsers,
   IconScale,
   IconAward,
-  IconFileText,
   IconArrowRight,
   IconBuilding,
   IconInfoCircle,
+  IconCalendar,
+  IconX,
 } from '@tabler/icons-vue'
 import {
-  ArtikelSkeleton,
   SectionHeading,
   SurveiCard,
+  FilterSelect,
 } from '@/Components/Isf'
 import Pagination from '@/Components/UI/Pagination.vue'
 import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
@@ -77,7 +82,7 @@ const rubrik = computed(() => data.value?.rubrik || {
     { slug: 'sumatera', name: 'Sumatera' },
     { slug: 'kalimantan', name: 'Kalimantan' },
     { slug: 'sulawesi', name: 'Sulawesi' },
-    { slug: 'bali_nusra', name: 'Bali & Nusra' },
+    { slug: 'bali_nusra', name: 'Bali & Nusa Tenggara' },
     { slug: 'maluku_papua', name: 'Maluku & Papua' },
   ],
 })
@@ -85,6 +90,12 @@ const rubrik = computed(() => data.value?.rubrik || {
 const featuredSurvey = computed(() => data.value?.featuredSurvey || null)
 const surveys = computed(() => data.value?.surveys || [])
 const meta = computed(() => data.value?.meta || { currentPage: 1, lastPage: 1, total: 0, perPage: 9 })
+
+// Top releases for timeline section
+const timelineSurveys = computed(() => {
+  if (!surveys.value || surveys.value.length === 0) return []
+  return surveys.value.slice(0, 4)
+})
 
 function updateUrlQuery(updates = {}) {
   const query = { ...route.query, ...updates }
@@ -103,8 +114,7 @@ function selectIsu(slug) {
   updateUrlQuery({ isu: slug, page: undefined })
 }
 
-function selectWilayah(e) {
-  const val = e.target.value
+function onWilayahChange(val) {
   currentPage.value = 1
   updateUrlQuery({ wilayah: val, page: undefined })
 }
@@ -115,6 +125,22 @@ function onSearchInput() {
     currentPage.value = 1
     updateUrlQuery({ q: currentSearch.value, page: undefined })
   }, 400)
+}
+
+function clearSearch() {
+  currentSearch.value = ''
+  currentPage.value = 1
+  updateUrlQuery({ q: undefined, page: undefined })
+}
+
+const hasActiveFilter = computed(() => {
+  return currentIsu.value !== 'semua' || currentWilayah.value !== 'semua' || Boolean(currentSearch.value?.trim())
+})
+
+function resetAllFilters() {
+  currentSearch.value = ''
+  currentPage.value = 1
+  updateUrlQuery({ isu: undefined, wilayah: undefined, q: undefined, page: undefined })
 }
 
 function onPageChange(page) {
@@ -135,236 +161,440 @@ watch(
   },
   { immediate: true }
 )
+
+// Update document title
+watch(
+  [() => rubrik.value?.title, currentIsu],
+  ([title, isu]) => {
+    if (typeof document !== 'undefined') {
+      const activeTopic = rubrik.value?.topics?.find(t => t.slug === isu)
+      const pageTitle = isu && isu !== 'semua'
+        ? `${activeTopic?.name || isu} · Survei · Indonesia Strategy Forum`
+        : `${title || 'Survei'} · Indonesia Strategy Forum`
+      document.title = pageTitle
+    }
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
   <div class="isf-theme font-space-grotesk min-h-screen bg-[#FBF9F4] text-neutral-900 antialiased pb-20">
-    <!-- Header Hero Rubrik Survei -->
+    <!-- ═══ 1. HEADER HERO RUBRIK SURVEI (Gaya Editorial Navy identik dengan Politik) ═══ -->
     <header class="bg-isf-navy text-white border-b border-neutral-800 pt-8 sm:pt-12 pb-8">
       <div class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12">
         <!-- Breadcrumb Nav -->
-        <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-xs text-neutral-400 mb-4 select-none">
-          <RouterLink to="/beranda" class="hover:text-white transition-colors">Beranda</RouterLink>
-          <IconChevronRight class="w-3.5 h-3.5 opacity-60" />
-          <span class="text-white font-bold">Survei & Riset Opini Publik</span>
+        <nav aria-label="Breadcrumb" class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-neutral-400 mb-4 select-none min-w-0">
+          <RouterLink to="/beranda" class="whitespace-nowrap shrink-0 hover:text-white transition-colors">Beranda</RouterLink>
+          <IconChevronRight class="w-3.5 h-3.5 opacity-60 shrink-0" />
+          <RouterLink
+            to="/survei"
+            :class="[
+              'whitespace-nowrap shrink-0 transition-colors',
+              currentIsu === 'semua' && currentWilayah === 'semua' && !currentSearch ? 'text-white font-bold' : 'hover:text-white'
+            ]"
+          >
+            Survei
+          </RouterLink>
+          <template v-if="currentIsu !== 'semua'">
+            <IconChevronRight class="w-3.5 h-3.5 opacity-60 shrink-0" />
+            <span class="text-white font-bold whitespace-nowrap shrink-0 capitalize">{{ currentIsu }}</span>
+          </template>
+          <template v-if="currentWilayah !== 'semua'">
+            <IconChevronRight class="w-3.5 h-3.5 opacity-60 shrink-0" />
+            <span class="text-neutral-300 font-medium whitespace-nowrap shrink-0 capitalize">{{ currentWilayah.replace('_', ' ') }}</span>
+          </template>
         </nav>
 
-        <!-- Rubrik Title & Kicker -->
-        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-neutral-800/80 pb-6">
+        <!-- Rubrik Title & Description -->
+        <div class="space-y-4 border-b border-neutral-800/80 pb-6">
           <div>
             <div class="flex items-center gap-2 text-xs font-mono font-bold tracking-widest text-isf-red uppercase mb-1.5">
-              <span class="inline-block w-2 h-2 bg-isf-red rounded-full"></span>
-              <span>Pusat Data Persepsi & Temuan Empiris</span>
+              <span class="inline-block w-2.5 h-2.5 bg-isf-red rounded-xs"></span>
+              <span>PUSAT DATA RISET & TEMUAN EMPIRIS</span>
             </div>
             <h1 class="font-headline text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-none text-white">
-              SURVEI OPINI PUBLIK
+              SURVEI
             </h1>
-            <p class="text-neutral-300 text-sm sm:text-base max-w-2xl mt-3 font-normal leading-relaxed">
+            <p class="text-xs sm:text-sm md:text-base text-neutral-300 mt-2 max-w-3xl leading-relaxed">
               {{ rubrik.description }}
             </p>
           </div>
         </div>
 
-        <!-- Filter Bar: Isu Pills, Wilayah Dropdown, Search Input (Saved to URL) -->
-        <div class="mt-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <!-- Isu Tabs -->
-          <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none text-xs sm:text-sm">
+        <!-- Filter Bar: Dropdown Isu & Wilayah (Kiri) + Search Input (Kanan) -->
+        <div class="pt-4 sm:pt-5 flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 text-xs">
+          <!-- Left: Dropdown Filter Isu + Wilayah + Reset Button -->
+          <div class="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
+            <!-- Filter Isu Dropdown (FilterSelect) -->
+            <div class="flex items-center gap-1.5 text-xs text-neutral-300">
+              <span class="text-neutral-400 font-medium whitespace-nowrap">Isu:</span>
+              <FilterSelect
+                :model-value="currentIsu"
+                :options="rubrik.topics"
+                :is-dark="true"
+                size="sm"
+                aria-label="Filter Isu Survei"
+                class="min-w-[150px]"
+                @update:model-value="selectIsu"
+              />
+            </div>
+
+            <!-- Filter Wilayah Dropdown (FilterSelect) -->
+            <div class="flex items-center gap-1.5 text-xs text-neutral-300">
+              <span class="text-neutral-400 font-medium whitespace-nowrap">Wilayah:</span>
+              <FilterSelect
+                :model-value="currentWilayah"
+                :options="rubrik.regions"
+                :is-dark="true"
+                size="sm"
+                aria-label="Filter Wilayah Survei"
+                class="min-w-[160px]"
+                @update:model-value="onWilayahChange"
+              />
+            </div>
+
+            <!-- Tombol Reset Filter jika ada filter aktif -->
             <button
-              v-for="top in rubrik.topics"
-              :key="top.slug"
+              v-if="hasActiveFilter"
               type="button"
-              @click="selectIsu(top.slug)"
-              :class="[
-                'px-4 py-2 rounded-full font-semibold transition-all whitespace-nowrap cursor-pointer',
-                currentIsu === top.slug
-                  ? 'bg-isf-red text-white shadow-sm'
-                  : 'bg-neutral-800/90 text-neutral-300 hover:bg-neutral-700 hover:text-white'
-              ]"
+              @click="resetAllFilters"
+              class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium text-neutral-300 hover:text-white bg-white/10 hover:bg-white/20 border border-neutral-700 transition-colors cursor-pointer"
+              title="Reset semua filter survei"
             >
-              {{ top.name }}
+              <IconX class="w-3.5 h-3.5" />
+              <span>Reset</span>
             </button>
           </div>
 
-          <!-- Secondary Filters: Wilayah & Search Input -->
-          <div class="flex items-center gap-3 shrink-0">
-            <!-- Wilayah Select -->
-            <div class="relative min-w-[160px]">
-              <select
-                :value="currentWilayah"
-                @change="selectWilayah"
-                class="w-full h-9 pl-3 pr-8 rounded-lg bg-neutral-800 border border-neutral-700 text-xs font-semibold text-white focus:outline-none focus:ring-2 focus:ring-isf-red appearance-none cursor-pointer"
-              >
-                <option
-                  v-for="reg in rubrik.regions"
-                  :key="reg.slug"
-                  :value="reg.slug"
-                >
-                  {{ reg.name }}
-                </option>
-              </select>
-              <IconMapPin class="w-3.5 h-3.5 text-neutral-400 absolute right-3 top-3 pointer-events-none" />
-            </div>
-
-            <!-- Search Input -->
-            <div class="relative w-48 sm:w-60">
-              <input
-                v-model="currentSearch"
-                type="text"
-                placeholder="Cari survei / lembaga..."
-                @input="onSearchInput"
-                class="w-full h-9 pl-8 pr-3 rounded-lg bg-neutral-800 border border-neutral-700 text-xs text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-isf-red transition-all"
-              />
-              <IconSearch class="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-3 pointer-events-none" />
-            </div>
+          <!-- Right: Search Input Utama (Sebelah Kanan) -->
+          <div class="relative w-full md:w-72 lg:w-80 shrink-0">
+            <IconSearch class="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              v-model="currentSearch"
+              type="text"
+              placeholder="Cari survei atau lembaga..."
+              @input="onSearchInput"
+              class="w-full h-9 pl-9 pr-8 rounded-md bg-neutral-900/90 border border-neutral-700 text-xs text-white placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-isf-red focus:border-isf-red transition-all"
+            />
+            <button
+              v-if="currentSearch"
+              type="button"
+              @click="clearSearch"
+              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white text-xs px-1 cursor-pointer"
+              aria-label="Hapus pencarian"
+            >
+              ✕
+            </button>
           </div>
         </div>
       </div>
     </header>
 
-    <!-- Main Content Container -->
-    <main class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12 pt-8 sm:pt-10">
-      <!-- Loading State -->
-      <div v-if="status === 'loading'" class="py-12">
-        <ArtikelSkeleton variant="rubrik" />
+    <!-- ═══ 2. SKELETON LOADER (Presisi mencerminkan struktur konten di Desktop & Mobile) ═══ -->
+    <main
+      v-if="status === 'loading' && !data"
+      class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12 mt-8 sm:mt-12 space-y-8 sm:space-y-12 animate-pulse"
+      aria-busy="true"
+      aria-label="Memuat data survei opini publik"
+    >
+      <!-- Section 1 Skeleton: Featured Survey -->
+      <div class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden">
+        <div class="border-b border-neutral-200 px-4 py-3 sm:px-6 sm:py-4">
+          <div class="h-4 w-36 bg-neutral-200 rounded"></div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 p-4 sm:p-6 lg:p-8">
+          <div class="lg:col-span-7 space-y-4">
+            <div class="h-3 w-32 bg-neutral-200 rounded"></div>
+            <div class="h-8 w-full bg-neutral-300 rounded"></div>
+            <div class="h-8 w-4/5 bg-neutral-300 rounded"></div>
+            <div class="h-4 w-full bg-neutral-200 rounded mt-3"></div>
+            <div class="h-4 w-5/6 bg-neutral-200 rounded"></div>
+            <div class="pt-4 border-t border-neutral-200 flex gap-4">
+              <div class="h-4 w-28 bg-neutral-200 rounded"></div>
+              <div class="h-4 w-24 bg-neutral-200 rounded"></div>
+            </div>
+          </div>
+          <div class="lg:col-span-5 h-56 bg-neutral-900 rounded-xl"></div>
+        </div>
       </div>
 
-      <!-- Error State -->
-      <div v-else-if="status === 'error'" class="py-12">
-        <ErrorMessage
-          title="Gagal Memuat Data Survei"
-          message="Terjadi kendala saat mengambil basis data hasil survei. Silakan periksa koneksi Anda."
-          action-label="Coba Lagi"
-          @retry="load"
-        />
+      <!-- Section 2 Skeleton: Timeline Navy -->
+      <div class="bg-isf-navy rounded-lg border border-neutral-800 shadow-sm overflow-hidden p-4 sm:p-6 space-y-6">
+        <div class="border-b border-neutral-800 pb-4 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 bg-isf-red rounded-xs"></div>
+            <div class="h-4 w-48 bg-neutral-700 rounded"></div>
+          </div>
+          <div class="h-3 w-32 bg-neutral-800 rounded"></div>
+        </div>
+        <div class="space-y-4 py-2">
+          <div class="h-16 w-full bg-neutral-800/60 rounded-lg"></div>
+          <div class="h-16 w-full bg-neutral-800/40 rounded-lg"></div>
+        </div>
       </div>
 
-      <!-- Loaded Content -->
-      <div v-else class="space-y-12 sm:space-y-16">
-        <!-- ═══ 1. FEATURED SURVEI UTAMA (NAVY ACCENT) ═════════════════════════ -->
-        <section
-          v-if="featuredSurvey && currentPage === 1 && currentIsu === 'semua' && currentWilayah === 'semua' && !currentSearch"
-          aria-labelledby="featured-survei-title"
-        >
-          <div class="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-xl text-white">
-            <div class="p-6 sm:p-8 lg:p-10">
-              <!-- Top Row Badges -->
-              <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-                <div class="flex items-center gap-2">
-                  <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-isf-red text-white">
-                    <IconAward class="w-4 h-4 shrink-0" />
-                    Survei Pilihan Redaksi
-                  </span>
+      <!-- Section 3 Skeleton: Grid Cards -->
+      <div class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden">
+        <div class="border-b border-neutral-200 px-4 py-3 sm:px-6 sm:py-4">
+          <div class="h-4 w-40 bg-neutral-300 rounded"></div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 sm:p-6">
+          <div v-for="n in 3" :key="n" class="h-64 bg-neutral-100 rounded-xl border border-neutral-200"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Error State -->
+    <div v-else-if="status === 'error' && !data" class="mx-auto max-w-3xl py-16 px-4">
+      <ErrorMessage
+        title="Gagal Memuat Data Survei"
+        message="Terjadi kendala saat mengambil basis data hasil survei. Silakan periksa koneksi Anda lalu coba lagi."
+        retryable
+        @retry="load"
+      />
+    </div>
+
+    <!-- ═══ 3. LOADED CONTENT VIEW ═════════════════════════════════════════ -->
+    <main v-else class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12 mt-8 sm:mt-12 space-y-8 sm:space-y-12">
+      <!-- ═══ SECTION 1: SOROTAN UTAMA SURVEI (FEATURED REPORT) ══════════════ -->
+      <section
+        v-if="featuredSurvey && currentPage === 1 && currentIsu === 'semua' && currentWilayah === 'semua' && !currentSearch"
+        aria-labelledby="featured-survei-title"
+        class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden"
+      >
+        <div class="border-b border-neutral-200">
+          <SectionHeading
+            id="featured-survei-title"
+            title="Sorotan Survei"
+            size="lg"
+            :class="sectionPad"
+          >
+            <template #eyebrow>Laporan Khusus & Temuan Kunci</template>
+          </SectionHeading>
+        </div>
+
+        <div :class="[sectionPad, 'py-5 sm:py-6 lg:py-8']">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-stretch">
+            <!-- Left Editorial Column -->
+            <div class="lg:col-span-7 flex flex-col justify-between">
+              <div>
+                <!-- Top Badges & Meta -->
+                <div class="flex flex-wrap items-center gap-2 mb-3">
                   <span
                     v-if="featuredSurvey.is_isf"
-                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                    class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-mono font-bold bg-isf-red text-white uppercase tracking-wider"
                   >
+                    <IconAward class="w-3 h-3 shrink-0" />
                     Riset In-House ISF
+                  </span>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-red-500/10 text-isf-red border border-red-500/20">
+                    {{ featuredSurvey.topic }}
+                  </span>
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-neutral-100 text-neutral-600 border border-neutral-200">
+                    <IconMapPin class="w-3 h-3 text-neutral-400 shrink-0" />
+                    {{ featuredSurvey.region?.toUpperCase() }}
+                  </span>
+                  <span class="text-[11px] font-mono text-neutral-400 ml-auto">
+                    {{ featuredSurvey.survey_period }}
                   </span>
                 </div>
 
-                <div class="text-xs font-mono text-neutral-400 flex items-center gap-2">
-                  <span>{{ featuredSurvey.survey_period }}</span>
-                  <span>•</span>
-                  <span>Rilis: {{ featuredSurvey.release_date }}</span>
+                <!-- Institution -->
+                <div class="flex items-center gap-1.5 text-xs text-neutral-500 font-semibold mb-2">
+                  <IconBuilding class="w-4 h-4 text-isf-red shrink-0" />
+                  <span>{{ featuredSurvey.institution }}</span>
                 </div>
+
+                <!-- Title -->
+                <h2 class="font-headline text-2xl sm:text-3xl lg:text-3xl font-bold leading-tight text-neutral-950 hover:text-isf-red transition-colors mb-3">
+                  <RouterLink :to="`/survei/${featuredSurvey.slug}`">
+                    {{ featuredSurvey.title }}
+                  </RouterLink>
+                </h2>
+
+                <!-- Summary -->
+                <p class="font-serif text-sm sm:text-base text-neutral-600 line-clamp-3 sm:line-clamp-4 leading-relaxed mb-6">
+                  {{ featuredSurvey.summary }}
+                </p>
               </div>
 
-              <!-- Main Grid -->
-              <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center">
-                <!-- Content Column -->
-                <div class="lg:col-span-8">
-                  <!-- Institution -->
-                  <div class="flex items-center gap-2 text-xs text-neutral-400 font-semibold mb-2 font-space-grotesk">
-                    <IconBuilding class="w-4 h-4 text-isf-red" />
-                    <span>{{ featuredSurvey.institution }}</span>
-                  </div>
-
-                  <!-- Title -->
-                  <h2 id="featured-survei-title" class="font-headline text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight mb-4">
-                    <RouterLink
-                      :to="`/survei/${featuredSurvey.slug}`"
-                      class="hover:text-isf-red transition-colors"
-                    >
-                      {{ featuredSurvey.title }}
-                    </RouterLink>
-                  </h2>
-
-                  <!-- Summary -->
-                  <p class="text-neutral-300 text-sm sm:text-base leading-relaxed line-clamp-3 mb-6">
-                    {{ featuredSurvey.summary }}
-                  </p>
-
-                  <!-- Metodologi Quick Info -->
-                  <div class="flex flex-wrap items-center gap-4 text-xs font-mono text-neutral-400 pt-4 border-t border-neutral-800">
-                    <div class="flex items-center gap-1.5">
-                      <IconUsers class="w-3.5 h-3.5 text-neutral-400" />
-                      <span>Sampel: <strong class="text-white">{{ featuredSurvey.sample_size?.toLocaleString('id-ID') }} Responden</strong></span>
-                    </div>
-                    <div class="flex items-center gap-1.5">
-                      <IconScale class="w-3.5 h-3.5 text-neutral-400" />
-                      <span>Margin of Error: <strong class="text-white">{{ featuredSurvey.margin_of_error }}</strong></span>
-                    </div>
-                    <div class="flex items-center gap-1.5">
-                      <IconMapPin class="w-3.5 h-3.5 text-neutral-400" />
-                      <span>Wilayah: <strong class="text-white uppercase">{{ featuredSurvey.region }}</strong></span>
-                    </div>
+              <!-- Methodology Quick Highlights -->
+              <div class="pt-4 border-t border-neutral-200 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs font-mono text-neutral-600">
+                <div class="flex items-center gap-2">
+                  <IconUsers class="w-4 h-4 text-isf-red shrink-0" />
+                  <div>
+                    <span class="text-[10px] text-neutral-400 block uppercase">Sampel</span>
+                    <strong class="text-neutral-900 font-bold">{{ featuredSurvey.sample_size?.toLocaleString('id-ID') }}</strong>
                   </div>
                 </div>
-
-                <!-- Highlight Metric Callout Box Column -->
-                <div class="lg:col-span-4 bg-neutral-950 p-6 rounded-xl border border-neutral-800 flex flex-col justify-between h-full">
+                <div class="flex items-center gap-2">
+                  <IconScale class="w-4 h-4 text-isf-red shrink-0" />
                   <div>
-                    <span class="text-[11px] font-mono uppercase tracking-wider text-neutral-400 block mb-1">
-                      Temuan Utama Survei
-                    </span>
-                    <div class="font-headline font-black text-4xl sm:text-5xl text-isf-red tracking-tight my-2">
-                      {{ featuredSurvey.headline_stat_value }}
-                    </div>
-                    <p class="text-xs sm:text-sm text-neutral-300 leading-snug">
-                      {{ featuredSurvey.headline_stat_label }}
-                    </p>
-                    <div
-                      v-if="featuredSurvey.headline_stat_comparison"
-                      class="mt-2 text-xs font-mono text-emerald-400"
-                    >
-                      {{ featuredSurvey.headline_stat_comparison }}
-                    </div>
+                    <span class="text-[10px] text-neutral-400 block uppercase">Margin of Error</span>
+                    <strong class="text-neutral-900 font-bold">{{ featuredSurvey.margin_of_error }}</strong>
                   </div>
-
-                  <!-- CTA Button -->
-                  <div class="pt-6 mt-6 border-t border-neutral-800">
-                    <RouterLink
-                      :to="`/survei/${featuredSurvey.slug}`"
-                      class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-isf-red hover:bg-red-700 text-white font-bold text-xs sm:text-sm tracking-wide transition-all shadow-md"
-                    >
-                      <span>Lihat Grafik & Analisis Lengkap</span>
-                      <IconArrowRight class="w-4 h-4" />
-                    </RouterLink>
+                </div>
+                <div class="flex items-center gap-2 col-span-2 sm:col-span-1">
+                  <IconCalendar class="w-4 h-4 text-isf-red shrink-0" />
+                  <div>
+                    <span class="text-[10px] text-neutral-400 block uppercase">Rilis Publik</span>
+                    <strong class="text-neutral-900 font-bold">{{ featuredSurvey.release_date }}</strong>
                   </div>
                 </div>
               </div>
             </div>
+
+            <!-- Right Callout Column: Headline Statistic -->
+            <div class="lg:col-span-5 bg-neutral-950 text-white p-5 sm:p-7 rounded-xl border border-neutral-800 flex flex-col justify-between shadow-sm">
+              <div>
+                <span class="text-[11px] font-mono uppercase tracking-wider text-neutral-400 block mb-1">
+                  Temuan Kunci Survei
+                </span>
+                <div class="font-headline font-black text-4xl sm:text-5xl lg:text-6xl text-isf-red tracking-tight my-2">
+                  {{ featuredSurvey.headline_stat_value }}
+                </div>
+                <p class="text-xs sm:text-sm text-neutral-300 font-medium leading-relaxed">
+                  {{ featuredSurvey.headline_stat_label }}
+                </p>
+                <div
+                  v-if="featuredSurvey.headline_stat_comparison"
+                  class="mt-3 text-xs font-mono text-emerald-400 flex items-center gap-1.5"
+                >
+                  <span>•</span>
+                  <span>{{ featuredSurvey.headline_stat_comparison }}</span>
+                </div>
+              </div>
+
+              <!-- CTA Action Button -->
+              <div class="pt-6 mt-6 border-t border-neutral-800">
+                <RouterLink
+                  :to="`/survei/${featuredSurvey.slug}`"
+                  class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-isf-red hover:bg-red-700 text-white font-bold text-xs sm:text-sm tracking-wide transition-all shadow-md cursor-pointer"
+                >
+                  <span>Lihat Grafik & Analisis Lengkap</span>
+                  <IconArrowRight class="w-4 h-4 shrink-0" />
+                </RouterLink>
+              </div>
+            </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <!-- ═══ 2. DAFTAR KARTU SURVEI (GRID) ═════════════════════════════════ -->
-        <section aria-labelledby="daftar-survei-title">
-          <div class="flex items-center justify-between border-b border-neutral-300 pb-4 mb-6">
-            <SectionHeading
-              id="daftar-survei-title"
-              :title="currentIsu !== 'semua' ? `Survei Isu: ${currentIsu.toUpperCase()}` : 'Laporan Survei Terkini'"
-              size="lg"
-            >
-              <template #eyebrow>Basis Data Riset Terpublikasi</template>
-            </SectionHeading>
-
-            <span class="text-xs font-mono text-neutral-500">
-              Total {{ meta.total }} laporan survei
+      <!-- ═══ SECTION 2: LINIMASA RILIS SURVEI TERKINI (SHADCN TIMELINE - NAVY) ═══ -->
+      <section
+        v-if="timelineSurveys.length > 0 && currentPage === 1 && currentIsu === 'semua' && currentWilayah === 'semua' && !currentSearch"
+        aria-labelledby="linimasa-survei-title"
+        class="bg-isf-navy text-white rounded-lg border border-neutral-800 shadow-sm overflow-hidden"
+      >
+        <div class="border-b border-neutral-800 px-4 py-3 sm:px-6 sm:py-4 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="inline-block w-2.5 h-2.5 bg-isf-red rounded-xs"></span>
+            <span class="text-xs font-mono font-bold tracking-widest uppercase text-isf-red">
+              Linimasa Riset Terkini
             </span>
+            <span class="text-neutral-600">•</span>
+            <h2 id="linimasa-survei-title" class="font-space-grotesk text-sm sm:text-base font-bold text-white uppercase tracking-wider">
+              Kronologi Rilis Survei Nasional
+            </h2>
           </div>
+          <span class="text-[11px] font-mono text-neutral-400">
+            Agregasi Persepsi & Dinamika Opini Publik
+          </span>
+        </div>
 
-          <!-- Grid -->
-          <div v-if="surveys && surveys.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div :class="[sectionPad, 'py-5 sm:py-7']">
+          <!-- Shadcn timeline for recent survey releases -->
+          <div class="relative pl-6 sm:pl-8 ml-3 sm:ml-4 border-l border-neutral-800 space-y-6 sm:space-y-8">
+            <div
+              v-for="(item, idx) in timelineSurveys"
+              :key="item.id"
+              class="relative group"
+            >
+              <!-- Node Dot on Line -->
+              <div
+                :class="[
+                  'absolute -left-[1.95rem] sm:-left-[2.45rem] top-1.5 w-3.5 h-3.5 rounded-full ring-4 transition-all group-hover:scale-125',
+                  idx === 0
+                    ? 'bg-isf-red ring-isf-red/30'
+                    : 'bg-neutral-700 ring-neutral-800 group-hover:bg-isf-red'
+                ]"
+              >
+                <!-- Pulse animation on the latest item -->
+                <span
+                  v-if="idx === 0"
+                  class="absolute inset-0 rounded-full bg-isf-red animate-ping opacity-75"
+                ></span>
+              </div>
+
+              <!-- Content Card -->
+              <div class="rounded-lg p-4 sm:p-5 bg-neutral-900/60 border border-neutral-800 hover:border-neutral-700 transition-colors">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-white/10 text-neutral-300 border border-white/15">
+                      {{ item.topic }}
+                    </span>
+                    <span class="text-xs font-mono text-neutral-400">
+                      {{ item.release_date }}
+                    </span>
+                  </div>
+                  <span class="text-xs text-neutral-400 font-medium">
+                    {{ item.institution }}
+                  </span>
+                </div>
+
+                <h3 class="font-headline font-bold text-base sm:text-lg text-white hover:text-isf-red transition-colors mb-2">
+                  <RouterLink :to="`/survei/${item.slug}`">
+                    {{ item.title }}
+                  </RouterLink>
+                </h3>
+
+                <!-- Highlight metric line -->
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-neutral-800 text-xs">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="font-headline font-black text-lg text-isf-red shrink-0">
+                      {{ item.headline_stat_value }}
+                    </span>
+                    <span class="text-neutral-300 text-xs truncate">
+                      {{ item.headline_stat_label }}
+                    </span>
+                  </div>
+
+                  <RouterLink
+                    :to="`/survei/${item.slug}`"
+                    class="inline-flex items-center gap-1 text-xs font-bold text-isf-red hover:text-red-400 transition-colors shrink-0 cursor-pointer"
+                  >
+                    <span>Detail Analisis</span>
+                    <IconArrowRight class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                  </RouterLink>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ SECTION 3: BASIS DATA LAPORAN SURVEI TERKINI (GRID ARSIP) ══════ -->
+      <section
+        aria-labelledby="daftar-survei-title"
+        class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden"
+      >
+        <div class="border-b border-neutral-200">
+          <SectionHeading
+            id="daftar-survei-title"
+            :title="currentIsu !== 'semua' ? `Survei Isu: ${currentIsu.toUpperCase()}` : 'Laporan Survei Terkini'"
+            size="lg"
+            :class="sectionPad"
+          >
+            <template #eyebrow>
+              Basis Data Riset Terpublikasi ({{ meta.total }} Laporan{{ currentWilayah !== 'semua' ? ` · ${currentWilayah.toUpperCase()}` : '' }})
+            </template>
+          </SectionHeading>
+        </div>
+
+        <!-- Grid Survei -->
+        <div v-if="surveys && surveys.length > 0" class="p-4 sm:p-6 lg:p-8">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <SurveiCard
               v-for="survey in surveys"
               :key="survey.id"
@@ -372,72 +602,83 @@ watch(
               theme="light"
             />
           </div>
+        </div>
 
-          <!-- Empty State -->
-          <div v-else class="text-center py-16 bg-white rounded-xl border border-neutral-200">
-            <IconChartBar class="w-12 h-12 text-neutral-400 mx-auto mb-3" />
-            <h4 class="font-bold text-neutral-800 text-base font-space-grotesk">Tidak Ada Survei yang Sesuai dengan Filter</h4>
-            <p class="text-xs text-neutral-500 mt-1 max-w-sm mx-auto">
-              Cobalah memilih isu atau wilayah lain, atau hapus kata kunci pencarian Anda.
-            </p>
-            <button
-              type="button"
-              @click="updateUrlQuery({ isu: undefined, wilayah: undefined, q: undefined })"
-              class="mt-4 px-4 py-2 rounded-lg bg-neutral-900 text-white text-xs font-bold hover:bg-neutral-800 transition-colors"
-            >
-              Reset Semua Filter
-            </button>
-          </div>
+        <!-- Empty State jika filter tidak menemukan survei -->
+        <div v-else class="text-center py-16 px-4" :class="sectionPad">
+          <IconChartBar class="w-12 h-12 text-neutral-400 mx-auto mb-3" />
+          <h4 class="font-bold text-neutral-800 text-base font-space-grotesk">Tidak Ada Survei yang Sesuai dengan Filter</h4>
+          <p class="text-xs text-neutral-500 mt-1 max-w-sm mx-auto">
+            Cobalah memilih isu atau wilayah lain, atau hapus kata kunci pencarian Anda.
+          </p>
+          <button
+            type="button"
+            @click="updateUrlQuery({ isu: undefined, wilayah: undefined, q: undefined })"
+            class="mt-4 px-4 py-2 rounded-lg bg-neutral-900 text-white text-xs font-bold hover:bg-neutral-800 transition-colors cursor-pointer"
+          >
+            Reset Semua Filter
+          </button>
+        </div>
 
-          <!-- Pagination -->
-          <div v-if="meta.lastPage > 1" class="mt-8 flex justify-center">
-            <Pagination
-              :current-page="meta.currentPage"
-              :last-page="meta.lastPage"
-              @change="onPageChange"
-            />
-          </div>
-        </section>
+        <!-- Pagination -->
+        <div v-if="meta.lastPage > 1" :class="['py-5 sm:py-6 flex justify-center border-t border-neutral-200', sectionPad]">
+          <Pagination
+            :current-page="meta.currentPage"
+            :total-pages="meta.lastPage"
+            @update:current-page="onPageChange"
+          />
+        </div>
+      </section>
 
-        <!-- ═══ 3. STANDAR METODOLOGI & INTEGRITAS DATA ISF ═══════════════════ -->
-        <section class="bg-neutral-900 text-neutral-100 rounded-2xl border border-neutral-800 p-6 sm:p-8 lg:p-10">
+      <!-- ═══ SECTION 4: STANDAR METODOLOGI & INTEGRITAS DATA ISF (CREAM) ═════ -->
+      <section
+        aria-labelledby="standar-integritas-title"
+        class="bg-[#FBF9F4] rounded-lg border border-neutral-300 shadow-xs overflow-hidden"
+      >
+        <div class="border-b border-neutral-300 bg-white/60">
+          <SectionHeading
+            id="standar-integritas-title"
+            title="Standar Etika & Kredibilitas Riset"
+            size="lg"
+            :class="sectionPad"
+          >
+            <template #eyebrow>Integritas & Transparansi Metodologi</template>
+          </SectionHeading>
+        </div>
+
+        <div :class="[sectionPad, 'py-5 sm:py-6 lg:py-8']">
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
             <div class="lg:col-span-8">
-              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-isf-red/20 text-isf-red border border-isf-red/30 mb-3">
-                <IconInfoCircle class="w-4 h-4 shrink-0" />
-                Standar Etika & Kredibilitas
-              </div>
-              <h3 class="font-headline text-xl sm:text-2xl font-bold text-white mb-2">
+              <h3 class="font-headline text-xl sm:text-2xl font-bold text-neutral-900 mb-2">
                 Transparansi Metodologi Riset Indonesia Strategy Forum
               </h3>
-              <p class="text-xs sm:text-sm text-neutral-300 leading-relaxed max-w-2xl">
+              <p class="text-xs sm:text-sm text-neutral-600 font-serif leading-relaxed max-w-2xl">
                 Seluruh survei yang dipublikasikan di rubrik ini tunduk pada kode etik riset opini publik internasional (WAPOR/ESOMAR). ISF memuat secara transparan ukuran sampel, metode penarikan sampel, rentang kesalahan (*margin of error*), serta batas waktu pengambilan data lapangan guna menjaga integritas analisis ilmiah.
               </p>
             </div>
             <div class="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-3 justify-end">
-              <div class="p-4 rounded-xl bg-neutral-950 border border-neutral-800">
-                <strong class="text-xs font-bold text-white block mb-0.5">Independensi Data</strong>
-                <span class="text-[11px] text-neutral-400">Bebas dari intervensi pesanan elektoral komersial.</span>
+              <div class="p-4 rounded-xl bg-white border border-neutral-200 shadow-2xs">
+                <strong class="text-xs font-bold text-neutral-900 block mb-0.5">Independensi Data</strong>
+                <span class="text-[11px] text-neutral-500">Bebas dari intervensi pesanan elektoral komersial.</span>
               </div>
-              <div class="p-4 rounded-xl bg-neutral-950 border border-neutral-800">
-                <strong class="text-xs font-bold text-white block mb-0.5">Akses Terbuka</strong>
-                <span class="text-[11px] text-neutral-400">Laporan lengkap dapat diunduh cuma-cuma oleh publik.</span>
+              <div class="p-4 rounded-xl bg-white border border-neutral-200 shadow-2xs">
+                <strong class="text-xs font-bold text-neutral-900 block mb-0.5">Akses Terbuka</strong>
+                <span class="text-[11px] text-neutral-500">Laporan lengkap dapat diunduh cuma-cuma oleh publik.</span>
               </div>
             </div>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
     </main>
   </div>
 </template>
 
 <style scoped>
-.scrollbar-none::-webkit-scrollbar {
+.isf-no-scrollbar::-webkit-scrollbar {
   display: none;
 }
-.scrollbar-none {
+.isf-no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 </style>
-

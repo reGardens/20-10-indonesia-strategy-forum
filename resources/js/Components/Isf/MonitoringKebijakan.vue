@@ -11,6 +11,7 @@
  * - Tabel alternatif yang aksesibel untuk pembaca layar
  */
 import { ref, computed } from 'vue'
+import FilterSelect from '@/Components/UI/FilterSelect.vue'
 import {
   IconSearch,
   IconFilter,
@@ -173,18 +174,13 @@ const filteredTrackers = computed(() => {
         <div class="flex flex-wrap items-center gap-2 sm:gap-3">
           <!-- Status Filter -->
           <div class="flex items-center gap-1.5 text-xs">
-            <span class="text-neutral-500 font-medium">Status:</span>
-            <select
+            <span :class="isDark ? 'text-neutral-400' : 'text-neutral-500'" class="font-medium">Status:</span>
+            <FilterSelect
               v-model="selectedStatus"
-              :class="[
-                'px-3 py-1.5 rounded-lg border text-xs font-space-grotesk font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-isf-red',
-                isDark ? 'bg-neutral-950 border-neutral-700 text-white' : 'bg-neutral-50 border-neutral-300 text-neutral-800'
-              ]"
-            >
-              <option v-for="opt in statusOptions" :key="opt.slug" :value="opt.slug">
-                {{ opt.label }}
-              </option>
-            </select>
+              :options="statusOptions"
+              :is-dark="isDark"
+              size="sm"
+            />
           </div>
 
           <!-- Table View Toggle -->

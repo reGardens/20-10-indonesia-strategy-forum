@@ -32,3 +32,5 @@ export { default as RichTextEditor } from './RichTextEditor.vue';
 export { default as Tabs } from './Tabs.vue';
 export { default as ImageUpload } from './ImageUpload.vue';
 export { default as DatePicker } from './DatePicker.vue';
+export { default as FilterSelect } from './FilterSelect.vue';
+

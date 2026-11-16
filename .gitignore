@@ -29,3 +29,4 @@ vite.config.js.timestamp-*
 *.zip
 *.sql
 create_staging_zip.py
+/scratch

@@ -9,12 +9,14 @@ import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
 import {
   Button,
   Input,
+  Badge,
   Table,
   TableHeader,
   TableBody,
   TableRow,
   TableHead,
-  TableCell
+  TableCell,
+  FilterSelect
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -27,6 +29,13 @@ const search = ref('')
 const statusFilter = ref('')
 let searchTimeout = null
 
+const statusOptions = [
+  { value: '', label: 'Semua Status' },
+  { value: 'pending', label: 'Pending (Menunggu Review)' },
+  { value: 'disetujui', label: 'Disetujui (Tayang)' },
+  { value: 'ditolak', label: 'Ditolak' },
+]
+
 async function loadData() {
   loading.value = true
   loadError.value = ''
@@ -37,7 +46,7 @@ async function loadData() {
     })
     items.value = res.data?.data || res.data || []
   } catch (err) {
-    loadError.value = errorMessage(err, 'Gagal memuat antrean surat pembaca')
+    loadError.value = errorMessage(err, 'Gagal memuat antrean surat pembaca.')
   } finally {
     loading.value = false
   }
@@ -50,13 +59,17 @@ function onSearchInput() {
   }, 350)
 }
 
+function onStatusChange() {
+  loadData()
+}
+
 async function handleApprove(item) {
   try {
     await cmsResources.suratPembaca.approve(item.id)
     alertSuccess(`Surat "${item.judul_surat}" berhasil disetujui untuk tayang.`)
     loadData()
   } catch (err) {
-    alertError(errorMessage(err, 'Gagal menyetujui surat'))
+    alertError(errorMessage(err, 'Gagal menyetujui surat.'))
   }
 }
 
@@ -69,7 +82,7 @@ async function handleReject(item) {
     alertSuccess(`Surat "${item.judul_surat}" ditolak.`)
     loadData()
   } catch (err) {
-    alertError(errorMessage(err, 'Gagal menolak surat'))
+    alertError(errorMessage(err, 'Gagal menolak surat.'))
   }
 }
 
@@ -81,10 +94,10 @@ async function handleDelete(item) {
 
   try {
     await cmsResources.suratPembaca.delete(item.id)
-    alertSuccess('Surat pembaca berhasil dihapus')
+    alertSuccess('Surat pembaca berhasil dihapus.')
     loadData()
   } catch (err) {
-    alertError(errorMessage(err, 'Gagal menghapus surat'))
+    alertError(errorMessage(err, 'Gagal menghapus surat.'))
   }
 }
 
@@ -109,183 +122,196 @@ onMounted(() => {
 </script>
 
 <template>
-  <Head title="Moderasi Surat Pembaca · CMS ISF" />
+  <Head title="Moderasi Surat Pembaca — Indonesia Strategy Forum" />
 
-  <div class="space-y-6">
+  <div class="p-6 space-y-6 w-full">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
       <div>
-        <h1 class="text-2xl font-bold tracking-tight text-foreground">Moderasi Surat Pembaca</h1>
+        <h1 class="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+          <span>Moderasi Surat Pembaca</span>
+          <Badge class="bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 text-xs">
+            {{ items.length }} Total
+          </Badge>
+        </h1>
         <p class="text-sm text-muted-foreground mt-1">
           Antrean aspirasi, kritik, dan gagasan masyarakat umum. Hanya surat berstatus disetujui yang tampil di portal publik.
         </p>
       </div>
       <Link href="/cms/surat-pembaca/create">
-        <Button class="gap-2">
-          <IconComponent name="IconPlus" class="w-4 h-4" />
+        <Button class="bg-red-600 hover:bg-red-700 text-white font-medium text-sm shadow-sm inline-flex items-center gap-1.5">
+          <IconComponent name="Plus" :size="16" />
           <span>Tambah Surat Manual</span>
         </Button>
       </Link>
     </div>
 
     <!-- Filters -->
-    <div class="bg-card rounded-lg border border-border p-4">
-      <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
-        <div class="sm:col-span-8">
-          <Input
-            v-model="search"
-            placeholder="Cari nama pengirim, kota, atau judul surat..."
-            @input="onSearchInput"
-          />
-        </div>
-        <div class="sm:col-span-4">
-          <select
+    <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+      <div class="relative w-full sm:w-80">
+        <Input
+          v-model="search"
+          placeholder="Cari nama pengirim, kota, atau judul surat..."
+          @input="onSearchInput"
+          class="pl-9 h-9 text-xs"
+        />
+        <IconComponent
+          name="Search"
+          :size="16"
+          class="absolute left-3 top-2.5 text-muted-foreground pointer-events-none"
+        />
+      </div>
+
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 w-full sm:w-auto justify-start py-0.5">
+        <div class="flex items-center gap-2">
+          <label for="filter-status" class="text-xs text-muted-foreground whitespace-nowrap">Status:</label>
+          <FilterSelect
+            id="filter-status"
             v-model="statusFilter"
-            @change="loadData"
-            class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option value="">Semua Status Moderasi</option>
-            <option value="pending">Menunggu Moderasi (Pending)</option>
-            <option value="disetujui">Disetujui (Tayang Publik)</option>
-            <option value="ditolak">Ditolak</option>
-          </select>
+            placeholder="Semua Status"
+            :options="statusOptions"
+            @change="onStatusChange"
+          />
         </div>
       </div>
     </div>
 
-    <!-- Table -->
-    <div class="bg-card rounded-lg border border-border overflow-hidden">
-      <LoadingIndicator v-if="loading" text="Memuat antrean surat pembaca..." />
-      <ErrorMessage
-        v-else-if="loadError"
-        :message="loadError"
-        action-label="Coba Lagi"
-        @retry="loadData"
-      />
-      <div v-else-if="items.length === 0" class="p-8 text-center text-muted-foreground">
-        <IconComponent name="IconMail" class="w-12 h-12 mx-auto mb-2 opacity-40" />
-        <p class="font-medium">Belum ada kiriman surat pembaca</p>
-        <p class="text-xs mt-1">Kiriman pembaca dari halaman landing akan muncul di sini.</p>
-      </div>
+    <!-- Table Container -->
+    <LoadingIndicator v-if="loading && items.length === 0" text="Memuat antrean surat pembaca..." />
+    <ErrorMessage
+      v-else-if="loadError"
+      :message="loadError"
+      @retry="loadData"
+    />
 
-      <div v-else class="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead class="w-12 text-center">#</TableHead>
-              <TableHead class="w-48">Pengirim & Domisili</TableHead>
-              <TableHead>Judul & Ringkasan Naskah</TableHead>
-              <TableHead class="w-36">Waktu Masuk</TableHead>
-              <TableHead class="w-28 text-center">Status</TableHead>
-              <TableHead class="w-44 text-right">Moderasi / Aksi</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow v-for="(item, idx) in items" :key="item.id">
-              <TableCell class="text-center font-mono text-xs text-muted-foreground">
-                {{ idx + 1 }}
-              </TableCell>
+    <div v-else class="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
+      <Table>
+        <TableHeader>
+          <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
+            <TableHead class="w-12 text-center text-xs">#</TableHead>
+            <TableHead class="min-w-[180px]">Pengirim & Asal</TableHead>
+            <TableHead class="min-w-[320px]">Judul & Isi Surat</TableHead>
+            <TableHead class="w-36">Waktu Masuk</TableHead>
+            <TableHead class="w-28 text-center">Status</TableHead>
+            <TableHead class="text-right">Aksi</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow v-if="items.length === 0">
+            <TableCell colspan="6" class="text-center py-10 text-muted-foreground text-sm">
+              Tidak ada antrean surat pembaca ditemukan.
+            </TableCell>
+          </TableRow>
+          <TableRow
+            v-for="(item, idx) in items"
+            :key="item.id"
+            class="hover:bg-muted/30 transition border-b border-border/50"
+          >
+            <TableCell class="text-center font-mono text-xs text-muted-foreground">
+              {{ idx + 1 }}
+            </TableCell>
 
-              <TableCell>
-                <div class="font-semibold text-foreground text-xs sm:text-sm">
-                  {{ item.nama_pengirim }}
-                </div>
-                <div class="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
-                  <IconComponent name="IconMapPin" class="w-3 h-3 text-muted-foreground" />
-                  <span>{{ item.kota_domisili }}</span>
-                </div>
-                <div class="text-[11px] text-muted-foreground font-mono truncate max-w-[170px]">
-                  {{ item.email_pengirim }}
-                </div>
-              </TableCell>
+            <TableCell class="py-3">
+              <div class="font-semibold text-foreground text-sm leading-snug">
+                {{ item.nama_pengirim }}
+              </div>
+              <div class="text-xs text-muted-foreground mt-0.5">
+                {{ item.kota_domisili || 'Indonesia' }}
+              </div>
+              <div class="text-[11px] text-muted-foreground font-mono truncate max-w-[170px] mt-0.5">
+                {{ item.email_pengirim }}
+              </div>
+            </TableCell>
 
-              <TableCell>
-                <div class="font-bold text-foreground text-xs sm:text-sm leading-snug">
-                  {{ item.judul_surat }}
-                </div>
-                <p class="text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
-                  {{ item.isi_surat }}
-                </p>
-                <div v-if="item.catatan_redaksi" class="mt-1 text-[11px] text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 inline-block">
-                  Catatan: {{ item.catatan_redaksi }}
-                </div>
-              </TableCell>
+            <TableCell>
+              <div class="font-semibold text-foreground text-xs sm:text-sm leading-snug">
+                {{ item.judul_surat }}
+              </div>
+              <p class="text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
+                {{ item.isi_surat }}
+              </p>
+              <div v-if="item.catatan_redaksi" class="mt-1 text-[11px] text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 inline-block">
+                Catatan: {{ item.catatan_redaksi }}
+              </div>
+            </TableCell>
 
-              <TableCell class="text-xs text-muted-foreground whitespace-nowrap">
-                {{ formatDate(item.created_at) }}
-              </TableCell>
+            <TableCell class="text-xs text-muted-foreground whitespace-nowrap">
+              {{ formatDate(item.created_at) }}
+            </TableCell>
 
-              <TableCell class="text-center">
-                <span
-                  v-if="item.status === 'disetujui'"
-                  class="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
+            <TableCell class="text-center">
+              <span
+                v-if="item.status === 'disetujui'"
+                class="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
+              >
+                Disetujui
+              </span>
+              <span
+                v-else-if="item.status === 'ditolak'"
+                class="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-rose-500/10 text-rose-600 border border-rose-500/20"
+              >
+                Ditolak
+              </span>
+              <span
+                v-else
+                class="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-amber-500/10 text-amber-600 border border-amber-500/20 animate-pulse"
+              >
+                Pending
+              </span>
+            </TableCell>
+
+            <TableCell class="text-right">
+              <div class="flex items-center justify-end gap-1.5">
+                <!-- Quick Approve Button -->
+                <Button
+                  v-if="item.status !== 'disetujui'"
+                  variant="outline"
+                  size="sm"
+                  class="h-8 px-2 text-xs font-medium text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-700 hover:border-emerald-500 inline-flex items-center"
+                  title="Setujui Surat"
+                  @click="handleApprove(item)"
                 >
-                  Disetujui
-                </span>
-                <span
-                  v-else-if="item.status === 'ditolak'"
-                  class="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-rose-500/10 text-rose-600 border border-rose-500/20"
+                  <IconComponent name="Check" :size="13" class="mr-1" />
+                  Setujui
+                </Button>
+
+                <!-- Quick Reject Button -->
+                <Button
+                  v-if="item.status !== 'ditolak'"
+                  variant="outline"
+                  size="sm"
+                  class="h-8 px-2 text-xs font-medium text-amber-600 border-amber-500/30 hover:bg-amber-500/10 hover:text-amber-700 hover:border-amber-500 inline-flex items-center"
+                  title="Tolak Surat"
+                  @click="handleReject(item)"
                 >
-                  Ditolak
-                </span>
-                <span
-                  v-else
-                  class="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-amber-500/10 text-amber-600 border border-amber-500/20 animate-pulse"
+                  <IconComponent name="X" :size="13" class="mr-1" />
+                  Tolak
+                </Button>
+
+                <!-- Detail / Edit -->
+                <Link :href="`/cms/surat-pembaca/${item.id}/edit`">
+                  <Button variant="outline" size="sm" class="h-8 px-2.5 text-xs font-medium hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center">
+                    <IconComponent name="Edit" :size="14" class="mr-1" />
+                    Edit
+                  </Button>
+                </Link>
+
+                <!-- Delete -->
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="h-8 px-2.5 text-xs font-medium text-red-500 border-red-500/30 hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center"
+                  title="Hapus"
+                  @click="handleDelete(item)"
                 >
-                  Pending
-                </span>
-              </TableCell>
-
-              <TableCell class="text-right">
-                <div class="flex items-center justify-end gap-1">
-                  <!-- Quick Approve Button -->
-                  <Button
-                    v-if="item.status !== 'disetujui'"
-                    variant="ghost"
-                    size="icon"
-                    class="h-8 w-8 text-emerald-600 hover:bg-emerald-50"
-                    title="Setujui Surat"
-                    @click="handleApprove(item)"
-                  >
-                    <IconComponent name="IconCheck" class="w-4 h-4" />
-                  </Button>
-
-                  <!-- Quick Reject Button -->
-                  <Button
-                    v-if="item.status !== 'ditolak'"
-                    variant="ghost"
-                    size="icon"
-                    class="h-8 w-8 text-amber-600 hover:bg-amber-50"
-                    title="Tolak Surat"
-                    @click="handleReject(item)"
-                  >
-                    <IconComponent name="IconX" class="w-4 h-4" />
-                  </Button>
-
-                  <!-- Detail / Edit -->
-                  <Link :href="`/cms/surat-pembaca/${item.id}/edit`">
-                    <Button variant="ghost" size="icon" class="h-8 w-8" title="Review / Edit">
-                      <IconComponent name="IconEdit" class="w-4 h-4 text-muted-foreground" />
-                    </Button>
-                  </Link>
-
-                  <!-- Delete -->
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    class="h-8 w-8 text-destructive hover:bg-destructive/10"
-                    title="Hapus"
-                    @click="handleDelete(item)"
-                  >
-                    <IconComponent name="IconTrash" class="w-4 h-4" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </div>
+                  <IconComponent name="Trash" :size="14" class="mr-1" />
+                  Hapus
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
     </div>
   </div>
 </template>
-

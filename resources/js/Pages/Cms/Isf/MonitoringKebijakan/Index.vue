@@ -10,12 +10,14 @@ import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
 import {
   Button,
   Input,
+  Badge,
   Table,
   TableHeader,
   TableBody,
   TableRow,
   TableHead,
-  TableCell
+  TableCell,
+  FilterSelect
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -30,42 +32,42 @@ const statusLabelFilter = ref('')
 const statusFilter = ref('')
 let searchTimeout = null
 
-const sectors = [
-  { slug: '', label: 'Semua Sektor' },
-  { slug: 'ekonomi', label: 'Ekonomi' },
-  { slug: 'kesehatan', label: 'Kesehatan' },
-  { slug: 'pendidikan', label: 'Pendidikan' },
-  { slug: 'pertahanan', label: 'Pertahanan' },
-  { slug: 'lingkungan', label: 'Lingkungan' },
+const sectorOptions = [
+  { value: '', label: 'Semua Sektor' },
+  { value: 'ekonomi', label: 'Ekonomi & Fiskal' },
+  { value: 'kesehatan', label: 'Kesehatan Masyarakat' },
+  { value: 'pendidikan', label: 'Pendidikan & Riset' },
+  { value: 'pertahanan', label: 'Pertahanan & Keamanan' },
+  { value: 'lingkungan', label: 'Lingkungan & Energi' },
 ]
 
-const statusLabels = [
-  { slug: '', label: 'Semua Status Progres' },
-  { slug: 'tercapai', label: 'Tercapai' },
-  { slug: 'dalam_proses', label: 'Dalam Proses' },
-  { slug: 'tertunda', label: 'Tertunda' },
-  { slug: 'perlu_evaluasi', label: 'Perlu Evaluasi' },
+const progressStatusOptions = [
+  { value: '', label: 'Semua Status Progres' },
+  { value: 'tercapai', label: 'Tercapai' },
+  { value: 'dalam_proses', label: 'Dalam Proses' },
+  { value: 'tertunda', label: 'Tertunda' },
+  { value: 'perlu_evaluasi', label: 'Perlu Evaluasi' },
 ]
 
 function getSectorBadge(sector) {
   const map = {
-    ekonomi: { label: 'Ekonomi', color: 'bg-blue-100 text-blue-800 border-blue-200' },
-    kesehatan: { label: 'Kesehatan', color: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
-    pendidikan: { label: 'Pendidikan', color: 'bg-amber-100 text-amber-800 border-amber-200' },
-    pertahanan: { label: 'Pertahanan', color: 'bg-slate-100 text-slate-800 border-slate-200' },
-    lingkungan: { label: 'Lingkungan', color: 'bg-teal-100 text-teal-800 border-teal-200' },
+    ekonomi: { label: 'Ekonomi & Fiskal', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
+    kesehatan: { label: 'Kesehatan', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
+    pendidikan: { label: 'Pendidikan', color: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
+    pertahanan: { label: 'Pertahanan', color: 'bg-slate-500/10 text-slate-600 border-slate-500/20' },
+    lingkungan: { label: 'Lingkungan', color: 'bg-teal-500/10 text-teal-600 border-teal-500/20' },
   }
-  return map[sector] || { label: sector || '-', color: 'bg-neutral-100 text-neutral-800 border-neutral-200' }
+  return map[sector] || { label: sector || '-', color: 'bg-muted text-muted-foreground border-border' }
 }
 
 function getProgressBadge(label) {
   const map = {
-    tercapai: { label: 'Tercapai', color: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
-    dalam_proses: { label: 'Dalam Proses', color: 'bg-blue-100 text-blue-800 border-blue-300' },
-    tertunda: { label: 'Tertunda', color: 'bg-amber-100 text-amber-800 border-amber-300' },
-    perlu_evaluasi: { label: 'Perlu Evaluasi', color: 'bg-rose-100 text-rose-800 border-rose-300' },
+    tercapai: { label: 'Tercapai', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
+    dalam_proses: { label: 'Dalam Proses', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
+    tertunda: { label: 'Tertunda', color: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
+    perlu_evaluasi: { label: 'Perlu Evaluasi', color: 'bg-rose-500/10 text-rose-600 border-rose-500/20' },
   }
-  return map[label] || { label: label || '-', color: 'bg-neutral-100 text-neutral-800 border-neutral-300' }
+  return map[label] || { label: label || '-', color: 'bg-muted text-muted-foreground border-border' }
 }
 
 async function loadData() {
@@ -93,18 +95,16 @@ function onSearchInput() {
   }, 350)
 }
 
-function onSectorChange(sector) {
-  sectorFilter.value = sector
+function onSectorChange() {
   loadData()
 }
 
-function onStatusLabelChange(label) {
-  statusLabelFilter.value = label
+function onStatusLabelChange() {
   loadData()
 }
 
 function onStatusChange(status) {
-  statusFilter.value = statusFilter.value === status ? '' : status
+  statusFilter.value = status
   loadData()
 }
 
@@ -119,7 +119,7 @@ async function handleDelete(item) {
     alertSuccess('Program monitoring kebijakan berhasil dihapus.')
     items.value = items.value.filter((i) => i.id !== item.id)
   } catch (err) {
-    alertError(errorMessage(err, 'Gagal menghapus program monitoring kebijakan.'))
+    alertError(errorMessage(err, 'Gagal menghapus program monitoring.'))
   }
 }
 
@@ -129,215 +129,222 @@ onMounted(() => {
 </script>
 
 <template>
-  <Head title="Monitoring Kebijakan — CMS ISF" />
+  <Head title="Kelola Monitoring Kebijakan — Indonesia Strategy Forum" />
 
-  <div class="space-y-6">
+  <div class="p-6 space-y-6 w-full">
     <!-- Header & Action Button -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
       <div>
-        <h1 class="text-2xl font-bold tracking-tight text-neutral-900">
-          Monitoring Kebijakan (Janji vs Realisasi)
+        <h1 class="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+          <span>Kelola Monitoring Kebijakan</span>
+          <Badge class="bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 text-xs">
+            {{ items.length }} Total
+          </Badge>
         </h1>
-        <p class="text-sm text-neutral-500 mt-1">
-          Pelacakan capaian program strategis pemerintah, target janji vs realisasi di lapangan, progres capaian, dan sumber data resmi.
+        <p class="text-sm text-muted-foreground mt-1">
+          Pantau realisasi janji pemerintah, persentase capaian target, status hambatan, dan evaluasi berkala.
         </p>
       </div>
       <Link href="/cms/monitoring-kebijakan/create">
-        <Button class="inline-flex items-center gap-2">
-          <IconComponent name="IconPlus" class="w-4 h-4" />
+        <Button class="bg-red-600 hover:bg-red-700 text-white font-medium text-sm shadow-sm inline-flex items-center gap-1.5">
+          <IconComponent name="Plus" :size="16" />
           <span>Tambah Program</span>
         </Button>
       </Link>
     </div>
 
     <!-- Filters Toolbar -->
-    <div class="p-4 bg-white rounded-xl border border-neutral-200/80 shadow-2xs space-y-3">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <!-- Search Input -->
-        <div class="relative w-full md:w-80">
-          <IconComponent
-            name="IconSearch"
-            class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none"
-          />
-          <Input
-            v-model="search"
-            @input="onSearchInput"
-            placeholder="Cari nama program, janji, realisasi..."
-            class="pl-9 text-xs"
-          />
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2">
-          <!-- Status Label Select -->
-          <select
-            v-model="statusLabelFilter"
-            @change="onStatusLabelChange(statusLabelFilter)"
-            class="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-800 shadow-xs focus:border-red-500 focus:outline-none"
-          >
-            <option v-for="sl in statusLabels" :key="sl.slug" :value="sl.slug">
-              {{ sl.label }}
-            </option>
-          </select>
-
-          <!-- Publish Status Toggle Buttons -->
-          <div class="flex items-center gap-1 shrink-0">
-            <Button
-              size="sm"
-              :variant="statusFilter === '' ? 'default' : 'outline'"
-              @click="onStatusChange('')"
-              class="text-xs h-8 px-2.5"
-            >
-              Semua
-            </Button>
-            <Button
-              size="sm"
-              :variant="statusFilter === 'terbit' ? 'default' : 'outline'"
-              @click="onStatusChange('terbit')"
-              class="text-xs h-8 px-2.5"
-            >
-              Terbit
-            </Button>
-            <Button
-              size="sm"
-              :variant="statusFilter === 'draft' ? 'default' : 'outline'"
-              @click="onStatusChange('draft')"
-              class="text-xs h-8 px-2.5"
-            >
-              Draft
-            </Button>
-          </div>
-        </div>
+    <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+      <div class="relative w-full sm:w-80">
+        <Input
+          v-model="search"
+          @input="onSearchInput"
+          placeholder="Cari program, janji, realisasi..."
+          class="pl-9 h-9 text-xs"
+        />
+        <IconComponent
+          name="Search"
+          :size="16"
+          class="absolute left-3 top-2.5 text-muted-foreground pointer-events-none"
+        />
       </div>
 
-      <!-- Sector Filter Buttons -->
-      <div class="pt-2 border-t border-neutral-100 flex items-center gap-1.5 overflow-x-auto pb-1 isf-no-scrollbar">
-        <button
-          v-for="s in sectors"
-          :key="s.slug"
-          type="button"
-          @click="onSectorChange(s.slug)"
-          :class="[
-            'px-3 py-1 rounded-full text-xs font-medium transition-all shrink-0 cursor-pointer',
-            sectorFilter === s.slug
-              ? 'bg-neutral-900 text-white font-semibold'
-              : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-          ]"
-        >
-          {{ s.label }}
-        </button>
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 w-full sm:w-auto justify-start py-0.5">
+        <div class="flex items-center gap-2">
+          <label for="filter-sektor" class="text-xs text-muted-foreground whitespace-nowrap">Sektor:</label>
+          <FilterSelect
+            id="filter-sektor"
+            v-model="sectorFilter"
+            placeholder="Semua Sektor"
+            :options="sectorOptions"
+            @change="onSectorChange"
+          />
+        </div>
+
+        <div class="flex items-center gap-2">
+          <label for="filter-status-progres" class="text-xs text-muted-foreground whitespace-nowrap">Progres:</label>
+          <FilterSelect
+            id="filter-status-progres"
+            v-model="statusLabelFilter"
+            placeholder="Semua Progres"
+            :options="progressStatusOptions"
+            @change="onStatusLabelChange"
+          />
+        </div>
+
+        <div class="flex items-center gap-2 overflow-x-auto justify-start">
+          <span class="text-xs text-muted-foreground whitespace-nowrap">Status:</span>
+          <div class="flex gap-1">
+            <button
+              type="button"
+              @click="onStatusChange('')"
+              :class="[
+                'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+                statusFilter === ''
+                  ? 'bg-red-600 text-white'
+                  : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+              ]"
+            >
+              Semua
+            </button>
+            <button
+              type="button"
+              @click="onStatusChange('terbit')"
+              :class="[
+                'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+                statusFilter === 'terbit'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+              ]"
+            >
+              Terbit
+            </button>
+            <button
+              type="button"
+              @click="onStatusChange('draf')"
+              :class="[
+                'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+                statusFilter === 'draf'
+                  ? 'bg-amber-600 text-white'
+                  : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+              ]"
+            >
+              Draf
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Data Table Container -->
-    <div class="bg-white rounded-xl border border-neutral-200/80 shadow-2xs overflow-hidden">
-      <LoadingIndicator v-if="loading" message="Memuat data monitoring kebijakan..." />
+    <LoadingIndicator v-if="loading && items.length === 0" text="Memuat data monitoring kebijakan..." />
+    <ErrorMessage
+      v-else-if="loadError"
+      :message="loadError"
+      @retry="loadData"
+    />
 
-      <ErrorMessage
-        v-else-if="loadError"
-        :message="loadError"
-        :retry="loadData"
-        class="m-6"
-      />
-
-      <div v-else-if="items.length === 0" class="py-16 text-center text-neutral-500">
-        <IconComponent name="IconChecklist" class="w-10 h-10 mx-auto text-neutral-300 mb-2" />
-        <p class="text-sm font-medium text-neutral-700">Tidak ada program monitoring kebijakan ditemukan</p>
-        <p class="text-xs text-neutral-400 mt-1">Coba sesuaikan kata kunci pencarian atau filter Anda.</p>
-      </div>
-
-      <div v-else class="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead class="w-12 text-center">#</TableHead>
-              <TableHead>Nama Program Pemerintah</TableHead>
-              <TableHead class="w-32">Sektor</TableHead>
-              <TableHead class="w-48">Progres Realisasi</TableHead>
-              <TableHead class="w-36 text-center">Status Evaluasi</TableHead>
-              <TableHead class="w-32">Pembaruan</TableHead>
-              <TableHead class="w-20 text-center">Urutan</TableHead>
-              <TableHead class="w-24 text-center">Status</TableHead>
-              <TableHead class="w-28 text-right">Aksi</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow v-for="(item, idx) in items" :key="item.id" class="hover:bg-neutral-50/70">
-              <TableCell class="text-center text-xs text-neutral-400 font-mono">
-                {{ idx + 1 }}
-              </TableCell>
-              <TableCell>
-                <div class="font-medium text-sm text-neutral-900 line-clamp-1">
-                  {{ item.program_name }}
+    <div v-else class="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
+      <Table>
+        <TableHeader>
+          <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
+            <TableHead class="w-12 text-center text-xs">#</TableHead>
+            <TableHead class="min-w-[240px]">Program & Janji</TableHead>
+            <TableHead class="w-36">Sektor</TableHead>
+            <TableHead class="w-32">Progres</TableHead>
+            <TableHead class="w-32 text-center">Status Capaian</TableHead>
+            <TableHead class="w-28">Update</TableHead>
+            <TableHead class="w-24 text-center">Status</TableHead>
+            <TableHead class="text-right">Aksi</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow v-if="items.length === 0">
+            <TableCell colspan="8" class="text-center py-10 text-muted-foreground text-sm">
+              Tidak ada data program monitoring kebijakan ditemukan.
+            </TableCell>
+          </TableRow>
+          <TableRow
+            v-for="(item, idx) in items"
+            :key="item.id"
+            class="hover:bg-muted/30 transition border-b border-border/50"
+          >
+            <TableCell class="text-center font-mono text-xs text-muted-foreground">
+              {{ idx + 1 }}
+            </TableCell>
+            <TableCell class="py-3">
+              <div class="font-semibold text-foreground text-sm leading-snug line-clamp-2">
+                {{ item.program_name }}
+              </div>
+              <div class="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+                Janji: {{ item.promise }}
+              </div>
+              <div v-if="item.source_title" class="text-[11px] text-muted-foreground/80 mt-0.5">
+                Sumber: {{ item.source_title }}
+              </div>
+            </TableCell>
+            <TableCell>
+              <span
+                :class="[
+                  'inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold border',
+                  getSectorBadge(item.sector).color
+                ]"
+              >
+                {{ getSectorBadge(item.sector).label }}
+              </span>
+            </TableCell>
+            <TableCell>
+              <div class="space-y-1">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="font-bold text-foreground font-mono">{{ item.progress_percent }}%</span>
                 </div>
-                <div v-if="item.source_title" class="text-[11px] text-neutral-500 mt-0.5 flex items-center gap-1">
-                  <span>Sumber: {{ item.source_title }}</span>
+                <div class="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                  <div
+                    class="h-full rounded-full transition-all duration-500"
+                    :class="item.progress_percent >= 100 ? 'bg-emerald-500' : 'bg-red-600'"
+                    :style="{ width: `${Math.min(100, Math.max(0, item.progress_percent))}%` }"
+                  ></div>
                 </div>
-              </TableCell>
-              <TableCell>
-                <span
-                  :class="[
-                    'inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold border',
-                    getSectorBadge(item.sector).color
-                  ]"
-                >
-                  {{ getSectorBadge(item.sector).label }}
-                </span>
-              </TableCell>
-              <TableCell>
-                <div class="space-y-1">
-                  <div class="flex items-center justify-between text-xs">
-                    <span class="font-bold text-neutral-900 font-mono">{{ item.progress_percent }}%</span>
-                  </div>
-                  <div class="w-full bg-neutral-200 rounded-full h-1.5 overflow-hidden">
-                    <div
-                      class="h-full rounded-full transition-all duration-500"
-                      :class="item.progress_percent >= 100 ? 'bg-emerald-500' : 'bg-isf-red'"
-                      :style="{ width: `${Math.min(100, Math.max(0, item.progress_percent))}%` }"
-                    ></div>
-                  </div>
-                </div>
-              </TableCell>
-              <TableCell class="text-center">
-                <span
-                  :class="[
-                    'inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold border',
-                    getProgressBadge(item.status_label).color
-                  ]"
-                >
-                  {{ getProgressBadge(item.status_label).label }}
-                </span>
-              </TableCell>
-              <TableCell class="text-xs text-neutral-600 whitespace-nowrap">
-                {{ item.last_updated_date || '-' }}
-              </TableCell>
-              <TableCell class="text-center text-xs font-mono text-neutral-600">
-                {{ item.order ?? 0 }}
-              </TableCell>
-              <TableCell class="text-center">
-                <StatusBadge :status="item.status" />
-              </TableCell>
-              <TableCell class="text-right whitespace-nowrap">
-                <div class="flex items-center justify-end gap-1.5">
-                  <Link :href="`/cms/monitoring-kebijakan/${item.id}/edit`">
-                    <Button variant="ghost" size="sm" class="h-8 w-8 p-0 text-neutral-600 hover:text-neutral-900">
-                      <IconComponent name="IconEdit" class="w-4 h-4" />
-                    </Button>
-                  </Link>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    class="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                    @click="handleDelete(item)"
-                  >
-                    <IconComponent name="IconTrash" class="w-4 h-4" />
+              </div>
+            </TableCell>
+            <TableCell class="text-center">
+              <span
+                :class="[
+                  'inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-semibold border',
+                  getProgressBadge(item.status_label).color
+                ]"
+              >
+                {{ getProgressBadge(item.status_label).label }}
+              </span>
+            </TableCell>
+            <TableCell class="text-xs text-muted-foreground whitespace-nowrap">
+              {{ item.last_updated_date || '-' }}
+            </TableCell>
+            <TableCell class="text-center">
+              <StatusBadge :status="item.status" />
+            </TableCell>
+            <TableCell class="text-right">
+              <div class="flex items-center justify-end gap-1.5">
+                <Link :href="`/cms/monitoring-kebijakan/${item.id}/edit`">
+                  <Button variant="outline" size="sm" class="h-8 px-2.5 text-xs font-medium hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center">
+                    <IconComponent name="Edit" :size="14" class="mr-1" />
+                    Edit
                   </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </div>
+                </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="h-8 px-2.5 text-xs font-medium text-red-500 border-red-500/30 hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center"
+                  @click="handleDelete(item)"
+                >
+                  <IconComponent name="Trash" :size="14" class="mr-1" />
+                  Hapus
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
     </div>
   </div>
 </template>
-

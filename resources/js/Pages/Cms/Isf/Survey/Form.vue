@@ -6,6 +6,7 @@ import { cmsResources, errorMessage } from '@/api/services/isfCmsService'
 import { alertSuccess, alertError } from '@/Composables/useAlert'
 import LoadingIndicator from '@/Pages/Cms/components/shared/LoadingIndicator.vue'
 import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
+import StatusSelectWithBadge from '@/Components/Cms/StatusSelectWithBadge.vue'
 import {
   Button,
   Input,
@@ -38,12 +39,12 @@ const topicOptions = [
 
 const regionOptions = [
   { value: 'nasional', label: 'Nasional' },
-  { value: 'jawa', label: 'Jawa' },
+  { value: 'jawa', label: 'Pulau Jawa' },
   { value: 'sumatera', label: 'Sumatera' },
   { value: 'kalimantan', label: 'Kalimantan' },
   { value: 'sulawesi', label: 'Sulawesi' },
-  { value: 'bali-nusra', label: 'Bali & Nusa Tenggara' },
-  { value: 'maluku-papua', label: 'Maluku & Papua' },
+  { value: 'bali_nusra', label: 'Bali & Nusa Tenggara' },
+  { value: 'maluku_papua', label: 'Maluku & Papua' },
 ]
 
 const defaultChartData = {
@@ -669,14 +670,11 @@ onMounted(() => {
 
             <div>
               <Label for="status" class="text-xs font-semibold">Status Publikasi</Label>
-              <select
+              <StatusSelectWithBadge
                 id="status"
                 v-model="form.status"
-                class="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                <option value="terbit">Terbit</option>
-                <option value="draft">Draft</option>
-              </select>
+                class="mt-1"
+              />
             </div>
 
             <div class="flex items-center gap-2 pt-6">
@@ -697,19 +695,18 @@ onMounted(() => {
       <!-- Bottom action bar -->
       <div class="flex items-center justify-end gap-3 pt-4 border-t border-border">
         <Link href="/cms/survei">
-          <Button variant="outline" size="sm" class="h-9">
+          <Button type="button" variant="outline" size="sm">
             Batal
           </Button>
         </Link>
         <Button
           type="submit"
-          size="sm"
-          class="h-9 bg-red-700 hover:bg-red-800 text-white"
+          class="bg-red-600 hover:bg-red-700 text-white font-medium text-sm shadow-sm inline-flex items-center gap-1.5"
           :disabled="saving"
         >
-          <IconComponent v-if="saving" name="Loader2" :size="14" class="mr-1.5 animate-spin" />
-          <IconComponent v-else name="Check" :size="14" class="mr-1.5" />
-          {{ saving ? 'Menyimpan...' : 'Simpan Data Survei' }}
+          <IconComponent v-if="saving" name="Refresh" :size="16" class="animate-spin" />
+          <IconComponent v-else name="DeviceFloppy" :size="16" />
+          <span>{{ saving ? 'Menyimpan...' : (isEdit ? 'Perbarui Survei' : 'Simpan Data Survei') }}</span>
         </Button>
       </div>
     </form>

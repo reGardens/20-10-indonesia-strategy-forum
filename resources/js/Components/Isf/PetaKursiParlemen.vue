@@ -125,22 +125,21 @@ function buildChartOption() {
       {
         name: `Kursi ${activeLembaga.value}`,
         type: 'pie',
-        radius: isMobile ? ['52%', '90%'] : ['52%', '88%'],
-        center: isMobile ? ['50%', '83%'] : ['50%', '82%'],
-        // Hemicycle / arch: busur setengah lingkaran 180° menuju 360°
-        startAngle: 180,
-        endAngle: 360,
-        padAngle: 1.5,
+        radius: isMobile ? ['58%', '85%'] : ['58%', '85%'],
+        center: ['50%', '50%'],
+        padAngle: 2,
         avoidLabelOverlap: false,
         itemStyle: {
-          borderRadius: 3,
+          borderRadius: 4,
+          borderColor: '#0B1220',
+          borderWidth: 2,
         },
         label: {
           show: false,
         },
         emphasis: {
           scale: true,
-          scaleSize: isMobile ? 5 : 8,
+          scaleSize: isMobile ? 4 : 6,
           itemStyle: {
             shadowBlur: 14,
             shadowOffsetX: 0,
@@ -336,78 +335,49 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <!-- Main Content: Hemicycle Graphic & Focus Detail -->
+    <!-- Main Content: Clean Doughnut Chart & Detail Komposisi Fraksi -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-center py-4 sm:py-6">
-      <!-- Hemicycle Arc Visualization (Left/Center col 7) -->
-      <div class="lg:col-span-7 flex flex-col items-center justify-center relative w-full">
+      <!-- Doughnut Chart Visualization (Left col 6) -->
+      <div class="lg:col-span-6 flex flex-col items-center justify-center relative w-full">
         <!-- Container with responsive clean height -->
-        <div class="w-full max-w-[480px] h-[200px] sm:h-[240px] md:h-[270px] relative flex items-center justify-center mx-auto">
+        <div class="w-full max-w-[320px] sm:max-w-[360px] h-[240px] sm:h-[280px] relative flex items-center justify-center mx-auto">
           <!-- Apache ECharts Container -->
           <div
             ref="chartContainerRef"
             class="echarts-parliament-chart w-full h-full select-none"
             role="img"
-            :aria-label="`Diagram busur hemicycle peta kursi parlemen ${activeLembaga} RI periode ${activePeriode}`"
+            :aria-label="`Diagram lingkaran komposisi perolehan kursi parlemen ${activeLembaga} RI periode ${activePeriode}`"
           />
 
-          <!-- Majority Threshold Line Indicator (Top Center 50% mark) -->
-          <div class="absolute top-1 sm:top-2 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none select-none z-10">
-            <span class="text-[9px] sm:text-[9.5px] font-mono font-semibold text-amber-400 bg-neutral-900/90 px-1.5 sm:px-2 py-0.5 rounded border border-amber-500/30 shadow-xs whitespace-nowrap">
-              Ambang 50%: {{ thresholdMajority }}
-            </span>
-            <div class="w-px h-4 sm:h-5 border-l border-dashed border-amber-400/80 mt-0.5"></div>
-          </div>
-
-          <!-- Center Core Information (Inside the Hollow Center of the Arch) -->
-          <div class="absolute bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 text-center pointer-events-none select-none z-10 w-full px-4">
-            <div class="font-space-grotesk text-xl sm:text-2xl md:text-3xl font-bold text-white leading-none">
+          <!-- Center Hole Information -->
+          <div class="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none select-none px-4">
+            <div class="font-space-grotesk text-2xl sm:text-3xl font-black text-white leading-none">
               {{ activeParty ? activeParty.jumlah_kursi : totalKursi }}
             </div>
-            <div class="font-space-grotesk text-[9px] sm:text-[10px] md:text-xs font-semibold text-neutral-400 uppercase tracking-widest mt-1 truncate">
-              {{ activeParty ? 'Kursi (' + activeParty.persentase + '%)' : 'Total Kursi ' + activeLembaga }}
+            <div class="font-space-grotesk text-[10px] sm:text-[11px] font-bold text-neutral-300 uppercase tracking-wider mt-1 truncate max-w-[140px]">
+              {{ activeParty ? (activeParty.singkatan || activeParty.partai) : `Total Kursi ${activeLembaga}` }}
             </div>
-            <div class="font-space-grotesk text-[9px] sm:text-[10px] md:text-[11px] font-medium text-amber-400 mt-0.5 truncate">
-              {{ activeParty ? (activeParty.singkatan || activeParty.partai) : 'Garis 50% Mayoritas: ' + thresholdMajority }}
+            <div class="font-mono text-[10px] sm:text-[11px] font-semibold text-amber-400 mt-0.5 truncate">
+              {{ activeParty ? `${activeParty.persentase}% Porsi` : `Ambang 50%: ${thresholdMajority}` }}
             </div>
           </div>
         </div>
 
-        <!-- Proportional Stacked Horizontal Bar -->
-        <div class="w-full max-w-[480px] mt-2 sm:mt-3 px-1 sm:px-0">
-          <div class="h-2.5 sm:h-3 w-full rounded-full overflow-hidden flex bg-neutral-800 shadow-inner" role="progressbar" :aria-valuenow="totalKursi" aria-valuemin="0" :aria-valuemax="totalKursi">
-            <div
-              v-for="item in seatsData"
-              :key="item.id"
-              :style="{
-                width: `${item.persentase}%`,
-                backgroundColor: item.warna_partai,
-                opacity: activeParty && activeParty.id !== item.id ? 0.35 : 1,
-              }"
-              class="h-full transition-opacity cursor-pointer"
-              :title="`${item.partai}: ${item.jumlah_kursi} kursi (${item.persentase}%)`"
-              @click="setActiveParty(activeParty?.id === item.id ? null : item)"
-              @mouseenter="setActiveParty(item)"
-              @mouseleave="clearActiveParty"
-            />
-          </div>
-          <div class="flex items-center justify-between text-[9.5px] sm:text-[10px] font-mono text-neutral-400 mt-1">
-            <span class="hidden sm:inline">0</span>
-            <span class="text-amber-400 font-semibold truncate px-1 text-center">50% Ambang ({{ thresholdMajority }})</span>
-            <span class="shrink-0">{{ totalKursi }} Kursi</span>
-          </div>
+        <div class="text-[11px] font-mono text-neutral-400 text-center mt-1">
+          Ambang Batas Mayoritas Parlemen (50% + 1): <strong class="text-amber-400">{{ thresholdMajority }} Kursi</strong>
         </div>
       </div>
 
-      <!-- Interactive Legend & Details List (Right col 5) -->
-      <div class="lg:col-span-5 flex flex-col gap-2 w-full mt-3 lg:mt-0">
+      <!-- Interactive Legend & Details List (Right col 6) -->
+      <div class="lg:col-span-6 flex flex-col gap-2 w-full mt-3 lg:mt-0">
         <div class="text-xs font-space-grotesk font-bold text-neutral-300 uppercase tracking-wider pb-1 flex items-center justify-between">
-          <span>Rincian Fraksi / Partai</span>
+          <span>Komposisi Fraksi / Partai</span>
           <span class="text-[10px] font-normal text-neutral-400 normal-case hidden sm:inline">Arahkan atau pilih untuk menyorot</span>
           <span class="text-[10px] font-normal text-neutral-400 normal-case sm:hidden">Sentuh untuk menyorot</span>
         </div>
 
         <!-- 2 Kolom di mobile/tablet, 1 kolom scrollable di desktop -->
-        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-1 gap-1.5 max-h-none lg:max-h-[290px] overflow-y-visible lg:overflow-y-auto pr-0 lg:pr-1 isf-no-scrollbar">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-1.5 max-h-none lg:max-h-[300px] overflow-y-visible lg:overflow-y-auto pr-0 lg:pr-1 isf-no-scrollbar">
           <button
             v-for="item in seatsData"
             :key="item.id"
@@ -418,34 +388,40 @@ onBeforeUnmount(() => {
             @focus="setActiveParty(item)"
             @blur="clearActiveParty"
             :class="[
-              'w-full flex items-center justify-between p-1.5 sm:p-2 rounded-lg border transition-all text-left font-space-grotesk cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-isf-red',
+              'w-full flex flex-col gap-1 p-2 rounded-lg border transition-all text-left font-space-grotesk cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-isf-red',
               activeParty && activeParty.id === item.id
                 ? 'bg-white/15 border-white/60 shadow-xs'
                 : 'bg-neutral-900/60 border-neutral-800 hover:bg-neutral-800/80 hover:border-neutral-700'
             ]"
           >
-            <div class="flex items-center gap-1.5 sm:gap-2.5 min-w-0 pr-1">
-              <span
-                class="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-full shrink-0 shadow-2xs"
-                :style="{ backgroundColor: item.warna_partai }"
-              />
-              <div class="min-w-0">
-                <div class="text-[11px] sm:text-xs font-bold text-white truncate">
+            <div class="flex items-center justify-between gap-2 min-w-0">
+              <div class="flex items-center gap-2 min-w-0">
+                <span
+                  class="w-2.5 h-2.5 rounded-full shrink-0 shadow-2xs"
+                  :style="{ backgroundColor: item.warna_partai }"
+                />
+                <span class="text-xs font-bold text-white truncate">
                   {{ item.singkatan || item.partai }}
-                </div>
-                <div v-if="item.singkatan && item.singkatan !== item.partai" class="hidden sm:block text-[10px] text-neutral-400 truncate">
+                </span>
+                <span v-if="item.singkatan && item.singkatan !== item.partai" class="hidden sm:inline text-[10px] text-neutral-400 truncate">
                   {{ item.partai }}
-                </div>
+                </span>
+              </div>
+              <div class="text-right shrink-0 flex items-center gap-2">
+                <span class="text-xs font-bold text-white">
+                  {{ item.jumlah_kursi }} <span class="text-[10px] font-normal text-neutral-400">kursi</span>
+                </span>
+                <span class="text-[10px] font-mono font-medium text-amber-400 min-w-[38px] text-right">
+                  {{ item.persentase }}%
+                </span>
               </div>
             </div>
-
-            <div class="text-right shrink-0">
-              <div class="text-[11px] sm:text-xs font-bold text-white">
-                {{ item.jumlah_kursi }} <span class="hidden sm:inline text-[10px] font-normal text-neutral-400">kursi</span>
-              </div>
-              <div class="text-[9.5px] sm:text-[10px] font-mono font-medium text-neutral-400">
-                {{ item.persentase }}%
-              </div>
+            <!-- Mini progress bar per fraksi -->
+            <div class="w-full h-1 bg-neutral-800 rounded-full overflow-hidden mt-0.5">
+              <div
+                class="h-full rounded-full transition-all duration-300"
+                :style="{ width: `${item.persentase}%`, backgroundColor: item.warna_partai }"
+              />
             </div>
           </button>
         </div>

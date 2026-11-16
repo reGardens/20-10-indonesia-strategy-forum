@@ -365,7 +365,7 @@ const routes = [
   {
     // Artikel per kategori: /artikel/{kategori} = daftar, /artikel/{kategori}/{slug} = detail.
     // Detail = child route, jadi menu navbar kategori tetap aktif (router-link-active).
-    path: '/artikel/:kategori(hukum|kebijakan|opini|opini-publik)',
+    path: '/artikel/:kategori(politik|hukum|kebijakan|opini|opini-publik)',
 
     component: IsfPublicLayout,
     children: [
@@ -451,6 +451,11 @@ const router = createRouter({
     if (savedPosition) return savedPosition
     if (to.hash) return { el: to.hash }
     if (to.path === from.path) return false
+    // Jangan scroll saat berganti tab di dalam halaman detail tokoh yang sama
+    const isSosokDetail = (name) => name === 'isf-sosok-detail' || name === 'isf-sosok-detail-tab'
+    if (isSosokDetail(to.name) && isSosokDetail(from.name) && to.params.slug === from.params.slug) {
+      return false
+    }
     return { top: 0, left: 0 }
   }
 })

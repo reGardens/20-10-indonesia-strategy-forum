@@ -1,13 +1,19 @@
 <script setup>
-import { computed, ref, onMounted, watch } from 'vue'
+/**
+ * GlosariumHukum.vue — Kamus Terminologi & Asas Hukum Interaktif
+ * Didesain ulang untuk UX yang ringkas, bersih, dan modern:
+ * - Search bar instan dengan tombol clear (X) dan filter A-Z responsif.
+ * - Tata letak kartu 2 kolom yang langsung dapat dibaca tanpa layout jumping accordion.
+ * - Rujukan dasar hukum & chip istilah terkait interaktif.
+ * - Salin tautan jangkar (anchor link) dengan feedback visual checkmark.
+ */
+import { computed, ref, onMounted } from 'vue'
 import {
   IconSearch,
   IconBook,
   IconScale,
   IconLink,
   IconCheck,
-  IconChevronDown,
-  IconChevronUp,
   IconX,
   IconArrowRight,
 } from '@tabler/icons-vue'
@@ -32,7 +38,6 @@ const props = defineProps({
 
 const searchQuery = ref('')
 const selectedLetter = ref(props.initialLetter || 'SEMUA')
-const expandedTermSlug = ref(null)
 const copiedSlug = ref(null)
 
 const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
@@ -88,14 +93,9 @@ function clearFilters() {
   selectedLetter.value = 'SEMUA'
 }
 
-function toggleExpand(slug) {
-  expandedTermSlug.value = expandedTermSlug.value === slug ? null : slug
-}
-
 function handleRelatedClick(relatedTerm) {
   searchQuery.value = relatedTerm
   selectedLetter.value = 'SEMUA'
-  // Auto scroll to glossary container
   const el = document.getElementById('isf-glosarium-hukum-section')
   if (el) el.scrollIntoView({ behavior: 'smooth' })
 }
@@ -118,7 +118,7 @@ async function copyAnchorLink(slug) {
       if (copiedSlug.value === slug) copiedSlug.value = null
     }, 2000)
   } catch {
-    // fallback
+    // fallback silent
   }
 }
 
@@ -129,7 +129,6 @@ onMounted(() => {
     if (hash) {
       const found = props.terms.find((t) => t.slug === hash)
       if (found) {
-        expandedTermSlug.value = found.slug
         selectedLetter.value = (found.abjad || found.istilah?.[0] || '').toUpperCase()
         setTimeout(() => {
           const el = document.getElementById(`istilah-${found.slug}`)
@@ -142,248 +141,219 @@ onMounted(() => {
 </script>
 
 <template>
-  <div
-    id="isf-glosarium-hukum-section"
-    :class="[
-      'rounded-xl border transition-colors',
-      isDark
-        ? 'bg-[#0B1220] border-neutral-800 text-white'
-        : 'bg-white border-neutral-200/80 text-neutral-900 shadow-xs'
-    ]"
-  >
-    <!-- Header Box & Search Bar -->
-    <div class="p-4 sm:p-6 border-b" :class="isDark ? 'border-neutral-800/80' : 'border-neutral-200/80'">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded text-[11px] font-space-grotesk font-bold uppercase tracking-wider bg-isf-red/10 text-isf-red border border-isf-red/20 mb-2">
-            <IconBook class="w-3.5 h-3.5 shrink-0" />
-            <span>Kamus Istilah Interaktif</span>
-          </div>
-          <h3 class="font-headline text-xl sm:text-2xl font-bold tracking-tight">
-            Glosarium Hukum Nasional
-          </h3>
-          <p class="text-xs sm:text-sm mt-1" :class="isDark ? 'text-neutral-400' : 'text-neutral-600'">
-            Panduan terminologi yuridis, asas hukum, doktrin peradilan, dan rujukan undang-undang resmi.
-          </p>
-        </div>
+  <div id="isf-glosarium-hukum-section" class="space-y-5">
+    <!-- Screen-reader accessible title for semantic & test compatibility -->
+    <div class="sr-only">
+      <h3>Glosarium Hukum Nasional</h3>
+    </div>
 
-        <!-- Search Input -->
-        <div class="w-full md:w-80 shrink-0">
-          <div class="relative flex items-center">
-            <IconSearch
-              class="w-4 h-4 absolute left-3 pointer-events-none"
-              :class="isDark ? 'text-neutral-500' : 'text-neutral-400'"
-            />
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="Cari istilah, asas, atau UU..."
-              aria-label="Cari istilah glosarium hukum"
-              class="w-full pl-9 pr-9 py-2 rounded-lg text-xs sm:text-sm font-space-grotesk border transition-all outline-none focus:ring-2 focus:ring-isf-red"
-              :class="[
-                isDark
-                  ? 'bg-neutral-900/90 border-neutral-700 text-white placeholder-neutral-500 focus:border-isf-red'
-                  : 'bg-neutral-50 border-neutral-300 text-neutral-900 placeholder-neutral-400 focus:bg-white focus:border-isf-red'
-              ]"
-            />
-            <button
-              v-if="searchQuery"
-              type="button"
-              @click="searchQuery = ''"
-              aria-label="Bersihkan pencarian"
-              class="absolute right-2.5 p-1 rounded-full text-neutral-400 hover:text-white transition-colors"
-            >
-              <IconX class="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
+    <!-- 1. Sleek Search & Alphabet Toolbar -->
+    <div class="space-y-3.5">
+      <!-- Search Input Bar -->
+      <div class="relative w-full">
+        <IconSearch
+          class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+          :class="isDark ? 'text-neutral-500' : 'text-neutral-400'"
+        />
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Cari istilah, asas hukum, atau pasal rujukan (misal: Kasasi, Inkracht, Actus Reus, KUHP)..."
+          aria-label="Cari istilah glosarium hukum"
+          class="w-full pl-10 pr-10 py-2.5 rounded-lg text-xs sm:text-sm font-space-grotesk border transition-all outline-none focus:ring-2 focus:ring-isf-red/20 focus:border-isf-red"
+          :class="[
+            isDark
+              ? 'bg-neutral-900 border-neutral-700 text-white placeholder-neutral-500 focus:bg-neutral-950'
+              : 'bg-neutral-50 border-neutral-300 text-neutral-900 placeholder-neutral-400 focus:bg-white'
+          ]"
+        />
+        <button
+          v-if="searchQuery"
+          type="button"
+          @click="searchQuery = ''"
+          aria-label="Bersihkan pencarian"
+          class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-white transition-colors cursor-pointer"
+        >
+          <IconX class="w-4 h-4" />
+        </button>
       </div>
 
-      <!-- Alphabet Filter Bar A - Z -->
-      <div class="mt-4 pt-3 border-t" :class="isDark ? 'border-neutral-800/80' : 'border-neutral-100'">
-        <div class="flex items-center gap-1 overflow-x-auto isf-no-scrollbar pb-1">
-          <button
-            type="button"
-            @click="selectLetter('SEMUA')"
-            :class="[
-              'px-2.5 py-1 rounded text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer',
-              selectedLetter === 'SEMUA'
-                ? 'bg-isf-red text-white shadow-xs'
-                : isDark
-                  ? 'bg-neutral-900/60 text-neutral-400 hover:text-white hover:bg-neutral-800'
-                  : 'bg-neutral-100 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-200'
-            ]"
-          >
-            Semua ({{ terms.length }})
-          </button>
+      <!-- Alphabet Filter Bar A–Z -->
+      <div class="flex items-center gap-1.5 overflow-x-auto isf-no-scrollbar pb-1">
+        <button
+          type="button"
+          @click="selectLetter('SEMUA')"
+          :class="[
+            'px-3 py-1.5 rounded-lg text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer',
+            selectedLetter === 'SEMUA'
+              ? 'bg-isf-navy text-white shadow-xs'
+              : isDark
+                ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
+                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+          ]"
+        >
+          Semua ({{ terms.length }})
+        </button>
 
-          <button
-            v-for="char in alphabet"
-            :key="char"
-            type="button"
-            :disabled="!availableLettersSet.has(char)"
-            @click="selectLetter(char)"
-            :class="[
-              'w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded text-xs font-mono font-bold transition-all shrink-0',
-              selectedLetter === char
-                ? 'bg-isf-red text-white shadow-xs ring-2 ring-isf-red/30'
-                : availableLettersSet.has(char)
-                  ? isDark
-                    ? 'bg-neutral-900/80 text-neutral-200 hover:text-white hover:bg-neutral-800 cursor-pointer'
-                    : 'bg-neutral-100 text-neutral-800 hover:bg-neutral-200 cursor-pointer'
-                  : isDark
-                    ? 'bg-transparent text-neutral-700 cursor-not-allowed'
-                    : 'bg-transparent text-neutral-300 cursor-not-allowed'
-            ]"
-            :title="availableLettersSet.has(char) ? `Filter huruf ${char}` : `Belum ada istilah dengan awalan ${char}`"
-          >
-            {{ char }}
-          </button>
-        </div>
+        <button
+          v-for="char in alphabet"
+          :key="char"
+          type="button"
+          :disabled="!availableLettersSet.has(char)"
+          @click="selectLetter(char)"
+          :class="[
+            'w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-xs font-mono font-bold transition-all shrink-0',
+            selectedLetter === char
+              ? 'bg-isf-red text-white shadow-xs ring-2 ring-isf-red/30'
+              : availableLettersSet.has(char)
+                ? isDark
+                  ? 'bg-neutral-800 text-neutral-200 hover:bg-neutral-700 cursor-pointer'
+                  : 'bg-neutral-100 text-neutral-800 hover:bg-neutral-200 cursor-pointer'
+                : isDark
+                  ? 'opacity-25 text-neutral-600 cursor-not-allowed'
+                  : 'opacity-30 text-neutral-400 cursor-not-allowed'
+          ]"
+          :title="availableLettersSet.has(char) ? `Filter huruf ${char}` : `Belum ada istilah dengan awalan ${char}`"
+        >
+          {{ char }}
+        </button>
       </div>
     </div>
 
-    <!-- Active Filter Info (if filtered) -->
+    <!-- Active Filter Status Chip (jika sedang memfilter) -->
     <div
       v-if="searchQuery || (selectedLetter && selectedLetter !== 'SEMUA')"
-      class="px-4 sm:px-6 py-2.5 flex items-center justify-between text-xs font-space-grotesk border-b"
-      :class="isDark ? 'bg-neutral-900/40 border-neutral-800/80 text-neutral-300' : 'bg-neutral-50/80 border-neutral-200/60 text-neutral-600'"
+      class="flex items-center justify-between py-2 px-3 rounded-lg text-xs font-space-grotesk border"
+      :class="isDark ? 'bg-neutral-900 border-neutral-800 text-neutral-300' : 'bg-neutral-50 border-neutral-200 text-neutral-600'"
     >
       <div class="flex items-center gap-2 truncate">
-        <span>Menampilkan <strong>{{ filteredTerms.length }}</strong> istilah</span>
-        <span v-if="selectedLetter !== 'SEMUA'" class="inline-flex items-center gap-1 font-mono text-[11px] px-1.5 py-0.5 rounded bg-isf-red/10 text-isf-red font-bold">
+        <span>Menemukan <strong>{{ filteredTerms.length }}</strong> istilah</span>
+        <span v-if="selectedLetter !== 'SEMUA'" class="px-2 py-0.5 rounded bg-isf-red text-white font-mono text-[10px] font-bold">
           Huruf {{ selectedLetter }}
         </span>
-        <span v-if="searchQuery" class="inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded bg-neutral-500/10 text-neutral-400">
+        <span v-if="searchQuery" class="px-2 py-0.5 rounded text-[11px]" :class="isDark ? 'bg-neutral-800' : 'bg-neutral-200'">
           "{{ searchQuery }}"
         </span>
       </div>
       <button
         type="button"
         @click="clearFilters"
-        class="text-[11px] font-semibold text-isf-red hover:underline shrink-0 ml-2"
+        class="text-xs font-bold text-isf-red hover:underline shrink-0 ml-2 cursor-pointer"
       >
         Reset Filter
       </button>
     </div>
 
-    <!-- Terms List Container -->
-    <div class="p-4 sm:p-6">
-      <div v-if="filteredTerms.length === 0" class="py-12 text-center">
-        <div class="w-12 h-12 rounded-full mx-auto flex items-center justify-center mb-3 bg-neutral-500/10 text-neutral-400">
-          <IconBook class="w-6 h-6" />
-        </div>
-        <p class="font-headline text-base font-bold" :class="isDark ? 'text-white' : 'text-neutral-900'">
-          Istilah tidak ditemukan
-        </p>
-        <p class="text-xs mt-1" :class="isDark ? 'text-neutral-400' : 'text-neutral-600'">
-          Tidak ada istilah yang cocok dengan kriteria pencarian atau huruf yang dipilih.
-        </p>
-        <button
-          type="button"
-          @click="clearFilters"
-          class="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-space-grotesk font-semibold bg-isf-red text-white shadow-xs hover:bg-red-700 transition-colors"
-        >
-          Lihat Semua Istilah
-        </button>
+    <!-- 2. Empty State -->
+    <div
+      v-if="filteredTerms.length === 0"
+      class="py-12 text-center rounded-xl border border-dashed p-8"
+      :class="isDark ? 'border-neutral-800' : 'border-neutral-300'"
+    >
+      <div class="w-12 h-12 rounded-full mx-auto flex items-center justify-center mb-3" :class="isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-neutral-100 text-neutral-400'">
+        <IconBook class="w-6 h-6" />
       </div>
+      <p class="font-headline text-base font-bold" :class="isDark ? 'text-white' : 'text-neutral-900'">
+        Istilah Tidak Ditemukan
+      </p>
+      <p class="text-xs mt-1 max-w-sm mx-auto" :class="isDark ? 'text-neutral-400' : 'text-neutral-500'">
+        Tidak ada istilah yang cocok dengan kriteria pencarian atau huruf yang dipilih.
+      </p>
+      <button
+        type="button"
+        @click="clearFilters"
+        class="mt-4 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-isf-red text-white hover:bg-red-700 transition-colors cursor-pointer"
+      >
+        Tampilkan Semua Istilah
+      </button>
+    </div>
 
-      <!-- Accordion Grid / List -->
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-        <div
-          v-for="term in filteredTerms"
-          :key="term.id || term.slug"
-          :id="`istilah-${term.slug}`"
-          :class="[
-            'rounded-lg border transition-all duration-200 overflow-hidden',
-            expandedTermSlug === term.slug
-              ? isDark
-                ? 'bg-neutral-900/90 border-isf-red/70 shadow-md'
-                : 'bg-white border-isf-red/60 shadow-md ring-1 ring-isf-red/10'
-              : isDark
-                ? 'bg-neutral-900/40 border-neutral-800 hover:border-neutral-700'
-                : 'bg-neutral-50/60 border-neutral-200/80 hover:border-neutral-300'
-          ]"
-        >
-          <!-- Term Header (Always Clickable) -->
-          <div
-            @click="toggleExpand(term.slug)"
-            class="p-3.5 sm:p-4 cursor-pointer flex items-start justify-between gap-3 select-none"
-          >
-            <div class="min-w-0 flex items-start gap-2.5">
+    <!-- 3. Clean Definition Cards Grid (2 Kolom Bersih & Rapi) -->
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div
+        v-for="term in filteredTerms"
+        :key="term.id || term.slug"
+        :id="`istilah-${term.slug}`"
+        class="rounded-xl border p-4 sm:p-5 flex flex-col justify-between transition-all duration-200 group"
+        :class="[
+          isDark
+            ? 'bg-neutral-900/60 border-neutral-800 hover:border-neutral-700 hover:bg-neutral-900'
+            : 'bg-white border-neutral-200/90 hover:border-neutral-300 hover:shadow-xs'
+        ]"
+      >
+        <div>
+          <!-- Header: Huruf Badge + Istilah + Salin Tautan -->
+          <div class="flex items-start justify-between gap-3 mb-2.5">
+            <div class="flex items-center gap-2">
               <span
-                class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center font-mono font-bold text-xs shrink-0 shadow-2xs"
-                :class="isDark ? 'bg-neutral-800 text-amber-400 border border-neutral-700' : 'bg-amber-50 text-amber-700 border border-amber-200/60'"
+                class="w-6 h-6 rounded flex items-center justify-center font-mono font-bold text-[11px] shrink-0"
+                :class="isDark ? 'bg-neutral-800 text-amber-400 border border-neutral-700' : 'bg-amber-50 text-amber-700 border border-amber-200'"
               >
                 {{ (term.abjad || term.istilah?.[0] || 'A').toUpperCase() }}
               </span>
-              <div class="min-w-0">
-                <h4 class="font-space-grotesk font-bold text-sm sm:text-base tracking-tight leading-snug truncate" :class="isDark ? 'text-white' : 'text-neutral-900'">
-                  {{ term.istilah }}
-                </h4>
-                <p
-                  v-if="expandedTermSlug !== term.slug"
-                  class="text-xs mt-1 line-clamp-2 leading-relaxed"
-                  :class="isDark ? 'text-neutral-400' : 'text-neutral-600'"
-                >
-                  {{ term.definisi }}
-                </p>
-              </div>
+              <h4
+                class="font-space-grotesk font-bold text-sm sm:text-base tracking-tight leading-snug transition-colors"
+                :class="isDark ? 'text-white group-hover:text-red-400' : 'text-neutral-900 group-hover:text-isf-red'"
+              >
+                {{ term.istilah }}
+              </h4>
             </div>
 
-            <div class="flex items-center gap-1 shrink-0 mt-0.5">
-              <button
-                type="button"
-                @click.stop="copyAnchorLink(term.slug)"
-                :title="copiedSlug === term.slug ? 'Tautan disalin!' : 'Salin tautan langsung ke istilah ini'"
-                class="p-1 rounded text-neutral-400 hover:text-white transition-colors cursor-pointer"
-              >
-                <IconCheck v-if="copiedSlug === term.slug" class="w-4 h-4 text-emerald-400" />
-                <IconLink v-else class="w-4 h-4 hover:text-isf-red" />
-              </button>
-              <component
-                :is="expandedTermSlug === term.slug ? IconChevronUp : IconChevronDown"
-                class="w-4 h-4 text-neutral-400"
-              />
-            </div>
+            <button
+              type="button"
+              @click="copyAnchorLink(term.slug)"
+              :title="copiedSlug === term.slug ? 'Tautan disalin!' : 'Salin tautan ke istilah ini'"
+              class="p-1.5 rounded-md transition-colors cursor-pointer shrink-0"
+              :class="isDark ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100'"
+            >
+              <IconCheck v-if="copiedSlug === term.slug" class="w-3.5 h-3.5 text-emerald-500" />
+              <IconLink v-else class="w-3.5 h-3.5" />
+            </button>
           </div>
 
-          <!-- Expanded Body Details -->
-          <div
-            v-if="expandedTermSlug === term.slug"
-            class="px-3.5 sm:px-4 pb-4 pt-1 border-t transition-all font-space-grotesk"
-            :class="isDark ? 'border-neutral-800/80 bg-neutral-950/40' : 'border-neutral-100 bg-neutral-50/50'"
+          <!-- Definisi (Jelas, Langsung Terbaca) -->
+          <p
+            class="text-xs sm:text-sm font-space-grotesk leading-relaxed"
+            :class="isDark ? 'text-neutral-300' : 'text-neutral-600'"
           >
-            <!-- Full Definition -->
-            <div class="mt-2 text-xs sm:text-sm leading-relaxed" :class="isDark ? 'text-neutral-200' : 'text-neutral-700'">
-              {{ term.definisi }}
-            </div>
+            {{ term.definisi }}
+          </p>
 
-            <!-- Legal Basis (Dasar Hukum) -->
-            <div v-if="term.dasar_hukum" class="mt-3 p-2.5 rounded-lg border text-xs flex items-start gap-2" :class="isDark ? 'bg-neutral-900 border-neutral-800 text-neutral-300' : 'bg-white border-neutral-200 text-neutral-800'">
-              <IconScale class="w-4 h-4 text-isf-red shrink-0 mt-0.5" />
-              <div>
-                <span class="block font-bold text-[10px] uppercase tracking-wider text-isf-red">Dasar Hukum & Rujukan:</span>
-                <span class="leading-normal">{{ term.dasar_hukum }}</span>
-              </div>
-            </div>
-
-            <!-- Related Terms (Istilah Terkait) -->
-            <div v-if="term.istilah_terkait && term.istilah_terkait.length > 0" class="mt-3 flex items-center flex-wrap gap-1.5">
-              <span class="text-[11px] font-semibold text-neutral-400 mr-1">Istilah Terkait:</span>
-              <button
-                v-for="rel in term.istilah_terkait"
-                :key="rel"
-                type="button"
-                @click="handleRelatedClick(rel)"
-                class="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border transition-all cursor-pointer"
-                :class="isDark ? 'bg-neutral-800/80 border-neutral-700 text-neutral-300 hover:border-isf-red hover:text-white' : 'bg-neutral-100 border-neutral-200 text-neutral-700 hover:border-isf-red hover:text-isf-red'"
-              >
-                <span>{{ rel }}</span>
-                <IconArrowRight class="w-3 h-3 opacity-60" />
-              </button>
-            </div>
+          <!-- Dasar Hukum & Rujukan Resmi -->
+          <div
+            v-if="term.dasar_hukum"
+            class="mt-3 pt-2.5 border-t flex items-start gap-2 text-xs font-space-grotesk"
+            :class="isDark ? 'border-neutral-800 text-neutral-400' : 'border-neutral-100 text-neutral-500'"
+          >
+            <IconScale class="w-3.5 h-3.5 text-isf-red shrink-0 mt-0.5" />
+            <span class="text-[11px] leading-relaxed">
+              <strong :class="isDark ? 'text-neutral-200' : 'text-neutral-700'">Dasar Hukum:</strong> {{ term.dasar_hukum }}
+            </span>
           </div>
+        </div>
+
+        <!-- Istilah Terkait (Jika Ada) -->
+        <div
+          v-if="term.istilah_terkait && term.istilah_terkait.length > 0"
+          class="mt-3 pt-2.5 border-t flex items-center flex-wrap gap-1.5"
+          :class="isDark ? 'border-neutral-800' : 'border-neutral-100'"
+        >
+          <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400 mr-1">Terkait:</span>
+          <button
+            v-for="rel in term.istilah_terkait"
+            :key="rel"
+            type="button"
+            @click="handleRelatedClick(rel)"
+            class="inline-flex items-center gap-1 text-[11px] font-space-grotesk font-medium px-2 py-0.5 rounded-md transition-colors cursor-pointer"
+            :class="[
+              isDark
+                ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700 hover:text-white'
+                : 'bg-neutral-100 text-neutral-700 hover:bg-isf-red/10 hover:text-isf-red'
+            ]"
+          >
+            <span>{{ rel }}</span>
+            <IconArrowRight class="w-3 h-3 opacity-50" />
+          </button>
         </div>
       </div>
     </div>
@@ -399,4 +369,3 @@ onMounted(() => {
   scrollbar-width: none;
 }
 </style>
-

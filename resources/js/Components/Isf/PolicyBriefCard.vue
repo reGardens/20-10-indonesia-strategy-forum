@@ -69,7 +69,7 @@ function toggleExpand() {
 <template>
   <article
     :class="[
-      'rounded-xl border transition-all duration-200 flex flex-col justify-between overflow-hidden',
+      'rounded-xl border transition-all duration-200 flex flex-col justify-between overflow-hidden self-start h-auto',
       isDark
         ? 'bg-neutral-900/90 border-neutral-800 text-neutral-100 hover:border-neutral-700 shadow-sm'
         : 'bg-white border-neutral-200/90 text-neutral-900 hover:border-neutral-300 shadow-xs hover:shadow-md'
@@ -177,10 +177,10 @@ function toggleExpand() {
       </span>
 
       <a
-        :href="brief.pdf_path"
+        :href="brief.pdf_path || `/storage/policy-briefs/${brief.slug || 'policy-brief'}.pdf`"
         target="_blank"
         rel="noopener noreferrer"
-        download
+        :download="`${brief.slug || 'policy-brief'}.pdf`"
         class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-space-grotesk font-bold text-white bg-isf-red hover:bg-[#b50500] transition-colors shadow-2xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red"
       >
         <IconDownload class="w-3.5 h-3.5" />
