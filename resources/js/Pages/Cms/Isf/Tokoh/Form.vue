@@ -34,8 +34,8 @@ const ROLE_OPTIONS = [
   { value: 'eksekutif', label: 'Eksekutif' },
   { value: 'legislatif', label: 'Legislatif' },
   { value: 'yudikatif', label: 'Yudikatif' },
-  { value: 'pakar', label: 'Pakar' },
-  { value: 'militer', label: 'Militer' },
+  { value: 'pakar', label: 'Pakar & Akademisi' },
+  { value: 'militer', label: 'Militer & Hankam' },
   { value: 'pengusaha', label: 'Pengusaha' },
 ]
 

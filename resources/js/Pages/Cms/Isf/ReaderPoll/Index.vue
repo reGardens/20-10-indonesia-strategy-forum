@@ -10,12 +10,14 @@ import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
 import {
   Button,
   Input,
+  Badge,
   Table,
   TableHeader,
   TableBody,
   TableRow,
   TableHead,
-  TableCell
+  TableCell,
+  FilterSelect
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -28,6 +30,13 @@ const search = ref('')
 const statusFilter = ref('')
 let searchTimeout = null
 
+const statusOptions = [
+  { value: '', label: 'Semua Status' },
+  { value: 'aktif', label: 'Aktif' },
+  { value: 'selesai', label: 'Selesai' },
+  { value: 'draf', label: 'Draf' },
+]
+
 async function loadData() {
   loading.value = true
   loadError.value = ''
@@ -38,7 +47,7 @@ async function loadData() {
     })
     items.value = res.data?.data || res.data || []
   } catch (err) {
-    loadError.value = errorMessage(err, 'Gagal memuat daftar polling')
+    loadError.value = errorMessage(err, 'Gagal memuat daftar polling.')
   } finally {
     loading.value = false
   }
@@ -51,6 +60,10 @@ function onSearchInput() {
   }, 350)
 }
 
+function onStatusChange() {
+  loadData()
+}
+
 async function handleDelete(item) {
   const confirmed = await confirmDelete(
     `Apakah Anda yakin ingin menghapus polling "${item.question}"? Semua rekapitulasi suara terkait akan dihapus permanen.`
@@ -59,10 +72,10 @@ async function handleDelete(item) {
 
   try {
     await cmsResources.readerPoll.delete(item.id)
-    alertSuccess('Polling berhasil dihapus')
+    alertSuccess('Polling berhasil dihapus.')
     loadData()
   } catch (err) {
-    alertError(errorMessage(err, 'Gagal menghapus polling'))
+    alertError(errorMessage(err, 'Gagal menghapus polling.'))
   }
 }
 
@@ -85,161 +98,169 @@ onMounted(() => {
 </script>
 
 <template>
-  <Head title="Manajemen Reader Poll · CMS ISF" />
+  <Head title="Kelola Reader Poll — Indonesia Strategy Forum" />
 
-  <div class="space-y-6">
+  <div class="p-6 space-y-6 w-full">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
       <div>
-        <h1 class="text-2xl font-bold tracking-tight text-foreground">Reader Poll (Jajak Pendapat)</h1>
+        <h1 class="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+          <span>Kelola Reader Poll (Jajak Pendapat)</span>
+          <Badge class="bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 text-xs">
+            {{ items.length }} Total
+          </Badge>
+        </h1>
         <p class="text-sm text-muted-foreground mt-1">
           Kelola pertanyaan jajak pendapat publik interaktif, opsi jawaban dinamis, dan pemantauan perolehan suara.
         </p>
       </div>
       <Link href="/cms/reader-poll/create">
-        <Button class="gap-2">
-          <IconComponent name="IconPlus" class="w-4 h-4" />
+        <Button class="bg-red-600 hover:bg-red-700 text-white font-medium text-sm shadow-sm inline-flex items-center gap-1.5">
+          <IconComponent name="Plus" :size="16" />
           <span>Tambah Polling</span>
         </Button>
       </Link>
     </div>
 
     <!-- Filters -->
-    <div class="bg-card rounded-lg border border-border p-4">
-      <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
-        <div class="sm:col-span-8">
-          <Input
-            v-model="search"
-            placeholder="Cari pertanyaan polling..."
-            @input="onSearchInput"
-          />
-        </div>
-        <div class="sm:col-span-4">
-          <select
+    <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+      <div class="relative w-full sm:w-80">
+        <Input
+          v-model="search"
+          placeholder="Cari pertanyaan polling..."
+          @input="onSearchInput"
+          class="pl-9 h-9 text-xs"
+        />
+        <IconComponent
+          name="Search"
+          :size="16"
+          class="absolute left-3 top-2.5 text-muted-foreground pointer-events-none"
+        />
+      </div>
+
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 w-full sm:w-auto justify-start py-0.5">
+        <div class="flex items-center gap-2">
+          <label for="filter-status" class="text-xs text-muted-foreground whitespace-nowrap">Status:</label>
+          <FilterSelect
+            id="filter-status"
             v-model="statusFilter"
-            @change="loadData"
-            class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option value="">Semua Status</option>
-            <option value="aktif">Aktif</option>
-            <option value="selesai">Selesai</option>
-            <option value="draft">Draft</option>
-          </select>
+            placeholder="Semua Status"
+            :options="statusOptions"
+            @change="onStatusChange"
+          />
         </div>
       </div>
     </div>
 
-    <!-- Table / List -->
-    <div class="bg-card rounded-lg border border-border overflow-hidden">
-      <LoadingIndicator v-if="loading" text="Memuat polling..." />
-      <ErrorMessage
-        v-else-if="loadError"
-        :message="loadError"
-        action-label="Coba Lagi"
-        @retry="loadData"
-      />
-      <div v-else-if="items.length === 0" class="p-8 text-center text-muted-foreground">
-        <IconComponent name="IconChartBar" class="w-12 h-12 mx-auto mb-2 opacity-40" />
-        <p class="font-medium">Belum ada reader poll</p>
-        <p class="text-xs mt-1">Klik tombol di atas untuk membuat polling baru.</p>
-      </div>
+    <!-- Table Container -->
+    <LoadingIndicator v-if="loading && items.length === 0" text="Memuat polling..." />
+    <ErrorMessage
+      v-else-if="loadError"
+      :message="loadError"
+      @retry="loadData"
+    />
 
-      <div v-else class="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead class="w-12 text-center">#</TableHead>
-              <TableHead>Pertanyaan Polling</TableHead>
-              <TableHead class="w-32 text-center">Opsi Jawaban</TableHead>
-              <TableHead class="w-28 text-center">Total Suara</TableHead>
-              <TableHead class="w-40">Periode Aktif</TableHead>
-              <TableHead class="w-24 text-center">Status</TableHead>
-              <TableHead class="w-28 text-right">Aksi</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow v-for="(item, idx) in items" :key="item.id">
-              <TableCell class="text-center font-mono text-xs text-muted-foreground">
-                {{ idx + 1 }}
-              </TableCell>
+    <div v-else class="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
+      <Table>
+        <TableHeader>
+          <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
+            <TableHead class="w-12 text-center text-xs">#</TableHead>
+            <TableHead class="min-w-[280px]">Pertanyaan & Slug</TableHead>
+            <TableHead class="w-32 text-center">Opsi Jawaban</TableHead>
+            <TableHead class="w-28 text-center">Total Suara</TableHead>
+            <TableHead class="w-36">Periode</TableHead>
+            <TableHead class="w-24 text-center">Status</TableHead>
+            <TableHead class="text-right">Aksi</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow v-if="items.length === 0">
+            <TableCell colspan="7" class="text-center py-10 text-muted-foreground text-sm">
+              Tidak ada jajak pendapat ditemukan.
+            </TableCell>
+          </TableRow>
+          <TableRow
+            v-for="(item, idx) in items"
+            :key="item.id"
+            class="hover:bg-muted/30 transition border-b border-border/50"
+          >
+            <TableCell class="text-center font-mono text-xs text-muted-foreground">
+              {{ idx + 1 }}
+            </TableCell>
 
-              <TableCell>
-                <div class="font-medium text-foreground">
-                  {{ item.question }}
-                </div>
-                <div v-if="item.description" class="text-xs text-muted-foreground line-clamp-1 mt-0.5">
-                  {{ item.description }}
-                </div>
-                <div v-if="item.is_featured" class="mt-1">
-                  <span class="inline-block px-1.5 py-0.5 text-[10px] font-bold rounded bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                    Featured
-                  </span>
-                </div>
-              </TableCell>
-
-              <TableCell class="text-center text-xs">
-                <span class="font-bold text-foreground">
-                  {{ Array.isArray(item.options) ? item.options.length : 0 }}
+            <TableCell class="py-3">
+              <div class="font-semibold text-foreground text-sm leading-snug line-clamp-2">
+                {{ item.question }}
+              </div>
+              <div class="text-xs text-muted-foreground font-mono mt-0.5">
+                #poll-{{ item.slug }}
+                <span v-if="item.is_featured" class="ml-1 text-[10px] text-red-600 font-semibold">
+                  ★ Utama
                 </span>
-                <span class="text-muted-foreground ml-1">opsi</span>
-              </TableCell>
+              </div>
+            </TableCell>
 
-              <TableCell class="text-center">
-                <span class="font-mono font-bold text-foreground">
-                  {{ item.total_votes || 0 }}
-                </span>
-                <span class="text-xs text-muted-foreground block">suara</span>
-              </TableCell>
+            <TableCell class="text-center">
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium bg-muted text-foreground">
+                {{ Array.isArray(item.options) ? item.options.length : 0 }} pilihan
+              </span>
+            </TableCell>
 
-              <TableCell class="text-xs text-muted-foreground whitespace-nowrap">
-                <div>{{ formatDate(item.start_date) }}</div>
-                <div class="text-[11px] text-muted-foreground/80">s/d {{ formatDate(item.end_date) }}</div>
-              </TableCell>
+            <TableCell class="text-center">
+              <span class="font-mono font-bold text-foreground">
+                {{ item.total_votes || 0 }}
+              </span>
+              <span class="text-[11px] text-muted-foreground block">suara</span>
+            </TableCell>
 
-              <TableCell class="text-center">
-                <span
-                  v-if="item.status === 'aktif'"
-                  class="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
-                >
-                  Aktif
-                </span>
-                <span
-                  v-else-if="item.status === 'selesai'"
-                  class="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-blue-500/10 text-blue-600 border border-blue-500/20"
-                >
-                  Selesai
-                </span>
-                <span
-                  v-else
-                  class="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-neutral-500/10 text-neutral-600 border border-neutral-500/20"
-                >
-                  Draft
-                </span>
-              </TableCell>
+            <TableCell class="text-xs text-muted-foreground whitespace-nowrap">
+              <div>{{ formatDate(item.start_date) }}</div>
+              <div class="text-[11px] text-muted-foreground/80">s/d {{ formatDate(item.end_date) }}</div>
+            </TableCell>
 
-              <TableCell class="text-right">
-                <div class="flex items-center justify-end gap-1">
-                  <Link :href="`/cms/reader-poll/${item.id}/edit`">
-                    <Button variant="ghost" size="icon" class="h-8 w-8" title="Edit">
-                      <IconComponent name="IconEdit" class="w-4 h-4 text-muted-foreground" />
-                    </Button>
-                  </Link>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    class="h-8 w-8 text-destructive hover:bg-destructive/10"
-                    title="Hapus"
-                    @click="handleDelete(item)"
-                  >
-                    <IconComponent name="IconTrash" class="w-4 h-4" />
+            <TableCell class="text-center">
+              <span
+                v-if="item.status === 'aktif'"
+                class="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
+              >
+                Aktif
+              </span>
+              <span
+                v-else-if="item.status === 'selesai'"
+                class="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-blue-500/10 text-blue-600 border border-blue-500/20"
+              >
+                Selesai
+              </span>
+              <span
+                v-else
+                class="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-neutral-500/10 text-neutral-600 border border-neutral-500/20"
+              >
+                Draf
+              </span>
+            </TableCell>
+
+            <TableCell class="text-right">
+              <div class="flex items-center justify-end gap-1.5">
+                <Link :href="`/cms/reader-poll/${item.id}/edit`">
+                  <Button variant="outline" size="sm" class="h-8 px-2.5 text-xs font-medium hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center">
+                    <IconComponent name="Edit" :size="14" class="mr-1" />
+                    Edit
                   </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </div>
+                </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="h-8 px-2.5 text-xs font-medium text-red-500 border-red-500/30 hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center"
+                  @click="handleDelete(item)"
+                >
+                  <IconComponent name="Trash" :size="14" class="mr-1" />
+                  Hapus
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
     </div>
   </div>
 </template>
-

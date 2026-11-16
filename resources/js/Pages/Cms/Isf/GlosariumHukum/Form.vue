@@ -6,6 +6,7 @@ import { cmsResources, errorMessage } from '@/api/services/isfCmsService'
 import { alertSuccess, alertError } from '@/Composables/useAlert'
 import LoadingIndicator from '@/Pages/Cms/components/shared/LoadingIndicator.vue'
 import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
+import StatusSelectWithBadge from '@/Components/Cms/StatusSelectWithBadge.vue'
 import {
   Button,
   Input,
@@ -114,44 +115,37 @@ onMounted(() => {
 </script>
 
 <template>
-  <Head :title="isEdit ? 'Edit Istilah Glosarium — CMS ISF' : 'Tambah Istilah Glosarium — CMS ISF'" />
+  <Head :title="isEdit ? 'Edit Istilah Glosarium — Indonesia Strategy Forum' : 'Tambah Istilah Glosarium — Indonesia Strategy Forum'" />
 
-  <div class="max-w-4xl mx-auto space-y-6">
-    <!-- Breadcrumb & Header -->
-    <div class="flex items-center justify-between gap-4">
+  <div class="p-6 space-y-6 max-w-4xl mx-auto w-full">
+    <!-- Header -->
+    <div class="flex items-center justify-between gap-4 pb-4 border-b border-border">
       <div>
-        <div class="flex items-center gap-2 text-xs text-neutral-500 mb-1">
-          <Link href="/cms/glosarium-hukum" class="hover:text-neutral-900 transition-colors">
-            Glosarium Hukum
-          </Link>
-          <span>/</span>
-          <span class="text-neutral-900 font-medium">
-            {{ isEdit ? 'Edit Istilah' : 'Tambah Istilah' }}
-          </span>
-        </div>
-        <h1 class="text-2xl font-bold tracking-tight text-neutral-900">
+        <h1 class="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
           {{ isEdit ? 'Edit Istilah Glosarium' : 'Tambah Istilah Glosarium' }}
         </h1>
+        <p class="text-sm text-muted-foreground mt-1">
+          Kamus istilah hukum interaktif, definisi yuridis, dasar hukum, dan istilah terkait.
+        </p>
       </div>
       <Link href="/cms/glosarium-hukum">
         <Button variant="outline" size="sm" class="inline-flex items-center gap-1.5">
-          <IconComponent name="IconArrowLeft" class="w-4 h-4" />
+          <IconComponent name="ArrowLeft" :size="14" />
           <span>Kembali</span>
         </Button>
       </Link>
     </div>
 
-    <LoadingIndicator v-if="loading" message="Memuat formulir istilah..." />
+    <LoadingIndicator v-if="loading" text="Memuat formulir istilah..." />
 
     <ErrorMessage
       v-else-if="loadError"
       :message="loadError"
-      :retry="loadData"
-      class="m-6"
+      @retry="loadData"
     />
 
     <!-- Form Card -->
-    <form v-else @submit.prevent="handleSubmit" class="space-y-6 bg-white p-6 sm:p-8 rounded-xl border border-neutral-200/80 shadow-2xs">
+    <form v-else @submit.prevent="handleSubmit" class="space-y-6 bg-card p-6 sm:p-8 rounded-xl border border-border shadow-xs">
       <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
         <!-- Istilah / Term Name (Col 8) -->
         <div class="md:col-span-8 space-y-1.5">
@@ -197,7 +191,7 @@ onMounted(() => {
             v-model="form.slug"
             placeholder="Dihasilkan otomatis jika dikosongkan (contoh: kasasi)"
           />
-          <p class="text-[11px] text-neutral-400">
+          <p class="text-[11px] text-muted-foreground">
             Digunakan untuk tautan langsung di halaman publik: /hukum#istilah-{{ form.slug || 'slug' }}
           </p>
           <p v-if="errors.slug" class="text-xs text-red-600 mt-1">
@@ -216,7 +210,7 @@ onMounted(() => {
             rows="4"
             required
             placeholder="Jelaskan arti, ruang lingkup, dan konteks penggunaan istilah hukum ini..."
-            class="w-full rounded-md border border-neutral-300 p-3 text-sm focus:border-isf-red focus:ring-1 focus:ring-isf-red outline-none"
+            class="w-full rounded-md border border-input bg-background text-foreground p-3 text-sm focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none"
           ></textarea>
           <p v-if="errors.definisi" class="text-xs text-red-600 mt-1">
             {{ errors.definisi[0] }}
@@ -248,7 +242,7 @@ onMounted(() => {
             v-model="rawRelatedTerms"
             placeholder="Contoh: Banding, Inkracht, Mahkamah Agung"
           />
-          <p class="text-[11px] text-neutral-400">
+          <p class="text-[11px] text-muted-foreground">
             Daftar istilah ini dapat diklik oleh pembaca untuk menelusuri istilah yang berhubungan.
           </p>
           <p v-if="errors.istilah_terkait" class="text-xs text-red-600 mt-1">
@@ -278,14 +272,10 @@ onMounted(() => {
           <Label for="status" class="font-medium text-xs">
             Status Publikasi
           </Label>
-          <select
+          <StatusSelectWithBadge
             id="status"
             v-model="form.status"
-            class="w-full rounded-md border border-neutral-300 p-2 text-sm focus:border-isf-red focus:ring-1 focus:ring-isf-red outline-none bg-white"
-          >
-            <option value="terbit">Terbit (Ditampilkan ke publik)</option>
-            <option value="draft">Draft (Disembunyikan)</option>
-          </select>
+          />
           <p v-if="errors.status" class="text-xs text-red-600 mt-1">
             {{ errors.status[0] }}
           </p>
@@ -293,18 +283,22 @@ onMounted(() => {
       </div>
 
       <!-- Submit / Action Buttons -->
-      <div class="pt-5 border-t border-neutral-200 flex items-center justify-end gap-3">
+      <div class="pt-5 border-t border-border flex items-center justify-end gap-3">
         <Link href="/cms/glosarium-hukum">
-          <Button type="button" variant="outline" :disabled="saving">
+          <Button type="button" variant="outline" size="sm" :disabled="saving">
             Batal
           </Button>
         </Link>
-        <Button type="submit" :disabled="saving" class="inline-flex items-center gap-2">
-          <IconComponent name="IconDeviceFloppy" class="w-4 h-4" />
+        <Button
+          type="submit"
+          :disabled="saving"
+          class="bg-red-600 hover:bg-red-700 text-white font-medium text-sm shadow-sm inline-flex items-center gap-1.5"
+        >
+          <IconComponent v-if="saving" name="Refresh" :size="16" class="animate-spin" />
+          <IconComponent v-else name="DeviceFloppy" :size="16" />
           <span>{{ saving ? 'Menyimpan...' : (isEdit ? 'Perbarui Istilah' : 'Simpan Istilah') }}</span>
         </Button>
       </div>
     </form>
   </div>
 </template>
-

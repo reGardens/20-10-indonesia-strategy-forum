@@ -137,24 +137,23 @@ onMounted(() => {
 <template>
   <Head :title="isEdit ? 'Edit Kutipan Publik · CMS ISF' : 'Tambah Kutipan Publik · CMS ISF'" />
 
-  <div class="space-y-6 max-w-4xl mx-auto">
+  <div class="p-6 space-y-6 max-w-4xl mx-auto w-full">
     <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <Link href="/cms/kutipan-publik">
-          <Button variant="ghost" size="icon" class="h-9 w-9">
-            <IconComponent name="IconArrowLeft" class="w-5 h-5" />
-          </Button>
-        </Link>
-        <div>
-          <h1 class="text-2xl font-bold tracking-tight text-foreground">
-            {{ isEdit ? 'Edit Kutipan Publik' : 'Tambah Kutipan Publik Baru' }}
-          </h1>
-          <p class="text-sm text-muted-foreground mt-0.5">
-            Kutipan tajam bernas dari tokoh bangsa atau warga warganet terkait isu strategis nasional.
-          </p>
-        </div>
+    <div class="flex items-center justify-between gap-4 pb-4 border-b border-border">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+          {{ isEdit ? 'Edit Kutipan Publik' : 'Tambah Kutipan Publik' }}
+        </h1>
+        <p class="text-sm text-muted-foreground mt-0.5">
+          Kutipan tajam bernas dari tokoh bangsa atau warga warganet terkait isu strategis nasional.
+        </p>
       </div>
+      <Link href="/cms/kutipan-publik">
+        <Button variant="outline" size="sm" class="inline-flex items-center gap-1.5">
+          <IconComponent name="ArrowLeft" :size="14" />
+          <span>Kembali</span>
+        </Button>
+      </Link>
     </div>
 
     <LoadingIndicator v-if="loading" text="Memuat data kutipan..." />
@@ -335,15 +334,19 @@ onMounted(() => {
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex items-center justify-end gap-3">
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-border">
         <Link href="/cms/kutipan-publik">
-          <Button type="button" variant="outline" :disabled="saving">
+          <Button type="button" variant="outline" size="sm" :disabled="saving">
             Batal
           </Button>
         </Link>
-        <Button type="submit" :disabled="saving" class="gap-2">
-          <IconComponent v-if="saving" name="IconLoader" class="w-4 h-4 animate-spin" />
-          <IconComponent v-else name="IconCheck" class="w-4 h-4" />
+        <Button
+          type="submit"
+          :disabled="saving"
+          class="bg-red-600 hover:bg-red-700 text-white font-medium text-sm shadow-sm inline-flex items-center gap-1.5"
+        >
+          <IconComponent v-if="saving" name="Refresh" :size="16" class="animate-spin" />
+          <IconComponent v-else name="DeviceFloppy" :size="16" />
           <span>{{ saving ? 'Menyimpan...' : (isEdit ? 'Simpan Perubahan' : 'Tambah Kutipan') }}</span>
         </Button>
       </div>

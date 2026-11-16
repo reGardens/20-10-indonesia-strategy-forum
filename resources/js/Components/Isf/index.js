@@ -28,6 +28,7 @@ export { default as IsfShareBar } from './IsfShareBar.vue';
 export { default as PetaKursiParlemen } from './PetaKursiParlemen.vue';
 export { default as GlosariumHukum } from './GlosariumHukum.vue';
 export { default as TimelineKasus } from './TimelineKasus.vue';
+export { default as TimelineMetodologi } from './TimelineMetodologi.vue';
 export { default as OpiniPakarCard } from './OpiniPakarCard.vue';
 export { default as PolicyBriefCard } from './PolicyBriefCard.vue';
 export { default as MonitoringKebijakan } from './MonitoringKebijakan.vue';
@@ -38,4 +39,6 @@ export { default as SurveiCard } from './SurveiCard.vue';
 export { default as SurveiChart } from './SurveiChart.vue';
 export { default as SosokCard } from './SosokCard.vue';
 export { default as SosokNetworkGraph } from './SosokNetworkGraph.vue';
+export { default as FilterSelect } from '../UI/FilterSelect.vue';
+
 

@@ -125,47 +125,49 @@ onMounted(() => {
 <template>
   <Head :title="isEdit ? 'Moderasi Surat Pembaca · CMS ISF' : 'Tambah Surat Manual · CMS ISF'" />
 
-  <div class="space-y-6 max-w-4xl mx-auto">
+  <div class="p-6 space-y-6 max-w-4xl mx-auto w-full">
     <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <Link href="/cms/surat-pembaca">
-          <Button variant="ghost" size="icon" class="h-9 w-9">
-            <IconComponent name="IconArrowLeft" class="w-5 h-5" />
-          </Button>
-        </Link>
-        <div>
-          <h1 class="text-2xl font-bold tracking-tight text-foreground">
-            {{ isEdit ? 'Moderasi & Penyuntingan Surat Pembaca' : 'Tambah Surat Pembaca Manual' }}
-          </h1>
-          <p class="text-sm text-muted-foreground mt-0.5">
-            Review isi naskah, lakukan penyuntingan editorial bila perlu, dan tentukan status tayang.
-          </p>
-        </div>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+          {{ isEdit ? 'Moderasi Surat Pembaca' : 'Tambah Surat Pembaca' }}
+        </h1>
+        <p class="text-sm text-muted-foreground mt-0.5">
+          Review isi naskah, lakukan penyuntingan editorial bila perlu, dan tentukan status tayang.
+        </p>
       </div>
 
-      <!-- Quick Action Buttons on Edit -->
-      <div v-if="isEdit" class="flex items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          class="border-emerald-600 text-emerald-600 hover:bg-emerald-50 text-xs gap-1.5"
-          :disabled="saving || form.status === 'disetujui'"
-          @click="handleSetStatus('disetujui')"
-        >
-          <IconComponent name="IconCheck" class="w-3.5 h-3.5" />
-          <span>Setujui (Tayang)</span>
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          class="border-destructive text-destructive hover:bg-destructive/10 text-xs gap-1.5"
-          :disabled="saving || form.status === 'ditolak'"
-          @click="handleSetStatus('ditolak')"
-        >
-          <IconComponent name="IconX" class="w-3.5 h-3.5" />
-          <span>Tolak</span>
-        </Button>
+      <div class="flex items-center gap-2">
+        <template v-if="isEdit">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            class="border-emerald-600 text-emerald-600 hover:bg-emerald-50 text-xs inline-flex items-center gap-1.5"
+            :disabled="saving || form.status === 'disetujui'"
+            @click="handleSetStatus('disetujui')"
+          >
+            <IconComponent name="Check" :size="14" />
+            <span>Setujui</span>
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            class="border-amber-600 text-amber-600 hover:bg-amber-50 text-xs inline-flex items-center gap-1.5"
+            :disabled="saving || form.status === 'ditolak'"
+            @click="handleSetStatus('ditolak')"
+          >
+            <IconComponent name="X" :size="14" />
+            <span>Tolak</span>
+          </Button>
+        </template>
+        <Link href="/cms/surat-pembaca">
+          <Button variant="outline" size="sm" class="inline-flex items-center gap-1.5">
+            <IconComponent name="ArrowLeft" :size="14" />
+            <span>Kembali</span>
+          </Button>
+        </Link>
       </div>
     </div>
 
@@ -315,15 +317,19 @@ onMounted(() => {
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex items-center justify-end gap-3">
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-border">
         <Link href="/cms/surat-pembaca">
-          <Button type="button" variant="outline" :disabled="saving">
+          <Button type="button" variant="outline" size="sm" :disabled="saving">
             Batal
           </Button>
         </Link>
-        <Button type="submit" :disabled="saving" class="gap-2">
-          <IconComponent v-if="saving" name="IconLoader" class="w-4 h-4 animate-spin" />
-          <IconComponent v-else name="IconCheck" class="w-4 h-4" />
+        <Button
+          type="submit"
+          :disabled="saving"
+          class="bg-red-600 hover:bg-red-700 text-white font-medium text-sm shadow-sm inline-flex items-center gap-1.5"
+        >
+          <IconComponent v-if="saving" name="Refresh" :size="16" class="animate-spin" />
+          <IconComponent v-else name="DeviceFloppy" :size="16" />
           <span>{{ saving ? 'Menyimpan...' : (isEdit ? 'Simpan Moderasi' : 'Tambah Surat') }}</span>
         </Button>
       </div>

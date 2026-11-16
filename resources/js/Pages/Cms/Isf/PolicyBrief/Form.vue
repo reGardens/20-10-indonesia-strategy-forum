@@ -6,6 +6,7 @@ import { cmsResources, errorMessage } from '@/api/services/isfCmsService'
 import { alertSuccess, alertError } from '@/Composables/useAlert'
 import LoadingIndicator from '@/Pages/Cms/components/shared/LoadingIndicator.vue'
 import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
+import StatusSelectWithBadge from '@/Components/Cms/StatusSelectWithBadge.vue'
 import {
   Button,
   Input,
@@ -81,19 +82,6 @@ async function loadData() {
   loadError.value = ''
   try {
     const data = await cmsResources.policyBrief.get(props.id)
-    let recs = []
-    if (Array.isArray(data.key_recommendations)) {
-      recs = data.key_recommendations
-    } else if (typeof data.key_recommendations === 'string') {
-      try {
-        const parsed = JSON.parse(data.key_recommendations)
-        if (Array.isArray(parsed)) recs = parsed
-      } catch {
-        recs = [data.key_recommendations]
-      }
-    }
-    if (recs.length === 0) recs = ['']
-
     form.value = {
       title: data.title || '',
       slug: data.slug || '',
@@ -101,10 +89,12 @@ async function loadData() {
       author: data.author || '',
       institution: data.institution || '',
       executive_summary: data.executive_summary || '',
-      key_recommendations: recs,
+      key_recommendations: Array.isArray(data.key_recommendations) && data.key_recommendations.length > 0
+        ? data.key_recommendations
+        : [''],
       pdf_path: data.pdf_path || '',
       pdf_size: data.pdf_size || '',
-      published_at: data.published_at ? data.published_at.slice(0, 10) : '',
+      published_at: data.published_at ? data.published_at.slice(0, 10) : new Date().toISOString().slice(0, 10),
       order: Number(data.order) || 0,
       status: data.status || 'terbit',
     }
@@ -120,12 +110,12 @@ async function handleSubmit() {
   errors.value = {}
 
   const cleanRecommendations = form.value.key_recommendations
-    .map(r => r.trim())
-    .filter(Boolean)
+    .map((r) => r.trim())
+    .filter((r) => r.length > 0)
 
   const payload = {
     ...form.value,
-    key_recommendations: cleanRecommendations,
+    key_recommendations: cleanRecommendations.length > 0 ? cleanRecommendations : ['Belum ada rekomendasi spesifik.'],
     order: Number(form.value.order) || 0,
   }
 
@@ -141,7 +131,6 @@ async function handleSubmit() {
   } catch (err) {
     if (err?.response?.status === 422 && err.response.data?.errors) {
       errors.value = err.response.data.errors
-      alertError('Harap periksa kembali inputan form yang bertanda merah.')
     } else {
       alertError(errorMessage(err, 'Gagal menyimpan policy brief.'))
     }
@@ -156,193 +145,181 @@ onMounted(() => {
 </script>
 
 <template>
-  <Head :title="`${isEdit ? 'Edit' : 'Tambah'} Policy Brief — CMS ISF`" />
+  <Head :title="isEdit ? 'Edit Policy Brief — Indonesia Strategy Forum' : 'Tambah Policy Brief — Indonesia Strategy Forum'" />
 
-  <div class="max-w-4xl mx-auto space-y-6">
-    <!-- Breadcrumb & Top Bar -->
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-2 text-xs text-neutral-500">
-        <Link href="/cms/policy-brief" class="hover:text-neutral-900 transition-colors">
-          Policy Brief
-        </Link>
-        <span>/</span>
-        <span class="text-neutral-900 font-medium">
-          {{ isEdit ? 'Edit Policy Brief' : 'Tambah Baru' }}
-        </span>
+  <div class="p-6 space-y-6 max-w-4xl mx-auto w-full">
+    <!-- Header -->
+    <div class="flex items-center justify-between gap-4 pb-4 border-b border-border">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+          {{ isEdit ? 'Edit Policy Brief' : 'Tambah Policy Brief' }}
+        </h1>
+        <p class="text-sm text-muted-foreground mt-1">
+          Ringkasan eksekutif riset kebijakan, rekomendasi strategis, dan dokumen PDF resmi.
+        </p>
       </div>
       <Link href="/cms/policy-brief">
-        <Button variant="outline" size="sm" class="text-xs">
-          Kembali
+        <Button variant="outline" size="sm" class="inline-flex items-center gap-1.5">
+          <IconComponent name="ArrowLeft" :size="14" />
+          <span>Kembali</span>
         </Button>
       </Link>
     </div>
 
-    <!-- Main Card Form -->
-    <div class="bg-white rounded-xl border border-neutral-200/80 shadow-2xs p-6">
-      <div class="mb-6 pb-4 border-b border-neutral-100">
-        <h1 class="text-xl font-bold tracking-tight text-neutral-900">
-          {{ isEdit ? 'Edit Policy Brief' : 'Form Policy Brief Baru' }}
-        </h1>
-        <p class="text-xs text-neutral-500 mt-1">
-          Lengkapi data riset kebijakan, ringkasan eksekutif, rekomendasi kunci, dan tautan berkas dokumen PDF.
-        </p>
-      </div>
+    <LoadingIndicator v-if="loading" text="Memuat formulir policy brief..." />
 
-      <LoadingIndicator v-if="loading" message="Memuat formulir..." />
+    <ErrorMessage
+      v-else-if="loadError"
+      :message="loadError"
+      @retry="loadData"
+    />
 
-      <ErrorMessage
-        v-else-if="loadError"
-        :message="loadError"
-        :retry="loadData"
-        class="mb-6"
-      />
-
-      <form v-else @submit.prevent="handleSubmit" class="space-y-6">
+    <!-- Form Card -->
+    <div v-else class="bg-card rounded-xl border border-border p-6 sm:p-8 shadow-xs">
+      <form @submit.prevent="handleSubmit" class="space-y-6">
         <!-- Judul & Slug -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="space-y-1.5 md:col-span-2">
-            <Label for="title" class="text-xs font-semibold text-neutral-700">
-              Judul Riset Kebijakan <span class="text-red-500">*</span>
+        <div class="space-y-4">
+          <div class="space-y-1.5">
+            <Label for="title" class="font-medium text-xs">
+              Judul Riset / Policy Brief <span class="text-red-500">*</span>
             </Label>
             <Input
               id="title"
               v-model="form.title"
               @blur="autoSlug"
-              placeholder="Contoh: Evaluasi Alokasi APBN untuk Transformasi Transisi Energi Terbarukan"
+              placeholder="Contoh: Transisi Energi Berkeadilan: Evaluasi Pensiun Dini PLTU Batubara"
               required
-              class="text-sm font-medium"
             />
             <p v-if="errors.title" class="text-xs text-red-600 font-medium">{{ errors.title[0] }}</p>
           </div>
 
-          <div class="space-y-1.5">
-            <Label for="slug" class="text-xs font-semibold text-neutral-700">
-              Slug URL (opsional, auto)
-            </Label>
-            <Input
-              id="slug"
-              v-model="form.slug"
-              placeholder="evaluasi-alokasi-apbn-transisi-energi"
-              class="text-xs font-mono"
-            />
-            <p v-if="errors.slug" class="text-xs text-red-600 font-medium">{{ errors.slug[0] }}</p>
-          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+              <Label for="slug" class="font-medium text-xs">
+                Slug URL / Identifikasi Dokumen
+              </Label>
+              <Input
+                id="slug"
+                v-model="form.slug"
+                placeholder="transisi-energi-berkeadilan"
+                class="font-mono text-xs"
+              />
+              <p v-if="errors.slug" class="text-xs text-red-600 font-medium">{{ errors.slug[0] }}</p>
+            </div>
 
-          <div class="space-y-1.5">
-            <Label for="sector" class="text-xs font-semibold text-neutral-700">
-              Sektor Kebijakan <span class="text-red-500">*</span>
-            </Label>
-            <select
-              id="sector"
-              v-model="form.sector"
-              required
-              class="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-xs font-medium text-neutral-800 shadow-xs focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-            >
-              <option v-for="s in sectorOptions" :key="s.value" :value="s.value">
-                {{ s.label }}
-              </option>
-            </select>
-            <p v-if="errors.sector" class="text-xs text-red-600 font-medium">{{ errors.sector[0] }}</p>
+            <div class="space-y-1.5">
+              <Label for="sector" class="font-medium text-xs">
+                Sektor Kebijakan <span class="text-red-500">*</span>
+              </Label>
+              <select
+                id="sector"
+                v-model="form.sector"
+                required
+                class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-xs font-medium focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+              >
+                <option v-for="sec in sectorOptions" :key="sec.value" :value="sec.value">
+                  {{ sec.label }}
+                </option>
+              </select>
+              <p v-if="errors.sector" class="text-xs text-red-600 font-medium">{{ errors.sector[0] }}</p>
+            </div>
           </div>
         </div>
 
         <!-- Penulis & Lembaga -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="space-y-1.5">
-            <Label for="author" class="text-xs font-semibold text-neutral-700">
-              Penulis / Peneliti <span class="text-red-500">*</span>
+            <Label for="author" class="font-medium text-xs">
+              Penulis Utama / Tim Peneliti
             </Label>
             <Input
               id="author"
               v-model="form.author"
-              placeholder="Contoh: Dr. Rizal Ramli & Tim Riset ISF"
-              required
-              class="text-xs"
+              placeholder="Contoh: Tim Riset Kebijakan Energi ISF"
             />
             <p v-if="errors.author" class="text-xs text-red-600 font-medium">{{ errors.author[0] }}</p>
           </div>
 
           <div class="space-y-1.5">
-            <Label for="institution" class="text-xs font-semibold text-neutral-700">
-              Afiliasi Lembaga
+            <Label for="institution" class="font-medium text-xs">
+              Institusi / Afiliasi
             </Label>
             <Input
               id="institution"
               v-model="form.institution"
-              placeholder="Contoh: ISF Economic Center & FEB UI"
-              class="text-xs"
+              placeholder="Contoh: Indonesia Strategy Forum & FEB UI"
             />
             <p v-if="errors.institution" class="text-xs text-red-600 font-medium">{{ errors.institution[0] }}</p>
           </div>
         </div>
 
-        <!-- Ringkasan Eksekutif -->
+        <!-- Executive Summary -->
         <div class="space-y-1.5">
-          <Label for="executive_summary" class="text-xs font-semibold text-neutral-700">
-            Ringkasan Eksekutif <span class="text-red-500">*</span>
+          <Label for="executive_summary" class="font-medium text-xs">
+            Ringkasan Eksekutif (Executive Summary) <span class="text-red-500">*</span>
           </Label>
           <textarea
             id="executive_summary"
             v-model="form.executive_summary"
-            rows="5"
-            placeholder="Tuliskan analisis mendalam ringkas mengenai latar belakang, temuan empiris, dan urgensi kebijakan..."
+            rows="4"
             required
-            class="w-full rounded-md border border-neutral-300 p-3 text-xs leading-relaxed text-neutral-800 shadow-xs focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 font-sans"
+            placeholder="Tuliskan latar belakang masalah, urgensi kebijakan, dan temuan kunci riset..."
+            class="w-full rounded-md border border-input bg-background text-foreground p-3 text-xs leading-relaxed focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
           ></textarea>
           <p v-if="errors.executive_summary" class="text-xs text-red-600 font-medium">{{ errors.executive_summary[0] }}</p>
         </div>
 
-        <!-- Rekomendasi Kunci Kebijakan -->
-        <div class="space-y-2">
+        <!-- Rekomendasi Kunci -->
+        <div class="space-y-3">
           <div class="flex items-center justify-between">
-            <Label class="text-xs font-semibold text-neutral-700">
-              Poin Rekomendasi Kunci Kebijakan
+            <Label class="font-medium text-xs">
+              Rekomendasi Kebijakan (Poin-Poin Strategis)
             </Label>
             <Button
               type="button"
               variant="outline"
               size="sm"
               @click="addRecommendation"
-              class="text-[11px] h-7 px-2.5 inline-flex items-center gap-1"
+              class="text-xs inline-flex items-center gap-1"
             >
-              <IconComponent name="IconPlus" class="w-3.5 h-3.5" />
-              <span>Tambah Rekomendasi</span>
+              <IconComponent name="Plus" :size="13" />
+              <span>Tambah Poin</span>
             </Button>
           </div>
+
           <div class="space-y-2">
             <div
-              v-for="(rec, idx) in form.key_recommendations"
-              :key="idx"
+              v-for="(rec, rIdx) in form.key_recommendations"
+              :key="rIdx"
               class="flex items-center gap-2"
             >
-              <span class="w-6 text-center text-xs font-mono font-bold text-neutral-400">
-                {{ idx + 1 }}.
+              <span class="w-6 h-6 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 flex items-center justify-center font-bold text-xs shrink-0">
+                {{ rIdx + 1 }}
               </span>
               <Input
-                v-model="form.key_recommendations[idx]"
-                placeholder="Tuliskan butir rekomendasi kebijakan yang konkrit..."
-                class="text-xs flex-1"
+                v-model="form.key_recommendations[rIdx]"
+                placeholder="Tuliskan butir rekomendasi operasional atau regulasi..."
+                class="flex-1 text-xs"
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                @click="removeRecommendation(idx)"
-                class="h-8 w-8 p-0 text-neutral-400 hover:text-red-600 hover:bg-red-50"
+                @click="removeRecommendation(rIdx)"
+                :disabled="form.key_recommendations.length <= 1"
+                class="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-500/10 shrink-0"
               >
-                <IconComponent name="IconTrash" class="w-3.5 h-3.5" />
+                <IconComponent name="Trash" :size="14" />
               </Button>
             </div>
           </div>
-          <p v-if="errors.key_recommendations" class="text-xs text-red-600 font-medium">
-            {{ errors.key_recommendations[0] }}
-          </p>
+          <p v-if="errors.key_recommendations" class="text-xs text-red-600 font-medium">{{ errors.key_recommendations[0] }}</p>
         </div>
 
         <!-- Dokumen PDF & Ukuran File -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="space-y-1.5">
-            <Label for="pdf_path" class="text-xs font-semibold text-neutral-700">
+            <Label for="pdf_path" class="font-medium text-xs">
               Tautan / Lokasi Berkas Dokumen PDF <span class="text-red-500">*</span>
             </Label>
             <Input
@@ -356,7 +333,7 @@ onMounted(() => {
           </div>
 
           <div class="space-y-1.5">
-            <Label for="pdf_size" class="text-xs font-semibold text-neutral-700">
+            <Label for="pdf_size" class="font-medium text-xs">
               Label Ukuran Berkas PDF
             </Label>
             <Input
@@ -370,9 +347,9 @@ onMounted(() => {
         </div>
 
         <!-- Tanggal Terbit, Urutan, Status -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-neutral-100">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-border">
           <div class="space-y-1.5">
-            <Label for="published_at" class="text-xs font-semibold text-neutral-700">
+            <Label for="published_at" class="font-medium text-xs">
               Tanggal Terbit <span class="text-red-500">*</span>
             </Label>
             <Input
@@ -386,7 +363,7 @@ onMounted(() => {
           </div>
 
           <div class="space-y-1.5">
-            <Label for="order" class="text-xs font-semibold text-neutral-700">
+            <Label for="order" class="font-medium text-xs">
               Urutan Prioritas
             </Label>
             <Input
@@ -401,36 +378,31 @@ onMounted(() => {
           </div>
 
           <div class="space-y-1.5">
-            <Label for="status" class="text-xs font-semibold text-neutral-700">
+            <Label for="status" class="font-medium text-xs">
               Status Publikasi <span class="text-red-500">*</span>
             </Label>
-            <select
+            <StatusSelectWithBadge
               id="status"
               v-model="form.status"
-              required
-              class="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-xs font-medium text-neutral-800 shadow-xs focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-            >
-              <option value="terbit">Terbit (Aktif)</option>
-              <option value="draft">Draft (Arsip)</option>
-            </select>
+            />
             <p v-if="errors.status" class="text-xs text-red-600 font-medium">{{ errors.status[0] }}</p>
           </div>
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex items-center justify-end gap-3 pt-6 border-t border-neutral-100">
+        <div class="flex items-center justify-end gap-3 pt-6 border-t border-border">
           <Link href="/cms/policy-brief">
-            <Button type="button" variant="outline" class="text-xs">
+            <Button type="button" variant="outline" size="sm">
               Batal
             </Button>
           </Link>
           <Button
             type="submit"
             :disabled="saving"
-            class="text-xs font-semibold inline-flex items-center gap-2"
+            class="bg-red-600 hover:bg-red-700 text-white font-medium text-sm shadow-sm inline-flex items-center gap-1.5"
           >
-            <IconComponent v-if="saving" name="IconRefresh" class="w-4 h-4 animate-spin" />
-            <IconComponent v-else name="IconDeviceFloppy" class="w-4 h-4" />
+            <IconComponent v-if="saving" name="Refresh" :size="16" class="animate-spin" />
+            <IconComponent v-else name="DeviceFloppy" :size="16" />
             <span>{{ saving ? 'Menyimpan...' : (isEdit ? 'Perbarui Policy Brief' : 'Simpan Policy Brief') }}</span>
           </Button>
         </div>
@@ -438,4 +410,3 @@ onMounted(() => {
     </div>
   </div>
 </template>
-

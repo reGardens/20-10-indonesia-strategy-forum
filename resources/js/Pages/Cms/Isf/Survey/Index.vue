@@ -4,17 +4,20 @@ import { Head, Link } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
 import { cmsResources, errorMessage } from '@/api/services/isfCmsService'
 import { alertSuccess, alertError, confirmDelete } from '@/Composables/useAlert'
+import StatusBadge from '@/Pages/Cms/components/shared/StatusBadge.vue'
 import LoadingIndicator from '@/Pages/Cms/components/shared/LoadingIndicator.vue'
 import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
 import {
   Button,
   Input,
+  Badge,
   Table,
   TableHeader,
   TableBody,
   TableRow,
   TableHead,
-  TableCell
+  TableCell,
+  FilterSelect
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -29,22 +32,22 @@ const regionFilter = ref('')
 const statusFilter = ref('')
 let searchTimeout = null
 
-const topics = [
+const topicOptions = [
   { value: '', label: 'Semua Isu' },
-  { value: 'politik', label: 'Politik' },
-  { value: 'ekonomi', label: 'Ekonomi' },
-  { value: 'sosial', label: 'Sosial' },
-  { value: 'hukum', label: 'Hukum' },
+  { value: 'politik', label: 'Politik & Tata Kelola' },
+  { value: 'ekonomi', label: 'Ekonomi & Kesejahteraan' },
+  { value: 'sosial', label: 'Sosial & Budaya' },
+  { value: 'hukum', label: 'Hukum & HAM' },
 ]
 
-const regions = [
+const regionOptions = [
   { value: '', label: 'Semua Wilayah' },
   { value: 'nasional', label: 'Nasional' },
   { value: 'jawa', label: 'Pulau Jawa' },
   { value: 'sumatera', label: 'Sumatera' },
   { value: 'kalimantan', label: 'Kalimantan' },
   { value: 'sulawesi', label: 'Sulawesi' },
-  { value: 'bali_nusra', label: 'Bali & Nusra' },
+  { value: 'bali_nusra', label: 'Bali & Nusa Tenggara' },
   { value: 'maluku_papua', label: 'Maluku & Papua' },
 ]
 
@@ -60,7 +63,7 @@ async function loadData() {
     })
     items.value = res.data?.data || res.data || []
   } catch (err) {
-    loadError.value = errorMessage(err, 'Gagal memuat daftar survei')
+    loadError.value = errorMessage(err, 'Gagal memuat daftar survei.')
   } finally {
     loading.value = false
   }
@@ -73,6 +76,19 @@ function onSearchInput() {
   }, 350)
 }
 
+function onTopicChange() {
+  loadData()
+}
+
+function onRegionChange() {
+  loadData()
+}
+
+function onStatusChange(status) {
+  statusFilter.value = status
+  loadData()
+}
+
 async function handleDelete(item) {
   const confirmed = await confirmDelete(
     `Apakah Anda yakin ingin menghapus laporan survei "${item.title}"?`
@@ -81,10 +97,10 @@ async function handleDelete(item) {
 
   try {
     await cmsResources.survei.delete(item.id)
-    alertSuccess('Laporan survei berhasil dihapus')
+    alertSuccess('Laporan survei berhasil dihapus.')
     loadData()
   } catch (err) {
-    alertError(errorMessage(err, 'Gagal menghapus survei'))
+    alertError(errorMessage(err, 'Gagal menghapus survei.'))
   }
 }
 
@@ -107,187 +123,211 @@ onMounted(() => {
 </script>
 
 <template>
-  <Head title="Manajemen Survei & Riset Opini Publik · CMS ISF" />
+  <Head title="Kelola Survei Opini Publik — Indonesia Strategy Forum" />
 
-  <div class="space-y-6">
+  <div class="p-6 space-y-6 w-full">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
       <div>
-        <h1 class="text-2xl font-bold tracking-tight text-foreground">Survei Opini Publik</h1>
+        <h1 class="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+          <span>Kelola Survei Opini Publik</span>
+          <Badge class="bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 text-xs">
+            {{ items.length }} Total
+          </Badge>
+        </h1>
         <p class="text-sm text-muted-foreground mt-1">
-          Kelola rilis survei opini publik ISF dan lembaga kredibel lainnya, metodologi, data segmen visualisasi, dan laporan PDF.
+          Kelola rilis survei opini publik ISF dan lembaga kredibel, metodologi, visualisasi data, dan berkas PDF.
         </p>
       </div>
       <Link href="/cms/survei/create">
-        <Button class="gap-2">
-          <IconComponent name="IconPlus" class="w-4 h-4" />
+        <Button class="bg-red-600 hover:bg-red-700 text-white font-medium text-sm shadow-sm inline-flex items-center gap-1.5">
+          <IconComponent name="Plus" :size="16" />
           <span>Tambah Survei Baru</span>
         </Button>
       </Link>
     </div>
 
     <!-- Filters -->
-    <div class="bg-card rounded-lg border border-border p-4">
-      <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
-        <div class="sm:col-span-5">
-          <Input
-            v-model="search"
-            placeholder="Cari judul, lembaga, temuan..."
-            @input="onSearchInput"
+    <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+      <div class="relative w-full sm:w-80">
+        <Input
+          v-model="search"
+          placeholder="Cari judul, lembaga, temuan..."
+          @input="onSearchInput"
+          class="pl-9 h-9 text-xs"
+        />
+        <IconComponent
+          name="Search"
+          :size="16"
+          class="absolute left-3 top-2.5 text-muted-foreground pointer-events-none"
+        />
+      </div>
+
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 w-full sm:w-auto justify-start py-0.5">
+        <div class="flex items-center gap-2">
+          <label for="filter-topik" class="text-xs text-muted-foreground whitespace-nowrap">Isu:</label>
+          <FilterSelect
+            id="filter-topik"
+            v-model="topicFilter"
+            placeholder="Semua Isu"
+            :options="topicOptions"
+            @change="onTopicChange"
           />
         </div>
-        <div class="sm:col-span-3">
-          <select
-            v-model="topicFilter"
-            @change="loadData"
-            class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option v-for="t in topics" :key="t.value" :value="t.value">
-              {{ t.label }}
-            </option>
-          </select>
-        </div>
-        <div class="sm:col-span-2">
-          <select
+
+        <div class="flex items-center gap-2">
+          <label for="filter-wilayah" class="text-xs text-muted-foreground whitespace-nowrap">Wilayah:</label>
+          <FilterSelect
+            id="filter-wilayah"
             v-model="regionFilter"
-            @change="loadData"
-            class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option v-for="r in regions" :key="r.value" :value="r.value">
-              {{ r.label }}
-            </option>
-          </select>
+            placeholder="Semua Wilayah"
+            :options="regionOptions"
+            @change="onRegionChange"
+          />
         </div>
-        <div class="sm:col-span-2">
-          <select
-            v-model="statusFilter"
-            @change="loadData"
-            class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option value="">Semua Status</option>
-            <option value="terbit">Terbit</option>
-            <option value="draft">Draft</option>
-          </select>
+
+        <div class="flex items-center gap-2 overflow-x-auto justify-start">
+          <span class="text-xs text-muted-foreground whitespace-nowrap">Status:</span>
+          <div class="flex gap-1">
+            <button
+              type="button"
+              @click="onStatusChange('')"
+              :class="[
+                'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+                statusFilter === ''
+                  ? 'bg-red-600 text-white'
+                  : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+              ]"
+            >
+              Semua
+            </button>
+            <button
+              type="button"
+              @click="onStatusChange('terbit')"
+              :class="[
+                'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+                statusFilter === 'terbit'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+              ]"
+            >
+              Terbit
+            </button>
+            <button
+              type="button"
+              @click="onStatusChange('draf')"
+              :class="[
+                'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+                statusFilter === 'draf'
+                  ? 'bg-amber-600 text-white'
+                  : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+              ]"
+            >
+              Draf
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Table -->
-    <div class="bg-card rounded-lg border border-border overflow-hidden">
-      <LoadingIndicator v-if="loading" text="Memuat data survei..." />
-      <ErrorMessage
-        v-else-if="loadError"
-        :message="loadError"
-        action-label="Coba Lagi"
-        @retry="loadData"
-      />
-      <div v-else-if="items.length === 0" class="p-8 text-center text-muted-foreground">
-        <IconComponent name="IconChartBar" class="w-12 h-12 mx-auto mb-2 opacity-40" />
-        <p class="font-medium">Belum ada data survei</p>
-        <p class="text-xs mt-1">Tambahkan survei pertama menggunakan tombol di atas.</p>
-      </div>
+    <!-- Table Container -->
+    <LoadingIndicator v-if="loading && items.length === 0" text="Memuat daftar survei..." />
+    <ErrorMessage
+      v-else-if="loadError"
+      :message="loadError"
+      @retry="loadData"
+    />
 
-      <div v-else class="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead class="w-12 text-center">#</TableHead>
-              <TableHead class="w-64">Judul & Lembaga Pelaksana</TableHead>
-              <TableHead class="w-24">Isu</TableHead>
-              <TableHead class="w-28">Wilayah</TableHead>
-              <TableHead class="w-36">Headline Metric</TableHead>
-              <TableHead class="w-32">Sampel & MoE</TableHead>
-              <TableHead class="w-24 text-center">Status</TableHead>
-              <TableHead class="w-24 text-right">Aksi</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow v-for="(item, idx) in items" :key="item.id">
-              <TableCell class="text-center font-mono text-xs text-muted-foreground">
-                {{ idx + 1 }}
-              </TableCell>
+    <div v-else class="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
+      <Table>
+        <TableHeader>
+          <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
+            <TableHead class="w-12 text-center text-xs">#</TableHead>
+            <TableHead class="min-w-[260px]">Judul & Penyelenggara</TableHead>
+            <TableHead class="w-32">Isu</TableHead>
+            <TableHead class="w-32">Wilayah</TableHead>
+            <TableHead class="w-36">Statistik Utama</TableHead>
+            <TableHead class="w-32">Sampel / MoE</TableHead>
+            <TableHead class="w-24 text-center">Status</TableHead>
+            <TableHead class="text-right">Aksi</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow v-if="items.length === 0">
+            <TableCell colspan="8" class="text-center py-10 text-muted-foreground text-sm">
+              Tidak ada data survei ditemukan.
+            </TableCell>
+          </TableRow>
+          <TableRow
+            v-for="(item, idx) in items"
+            :key="item.id"
+            class="hover:bg-muted/30 transition border-b border-border/50"
+          >
+            <TableCell class="text-center font-mono text-xs text-muted-foreground">
+              {{ idx + 1 }}
+            </TableCell>
 
-              <TableCell>
-                <div class="font-bold text-foreground text-xs sm:text-sm line-clamp-2 leading-snug">
-                  {{ item.title }}
-                </div>
-                <div class="text-[11px] text-muted-foreground flex items-center gap-1.5 mt-1 font-space-grotesk">
-                  <span class="font-semibold text-primary">{{ item.institution }}</span>
-                  <span v-if="item.is_isf" class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-primary/10 text-primary uppercase">
-                    ISF
-                  </span>
-                </div>
-                <div v-if="item.is_featured" class="mt-1">
-                  <span class="inline-block px-1.5 py-0.5 text-[9px] font-bold rounded bg-amber-500/10 text-amber-600 border border-amber-500/20">
-                    ⭐ Featured di Dashboard
-                  </span>
-                </div>
-              </TableCell>
+            <TableCell class="py-3">
+              <div class="font-semibold text-foreground text-sm leading-snug line-clamp-2">
+                {{ item.title }}
+              </div>
+              <div class="text-xs text-muted-foreground mt-0.5">
+                {{ item.institution || 'ISF Research' }} · {{ formatDate(item.release_date) }}
+              </div>
+            </TableCell>
 
-              <TableCell>
-                <span class="inline-block px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider bg-secondary text-secondary-foreground font-mono">
-                  {{ item.topic }}
-                </span>
-              </TableCell>
+            <TableCell>
+              <Badge variant="outline" class="text-xs capitalize font-normal">
+                {{ item.topic }}
+              </Badge>
+            </TableCell>
 
-              <TableCell>
-                <span class="text-xs text-muted-foreground capitalize">
-                  {{ item.region }}
-                </span>
-              </TableCell>
+            <TableCell>
+              <span class="text-xs text-muted-foreground capitalize">
+                {{ item.region }}
+              </span>
+            </TableCell>
 
-              <TableCell>
-                <div class="font-bold text-primary font-mono text-base">
-                  {{ item.headline_stat_value }}
-                </div>
-                <div class="text-[11px] text-muted-foreground line-clamp-1">
-                  {{ item.headline_stat_label }}
-                </div>
-              </TableCell>
+            <TableCell>
+              <div class="font-bold text-red-600 dark:text-red-400 font-mono text-base">
+                {{ item.headline_stat_value }}
+              </div>
+              <div class="text-[11px] text-muted-foreground line-clamp-1">
+                {{ item.headline_stat_label }}
+              </div>
+            </TableCell>
 
-              <TableCell class="text-xs text-muted-foreground font-mono">
-                <div>{{ item.sample_size ? `${item.sample_size.toLocaleString('id-ID')} Rsp.` : '-' }}</div>
-                <div class="text-[11px]">MoE: {{ item.margin_of_error || '-' }}</div>
-              </TableCell>
+            <TableCell class="text-xs text-muted-foreground font-mono">
+              <div>{{ item.sample_size ? `${item.sample_size.toLocaleString('id-ID')} Rsp.` : '-' }}</div>
+              <div class="text-[11px]">MoE: {{ item.margin_of_error || '-' }}</div>
+            </TableCell>
 
-              <TableCell class="text-center">
-                <span
-                  v-if="item.status === 'terbit'"
-                  class="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
-                >
-                  Terbit
-                </span>
-                <span
-                  v-else
-                  class="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-neutral-500/10 text-neutral-600 border border-neutral-500/20"
-                >
-                  Draft
-                </span>
-              </TableCell>
+            <TableCell class="text-center">
+              <StatusBadge :status="item.status" />
+            </TableCell>
 
-              <TableCell class="text-right">
-                <div class="flex items-center justify-end gap-1">
-                  <Link :href="`/cms/survei/${item.id}/edit`">
-                    <Button variant="ghost" size="icon" class="h-8 w-8" title="Edit">
-                      <IconComponent name="IconEdit" class="w-4 h-4 text-muted-foreground" />
-                    </Button>
-                  </Link>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    class="h-8 w-8 text-destructive hover:bg-destructive/10"
-                    title="Hapus"
-                    @click="handleDelete(item)"
-                  >
-                    <IconComponent name="IconTrash" class="w-4 h-4" />
+            <TableCell class="text-right">
+              <div class="flex items-center justify-end gap-1.5">
+                <Link :href="`/cms/survei/${item.id}/edit`">
+                  <Button variant="outline" size="sm" class="h-8 px-2.5 text-xs font-medium hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center">
+                    <IconComponent name="Edit" :size="14" class="mr-1" />
+                    Edit
                   </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </div>
+                </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="h-8 px-2.5 text-xs font-medium text-red-500 border-red-500/30 hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center"
+                  @click="handleDelete(item)"
+                >
+                  <IconComponent name="Trash" :size="14" class="mr-1" />
+                  Hapus
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
     </div>
   </div>
 </template>
-

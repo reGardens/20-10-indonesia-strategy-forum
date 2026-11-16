@@ -18,7 +18,8 @@ import {
   TableRow,
   TableHead,
   TableCell,
-  Pagination
+  Pagination,
+  FilterSelect
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -37,12 +38,12 @@ const page = ref(1)
 let searchTimeout = null
 
 const ROLE_CATEGORIES = [
-  { value: '', label: 'Semua Kategori' },
+  { value: '', label: 'Semua Peran' },
   { value: 'eksekutif', label: 'Eksekutif' },
   { value: 'legislatif', label: 'Legislatif' },
   { value: 'yudikatif', label: 'Yudikatif' },
-  { value: 'pakar', label: 'Pakar' },
-  { value: 'militer', label: 'Militer' },
+  { value: 'pakar', label: 'Pakar & Akademisi' },
+  { value: 'militer', label: 'Militer & Hankam' },
   { value: 'pengusaha', label: 'Pengusaha' }
 ]
 
@@ -158,23 +159,34 @@ onMounted(() => {
     </div>
 
     <!-- Filter and Search -->
-    <div class="flex flex-col gap-3">
-      <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-        <div class="relative w-full sm:w-80">
-          <Input
-            v-model="search"
-            @input="onSearchInput"
-            placeholder="Cari nama atau jabatan tokoh..."
-            class="pl-9 h-9 text-xs"
-          />
-          <IconComponent
-            name="Search"
-            :size="16"
-            class="absolute left-3 top-2.5 text-muted-foreground pointer-events-none"
+    <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+      <div class="relative w-full sm:w-80">
+        <Input
+          v-model="search"
+          @input="onSearchInput"
+          placeholder="Cari nama atau jabatan tokoh..."
+          class="pl-9 h-9 text-xs"
+        />
+        <IconComponent
+          name="Search"
+          :size="16"
+          class="absolute left-3 top-2.5 text-muted-foreground pointer-events-none"
+        />
+      </div>
+
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 w-full sm:w-auto justify-start py-0.5">
+        <div class="flex items-center gap-2">
+          <label for="filter-peran" class="text-xs text-muted-foreground whitespace-nowrap">Peran:</label>
+          <FilterSelect
+            id="filter-peran"
+            v-model="kategoriFilter"
+            placeholder="Semua Peran"
+            :options="ROLE_CATEGORIES"
+            @change="onKategoriChange"
           />
         </div>
 
-        <div class="flex items-center gap-2 overflow-x-auto w-full sm:w-auto justify-start py-0.5">
+        <div class="flex items-center gap-2 overflow-x-auto justify-start">
           <span class="text-xs text-muted-foreground whitespace-nowrap">Status:</span>
           <div class="flex gap-1">
             <button
@@ -216,27 +228,6 @@ onMounted(() => {
           </div>
         </div>
       </div>
-
-      <!-- Kategori Peran Filter Bar -->
-      <div class="flex items-center gap-2 overflow-x-auto w-full justify-start pb-1">
-        <span class="text-xs text-muted-foreground whitespace-nowrap font-medium">Peran:</span>
-        <div class="flex gap-1 overflow-x-auto">
-          <button
-            v-for="cat in ROLE_CATEGORIES"
-            :key="cat.value"
-            type="button"
-            @click="onKategoriChange(cat.value)"
-            :class="[
-              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors whitespace-nowrap',
-              kategoriFilter === cat.value
-                ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-semibold'
-                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
-            ]"
-          >
-            {{ cat.label }}
-          </button>
-        </div>
-      </div>
     </div>
 
     <!-- Loading & Error -->
@@ -249,12 +240,12 @@ onMounted(() => {
         <TableHeader>
           <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
             <TableHead class="w-12 text-center text-xs">#</TableHead>
-            <TableHead class="w-[35%]">Tokoh & Profil</TableHead>
-            <TableHead class="w-[18%]">Peran & Skor</TableHead>
-            <TableHead class="w-[20%]">Jabatan / Posisi</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Sorotan</TableHead>
-            <TableHead class="text-right">Aksi</TableHead>
+            <TableHead class="min-w-[200px] w-[26%]">Tokoh & Profil</TableHead>
+            <TableHead class="w-36">Peran & Skor</TableHead>
+            <TableHead class="min-w-[160px] w-[22%]">Jabatan / Posisi</TableHead>
+            <TableHead class="w-24 text-center">Status</TableHead>
+            <TableHead class="w-48 min-w-[180px]">Sorotan</TableHead>
+            <TableHead class="w-36 text-right">Aksi</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -298,24 +289,24 @@ onMounted(() => {
             <TableCell>
               <StatusBadge :status="item.status" />
             </TableCell>
-            <TableCell>
+            <TableCell class="whitespace-nowrap">
               <div class="flex flex-col items-start gap-1">
                 <span
                   v-if="item.is_influential_weekly"
-                  class="text-[9px] px-1.5 py-0.5 rounded bg-red-600 text-white font-bold"
+                  class="text-[10px] px-2 py-0.5 rounded bg-red-600 text-white font-bold whitespace-nowrap inline-flex items-center"
                 >
                   ★ Tokoh Minggu Ini
                 </span>
-                <LiveBadge v-if="item.id === liveId" label="Pekan Ini Tayang" />
+                <LiveBadge v-if="item.id === liveId" label="Pekan Ini Tayang" class="whitespace-nowrap" />
                 <span
                   v-else-if="item.is_featured"
-                  class="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium"
+                  class="text-[10px] px-2 py-0.5 rounded bg-muted text-muted-foreground font-medium whitespace-nowrap inline-flex items-center"
                 >
                   Flag Featured
                 </span>
                 <span
                   v-if="item.show_in_politik"
-                  class="text-[9px] px-1.5 py-0.5 rounded bg-red-500/10 text-red-600 font-semibold border border-red-500/20"
+                  class="text-[10px] px-2 py-0.5 rounded bg-red-500/10 text-red-600 font-semibold border border-red-500/20 whitespace-nowrap inline-flex items-center"
                 >
                   Profil Politik
                 </span>

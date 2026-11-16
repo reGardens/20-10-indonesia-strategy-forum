@@ -53,7 +53,7 @@ function onSearchInput() {
 }
 
 function onStatusChange(status) {
-  statusFilter.value = statusFilter.value === status ? '' : status
+  statusFilter.value = status
   loadData()
 }
 
@@ -78,155 +78,172 @@ onMounted(() => {
 </script>
 
 <template>
-  <Head title="Timeline Kasus Hukum — CMS ISF" />
+  <Head title="Kelola Timeline Kasus Hukum — Indonesia Strategy Forum" />
 
-  <div class="space-y-6">
+  <div class="p-6 space-y-6 w-full">
     <!-- Header & Action Button -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
       <div>
-        <h1 class="text-2xl font-bold tracking-tight text-neutral-900">
-          Timeline Kasus Hukum
+        <h1 class="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+          <span>Kelola Timeline Kasus Hukum</span>
+          <Badge class="bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 text-xs">
+            {{ items.length }} Total
+          </Badge>
         </h1>
-        <p class="text-sm text-neutral-500 mt-1">
+        <p class="text-sm text-muted-foreground mt-1">
           Kelola alur waktu perkara hukum besar, sengketa konstitusi, tindak pidana korupsi, dan kronologi sidangnya.
         </p>
       </div>
       <Link href="/cms/timeline-kasus/create">
-        <Button class="inline-flex items-center gap-2">
-          <IconComponent name="IconPlus" class="w-4 h-4" />
+        <Button class="bg-red-600 hover:bg-red-700 text-white font-medium text-sm shadow-sm inline-flex items-center gap-1.5">
+          <IconComponent name="Plus" :size="16" />
           <span>Tambah Kasus Baru</span>
         </Button>
       </Link>
     </div>
 
     <!-- Filters & Search Toolbar -->
-    <div class="p-4 bg-white rounded-xl border border-neutral-200/80 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
-      <!-- Search Input -->
-      <div class="relative w-full md:w-80">
-        <IconComponent
-          name="IconSearch"
-          class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none"
-        />
+    <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+      <div class="relative w-full sm:w-80">
         <Input
           v-model="search"
           @input="onSearchInput"
           placeholder="Cari judul kasus, kategori, deskripsi..."
-          class="pl-9 text-xs"
+          class="pl-9 h-9 text-xs"
+        />
+        <IconComponent
+          name="Search"
+          :size="16"
+          class="absolute left-3 top-2.5 text-muted-foreground pointer-events-none"
         />
       </div>
 
-      <!-- Status Filter Buttons -->
-      <div class="flex items-center gap-2 shrink-0">
-        <Button
-          size="sm"
-          :variant="statusFilter === '' ? 'default' : 'outline'"
-          @click="onStatusChange('')"
-          class="text-xs"
-        >
-          Semua
-        </Button>
-        <Button
-          size="sm"
-          :variant="statusFilter === 'terbit' ? 'default' : 'outline'"
-          @click="onStatusChange('terbit')"
-          class="text-xs"
-        >
-          Terbit
-        </Button>
-        <Button
-          size="sm"
-          :variant="statusFilter === 'draft' ? 'default' : 'outline'"
-          @click="onStatusChange('draft')"
-          class="text-xs"
-        >
-          Draft
-        </Button>
+      <div class="flex items-center gap-2 overflow-x-auto justify-start">
+        <span class="text-xs text-muted-foreground whitespace-nowrap">Status:</span>
+        <div class="flex gap-1">
+          <button
+            type="button"
+            @click="onStatusChange('')"
+            :class="[
+              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+              statusFilter === ''
+                ? 'bg-red-600 text-white'
+                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+            ]"
+          >
+            Semua
+          </button>
+          <button
+            type="button"
+            @click="onStatusChange('terbit')"
+            :class="[
+              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+              statusFilter === 'terbit'
+                ? 'bg-emerald-600 text-white'
+                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+            ]"
+          >
+            Terbit
+          </button>
+          <button
+            type="button"
+            @click="onStatusChange('draf')"
+            :class="[
+              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+              statusFilter === 'draf'
+                ? 'bg-amber-600 text-white'
+                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+            ]"
+          >
+            Draf
+          </button>
+        </div>
       </div>
     </div>
 
     <!-- Data Table Container -->
-    <div class="bg-white rounded-xl border border-neutral-200/80 shadow-2xs overflow-hidden">
-      <LoadingIndicator v-if="loading" message="Memuat data timeline kasus..." />
+    <LoadingIndicator v-if="loading && items.length === 0" text="Memuat data timeline kasus..." />
+    <ErrorMessage
+      v-else-if="loadError"
+      :message="loadError"
+      @retry="loadData"
+    />
 
-      <ErrorMessage
-        v-else-if="loadError"
-        :message="loadError"
-        :retry="loadData"
-        class="m-6"
-      />
-
-      <div v-else-if="items.length === 0" class="py-16 text-center text-neutral-500">
-        <IconComponent name="IconClock" class="w-10 h-10 mx-auto text-neutral-300 mb-2" />
-        <p class="font-medium text-neutral-700">Belum ada timeline kasus hukum</p>
-        <p class="text-xs text-neutral-400 mt-1">
-          Buat timeline alur perkara untuk menyajikan perjalanan kasus hukum besar secara visual.
-        </p>
-      </div>
-
-      <div v-else class="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead class="w-12 text-center">#</TableHead>
-              <TableHead class="min-w-[240px]">Judul Kasus</TableHead>
-              <TableHead class="min-w-[140px]">Kategori</TableHead>
-              <TableHead class="min-w-[160px]">Status Kasus</TableHead>
-              <TableHead class="w-20 text-center">Urutan</TableHead>
-              <TableHead class="w-24 text-center">Status</TableHead>
-              <TableHead class="w-28 text-right pr-4">Aksi</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow v-for="(item, idx) in items" :key="item.id" class="hover:bg-neutral-50/70">
-              <TableCell class="text-center font-mono text-xs text-neutral-400">
-                {{ idx + 1 }}
-              </TableCell>
-              <TableCell>
-                <div class="font-semibold text-neutral-900 text-sm">
-                  {{ item.judul_kasus }}
-                </div>
-                <div class="text-xs text-neutral-500 font-mono mt-0.5">
-                  /hukum#timeline-{{ item.slug }}
-                </div>
-              </TableCell>
-              <TableCell>
-                <Badge v-if="item.kategori_kasus" variant="secondary" class="text-xs">
-                  {{ item.kategori_kasus }}
-                </Badge>
-                <span v-else class="text-xs text-neutral-400">-</span>
-              </TableCell>
-              <TableCell class="text-xs font-semibold text-amber-600">
-                {{ item.status_kasus || 'Proses Berjalan' }}
-              </TableCell>
-              <TableCell class="text-center font-mono text-xs text-neutral-600">
-                {{ item.urutan }}
-              </TableCell>
-              <TableCell class="text-center">
-                <StatusBadge :status="item.status" />
-              </TableCell>
-              <TableCell class="text-right pr-4">
-                <div class="inline-flex items-center gap-1 justify-end">
-                  <Link :href="`/cms/timeline-kasus/${item.id}/edit`">
-                    <Button variant="ghost" size="sm" class="h-8 w-8 p-0" title="Edit Kasus & Peristiwa">
-                      <IconComponent name="IconEdit" class="w-4 h-4 text-neutral-600" />
-                    </Button>
-                  </Link>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    class="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                    title="Hapus Kasus"
-                    @click="handleDelete(item)"
-                  >
-                    <IconComponent name="IconTrash" class="w-4 h-4" />
+    <div v-else class="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
+      <Table>
+        <TableHeader>
+          <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
+            <TableHead class="w-12 text-center text-xs">#</TableHead>
+            <TableHead class="min-w-[220px]">Judul Kasus & Slug</TableHead>
+            <TableHead class="w-40">Kategori Perkara</TableHead>
+            <TableHead class="w-36">Status Kasus</TableHead>
+            <TableHead class="w-24 text-center">Peristiwa</TableHead>
+            <TableHead class="w-24 text-center">Status</TableHead>
+            <TableHead class="text-right">Aksi</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow v-if="items.length === 0">
+            <TableCell colspan="7" class="text-center py-10 text-muted-foreground text-sm">
+              Tidak ada data timeline kasus ditemukan.
+            </TableCell>
+          </TableRow>
+          <TableRow
+            v-for="(item, idx) in items"
+            :key="item.id"
+            class="hover:bg-muted/30 transition border-b border-border/50"
+          >
+            <TableCell class="text-center font-mono text-xs text-muted-foreground">
+              {{ idx + 1 }}
+            </TableCell>
+            <TableCell class="py-3">
+              <div class="font-semibold text-foreground text-sm leading-snug">
+                {{ item.judul_kasus }}
+              </div>
+              <div class="text-xs text-muted-foreground font-mono mt-0.5 truncate">
+                #kasus-{{ item.slug }}
+              </div>
+            </TableCell>
+            <TableCell>
+              <Badge variant="outline" class="text-xs font-normal">
+                {{ item.kategori_kasus || 'Umum' }}
+              </Badge>
+            </TableCell>
+            <TableCell>
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-500/10 text-blue-600 border border-blue-500/20">
+                {{ item.status_kasus }}
+              </span>
+            </TableCell>
+            <TableCell class="text-center">
+              <span class="inline-flex items-center px-2 py-0.5 rounded font-mono font-bold text-xs bg-muted text-foreground">
+                {{ Array.isArray(item.events) ? item.events.length : 0 }} alur
+              </span>
+            </TableCell>
+            <TableCell class="text-center">
+              <StatusBadge :status="item.status" />
+            </TableCell>
+            <TableCell class="text-right">
+              <div class="flex items-center justify-end gap-1.5">
+                <Link :href="`/cms/timeline-kasus/${item.id}/edit`">
+                  <Button variant="outline" size="sm" class="h-8 px-2.5 text-xs font-medium hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center">
+                    <IconComponent name="Edit" :size="14" class="mr-1" />
+                    Edit
                   </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </div>
+                </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="h-8 px-2.5 text-xs font-medium text-red-500 border-red-500/30 hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center"
+                  @click="handleDelete(item)"
+                >
+                  <IconComponent name="Trash" :size="14" class="mr-1" />
+                  Hapus
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
     </div>
   </div>
 </template>
-

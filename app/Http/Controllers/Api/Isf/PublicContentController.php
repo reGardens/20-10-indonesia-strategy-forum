@@ -620,10 +620,15 @@ class PublicContentController extends Controller
         $query = Article::query()->terbit()->where('category', 'politik');
 
         if ($subkategori) {
-            $query->where(function ($q) use ($subkategori) {
+            $subQuery = (clone $query)->where(function ($q) use ($subkategori) {
                 $q->where('subcategory', $subkategori)
                     ->orWhere('category', $subkategori);
             });
+            // Jika ada artikel dengan subkategori tersebut, terapkan filternya.
+            // Jika subkategori belum memiliki artikel khusus, fallback menampilkan artikel terbaru politik agar filter tidak kosong.
+            if ($subQuery->count() > 0) {
+                $query = $subQuery;
+            }
         }
 
         $total = (clone $query)->count();
@@ -667,24 +672,26 @@ class PublicContentController extends Controller
             ];
         })->values()->all();
 
-        // Tokoh Politik
-        $tokohQuery = Tokoh::query()->terbit()->where('show_in_politik', true);
-        if ($tokohQuery->count() === 0) {
-            $tokohQuery = Tokoh::query()->terbit()->take(3);
-        }
-        $tokohPolitik = $tokohQuery->orderByDesc('updated_at')->take(4)->get()->map(function (Tokoh $t) {
-            return [
-                'id' => $t->id,
-                'slug' => $t->slug,
-                'name' => $t->name,
-                'position' => $t->position,
-                'photoUrl' => $t->photo_url,
-                'photoAlt' => $t->photo_alt ?: $t->name,
-                'teaser' => $t->teaser ?: "Profil dan rekam jejak kepemimpinan serta analisis kebijakan {$t->name}.",
-                'stats' => $t->stats ?: [],
-                'to' => "/tokoh/{$t->slug}",
-            ];
-        })->values()->all();
+        // Tokoh Politik: Tampilkan tokoh yang diaktifkan show_in_politik atau tokoh terbit lainnya (hingga 4 kartu profil)
+        $tokohPolitik = Tokoh::query()
+            ->terbit()
+            ->orderByDesc('show_in_politik')
+            ->orderByDesc('updated_at')
+            ->take(4)
+            ->get()
+            ->map(function (Tokoh $t) {
+                return [
+                    'id' => $t->id,
+                    'slug' => $t->slug,
+                    'name' => $t->name,
+                    'position' => $t->position,
+                    'photoUrl' => $t->photo_url,
+                    'photoAlt' => $t->photo_alt ?: $t->name,
+                    'teaser' => $t->teaser ?: "Profil dan rekam jejak kepemimpinan serta analisis kebijakan {$t->name}.",
+                    'stats' => $t->stats ?: [],
+                    'to' => "/sosok/{$t->slug}",
+                ];
+            })->values()->all();
 
         return response()->json([
             'rubrik' => [
@@ -806,10 +813,15 @@ class PublicContentController extends Controller
         $query = Article::query()->terbit()->whereIn('category', ['hukum', 'ruu']);
 
         if ($subkategori && $subkategori !== 'semua' && $subkategori !== 'glosarium') {
-            $query->where(function ($q) use ($subkategori) {
+            $subQuery = (clone $query)->where(function ($q) use ($subkategori) {
                 $q->where('subcategory', $subkategori)
                     ->orWhere('category', $subkategori);
             });
+            // Jika ada artikel dengan subkategori tersebut, terapkan filternya.
+            // Jika subkategori belum memiliki artikel khusus, fallback menampilkan artikel hukum terbaru agar tidak kosong.
+            if ($subQuery->count() > 0) {
+                $query = $subQuery;
+            }
         }
 
         $total = (clone $query)->count();
@@ -1073,7 +1085,15 @@ class PublicContentController extends Controller
             ->orderByDesc('id');
 
         if ($subkategori && in_array($subkategori, ['ekonomi', 'kesehatan', 'pendidikan', 'pertahanan', 'lingkungan'], true)) {
-            $query->where('subcategory', $subkategori);
+            $subQuery = (clone $query)->where(function ($q) use ($subkategori) {
+                $q->where('subcategory', $subkategori)
+                    ->orWhere('category', $subkategori);
+            });
+            // Jika ada artikel dengan subkategori tersebut, terapkan filternya.
+            // Jika belum ada artikel khusus, fallback menampilkan artikel terbaru kebijakan agar filter tidak kosong.
+            if ($subQuery->count() > 0) {
+                $query = $subQuery;
+            }
         }
 
         $total = (clone $query)->count();
@@ -1324,8 +1344,10 @@ class PublicContentController extends Controller
         $formattedOptions = array_map(function ($opt) use ($total) {
             $votes = (int) ($opt['votes'] ?? 0);
             $pct = $total > 0 ? round(($votes / $total) * 100, 1) : 0;
+            $optId = (string) ($opt['id'] ?? $opt['key'] ?? '');
             return [
-                'id' => (string) ($opt['id'] ?? ''),
+                'id' => $optId,
+                'key' => $optId,
                 'label' => $opt['label'] ?? '',
                 'votes' => $votes,
                 'percentage' => $pct,
@@ -1396,7 +1418,15 @@ class PublicContentController extends Controller
             ->orderByDesc('id');
 
         if ($subkategori && in_array($subkategori, ['op-ed', 'editorial', 'surat-pembaca'], true)) {
-            $query->where('subcategory', $subkategori);
+            $subQuery = (clone $query)->where(function ($q) use ($subkategori) {
+                $q->where('subcategory', $subkategori)
+                    ->orWhere('category', $subkategori);
+            });
+            // Jika ada artikel dengan subkategori tersebut, terapkan filternya.
+            // Jika subkategori belum memiliki artikel khusus, fallback menampilkan artikel terbaru opini agar filter tidak kosong.
+            if ($subQuery->count() > 0) {
+                $query = $subQuery;
+            }
         }
 
         $total = (clone $query)->count();
@@ -1410,6 +1440,9 @@ class PublicContentController extends Controller
         $mappedArticles = $articles->map(function ($art) use ($cardMapper) {
             $card = $cardMapper($art);
             $card['is_editorial'] = $art->subcategory === 'editorial';
+            $card['excerpt'] = $art->summary ?? '';
+            $card['author_name'] = $art->author_name ?: 'Tim Riset ISF';
+            $card['author_affiliation'] = $art->author_role ?? '';
             return $card;
         })->values()->all();
 
@@ -1423,12 +1456,15 @@ class PublicContentController extends Controller
 
         // Reader Poll (Aktif & Featured)
         $voterHash = $this->getVoterHash($request);
-        $activePoll = ReaderPoll::query()->aktif()
+        $activePolls = ReaderPoll::query()->aktif()
             ->orderByDesc('is_featured')
             ->orderBy('order', 'asc')
             ->orderByDesc('id')
-            ->first();
-        $formattedPoll = $activePoll ? $this->formatPollResponse($activePoll, $voterHash) : null;
+            ->get()
+            ->map(fn (ReaderPoll $p) => $this->formatPollResponse($p, $voterHash))
+            ->values()
+            ->all();
+        $formattedPoll = count($activePolls) > 0 ? $activePolls[0] : null;
 
         // Kutipan Publik (max 6)
         $quotes = PublicQuote::query()->terbit()
@@ -1441,19 +1477,30 @@ class PublicContentController extends Controller
             ->map(fn (PublicQuote $q) => [
                 'id' => $q->id,
                 'quote' => $q->quote,
+                'kutipan' => $q->quote,
                 'author_name' => $q->author_name,
+                'tokoh_nama' => $q->author_name ?: ($q->tokoh?->name ?? 'Anonim'),
                 'author_title' => $q->author_title,
+                'tokoh_jabatan' => $q->author_title ?: ($q->tokoh?->position ?? ''),
                 'author_type' => $q->author_type,
+                'tokoh_tipe' => $q->author_type ?: ($q->tokoh_id ? 'tokoh' : 'netizen'),
                 'topic' => $q->topic,
+                'isu_terkait' => $q->topic,
                 'source_title' => $q->source_title,
+                'sumber_nama' => $q->source_title,
                 'source_url' => $q->source_url,
+                'sumber_url' => $q->source_url,
                 'quote_date' => $q->quote_date?->format('Y-m-d'),
+                'tanggal_kutipan' => $q->quote_date?->format('Y-m-d'),
                 'quote_date_formatted' => $q->quote_date ? \Carbon\Carbon::parse($q->quote_date)->locale('id')->isoFormat('D MMMM Y') : '',
+                'tokoh_id' => $q->tokoh_id,
                 'tokoh' => $q->tokoh ? [
                     'id' => $q->tokoh->id,
                     'name' => $q->tokoh->name,
                     'slug' => $q->tokoh->slug,
                     'position' => $q->tokoh->position,
+                    'photo_url' => $q->tokoh->photo_url,
+                    'foto_url' => $q->tokoh->photo_url,
                     'to' => '/tokoh/' . $q->tokoh->slug,
                 ] : null,
             ])->values()->all();
@@ -1493,6 +1540,7 @@ class PublicContentController extends Controller
                 'perPage' => $limit,
             ],
             'readerPoll' => $formattedPoll,
+            'readerPolls' => $activePolls,
             'kutipanPublik' => $quotes,
             'suratPembaca' => $letters,
         ]);
@@ -2973,12 +3021,12 @@ HTML;
                 'label' => 'Sosok',
                 'description' => 'Direktori komprehensif profil tokoh nasional, rekam jejak, skor pengaruh, dan pemetaan jejaring strategis.',
                 'kategoriOptions' => [
-                    ['slug' => 'semua', 'name' => 'Semua Kategori'],
-                    ['slug' => 'eksekutif', 'name' => 'Eksekutif (Presiden, Menteri, Gubernur)'],
-                    ['slug' => 'legislatif', 'name' => 'Legislatif (DPR, DPD, MPR)'],
-                    ['slug' => 'yudikatif', 'name' => 'Yudikatif (Hakim Agung, Hakim MK)'],
-                    ['slug' => 'pakar', 'name' => 'Akademisi & Pakar'],
-                    ['slug' => 'militer', 'name' => 'Militer & Hankam (TNI, Polri)'],
+                    ['slug' => 'semua', 'name' => 'Semua Tokoh'],
+                    ['slug' => 'eksekutif', 'name' => 'Eksekutif'],
+                    ['slug' => 'legislatif', 'name' => 'Legislatif'],
+                    ['slug' => 'yudikatif', 'name' => 'Yudikatif'],
+                    ['slug' => 'pakar', 'name' => 'Pakar & Akademisi'],
+                    ['slug' => 'militer', 'name' => 'Militer & Hankam'],
                     ['slug' => 'pengusaha', 'name' => 'Pengusaha'],
                 ],
                 'activeKategori' => $kategori ?: 'semua',
