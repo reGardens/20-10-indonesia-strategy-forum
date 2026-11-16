@@ -28,10 +28,36 @@ return new class extends Migration
             $table->boolean('is_influential_weekly')->default(false)->index()->after('is_featured');
         });
 
-        // 1. Update budi-santoso with complete Sosok fields
-        $budi = Tokoh::where('slug', 'budi-santoso')->first();
-        if ($budi) {
-            $budi->update([
+        // 1. Update or create budi-santoso with complete Sosok fields
+        Tokoh::updateOrCreate(
+            ['slug' => 'budi-santoso'],
+            [
+                'name' => 'Dr. Budi Santoso, S.H., M.H.',
+                'position' => 'Ketua Komisi Hukum DPR RI',
+                'photo_alt' => 'Foto profil Dr. Budi Santoso',
+                'photo_url' => 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=800&auto=format&fit=crop',
+                'stats' => [
+                    ['label' => 'Kebijakan Diinisiasi', 'value' => 12],
+                    ['label' => 'Rapat Paripurna', 'value' => 48],
+                    ['label' => 'Keterlibatan Publik', 'value' => 85],
+                    ['label' => 'Sorotan Regulasi', 'value' => 34],
+                ],
+                'skor_value' => 84,
+                'skor_period' => 'Pekan 42 / 2026',
+                'skor_explanation' => 'Tingkat kepemimpinan aktif dalam perumusan undang-undang strategis dan konsolidasi fraksi komisi.',
+                'matrix_columns' => ['Inisiasi', 'Pembahasan', 'Implementasi'],
+                'matrix_rows' => [
+                    ['kebijakan' => 'RUU Perampasan Aset', 'tahap' => 'Pembahasan Tingkat I', 'involvement' => [true, true, false]],
+                    ['kebijakan' => 'Revisi KUHAP', 'tahap' => 'Harmonisasi Baleg', 'involvement' => [true, false, false]],
+                ],
+                'related_articles' => [],
+                'calendar_year' => 2026,
+                'calendar_month' => 11,
+                'calendar_events' => [
+                    ['date' => '2026-11-18', 'title' => 'RDP Komisi III dengan Jaksa Agung'],
+                    ['date' => '2026-11-20', 'title' => 'Rapat Konsultasi Pembahasan RUU Perampasan Aset'],
+                ],
+                'teaser' => 'Legislator kunci Komisi III DPR RI yang memimpin perumusan RUU Perampasan Aset dan reformasi peradilan.',
                 'role_category' => 'legislatif',
                 'issues' => ['hukum', 'politik'],
                 'summary_analysis' => 'Figur kunci dalam perumusan RUU Perampasan Aset dan pengawasan reformasi peradilan nasional di Parlemen.',
@@ -75,8 +101,10 @@ return new class extends Migration
                 'aliases' => ['Budi Santoso', 'Dr. Budi Santoso', 'Komisi III DPR'],
                 'is_influential_weekly' => true,
                 'is_featured' => true,
-            ]);
-        }
+                'show_in_politik' => true,
+                'status' => 'terbit',
+            ]
+        );
 
         // 2. Seed Tokoh Eksekutif: Sri Hartati (Menteri Koordinator Perekonomian & Fiskal)
         Tokoh::create([

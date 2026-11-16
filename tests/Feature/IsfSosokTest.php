@@ -13,6 +13,34 @@ class IsfSosokTest extends TestCase
 {
     use DatabaseTransactions;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Tokoh::updateOrCreate(
+            ['slug' => 'budi-santoso'],
+            [
+                'name' => 'Dr. Budi Santoso, S.H., M.H.',
+                'position' => 'Ketua Komisi Hukum DPR RI',
+                'role_category' => 'legislatif',
+                'issues' => ['hukum', 'politik'],
+                'summary_analysis' => 'Figur kunci dalam perumusan RUU Perampasan Aset dan pengawasan reformasi peradilan nasional di Parlemen.',
+                'stats' => [['label' => 'Rapat', 'value' => 10]],
+                'skor_value' => 84,
+                'skor_period' => 'Pekan 42 / 2026',
+                'skor_explanation' => 'Tingkat kepemimpinan aktif dalam perumusan undang-undang strategis.',
+                'matrix_columns' => ['Inisiasi', 'Pembahasan', 'Implementasi'],
+                'matrix_rows' => [['kebijakan' => 'RUU Perampasan Aset', 'tahap' => 'Pembahasan', 'involvement' => [true, true, false]]],
+                'calendar_year' => 2026,
+                'calendar_month' => 11,
+                'calendar_events' => [],
+                'status' => 'terbit',
+                'is_influential_weekly' => true,
+                'is_featured' => true,
+            ]
+        );
+    }
+
     public function test_legacy_tokoh_url_redirects_301_to_sosok(): void
     {
         $response = $this->get('/tokoh/budi-santoso');

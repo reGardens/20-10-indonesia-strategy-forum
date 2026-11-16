@@ -45,7 +45,7 @@ class IsfHeaderSessionTest extends TestCase
 
     public function test_shell_header_shows_login_for_guest(): void
     {
-        $html = $this->get('/tokoh/budi-santoso')->assertOk()->getContent();
+        $html = $this->get('/sosok/budi-santoso')->assertOk()->getContent();
 
         $this->assertStringContainsString('>Login</a>', $html);
         $this->assertStringNotContainsString('aria-label="Keluar"', $html);
@@ -53,7 +53,7 @@ class IsfHeaderSessionTest extends TestCase
 
     public function test_shell_header_shows_avatar_menu_trigger_when_logged_in(): void
     {
-        $html = $this->actingAs($this->makeUser())->get('/tokoh/budi-santoso')->assertOk()->getContent();
+        $html = $this->actingAs($this->makeUser())->get('/sosok/budi-santoso')->assertOk()->getContent();
 
         $this->assertStringNotContainsString('>Login</a>', $html);
         // Shell = pemicu menu profil (ikon avatar saja), nama & Keluar ada di dalam menu (Vue).
