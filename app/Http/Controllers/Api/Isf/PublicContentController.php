@@ -25,6 +25,7 @@ use App\Models\Isf\ReaderPoll;
 use App\Models\Isf\ReaderPollVote;
 use App\Models\Isf\PublicQuote;
 use App\Models\Isf\Letter;
+use App\Models\Isf\Survey;
 use App\Http\Requests\Isf\LetterSubmissionRequest;
 use App\Support\IsfRubrik;
 use App\Models\Isf\Setting;
@@ -2777,6 +2778,115 @@ HTML;
                 'playlist' => $videoPlaylist,
             ],
         ];
+    }
+
+    public function survei(Request $request): JsonResponse
+    {
+        $topic = $request->query('isu') ?? $request->query('topic');
+        $region = $request->query('wilayah') ?? $request->query('region');
+        $q = $request->query('q');
+        $page = max(1, (int) $request->query('page', 1));
+        $limit = max(1, min(50, (int) $request->query('limit', 9)));
+
+        $query = Survey::terbit();
+
+        if ($topic && $topic !== 'semua') {
+            $query->where('topic', strtolower($topic));
+        }
+
+        if ($region && $region !== 'semua') {
+            $query->where('region', strtolower($region));
+        }
+
+        if ($q && trim($q) !== '') {
+            $term = '%' . trim($q) . '%';
+            $query->where(function ($sub) use ($term) {
+                $sub->where('title', 'like', $term)
+                    ->orWhere('institution', 'like', $term)
+                    ->orWhere('summary', 'like', $term)
+                    ->orWhere('headline_stat_label', 'like', $term);
+            });
+        }
+
+        // Featured Survey for hero highlight
+        $featuredSurvey = Survey::terbit()->where('is_featured', true)->first()
+            ?? Survey::terbit()->orderBy('release_date', 'desc')->first();
+
+        $total = (clone $query)->count();
+        $surveys = $query->orderBy('order', 'asc')
+            ->orderBy('release_date', 'desc')
+            ->orderBy('id', 'desc')
+            ->forPage($page, $limit)
+            ->get();
+
+        $lastPage = max(1, (int) ceil($total / $limit));
+
+        return response()->json([
+            'rubrik' => [
+                'key' => 'survei',
+                'title' => 'Survei',
+                'label' => 'Survei',
+                'description' => 'Dashboard rilis survei opini publik, metodologi riset terpercaya, agregasi persepsi nasional, dan visualisasi data interaktif.',
+                'topics' => [
+                    ['slug' => 'semua', 'name' => 'Semua Isu'],
+                    ['slug' => 'politik', 'name' => 'Politik'],
+                    ['slug' => 'ekonomi', 'name' => 'Ekonomi'],
+                    ['slug' => 'sosial', 'name' => 'Sosial'],
+                    ['slug' => 'hukum', 'name' => 'Hukum'],
+                ],
+                'regions' => [
+                    ['slug' => 'semua', 'name' => 'Semua Wilayah'],
+                    ['slug' => 'nasional', 'name' => 'Nasional'],
+                    ['slug' => 'jawa', 'name' => 'Pulau Jawa'],
+                    ['slug' => 'sumatera', 'name' => 'Sumatera'],
+                    ['slug' => 'kalimantan', 'name' => 'Kalimantan'],
+                    ['slug' => 'sulawesi', 'name' => 'Sulawesi'],
+                    ['slug' => 'bali_nusra', 'name' => 'Bali & Nusa Tenggara'],
+                    ['slug' => 'maluku_papua', 'name' => 'Maluku & Papua'],
+                ],
+                'activeTopic' => $topic ?: 'semua',
+                'activeRegion' => $region ?: 'semua',
+            ],
+            'featuredSurvey' => $featuredSurvey,
+            'surveys' => $surveys,
+            'meta' => [
+                'currentPage' => $page,
+                'lastPage' => $lastPage,
+                'total' => $total,
+                'perPage' => $limit,
+            ],
+        ]);
+    }
+
+    public function surveiDetail(string $slug): JsonResponse
+    {
+        $survey = Survey::terbit()->where('slug', $slug)->first();
+        if (! $survey) {
+            return response()->json(['message' => 'Laporan survei tidak ditemukan.'], 404);
+        }
+
+        $relatedSurveys = Survey::terbit()
+            ->where('id', '!=', $survey->id)
+            ->where(function ($q) use ($survey) {
+                $q->where('topic', $survey->topic)
+                  ->orWhere('region', $survey->region);
+            })
+            ->orderBy('release_date', 'desc')
+            ->limit(3)
+            ->get();
+
+        if ($relatedSurveys->isEmpty()) {
+            $relatedSurveys = Survey::terbit()
+                ->where('id', '!=', $survey->id)
+                ->orderBy('release_date', 'desc')
+                ->limit(3)
+                ->get();
+        }
+
+        return response()->json([
+            'survey' => $survey,
+            'relatedSurveys' => $relatedSurveys,
+        ]);
     }
 
     private function notFound(string $message): JsonResponse

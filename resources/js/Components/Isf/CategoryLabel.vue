@@ -25,6 +25,7 @@ const LABELS = {
     ruu: "Hukum",
     opini: "Opini Publik",
     "opini-publik": "Opini Publik",
+    survei: "Survei",
 };
 
 const key = computed(() => String(props.category).toLowerCase());

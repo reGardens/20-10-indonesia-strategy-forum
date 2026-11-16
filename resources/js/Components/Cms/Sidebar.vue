@@ -132,6 +132,12 @@ const menuGroups = computed(() => [
                 visible: hasFeature("data_grafik"),
             },
             {
+                label: "Survei Opini Publik",
+                href: "/cms/survei",
+                icon: "ChartBar",
+                visible: hasFeature("survei"),
+            },
+            {
                 label: "Reader Poll",
                 href: "/cms/reader-poll",
                 icon: "ChartBar",

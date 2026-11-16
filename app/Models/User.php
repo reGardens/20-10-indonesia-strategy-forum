@@ -34,6 +34,7 @@ class User extends Authenticatable
         'reader_poll',
         'kutipan_publik',
         'surat_pembaca',
+        'survei',
     ];
 
     /**

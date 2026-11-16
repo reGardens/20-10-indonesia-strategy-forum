@@ -45,6 +45,7 @@ const features = [
     { key: "policy_brief", label: "Policy Brief", desc: "Ringkasan eksekutif riset kebijakan, rekomendasi kunci, dokumen PDF, dan status" },
     { key: "monitoring_kebijakan", label: "Monitoring Kebijakan", desc: "Pelacakan program pemerintah, komparasi Janji vs Realisasi, progres %, dan status evaluasi" },
     { key: "reader_poll", label: "Reader Poll (Jajak Pendapat)", desc: "Kelola pertanyaan jajak pendapat publik, opsi dinamis, periode aktif, dan pantau rekapitulasi suara" },
+    { key: "survei", label: "Survei Opini Publik", desc: "Kelola survei opini publik lembaga riset/ISF, metodologi, segmen grafik interaktif, dan PDF laporan" },
     { key: "kutipan_publik", label: "Kutipan Publik", desc: "Kumpulan kutipan tokoh dan warga netizen terkait isu strategis nasional, sumber, dan tautan profil" },
     { key: "surat_pembaca", label: "Moderasi Surat Pembaca", desc: "Kelola dan moderasi antrean surat pembaca publik (setujui, tolak, penyuntingan editorial)" }
 ];

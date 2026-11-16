@@ -186,7 +186,7 @@ const NAV_LINKS = [
     { label: "Kebijakan Publik", to: "/kebijakan-publik", group: "rubrik" },
     { label: "Sosok", to: "/tokoh/budi-santoso", group: "rubrik" },
     { label: "Opini Publik", to: "/opini-publik", group: "rubrik" },
-    { label: "Survei", to: "#", group: "rubrik" },
+    { label: "Survei", to: "/survei", group: "rubrik" },
     { label: "Portal Anggota", to: "/anggota", group: "fitur" },
 ];
 

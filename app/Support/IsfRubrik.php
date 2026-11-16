@@ -36,6 +36,11 @@ final class IsfRubrik
             'label' => 'Opini Publik',
             'description' => 'Wadah pemikiran kritis, pandangan resmi redaksi, dan suara kontribusi publik.',
         ],
+        'survei' => [
+            'title' => 'Survei',
+            'label' => 'Survei',
+            'description' => 'Dashboard temuan survei opini publik nasional dan regional dari ISF dan lembaga terpercaya.',
+        ],
     ];
 
     /** Kategori lama → kategori gabungan. */

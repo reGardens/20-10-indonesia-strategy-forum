@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\Isf\Cms\PolicyMonitoringController;
 use App\Http\Controllers\Api\Isf\Cms\ReaderPollController;
 use App\Http\Controllers\Api\Isf\Cms\PublicQuoteController;
 use App\Http\Controllers\Api\Isf\Cms\LetterController;
+use App\Http\Controllers\Api\Isf\Cms\SurveyController;
 use App\Http\Controllers\Api\Isf\Cms\SettingController;
 use App\Http\Controllers\Api\Isf\Cms\TokohController;
 use App\Http\Controllers\Api\Isf\PublicAdController;
@@ -68,6 +69,8 @@ Route::middleware(['web'])->prefix('isf')->group(function () {
     Route::get('/kutipan-publik', [PublicContentController::class, 'kutipanPublik'])->name('api.isf.kutipan-publik');
     Route::get('/surat-pembaca', [PublicContentController::class, 'suratPembaca'])->name('api.isf.surat-pembaca');
     Route::post('/surat-pembaca', [PublicContentController::class, 'submitSuratPembaca'])->middleware('throttle:6,1')->name('api.isf.surat-pembaca.submit');
+    Route::get('/survei', [PublicContentController::class, 'survei'])->name('api.isf.survei');
+    Route::get('/survei/{slug}', [PublicContentController::class, 'surveiDetail'])->name('api.isf.survei.show');
     Route::get('/kategori/{kategori}', [PublicContentController::class, 'kategori'])->name('api.isf.kategori');
     Route::get('/infografik', [PublicContentController::class, 'infografik'])->name('api.isf.infografik');
     Route::get('/infografik/{slug}', [PublicContentController::class, 'infografikDetail'])->name('api.isf.infografik.show');
@@ -123,6 +126,8 @@ Route::middleware(['web', 'auth'])->prefix('cms')->name('api.cms.')->group(funct
         ->middleware('feature:surat_pembaca')->name('api.cms.surat-pembaca.approve');
     Route::post('/surat-pembaca/{suratPembaca}/reject', [LetterController::class, 'reject'])
         ->middleware('feature:surat_pembaca')->name('api.cms.surat-pembaca.reject');
+    Route::apiResource('survei', SurveyController::class)
+        ->parameters(['survei' => 'survei'])->middleware('feature:survei');
 
     Route::get('/pengaturan-halaman', [SettingController::class, 'show'])
         ->middleware('feature:pengaturan_halaman')->name('pengaturan-halaman.show');
