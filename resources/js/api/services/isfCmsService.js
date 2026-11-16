@@ -55,6 +55,7 @@ export const cmsResources = {
   readerPoll: createCmsResource('reader-poll'),
   kutipanPublik: createCmsResource('kutipan-publik'),
   suratPembaca: createCmsResource('surat-pembaca'),
+  survei: createCmsResource('survei'),
   iklan: {
     ...createCmsResource('iklan'),
     reorder: (items) => http.post('/cms/iklan/reorder', { items }).then((r) => r.data),

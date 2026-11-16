@@ -34,4 +34,6 @@ export { default as MonitoringKebijakan } from './MonitoringKebijakan.vue';
 export { default as ReaderPollCard } from './ReaderPollCard.vue';
 export { default as KutipanPublikCard } from './KutipanPublikCard.vue';
 export { default as SuratPembacaForm } from './SuratPembacaForm.vue';
+export { default as SurveiCard } from './SurveiCard.vue';
+export { default as SurveiChart } from './SurveiChart.vue';
 

@@ -12,7 +12,7 @@ final class IsfOptions
      * Content categories (CategoryLabel.vue) = section Beranda = menu navbar.
      * ruu → hukum & ekonomi → kebijakan digabung (migration 2026_11_14_000003).
      */
-    public const CATEGORIES = ['politik', 'kebijakan', 'hukum', 'opini'];
+    public const CATEGORIES = ['politik', 'kebijakan', 'hukum', 'opini', 'survei'];
 
     /** Alert priorities: merah = Prioritas Tinggi, kuning = Perlu Dipantau. */
     public const PRIORITIES = ['merah', 'kuning'];

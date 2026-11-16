@@ -315,6 +315,24 @@ const routes = [
     redirect: '/opini-publik'
   },
   {
+    path: '/survei',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-survei',
+        component: () => import('../Pages/Isf/views/SurveiView.vue'),
+        meta: { title: 'Survei Opini Publik · Indonesia Strategy Forum' }
+      },
+      {
+        path: ':slug',
+        name: 'isf-survei-detail',
+        component: () => import('../Pages/Isf/views/SurveiDetailView.vue'),
+        meta: { title: 'Detail Survei · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
     // Artikel per kategori: /artikel/{kategori} = daftar, /artikel/{kategori}/{slug} = detail.
     // Detail = child route, jadi menu navbar kategori tetap aktif (router-link-active).
     path: '/artikel/:kategori(hukum|kebijakan|opini|opini-publik)',

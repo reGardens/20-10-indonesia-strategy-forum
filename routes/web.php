@@ -30,6 +30,8 @@ Route::get('/kebijakan-publik', [SpaController::class, 'index'])->name('isf.kebi
 Route::get('/kebijakan-publik/{subkategori}', [SpaController::class, 'index'])->whereIn('subkategori', ['ekonomi', 'kesehatan', 'pendidikan', 'pertahanan', 'lingkungan', 'policy-brief', 'monitoring'])->name('isf.kebijakan-publik.subkategori');
 Route::get('/opini-publik', [SpaController::class, 'index'])->name('isf.opini-publik');
 Route::get('/opini-publik/{subkategori}', [SpaController::class, 'index'])->whereIn('subkategori', ['op-ed', 'editorial', 'surat-pembaca', 'polling', 'kutipan'])->name('isf.opini-publik.subkategori');
+Route::get('/survei', [SpaController::class, 'index'])->name('isf.survei');
+Route::get('/survei/{slug}', [SpaController::class, 'index'])->name('isf.survei.show');
 // Artikel per kategori: /artikel/{kategori} = daftar (mis. /artikel/ruu), /artikel/{kategori}/{slug} = detail.
 Route::get('/artikel/{kategori}', [SpaController::class, 'index'])->whereIn('kategori', IsfRubrik::keys())->name('isf.kategori');
 Route::get('/artikel/{kategori}/{slug}', [ArticlePageController::class, 'show'])->whereIn('kategori', IsfRubrik::keys())->name('isf.artikel.show');
@@ -109,6 +111,7 @@ Route::middleware('auth')->group(function () {
         'reader-poll' => 'reader_poll',
         'kutipan-publik' => 'kutipan_publik',
         'surat-pembaca' => 'surat_pembaca',
+        'survei' => 'survei',
     ];
     foreach ($isfModules as $segment => $feature) {
         Route::middleware("feature:{$feature}")->prefix("cms/{$segment}")->group(function () use ($segment) {

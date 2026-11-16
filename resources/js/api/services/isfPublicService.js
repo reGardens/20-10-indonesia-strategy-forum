@@ -172,6 +172,24 @@ export function submitSuratPembaca(payload) {
   return http.post('/isf/surat-pembaca', payload).then((r) => r.data)
 }
 
+export function getSurvei(params = {}) {
+  const query = typeof params === 'string' ? { isu: params } : params
+  const qs = new URLSearchParams()
+  if (query.isu && query.isu !== 'semua') qs.set('isu', query.isu)
+  if (query.topic && query.topic !== 'semua') qs.set('topic', query.topic)
+  if (query.wilayah && query.wilayah !== 'semua') qs.set('wilayah', query.wilayah)
+  if (query.region && query.region !== 'semua') qs.set('region', query.region)
+  if (query.page && query.page > 1) qs.set('page', String(query.page))
+  if (query.limit && query.limit !== 9) qs.set('limit', String(query.limit))
+  if (query.q) qs.set('q', query.q)
+  const queryString = qs.toString()
+  return get('/isf/survei' + (queryString ? `?${queryString}` : ''))
+}
+
+export function getSurveiDetail(slug) {
+  return get(`/isf/survei/${slug}`)
+}
+
 export function searchContent(params = {}) {
   const query = typeof params === 'string' ? { q: params } : params
   const qs = new URLSearchParams()
@@ -227,4 +245,4 @@ export function isNotFound(error) {
   return error?.response?.status === 404
 }
 
-export default { getBeranda, getTokoh, getAnggota, getInfografik, getMediaDetail, getArtikel, getInfografikDetail, getKategori, getPolitik, getPetaKursi, getHukum, getGlosariumHukum, getTimelineKasus, getKebijakanPublik, getPolicyBriefs, getMonitoringKebijakan, getOpiniPublik, getReaderPoll, voteReaderPoll, getKutipanPublik, getSuratPembaca, submitSuratPembaca, searchContent, getAds, trackAdImpression, trackAdClick, isNotFound }
+export default { getBeranda, getTokoh, getAnggota, getInfografik, getMediaDetail, getArtikel, getInfografikDetail, getKategori, getPolitik, getPetaKursi, getHukum, getGlosariumHukum, getTimelineKasus, getKebijakanPublik, getPolicyBriefs, getMonitoringKebijakan, getOpiniPublik, getReaderPoll, voteReaderPoll, getKutipanPublik, getSuratPembaca, submitSuratPembaca, getSurvei, getSurveiDetail, searchContent, getAds, trackAdImpression, trackAdClick, isNotFound }

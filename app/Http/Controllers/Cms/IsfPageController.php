@@ -38,6 +38,7 @@ class IsfPageController extends Controller
         'reader-poll' => 'ReaderPoll',
         'kutipan-publik' => 'PublicQuote',
         'surat-pembaca' => 'Letter',
+        'survei' => 'Survey',
     ];
 
     public function index(Request $request): Response
