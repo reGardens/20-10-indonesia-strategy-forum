@@ -36,4 +36,6 @@ export { default as KutipanPublikCard } from './KutipanPublikCard.vue';
 export { default as SuratPembacaForm } from './SuratPembacaForm.vue';
 export { default as SurveiCard } from './SurveiCard.vue';
 export { default as SurveiChart } from './SurveiChart.vue';
+export { default as SosokCard } from './SosokCard.vue';
+export { default as SosokNetworkGraph } from './SosokNetworkGraph.vue';
 

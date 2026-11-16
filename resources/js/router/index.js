@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { getBeranda, getAnggota, getInfografik, getTokoh, getMediaDetail, getArtikel, getInfografikDetail, getKategori, getPolitik } from '@/api/services/isfPublicService'
+import { getBeranda, getAnggota, getInfografik, getTokoh, getMediaDetail, getArtikel, getInfografikDetail, getKategori, getPolitik, getSosok, getSosokDetail } from '@/api/services/isfPublicService'
 
 const CmsLayout = () => import('../Pages/Cms/layouts/CmsLayout.vue')
 const InvitationLayout = () => import('../Pages/Landing/invitation/layouts/InvitationLayout.vue')
@@ -195,6 +195,36 @@ const routes = [
         name: 'isf-infografik-detail',
         component: () => import('../Pages/Isf/views/InfografikDetailView.vue'),
         meta: { title: 'Infografik · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
+    path: '/sosok',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-sosok',
+        component: () => import('../Pages/Isf/views/SosokView.vue'),
+        meta: { title: 'Sosok & Tokoh Strategis · Indonesia Strategy Forum' }
+      },
+      {
+        path: ':kategori(eksekutif|legislatif|yudikatif|pakar|militer|pengusaha)',
+        name: 'isf-sosok-kategori',
+        component: () => import('../Pages/Isf/views/SosokView.vue'),
+        meta: { title: 'Sosok & Tokoh Strategis · Indonesia Strategy Forum' }
+      },
+      {
+        path: ':slug',
+        name: 'isf-sosok-detail',
+        component: () => import('../Pages/Isf/views/SosokDetailView.vue'),
+        meta: { title: 'Detail Tokoh · Indonesia Strategy Forum' }
+      },
+      {
+        path: ':slug/:tab(profil|analisis|jejaring|berita|kontroversi)',
+        name: 'isf-sosok-detail-tab',
+        component: () => import('../Pages/Isf/views/SosokDetailView.vue'),
+        meta: { title: 'Detail Tokoh · Indonesia Strategy Forum' }
       }
     ]
   },
@@ -482,8 +512,18 @@ router.beforeResolve((to) => {
       getKategori(to.params.kategori)
     } else if (to.name === 'isf-politik' || to.name === 'isf-politik-subkategori') {
       getPolitik(to.params.subkategori)
+    } else if (to.name === 'isf-sosok' || to.name === 'isf-sosok-kategori') {
+      getSosok({ kategori: to.params.kategori })
+    } else if ((to.name === 'isf-sosok-detail' || to.name === 'isf-sosok-detail-tab') && to.params.slug) {
+      getSosokDetail(to.params.slug)
     }
   } catch {}
+})
+
+router.afterEach((to) => {
+  if (to.meta?.title && typeof document !== 'undefined') {
+    document.title = to.meta.title
+  }
 })
 
 export default router
