@@ -43,7 +43,10 @@ const features = [
     { key: "glosarium_hukum", label: "Glosarium Hukum", desc: "Kamus istilah hukum interaktif, definisi, dasar hukum, istilah terkait, dan status" },
     { key: "timeline_kasus", label: "Timeline Kasus", desc: "Kelola alur waktu kasus hukum besar/tipikor, kronologi peristiwa, tahap, dan sumber" },
     { key: "policy_brief", label: "Policy Brief", desc: "Ringkasan eksekutif riset kebijakan, rekomendasi kunci, dokumen PDF, dan status" },
-    { key: "monitoring_kebijakan", label: "Monitoring Kebijakan", desc: "Pelacakan program pemerintah, komparasi Janji vs Realisasi, progres %, dan status evaluasi" }
+    { key: "monitoring_kebijakan", label: "Monitoring Kebijakan", desc: "Pelacakan program pemerintah, komparasi Janji vs Realisasi, progres %, dan status evaluasi" },
+    { key: "reader_poll", label: "Reader Poll (Jajak Pendapat)", desc: "Kelola pertanyaan jajak pendapat publik, opsi dinamis, periode aktif, dan pantau rekapitulasi suara" },
+    { key: "kutipan_publik", label: "Kutipan Publik", desc: "Kumpulan kutipan tokoh dan warga netizen terkait isu strategis nasional, sumber, dan tautan profil" },
+    { key: "surat_pembaca", label: "Moderasi Surat Pembaca", desc: "Kelola dan moderasi antrean surat pembaca publik (setujui, tolak, penyuntingan editorial)" }
 ];
 
 function toggleFeature(featureKey) {

@@ -35,6 +35,9 @@ class IsfPageController extends Controller
         'timeline-kasus' => 'TimelineKasus',
         'policy-brief' => 'PolicyBrief',
         'monitoring-kebijakan' => 'MonitoringKebijakan',
+        'reader-poll' => 'ReaderPoll',
+        'kutipan-publik' => 'PublicQuote',
+        'surat-pembaca' => 'Letter',
     ];
 
     public function index(Request $request): Response

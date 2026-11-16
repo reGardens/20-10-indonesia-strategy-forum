@@ -28,6 +28,8 @@ Route::get('/hukum', [SpaController::class, 'index'])->name('isf.hukum');
 Route::get('/hukum/{subkategori}', [SpaController::class, 'index'])->whereIn('subkategori', ['regulasi', 'putusan', 'kasus', 'glosarium'])->name('isf.hukum.subkategori');
 Route::get('/kebijakan-publik', [SpaController::class, 'index'])->name('isf.kebijakan-publik');
 Route::get('/kebijakan-publik/{subkategori}', [SpaController::class, 'index'])->whereIn('subkategori', ['ekonomi', 'kesehatan', 'pendidikan', 'pertahanan', 'lingkungan', 'policy-brief', 'monitoring'])->name('isf.kebijakan-publik.subkategori');
+Route::get('/opini-publik', [SpaController::class, 'index'])->name('isf.opini-publik');
+Route::get('/opini-publik/{subkategori}', [SpaController::class, 'index'])->whereIn('subkategori', ['op-ed', 'editorial', 'surat-pembaca', 'polling', 'kutipan'])->name('isf.opini-publik.subkategori');
 // Artikel per kategori: /artikel/{kategori} = daftar (mis. /artikel/ruu), /artikel/{kategori}/{slug} = detail.
 Route::get('/artikel/{kategori}', [SpaController::class, 'index'])->whereIn('kategori', IsfRubrik::keys())->name('isf.kategori');
 Route::get('/artikel/{kategori}/{slug}', [ArticlePageController::class, 'show'])->whereIn('kategori', IsfRubrik::keys())->name('isf.artikel.show');
@@ -104,6 +106,9 @@ Route::middleware('auth')->group(function () {
         'timeline-kasus' => 'timeline_kasus',
         'policy-brief' => 'policy_brief',
         'monitoring-kebijakan' => 'monitoring_kebijakan',
+        'reader-poll' => 'reader_poll',
+        'kutipan-publik' => 'kutipan_publik',
+        'surat-pembaca' => 'surat_pembaca',
     ];
     foreach ($isfModules as $segment => $feature) {
         Route::middleware("feature:{$feature}")->prefix("cms/{$segment}")->group(function () use ($segment) {
