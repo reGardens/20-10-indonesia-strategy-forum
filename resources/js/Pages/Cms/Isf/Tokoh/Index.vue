@@ -32,8 +32,38 @@ const errorMsg = ref('')
 
 const search = ref('')
 const statusFilter = ref('')
+const kategoriFilter = ref('')
 const page = ref(1)
 let searchTimeout = null
+
+const ROLE_CATEGORIES = [
+  { value: '', label: 'Semua Kategori' },
+  { value: 'eksekutif', label: 'Eksekutif' },
+  { value: 'legislatif', label: 'Legislatif' },
+  { value: 'yudikatif', label: 'Yudikatif' },
+  { value: 'pakar', label: 'Pakar' },
+  { value: 'militer', label: 'Militer' },
+  { value: 'pengusaha', label: 'Pengusaha' }
+]
+
+function getCategoryColor(cat) {
+  switch (cat) {
+    case 'eksekutif':
+      return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-900/60'
+    case 'legislatif':
+      return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900/60'
+    case 'yudikatif':
+      return 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-900/60'
+    case 'pakar':
+      return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/60'
+    case 'militer':
+      return 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/60'
+    case 'pengusaha':
+      return 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-900/60'
+    default:
+      return 'bg-muted text-muted-foreground border-border'
+  }
+}
 
 async function loadData() {
   loading.value = true
@@ -42,7 +72,8 @@ async function loadData() {
     const res = await cmsResources.tokoh.list({
       page: page.value,
       q: search.value || undefined,
-      status: statusFilter.value || undefined
+      status: statusFilter.value || undefined,
+      role_category: kategoriFilter.value || undefined
     })
     items.value = res.data || []
     meta.value = {
@@ -69,6 +100,12 @@ function onSearchInput() {
 
 function onStatusChange(val) {
   statusFilter.value = val
+  page.value = 1
+  loadData()
+}
+
+function onKategoriChange(val) {
+  kategoriFilter.value = val
   page.value = 1
   loadData()
 }
@@ -121,59 +158,82 @@ onMounted(() => {
     </div>
 
     <!-- Filter and Search -->
-    <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-      <div class="relative w-full sm:w-80">
-        <Input
-          v-model="search"
-          @input="onSearchInput"
-          placeholder="Cari nama atau jabatan tokoh..."
-          class="pl-9 h-9 text-xs"
-        />
-        <IconComponent
-          name="Search"
-          :size="16"
-          class="absolute left-3 top-2.5 text-muted-foreground pointer-events-none"
-        />
+    <div class="flex flex-col gap-3">
+      <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+        <div class="relative w-full sm:w-80">
+          <Input
+            v-model="search"
+            @input="onSearchInput"
+            placeholder="Cari nama atau jabatan tokoh..."
+            class="pl-9 h-9 text-xs"
+          />
+          <IconComponent
+            name="Search"
+            :size="16"
+            class="absolute left-3 top-2.5 text-muted-foreground pointer-events-none"
+          />
+        </div>
+
+        <div class="flex items-center gap-2 overflow-x-auto w-full sm:w-auto justify-start py-0.5">
+          <span class="text-xs text-muted-foreground whitespace-nowrap">Status:</span>
+          <div class="flex gap-1">
+            <button
+              type="button"
+              @click="onStatusChange('')"
+              :class="[
+                'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+                statusFilter === ''
+                  ? 'bg-red-600 text-white'
+                  : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+              ]"
+            >
+              Semua
+            </button>
+            <button
+              type="button"
+              @click="onStatusChange('terbit')"
+              :class="[
+                'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+                statusFilter === 'terbit'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+              ]"
+            >
+              Terbit
+            </button>
+            <button
+              type="button"
+              @click="onStatusChange('draf')"
+              :class="[
+                'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+                statusFilter === 'draf'
+                  ? 'bg-amber-600 text-white'
+                  : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+              ]"
+            >
+              Draf
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div class="flex items-center gap-2 overflow-x-auto w-full sm:w-auto justify-start py-0.5">
-        <span class="text-xs text-muted-foreground whitespace-nowrap">Status:</span>
-        <div class="flex gap-1">
+      <!-- Kategori Peran Filter Bar -->
+      <div class="flex items-center gap-2 overflow-x-auto w-full justify-start pb-1">
+        <span class="text-xs text-muted-foreground whitespace-nowrap font-medium">Peran:</span>
+        <div class="flex gap-1 overflow-x-auto">
           <button
+            v-for="cat in ROLE_CATEGORIES"
+            :key="cat.value"
             type="button"
-            @click="onStatusChange('')"
+            @click="onKategoriChange(cat.value)"
             :class="[
-              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
-              statusFilter === ''
-                ? 'bg-red-600 text-white'
+              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors whitespace-nowrap',
+              kategoriFilter === cat.value
+                ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-semibold'
                 : 'bg-card text-muted-foreground hover:bg-accent border border-border'
             ]"
           >
-            Semua
-          </button>
-          <button
-            type="button"
-            @click="onStatusChange('terbit')"
-            :class="[
-              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
-              statusFilter === 'terbit'
-                ? 'bg-emerald-600 text-white'
-                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
-            ]"
-          >
-            Terbit
-          </button>
-          <button
-            type="button"
-            @click="onStatusChange('draf')"
-            :class="[
-              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
-              statusFilter === 'draf'
-                ? 'bg-amber-600 text-white'
-                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
-            ]"
-          >
-            Draf
+            {{ cat.label }}
           </button>
         </div>
       </div>
@@ -189,16 +249,17 @@ onMounted(() => {
         <TableHeader>
           <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
             <TableHead class="w-12 text-center text-xs">#</TableHead>
-            <TableHead class="w-[45%]">Nama & Slug</TableHead>
-            <TableHead>Jabatan / Posisi</TableHead>
+            <TableHead class="w-[35%]">Tokoh & Profil</TableHead>
+            <TableHead class="w-[18%]">Peran & Skor</TableHead>
+            <TableHead class="w-[20%]">Jabatan / Posisi</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Tokoh Pekan Ini</TableHead>
+            <TableHead>Sorotan</TableHead>
             <TableHead class="text-right">Aksi</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow v-if="items.length === 0">
-            <TableCell colspan="6" class="text-center py-10 text-muted-foreground text-sm">
+            <TableCell colspan="7" class="text-center py-10 text-muted-foreground text-sm">
               Tidak ada data tokoh ditemukan.
             </TableCell>
           </TableRow>
@@ -215,7 +276,20 @@ onMounted(() => {
                 {{ item.name }}
               </div>
               <div class="text-xs text-muted-foreground font-mono mt-0.5 truncate">
-                /tokoh/{{ item.slug }}
+                /sosok/{{ item.slug }}
+              </div>
+            </TableCell>
+            <TableCell>
+              <div class="flex flex-col gap-1 items-start">
+                <span
+                  class="text-[11px] font-semibold px-2 py-0.5 rounded border capitalize"
+                  :class="getCategoryColor(item.role_category)"
+                >
+                  {{ item.role_category || 'Tokoh' }}
+                </span>
+                <span class="text-[11px] font-mono font-medium text-muted-foreground">
+                  Skor: <span class="font-bold text-foreground">{{ item.influence_score ?? item.skor_value ?? '-' }}</span>/100
+                </span>
               </div>
             </TableCell>
             <TableCell class="text-xs text-foreground font-medium">
@@ -226,6 +300,12 @@ onMounted(() => {
             </TableCell>
             <TableCell>
               <div class="flex flex-col items-start gap-1">
+                <span
+                  v-if="item.is_influential_weekly"
+                  class="text-[9px] px-1.5 py-0.5 rounded bg-red-600 text-white font-bold"
+                >
+                  ★ Tokoh Minggu Ini
+                </span>
                 <LiveBadge v-if="item.id === liveId" label="Pekan Ini Tayang" />
                 <span
                   v-else-if="item.is_featured"
@@ -239,7 +319,7 @@ onMounted(() => {
                 >
                   Profil Politik
                 </span>
-                <span v-if="!item.is_featured && !item.show_in_politik && item.id !== liveId" class="text-xs text-muted-foreground">-</span>
+                <span v-if="!item.is_featured && !item.show_in_politik && item.id !== liveId && !item.is_influential_weekly" class="text-xs text-muted-foreground">-</span>
               </div>
             </TableCell>
             <TableCell class="text-right">

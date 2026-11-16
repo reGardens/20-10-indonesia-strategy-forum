@@ -190,6 +190,23 @@ export function getSurveiDetail(slug) {
   return get(`/isf/survei/${slug}`)
 }
 
+export function getSosok(params = {}) {
+  const qs = new URLSearchParams()
+  if (params.kategori && params.kategori !== 'semua') qs.set('kategori', params.kategori)
+  if (params.category && params.category !== 'semua') qs.set('kategori', params.category)
+  if (params.isu && params.isu !== 'semua') qs.set('isu', params.isu)
+  if (params.abjad && params.abjad !== 'semua') qs.set('abjad', params.abjad)
+  if (params.q) qs.set('q', params.q)
+  if (params.page && params.page > 1) qs.set('page', String(params.page))
+  if (params.limit && params.limit !== 12) qs.set('limit', String(params.limit))
+  const queryString = qs.toString()
+  return get('/isf/sosok' + (queryString ? `?${queryString}` : ''))
+}
+
+export function getSosokDetail(slug) {
+  return get(`/isf/sosok/${slug}`)
+}
+
 export function searchContent(params = {}) {
   const query = typeof params === 'string' ? { q: params } : params
   const qs = new URLSearchParams()
@@ -245,4 +262,4 @@ export function isNotFound(error) {
   return error?.response?.status === 404
 }
 
-export default { getBeranda, getTokoh, getAnggota, getInfografik, getMediaDetail, getArtikel, getInfografikDetail, getKategori, getPolitik, getPetaKursi, getHukum, getGlosariumHukum, getTimelineKasus, getKebijakanPublik, getPolicyBriefs, getMonitoringKebijakan, getOpiniPublik, getReaderPoll, voteReaderPoll, getKutipanPublik, getSuratPembaca, submitSuratPembaca, getSurvei, getSurveiDetail, searchContent, getAds, trackAdImpression, trackAdClick, isNotFound }
+export default { getBeranda, getTokoh, getAnggota, getInfografik, getMediaDetail, getArtikel, getInfografikDetail, getKategori, getPolitik, getPetaKursi, getHukum, getGlosariumHukum, getTimelineKasus, getKebijakanPublik, getPolicyBriefs, getMonitoringKebijakan, getOpiniPublik, getReaderPoll, voteReaderPoll, getKutipanPublik, getSuratPembaca, submitSuratPembaca, getSurvei, getSurveiDetail, getSosok, getSosokDetail, searchContent, getAds, trackAdImpression, trackAdClick, isNotFound }

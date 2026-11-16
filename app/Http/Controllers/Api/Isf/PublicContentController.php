@@ -26,6 +26,7 @@ use App\Models\Isf\ReaderPollVote;
 use App\Models\Isf\PublicQuote;
 use App\Models\Isf\Letter;
 use App\Models\Isf\Survey;
+use App\Models\Isf\TokohReview;
 use App\Http\Requests\Isf\LetterSubmissionRequest;
 use App\Support\IsfRubrik;
 use App\Models\Isf\Setting;
@@ -2886,6 +2887,264 @@ HTML;
         return response()->json([
             'survey' => $survey,
             'relatedSurveys' => $relatedSurveys,
+        ]);
+    }
+
+    /**
+     * Map model Tokoh ke kartu representasi Sosok publik.
+     */
+    private function sosokCardMapper(): \Closure
+    {
+        return fn(Tokoh $t) => [
+            'id' => $t->id,
+            'slug' => $t->slug,
+            'name' => $t->name,
+            'position' => $t->position,
+            'role_category' => $t->role_category ?? 'legislatif',
+            'role_category_label' => Tokoh::ROLE_CATEGORIES[$t->role_category] ?? ucfirst($t->role_category ?? 'Tokoh'),
+            'issues' => $t->issues ?? [],
+            'summary_analysis' => $t->summary_analysis ?? $t->teaser ?? '',
+            'bio' => $t->bio ?? $t->teaser ?? '',
+            'photo_url' => $t->photo_url,
+            'photo_alt' => $t->photo_alt ?: "Foto profil {$t->name}",
+            'influence_score' => $t->influence_score ?? $t->skor_value ?? 75,
+            'skor_value' => $t->skor_value ?? 75,
+            'is_influential_weekly' => (bool) ($t->is_influential_weekly || $t->is_featured),
+            'to' => "/sosok/{$t->slug}",
+        ];
+    }
+
+    /**
+     * GET /api/isf/sosok
+     *
+     * Halaman Indeks & Subkategori Rubrik Sosok (/sosok dan /sosok/[kategori]):
+     * - Hero: Tokoh Paling Berpengaruh Minggu Ini
+     * - Filter: Kategori (eksekutif, legislatif, dll.), Isu, dan Alfabet A-Z
+     * - Grid profil tokoh publik
+     */
+    public function sosok(Request $request): JsonResponse
+    {
+        $kategori = $request->query('kategori') ?? $request->query('category');
+        $isu = $request->query('isu') ?? $request->query('issue');
+        $abjad = $request->query('abjad') ?? $request->query('alphabet');
+        $q = $request->query('q');
+        $page = max(1, (int) $request->query('page', 1));
+        $limit = max(1, min(50, (int) $request->query('limit', 12)));
+
+        $query = Tokoh::query()->terbit();
+
+        if ($kategori && $kategori !== 'semua') {
+            $query->roleCategory($kategori);
+        }
+
+        if ($isu && $isu !== 'semua') {
+            $query->issue($isu);
+        }
+
+        if ($abjad && $abjad !== 'semua') {
+            $query->alphabet($abjad);
+        }
+
+        if ($q && trim($q) !== '') {
+            $term = '%' . trim($q) . '%';
+            $query->where(function ($sub) use ($term) {
+                $sub->where('name', 'like', $term)
+                    ->orWhere('position', 'like', $term)
+                    ->orWhere('summary_analysis', 'like', $term)
+                    ->orWhere('bio', 'like', $term);
+            });
+        }
+
+        // Hero: Tokoh Paling Berpengaruh Minggu Ini
+        $featuredHero = Tokoh::currentFeatured();
+
+        $total = (clone $query)->count();
+        $items = $query->orderBy('name', 'asc')
+            ->forPage($page, $limit)
+            ->get();
+
+        $lastPage = max(1, (int) ceil($total / $limit));
+        $cardMapper = $this->sosokCardMapper();
+
+        return response()->json([
+            'rubrik' => [
+                'key' => 'sosok',
+                'title' => 'Sosok',
+                'label' => 'Sosok',
+                'description' => 'Direktori komprehensif profil tokoh nasional, rekam jejak, skor pengaruh, dan pemetaan jejaring strategis.',
+                'kategoriOptions' => [
+                    ['slug' => 'semua', 'name' => 'Semua Kategori'],
+                    ['slug' => 'eksekutif', 'name' => 'Eksekutif (Presiden, Menteri, Gubernur)'],
+                    ['slug' => 'legislatif', 'name' => 'Legislatif (DPR, DPD, MPR)'],
+                    ['slug' => 'yudikatif', 'name' => 'Yudikatif (Hakim Agung, Hakim MK)'],
+                    ['slug' => 'pakar', 'name' => 'Akademisi & Pakar'],
+                    ['slug' => 'militer', 'name' => 'Militer & Hankam (TNI, Polri)'],
+                    ['slug' => 'pengusaha', 'name' => 'Pengusaha'],
+                ],
+                'activeKategori' => $kategori ?: 'semua',
+                'isuOptions' => [
+                    ['slug' => 'semua', 'name' => 'Semua Isu'],
+                    ['slug' => 'politik', 'name' => 'Politik'],
+                    ['slug' => 'hukum', 'name' => 'Hukum'],
+                    ['slug' => 'ekonomi', 'name' => 'Ekonomi'],
+                    ['slug' => 'pertahanan', 'name' => 'Pertahanan'],
+                    ['slug' => 'kebijakan', 'name' => 'Kebijakan'],
+                ],
+                'activeIsu' => $isu ?: 'semua',
+                'activeAbjad' => $abjad ?: 'semua',
+            ],
+            'hero' => $featuredHero ? $cardMapper($featuredHero) : null,
+            'items' => $items->map($cardMapper)->values()->all(),
+            'meta' => [
+                'currentPage' => $page,
+                'lastPage' => $lastPage,
+                'total' => $total,
+                'perPage' => $limit,
+            ],
+        ]);
+    }
+
+    /**
+     * GET /api/isf/sosok/{slug}
+     *
+     * Halaman Detail Tokoh dengan 5 Tab:
+     * - Tab 1: Profil & Rekam Jejak (/profil)
+     * - Tab 2: Analisis ISF (/analisis): skor pengaruh, policy brief, rating & ulasan (#41), jejak kebijakan
+     * - Tab 3: Jejaring & Afiliasi (/jejaring): visualisasi relasi, partai/organisasi, sekutu & oposan
+     * - Tab 4: Berita & Aktivitas (/berita): feed otomatis artikel yang menyebut tokoh/alias
+     * - Tab 5: Kutipan & Kontroversi (/kontroversi): kumpulan kutipan penting & timeline kontroversi
+     */
+    public function sosokDetail(Request $request, string $slug): JsonResponse
+    {
+        $tokoh = Tokoh::query()->terbit()->where('slug', $slug)->first();
+        if (! $tokoh) {
+            return $this->notFound('Tokoh tidak ditemukan.');
+        }
+
+        $cardMapper = $this->sosokCardMapper();
+
+        // 1. Tab Profil
+        $profil = [
+            'bio' => $tokoh->bio ?: $tokoh->teaser ?: '',
+            'career_timeline' => $tokoh->career_timeline ?? [],
+            'education' => $tokoh->education ?? [],
+            'positions_history' => $tokoh->positions_history ?? [],
+            'stats' => $tokoh->stats ?? [],
+            'affiliations' => $tokoh->affiliations ?? [],
+        ];
+
+        // 2. Tab Analisis ISF
+        $issues = (array) ($tokoh->issues ?? []);
+        $policyBriefs = PolicyBrief::query()->terbit()
+            ->where(function ($q) use ($issues) {
+                if (!empty($issues)) {
+                    $q->whereIn('sector', $issues);
+                }
+            })
+            ->orderByDesc('published_at')
+            ->limit(3)
+            ->get();
+
+        // Review summary (#41)
+        $reviewQuery = TokohReview::query()->where('tokoh_id', $tokoh->id);
+        $reviewCount = (clone $reviewQuery)->count();
+        $reviewAvg = $reviewCount > 0 ? round((clone $reviewQuery)->avg('rating'), 1) : 0.0;
+
+        $analisis = [
+            'influence_score' => $tokoh->influence_score ?? $tokoh->skor_value ?? 75,
+            'skorSorotan' => [
+                'value' => $tokoh->skor_value,
+                'period' => $tokoh->skor_period,
+                'explanation' => $tokoh->skor_explanation,
+            ],
+            'policyMatrix' => [
+                'columns' => $tokoh->matrix_columns ?? [],
+                'rows' => $tokoh->matrix_rows ?? [],
+            ],
+            'policyBriefs' => $policyBriefs,
+            'ratingSummary' => [
+                'average' => $reviewAvg,
+                'total' => $reviewCount,
+            ],
+        ];
+
+        // 3. Tab Jejaring & Afiliasi
+        $jejaring = [
+            'affiliations' => $tokoh->affiliations ?? [],
+            'allies' => $tokoh->allies ?? [],
+            'critics' => $tokoh->critics ?? [],
+        ];
+
+        // 4. Tab Berita & Aktivitas (otomatis dari artikel yang menyebut nama/alias)
+        $aliases = array_filter(array_merge([$tokoh->name], (array) ($tokoh->aliases ?? [])));
+        $articleQuery = Article::query()->terbit();
+        $articleQuery->where(function ($q) use ($aliases, $tokoh) {
+            foreach ($aliases as $alias) {
+                if (trim($alias) !== '') {
+                    $term = '%' . trim($alias) . '%';
+                    $q->orWhere('title', 'like', $term)
+                      ->orWhere('summary', 'like', $term)
+                      ->orWhere('body', 'like', $term);
+                }
+            }
+            if (!empty($tokoh->related_articles)) {
+                foreach ($tokoh->related_articles as $ra) {
+                    if (!empty($ra['title'])) {
+                        $q->orWhere('title', 'like', '%' . trim($ra['title']) . '%');
+                    }
+                }
+            }
+        });
+        $feedArticles = $articleQuery->orderByDesc('published_at')->limit(8)->get();
+        $articleCard = $this->articleCardMapper($this->categoryLabeler());
+
+        $berita = [
+            'articles' => $feedArticles->map($articleCard)->values()->all(),
+        ];
+
+        // 5. Tab Kutipan & Kontroversi
+        $quotes = $tokoh->quotes ?? [];
+        $controversies = $tokoh->controversies ?? [];
+        $publicQuotes = PublicQuote::query()->terbit()
+            ->where('author_name', 'like', "%{$tokoh->name}%")
+            ->limit(5)
+            ->get();
+
+        $kontroversi = [
+            'quotes' => $quotes,
+            'controversies' => $controversies,
+            'publicQuotes' => $publicQuotes,
+        ];
+
+        // Related Tokoh
+        $related = Tokoh::query()->terbit()
+            ->where('id', '!=', $tokoh->id)
+            ->where('role_category', $tokoh->role_category)
+            ->limit(4)
+            ->get();
+
+        if ($related->isEmpty()) {
+            $related = Tokoh::query()->terbit()
+                ->where('id', '!=', $tokoh->id)
+                ->limit(4)
+                ->get();
+        }
+
+        return response()->json([
+            'tokoh' => $cardMapper($tokoh),
+            'tabs' => [
+                'profil' => $profil,
+                'analisis' => $analisis,
+                'jejaring' => $jejaring,
+                'berita' => $berita,
+                'kontroversi' => $kontroversi,
+            ],
+            'calendar' => [
+                'year' => $tokoh->calendar_year,
+                'month' => $tokoh->calendar_month,
+                'events' => $tokoh->calendar_events ?? [],
+            ],
+            'relatedTokoh' => $related->map($cardMapper)->values()->all(),
         ]);
     }
 

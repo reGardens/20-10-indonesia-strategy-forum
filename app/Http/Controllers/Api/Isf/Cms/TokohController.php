@@ -14,11 +14,11 @@ class TokohController extends CmsResourceController
 {
     protected string $model = Tokoh::class;
 
-    protected array $listColumns = ['id', 'slug', 'name', 'position', 'is_featured', 'show_in_politik', 'status', 'updated_at'];
+    protected array $listColumns = ['id', 'slug', 'name', 'position', 'role_category', 'influence_score', 'is_featured', 'is_influential_weekly', 'show_in_politik', 'status', 'updated_at'];
 
-    protected array $searchColumns = ['name', 'slug'];
+    protected array $searchColumns = ['name', 'slug', 'position', 'summary_analysis'];
 
-    protected array $filterColumns = ['status', 'show_in_politik'];
+    protected array $filterColumns = ['status', 'role_category', 'show_in_politik', 'is_influential_weekly'];
 
     protected array $order = ['id' => 'desc'];
 

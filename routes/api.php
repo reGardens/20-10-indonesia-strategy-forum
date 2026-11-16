@@ -53,6 +53,14 @@ Route::middleware(['web'])->prefix('isf')->group(function () {
     Route::post('/tokoh/{slug}/ulasan', [TokohReviewController::class, 'store'])
         ->middleware(['auth', 'throttle:10,1'])
         ->name('api.isf.tokoh.ulasan.store');
+
+    // Rubrik Sosok (/sosok)
+    Route::get('/sosok', [PublicContentController::class, 'sosok'])->name('api.isf.sosok');
+    Route::get('/sosok/{slug}', [PublicContentController::class, 'sosokDetail'])->name('api.isf.sosok.show');
+    Route::get('/sosok/{slug}/ulasan', [TokohReviewController::class, 'index'])->name('api.isf.sosok.ulasan');
+    Route::post('/sosok/{slug}/ulasan', [TokohReviewController::class, 'store'])
+        ->middleware(['auth', 'throttle:10,1'])
+        ->name('api.isf.sosok.ulasan.store');
     Route::get('/media/{id}', [PublicContentController::class, 'mediaDetail'])->name('api.isf.media');
     Route::get('/artikel/{slug}', [PublicContentController::class, 'artikel'])->name('api.isf.artikel');
     Route::get('/politik', [PublicContentController::class, 'politik'])->name('api.isf.politik');

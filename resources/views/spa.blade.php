@@ -801,7 +801,7 @@
                         </aside>
                     </div>
                 </main>
-            @elseif(request()->is('tokoh/*'))
+            @elseif(request()->is('tokoh/*') || request()->is('sosok') || request()->is('sosok/*'))
                 @include('partials.isf-masthead')
                 <main class="isf-skel-article isf-skel-article--full isf-skel-pulse" aria-busy="true" aria-label="Memuat profil tokoh">
                     <div class="isf-skel-el" style="width: 120px; height: 12px; margin-bottom: 16px;"></div>
