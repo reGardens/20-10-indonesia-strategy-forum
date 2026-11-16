@@ -19,6 +19,8 @@ use App\Models\Isf\Chart;
 use App\Models\Isf\Infographic;
 use App\Models\Isf\LegalGlossary;
 use App\Models\Isf\ParliamentSeat;
+use App\Models\Isf\PolicyBrief;
+use App\Models\Isf\PolicyTracker;
 use App\Support\IsfRubrik;
 use App\Models\Isf\Setting;
 use App\Models\Isf\Tokoh;
@@ -1006,6 +1008,276 @@ class PublicContentController extends Controller
 
         return response()->json([
             'data' => $timelines,
+        ]);
+    }
+
+    /**
+     * GET /api/isf/kebijakan-publik
+     *
+     * Halaman Rubrik Kebijakan Publik:
+     * - Kategori induk Kebijakan Publik & sub-kategori sektoral (ekonomi, kesehatan, pendidikan, pertahanan, lingkungan)
+     * - Headline utama kebijakan publik & arsip artikel terpaginasi
+     * - Policy Brief (ringkasan eksekutif riset & dokumen PDF yang bisa diunduh)
+     * - Data & Statistik (grafik interaktif APBN, BPS, dll.)
+     * - Monitoring Kebijakan (pelacakan program pemerintah: Janji vs Realisasi)
+     */
+    public function kebijakanPublik(Request $request): JsonResponse
+    {
+        $subkategori = $request->query('subkategori') ? strtolower(trim((string) $request->query('subkategori'))) : null;
+        $page = max(1, (int) $request->input('page', 1));
+        $limit = min(24, max(1, (int) $request->input('limit', 9)));
+
+        // Kategori induk Kebijakan Publik
+        $kebijakanCat = Category::query()->terbit()->where('slug', 'kebijakan')->first();
+        $subcategories = [];
+        if ($kebijakanCat) {
+            $subcategories = Category::query()
+                ->terbit()
+                ->where('parent_id', $kebijakanCat->id)
+                ->orderBy('order', 'asc')
+                ->orderBy('id', 'asc')
+                ->get(['id', 'name', 'slug', 'description', 'color'])
+                ->map(fn (Category $c) => [
+                    'id' => $c->id,
+                    'name' => $c->name,
+                    'slug' => $c->slug,
+                    'description' => $c->description,
+                    'color' => $c->color,
+                ])
+                ->values()
+                ->all();
+        }
+
+        if (empty($subcategories)) {
+            $subcategories = [
+                ['name' => 'Ekonomi & Fiskal', 'slug' => 'ekonomi', 'description' => 'Kebijakan fiskal, APBN, moneter, inflasi, dan stabilitas makroekonomi.'],
+                ['name' => 'Kesehatan Masyarakat', 'slug' => 'kesehatan', 'description' => 'Sistem kesehatan nasional, BPJS, ketahanan farmasi, dan layanan medis.'],
+                ['name' => 'Pendidikan & Riset', 'slug' => 'pendidikan', 'description' => 'Kurikulum, alokasi anggaran pendidikan, riset teknologi, dan SDM.'],
+                ['name' => 'Pertahanan & Keamanan', 'slug' => 'pertahanan', 'description' => 'Modernisasi alutsista, ketahanan siber, diplomasi pertahanan, dan perbatasan.'],
+                ['name' => 'Lingkungan & Energi', 'slug' => 'lingkungan', 'description' => 'Transisi energi terbarukan, dekarbonisasi industri, kehutanan, dan tata kelola iklim.'],
+            ];
+        }
+
+        // Query artikel kategori kebijakan (termasuk legacy 'ekonomi')
+        $query = Article::query()
+            ->terbit()
+            ->whereIn('category', ['kebijakan', 'ekonomi'])
+            ->orderByDesc('published_at')
+            ->orderByDesc('id');
+
+        if ($subkategori && in_array($subkategori, ['ekonomi', 'kesehatan', 'pendidikan', 'pertahanan', 'lingkungan'], true)) {
+            $query->where('subcategory', $subkategori);
+        }
+
+        $total = (clone $query)->count();
+        $lastPage = max(1, (int) ceil($total / $limit));
+        $articles = $query->skip(($page - 1) * $limit)
+            ->take($limit)
+            ->get();
+
+        $categoryLabel = $this->categoryLabeler();
+        $cardMapper = $this->articleCardMapper($categoryLabel);
+        $mappedArticles = $articles->map($cardMapper)->values()->all();
+
+        // Headline
+        $headline = null;
+        $listArticles = $mappedArticles;
+        if ($page === 1 && count($mappedArticles) > 0) {
+            $headline = $mappedArticles[0];
+            $listArticles = array_slice($mappedArticles, 1);
+        }
+
+        // Policy Briefs
+        $briefQuery = PolicyBrief::query()->terbit();
+        if ($subkategori && in_array($subkategori, ['ekonomi', 'kesehatan', 'pendidikan', 'pertahanan', 'lingkungan'], true)) {
+            $briefQuery->where('sector', $subkategori);
+        }
+        $policyBriefs = $briefQuery->orderBy('order', 'asc')
+            ->orderByDesc('published_at')
+            ->take(6)
+            ->get()
+            ->map(fn (PolicyBrief $b) => [
+                'id' => $b->id,
+                'title' => $b->title,
+                'slug' => $b->slug,
+                'sector' => $b->sector,
+                'author' => $b->author,
+                'institution' => $b->institution,
+                'executive_summary' => $b->executive_summary,
+                'key_recommendations' => $b->key_recommendations ?: [],
+                'pdf_path' => $b->pdf_path,
+                'pdf_size' => $b->pdf_size,
+                'published_at' => $b->published_at?->format('Y-m-d'),
+                'published_at_formatted' => $b->published_at ? \Carbon\Carbon::parse($b->published_at)->locale('id')->isoFormat('D MMMM Y') : '',
+            ])->values()->all();
+
+        // Data & Statistik (Charts)
+        $chartQuery = Chart::query()->terbit();
+        if ($subkategori && in_array($subkategori, ['ekonomi', 'kesehatan', 'pendidikan', 'pertahanan', 'lingkungan'], true)) {
+            $chartQuery->where(function ($q) use ($subkategori) {
+                $q->where('sector', $subkategori)->orWhereNull('sector');
+            });
+        }
+        $dataGrafik = $chartQuery->orderBy('order', 'asc')
+            ->orderByDesc('id')
+            ->take(4)
+            ->get()
+            ->map(fn (Chart $c) => [
+                'id' => $c->id,
+                'title' => $c->title,
+                'description' => $c->description,
+                'unit' => $c->unit,
+                'sector' => $c->sector,
+                'data' => is_array($c->data) ? $c->data : json_decode($c->data, true),
+                'source_title' => $c->source_title,
+                'source_url' => $c->source_url,
+                'author_name' => $c->author_name,
+                'author_role' => $c->author_role,
+            ])->values()->all();
+
+        // Monitoring Kebijakan (Policy Trackers)
+        $trackerQuery = PolicyTracker::query()->terbit();
+        if ($subkategori && in_array($subkategori, ['ekonomi', 'kesehatan', 'pendidikan', 'pertahanan', 'lingkungan'], true)) {
+            $trackerQuery->where('sector', $subkategori);
+        }
+        $monitoringKebijakan = $trackerQuery->orderBy('order', 'asc')
+            ->orderByDesc('last_updated_date')
+            ->take(8)
+            ->get()
+            ->map(fn (PolicyTracker $t) => [
+                'id' => $t->id,
+                'program_name' => $t->program_name,
+                'slug' => $t->slug,
+                'sector' => $t->sector,
+                'promise' => $t->promise,
+                'realization' => $t->realization,
+                'progress_percent' => $t->progress_percent,
+                'status_label' => $t->status_label,
+                'source_title' => $t->source_title,
+                'source_url' => $t->source_url,
+                'last_updated_date' => $t->last_updated_date?->format('Y-m-d'),
+                'last_updated_formatted' => $t->last_updated_date ? \Carbon\Carbon::parse($t->last_updated_date)->locale('id')->isoFormat('D MMMM Y') : '',
+            ])->values()->all();
+
+        return response()->json([
+            'rubrik' => [
+                'key' => 'kebijakan',
+                'title' => 'Kebijakan Publik',
+                'label' => 'Kebijakan Publik',
+                'description' => 'Analisis & riset kebijakan per sektor, evaluasi regulasi, data fiskal, dan pelacakan program strategis pemerintah.',
+                'subkategori' => $subcategories,
+                'activeSubkategori' => $subkategori,
+            ],
+            'headline' => $headline,
+            'articles' => $listArticles,
+            'meta' => [
+                'currentPage' => $page,
+                'lastPage' => $lastPage,
+                'total' => $total,
+                'perPage' => $limit,
+            ],
+            'policyBriefs' => $policyBriefs,
+            'dataGrafik' => $dataGrafik,
+            'monitoringKebijakan' => $monitoringKebijakan,
+        ]);
+    }
+
+    /**
+     * GET /api/isf/policy-brief
+     *
+     * Daftar ringkasan eksekutif policy brief dengan tautan unduh PDF.
+     */
+    public function policyBrief(Request $request): JsonResponse
+    {
+        $sector = $request->query('sector') ? strtolower(trim((string) $request->query('sector'))) : null;
+        $q = trim((string) $request->input('q', ''));
+
+        $query = PolicyBrief::query()->terbit();
+
+        if ($sector) {
+            $query->where('sector', $sector);
+        }
+
+        if ($q !== '') {
+            $query->where(function ($sub) use ($q) {
+                $sub->where('title', 'like', "%{$q}%")
+                    ->orWhere('author', 'like', "%{$q}%")
+                    ->orWhere('executive_summary', 'like', "%{$q}%");
+            });
+        }
+
+        $briefs = $query->orderBy('order', 'asc')
+            ->orderByDesc('published_at')
+            ->get()
+            ->map(fn (PolicyBrief $b) => [
+                'id' => $b->id,
+                'title' => $b->title,
+                'slug' => $b->slug,
+                'sector' => $b->sector,
+                'author' => $b->author,
+                'institution' => $b->institution,
+                'executive_summary' => $b->executive_summary,
+                'key_recommendations' => $b->key_recommendations ?: [],
+                'pdf_path' => $b->pdf_path,
+                'pdf_size' => $b->pdf_size,
+                'published_at' => $b->published_at?->format('Y-m-d'),
+                'published_at_formatted' => $b->published_at ? \Carbon\Carbon::parse($b->published_at)->locale('id')->isoFormat('D MMMM Y') : '',
+            ])->values()->all();
+
+        return response()->json([
+            'data' => $briefs,
+        ]);
+    }
+
+    /**
+     * GET /api/isf/monitoring-kebijakan
+     *
+     * Pelacakan program pemerintah: Janji vs Realisasi.
+     */
+    public function monitoringKebijakan(Request $request): JsonResponse
+    {
+        $sector = $request->query('sector') ? strtolower(trim((string) $request->query('sector'))) : null;
+        $statusLabel = $request->query('status_label') ? strtolower(trim((string) $request->query('status_label'))) : null;
+        $q = trim((string) $request->input('q', ''));
+
+        $query = PolicyTracker::query()->terbit();
+
+        if ($sector) {
+            $query->where('sector', $sector);
+        }
+
+        if ($statusLabel) {
+            $query->where('status_label', $statusLabel);
+        }
+
+        if ($q !== '') {
+            $query->where(function ($sub) use ($q) {
+                $sub->where('program_name', 'like', "%{$q}%")
+                    ->orWhere('promise', 'like', "%{$q}%")
+                    ->orWhere('realization', 'like', "%{$q}%");
+            });
+        }
+
+        $trackers = $query->orderBy('order', 'asc')
+            ->orderByDesc('last_updated_date')
+            ->get()
+            ->map(fn (PolicyTracker $t) => [
+                'id' => $t->id,
+                'program_name' => $t->program_name,
+                'slug' => $t->slug,
+                'sector' => $t->sector,
+                'promise' => $t->promise,
+                'realization' => $t->realization,
+                'progress_percent' => $t->progress_percent,
+                'status_label' => $t->status_label,
+                'source_title' => $t->source_title,
+                'source_url' => $t->source_url,
+                'last_updated_date' => $t->last_updated_date?->format('Y-m-d'),
+                'last_updated_formatted' => $t->last_updated_date ? \Carbon\Carbon::parse($t->last_updated_date)->locale('id')->isoFormat('D MMMM Y') : '',
+            ])->values()->all();
+
+        return response()->json([
+            'data' => $trackers,
         ]);
     }
 

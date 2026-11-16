@@ -114,6 +114,18 @@ const menuGroups = computed(() => [
                 visible: hasFeature("timeline_kasus"),
             },
             {
+                label: "Policy Brief",
+                href: "/cms/policy-brief",
+                icon: "FileText",
+                visible: hasFeature("policy_brief"),
+            },
+            {
+                label: "Monitoring Kebijakan",
+                href: "/cms/monitoring-kebijakan",
+                icon: "Checklist",
+                visible: hasFeature("monitoring_kebijakan"),
+            },
+            {
                 label: "ISF Insight (Grafik)",
                 href: "/cms/data-grafik",
                 icon: "ChartBar",

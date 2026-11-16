@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\Isf\Cms\InfographicController;
 use App\Http\Controllers\Api\Isf\Cms\LegalGlossaryController;
 use App\Http\Controllers\Api\Isf\Cms\MediaUploadController;
 use App\Http\Controllers\Api\Isf\Cms\ParliamentSeatController;
+use App\Http\Controllers\Api\Isf\Cms\PolicyBriefController;
+use App\Http\Controllers\Api\Isf\Cms\PolicyMonitoringController;
 use App\Http\Controllers\Api\Isf\Cms\SettingController;
 use App\Http\Controllers\Api\Isf\Cms\TokohController;
 use App\Http\Controllers\Api\Isf\PublicAdController;
@@ -54,6 +56,9 @@ Route::middleware(['web'])->prefix('isf')->group(function () {
     Route::get('/hukum', [PublicContentController::class, 'hukum'])->name('api.isf.hukum');
     Route::get('/glosarium-hukum', [PublicContentController::class, 'glosariumHukum'])->name('api.isf.glosarium-hukum');
     Route::get('/timeline-kasus', [PublicContentController::class, 'timelineKasus'])->name('api.isf.timeline-kasus');
+    Route::get('/kebijakan-publik', [PublicContentController::class, 'kebijakanPublik'])->name('api.isf.kebijakan-publik');
+    Route::get('/policy-brief', [PublicContentController::class, 'policyBrief'])->name('api.isf.policy-brief');
+    Route::get('/monitoring-kebijakan', [PublicContentController::class, 'monitoringKebijakan'])->name('api.isf.monitoring-kebijakan');
     Route::get('/kategori/{kategori}', [PublicContentController::class, 'kategori'])->name('api.isf.kategori');
     Route::get('/infografik', [PublicContentController::class, 'infografik'])->name('api.isf.infografik');
     Route::get('/infografik/{slug}', [PublicContentController::class, 'infografikDetail'])->name('api.isf.infografik.show');
@@ -95,6 +100,10 @@ Route::middleware(['web', 'auth'])->prefix('cms')->name('api.cms.')->group(funct
         ->parameters(['glosarium-hukum' => 'legalGlossary'])->middleware('feature:glosarium_hukum');
     Route::apiResource('timeline-kasus', CaseTimelineController::class)
         ->parameters(['timeline-kasus' => 'caseTimeline'])->middleware('feature:timeline_kasus');
+    Route::apiResource('policy-brief', PolicyBriefController::class)
+        ->parameters(['policy-brief' => 'policyBrief'])->middleware('feature:policy_brief');
+    Route::apiResource('monitoring-kebijakan', PolicyMonitoringController::class)
+        ->parameters(['monitoring-kebijakan' => 'policyMonitoring'])->middleware('feature:monitoring_kebijakan');
 
     Route::get('/pengaturan-halaman', [SettingController::class, 'show'])
         ->middleware('feature:pengaturan_halaman')->name('pengaturan-halaman.show');

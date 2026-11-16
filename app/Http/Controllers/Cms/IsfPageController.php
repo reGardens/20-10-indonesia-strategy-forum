@@ -33,6 +33,8 @@ class IsfPageController extends Controller
         'kursi-parlemen' => 'KursiParlemen',
         'glosarium-hukum' => 'GlosariumHukum',
         'timeline-kasus' => 'TimelineKasus',
+        'policy-brief' => 'PolicyBrief',
+        'monitoring-kebijakan' => 'MonitoringKebijakan',
     ];
 
     public function index(Request $request): Response
