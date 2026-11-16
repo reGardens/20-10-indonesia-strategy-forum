@@ -29,6 +29,8 @@ class User extends Authenticatable
         'kursi_parlemen',
         'glosarium_hukum',
         'timeline_kasus',
+        'policy_brief',
+        'monitoring_kebijakan',
     ];
 
     /**

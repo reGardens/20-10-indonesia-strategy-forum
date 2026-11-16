@@ -29,3 +29,5 @@ export { default as PetaKursiParlemen } from './PetaKursiParlemen.vue';
 export { default as GlosariumHukum } from './GlosariumHukum.vue';
 export { default as TimelineKasus } from './TimelineKasus.vue';
 export { default as OpiniPakarCard } from './OpiniPakarCard.vue';
+export { default as PolicyBriefCard } from './PolicyBriefCard.vue';
+export { default as MonitoringKebijakan } from './MonitoringKebijakan.vue';

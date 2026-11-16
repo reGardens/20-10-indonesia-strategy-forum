@@ -79,7 +79,7 @@ class RubrikPageTest extends TestCase
             // Navbar shell awal menautkan halaman kategori (bukan '#').
             $this->assertTrue(str_contains($html, 'href="/politik"') || str_contains($html, 'href="/artikel/politik"'));
             $this->assertTrue(str_contains($html, 'href="/hukum"') || str_contains($html, 'href="/artikel/hukum"'));
-            $this->assertStringContainsString('href="/artikel/kebijakan"', $html);
+            $this->assertTrue(str_contains($html, 'href="/kebijakan-publik"') || str_contains($html, 'href="/artikel/kebijakan"'));
         }
     }
 

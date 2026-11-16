@@ -108,6 +108,32 @@ export function getTimelineKasus(slug = null) {
   return get('/isf/timeline-kasus' + (queryString ? `?${queryString}` : ''))
 }
 
+export function getKebijakanPublik(subkategori = null, page = 1, limit = 9) {
+  const qs = new URLSearchParams()
+  if (subkategori) qs.set('subkategori', subkategori)
+  if (page) qs.set('page', String(page))
+  if (limit) qs.set('limit', String(limit))
+  const queryString = qs.toString()
+  return get('/isf/kebijakan-publik' + (queryString ? `?${queryString}` : ''))
+}
+
+export function getPolicyBriefs(params = {}) {
+  const qs = new URLSearchParams()
+  if (params.sector) qs.set('sector', params.sector)
+  if (params.q) qs.set('q', params.q)
+  const queryString = qs.toString()
+  return get('/isf/policy-brief' + (queryString ? `?${queryString}` : ''))
+}
+
+export function getMonitoringKebijakan(params = {}) {
+  const qs = new URLSearchParams()
+  if (params.sector) qs.set('sector', params.sector)
+  if (params.status_label) qs.set('status_label', params.status_label)
+  if (params.q) qs.set('q', params.q)
+  const queryString = qs.toString()
+  return get('/isf/monitoring-kebijakan' + (queryString ? `?${queryString}` : ''))
+}
+
 export function searchContent(params = {}) {
   const query = typeof params === 'string' ? { q: params } : params
   const qs = new URLSearchParams()
@@ -163,4 +189,4 @@ export function isNotFound(error) {
   return error?.response?.status === 404
 }
 
-export default { getBeranda, getTokoh, getAnggota, getInfografik, getMediaDetail, getArtikel, getInfografikDetail, getKategori, getPolitik, getPetaKursi, searchContent, getAds, trackAdImpression, trackAdClick, isNotFound }
+export default { getBeranda, getTokoh, getAnggota, getInfografik, getMediaDetail, getArtikel, getInfografikDetail, getKategori, getPolitik, getPetaKursi, getHukum, getGlosariumHukum, getTimelineKasus, getKebijakanPublik, getPolicyBriefs, getMonitoringKebijakan, searchContent, getAds, trackAdImpression, trackAdClick, isNotFound }

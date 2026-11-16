@@ -168,7 +168,7 @@ html[data-isf-layout="row-3"] .isf-ssr-masthead { padding-top: 0.875rem; padding
                         $isfPath = '/' . trim(request()->path(), '/');
                         if ($isfPath === '/') { $isfPath = '/beranda'; }
                         $isfNavGroups = [
-                            [['Beranda', '/beranda'], ['Politik', '/politik'], ['Hukum', '/hukum'], ['Kebijakan Publik', '/artikel/kebijakan'], ['Sosok', '/tokoh/budi-santoso'], ['Opini Publik', '#'], ['Survei', '#']],
+                            [['Beranda', '/beranda'], ['Politik', '/politik'], ['Hukum', '/hukum'], ['Kebijakan Publik', '/kebijakan-publik'], ['Sosok', '/tokoh/budi-santoso'], ['Opini Publik', '#'], ['Survei', '#']],
                             [['Portal Anggota', '/anggota']],
                         ];
                     @endphp

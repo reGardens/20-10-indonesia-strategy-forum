@@ -41,7 +41,9 @@ const features = [
     { key: "kategori", label: "Kategori & Sub-Kategori", desc: "Kelola struktur kategori dan sub-kategori konten (Politik, Hukum, Kebijakan, Pemilu, Parlemen, dll.)" },
     { key: "kursi_parlemen", label: "Peta Kursi Parlemen", desc: "Kelola data komposisi kursi parlemen DPR/DPD/MPR per partai, warna, dan status publikasi" },
     { key: "glosarium_hukum", label: "Glosarium Hukum", desc: "Kamus istilah hukum interaktif, definisi, dasar hukum, istilah terkait, dan status" },
-    { key: "timeline_kasus", label: "Timeline Kasus", desc: "Kelola alur waktu kasus hukum besar/tipikor, kronologi peristiwa, tahap, dan sumber" }
+    { key: "timeline_kasus", label: "Timeline Kasus", desc: "Kelola alur waktu kasus hukum besar/tipikor, kronologi peristiwa, tahap, dan sumber" },
+    { key: "policy_brief", label: "Policy Brief", desc: "Ringkasan eksekutif riset kebijakan, rekomendasi kunci, dokumen PDF, dan status" },
+    { key: "monitoring_kebijakan", label: "Monitoring Kebijakan", desc: "Pelacakan program pemerintah, komparasi Janji vs Realisasi, progres %, dan status evaluasi" }
 ];
 
 function toggleFeature(featureKey) {

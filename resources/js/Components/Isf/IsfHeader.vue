@@ -183,7 +183,7 @@ const NAV_LINKS = [
     { label: "Beranda", to: "/beranda", group: "rubrik" },
     { label: "Politik", to: "/politik", group: "rubrik" },
     { label: "Hukum", to: "/hukum", group: "rubrik" },
-    { label: "Kebijakan Publik", to: "/artikel/kebijakan", group: "rubrik" },
+    { label: "Kebijakan Publik", to: "/kebijakan-publik", group: "rubrik" },
     { label: "Sosok", to: "/tokoh/budi-santoso", group: "rubrik" },
     { label: "Opini Publik", to: "#", group: "rubrik" },
     { label: "Survei", to: "#", group: "rubrik" },

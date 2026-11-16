@@ -26,6 +26,7 @@ class Chart extends Model
         'source_title',
         'source_url',
         'is_beranda',
+        'sector',
         'order',
         'status',
     ];

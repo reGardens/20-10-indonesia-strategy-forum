@@ -267,6 +267,28 @@ const routes = [
     redirect: '/hukum'
   },
   {
+    path: '/kebijakan-publik',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-kebijakan-publik',
+        component: () => import('../Pages/Isf/views/KebijakanPublikView.vue'),
+        meta: { title: 'Kebijakan Publik · Indonesia Strategy Forum' }
+      },
+      {
+        path: ':subkategori(ekonomi|kesehatan|pendidikan|pertahanan|lingkungan|policy-brief|monitoring)',
+        name: 'isf-kebijakan-publik-subkategori',
+        component: () => import('../Pages/Isf/views/KebijakanPublikView.vue'),
+        meta: { title: 'Kebijakan Publik · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
+    path: '/artikel/kebijakan',
+    redirect: '/kebijakan-publik'
+  },
+  {
     // Artikel per kategori: /artikel/{kategori} = daftar, /artikel/{kategori}/{slug} = detail.
     // Detail = child route, jadi menu navbar kategori tetap aktif (router-link-active).
     path: '/artikel/:kategori(hukum|kebijakan)',
