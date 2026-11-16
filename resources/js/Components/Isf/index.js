@@ -31,3 +31,7 @@ export { default as TimelineKasus } from './TimelineKasus.vue';
 export { default as OpiniPakarCard } from './OpiniPakarCard.vue';
 export { default as PolicyBriefCard } from './PolicyBriefCard.vue';
 export { default as MonitoringKebijakan } from './MonitoringKebijakan.vue';
+export { default as ReaderPollCard } from './ReaderPollCard.vue';
+export { default as KutipanPublikCard } from './KutipanPublikCard.vue';
+export { default as SuratPembacaForm } from './SuratPembacaForm.vue';
+

@@ -21,6 +21,11 @@ use App\Models\Isf\LegalGlossary;
 use App\Models\Isf\ParliamentSeat;
 use App\Models\Isf\PolicyBrief;
 use App\Models\Isf\PolicyTracker;
+use App\Models\Isf\ReaderPoll;
+use App\Models\Isf\ReaderPollVote;
+use App\Models\Isf\PublicQuote;
+use App\Models\Isf\Letter;
+use App\Http\Requests\Isf\LetterSubmissionRequest;
 use App\Support\IsfRubrik;
 use App\Models\Isf\Setting;
 use App\Models\Isf\Tokoh;
@@ -1279,6 +1284,453 @@ class PublicContentController extends Controller
         return response()->json([
             'data' => $trackers,
         ]);
+    }
+
+    /**
+     * Helper voter hash untuk Reader Poll.
+     */
+    protected function getVoterHash(Request $request): string
+    {
+        $ip = $request->ip() ?? '127.0.0.1';
+        $ua = $request->header('User-Agent') ?? 'unknown';
+        $userId = $request->user()?->id ? ('usr:' . $request->user()->id) : '';
+        $cookie = $request->cookie('isf_voter_id') ?? '';
+        return hash('sha256', $ip . '|' . $ua . '|' . $userId . '|' . $cookie);
+    }
+
+    /**
+     * Format reader poll response dengan persentase dan status voting.
+     */
+    protected function formatPollResponse(ReaderPoll $poll, ?string $voterHash = null): array
+    {
+        $options = is_array($poll->options) ? $poll->options : [];
+        $total = (int) $poll->total_votes;
+        if ($total <= 0) {
+            $total = array_sum(array_map(fn ($o) => (int) ($o['votes'] ?? 0), $options));
+        }
+
+        $votedOptionId = null;
+        $hasVoted = false;
+        if ($voterHash) {
+            $vote = ReaderPollVote::where('poll_id', $poll->id)->where('voter_hash', $voterHash)->first();
+            if ($vote) {
+                $hasVoted = true;
+                $votedOptionId = $vote->option_id;
+            }
+        }
+
+        $formattedOptions = array_map(function ($opt) use ($total) {
+            $votes = (int) ($opt['votes'] ?? 0);
+            $pct = $total > 0 ? round(($votes / $total) * 100, 1) : 0;
+            return [
+                'id' => (string) ($opt['id'] ?? ''),
+                'label' => $opt['label'] ?? '',
+                'votes' => $votes,
+                'percentage' => $pct,
+            ];
+        }, $options);
+
+        return [
+            'id' => $poll->id,
+            'question' => $poll->question,
+            'slug' => $poll->slug,
+            'description' => $poll->description,
+            'options' => $formattedOptions,
+            'total_votes' => $total,
+            'status' => $poll->status,
+            'is_featured' => (bool) $poll->is_featured,
+            'is_closed' => $poll->status !== 'aktif',
+            'has_voted' => $hasVoted,
+            'voted_option_id' => $votedOptionId,
+            'is_scientific' => false,
+            'disclaimer' => 'Jajak Pendapat / Polling Persepsi Publik Non-Ilmiah',
+        ];
+    }
+
+    /**
+     * GET /api/isf/opini-publik
+     *
+     * Halaman landing rubrik Opini Publik (Op-Ed, Editorial, Surat Pembaca, Reader Poll & Kutipan).
+     */
+    public function opiniPublik(Request $request): JsonResponse
+    {
+        $subkategori = $request->query('subkategori') ? strtolower(trim((string) $request->query('subkategori'))) : null;
+        $page = max(1, (int) $request->input('page', 1));
+        $limit = min(24, max(1, (int) $request->input('limit', 9)));
+
+        // Subkategori Opini Publik
+        $parent = Category::query()->terbit()->where('slug', 'opini')->first();
+        $subcategories = [];
+        if ($parent) {
+            $subcategories = Category::query()
+                ->terbit()
+                ->where('parent_id', $parent->id)
+                ->orderBy('order', 'asc')
+                ->orderBy('id', 'asc')
+                ->get(['id', 'name', 'slug', 'description'])
+                ->map(fn (Category $c) => [
+                    'id' => $c->id,
+                    'name' => $c->name,
+                    'slug' => $c->slug,
+                    'description' => $c->description,
+                ])
+                ->values()
+                ->all();
+        }
+
+        if (empty($subcategories)) {
+            $subcategories = [
+                ['name' => 'Op-Ed & Analisis Pakar', 'slug' => 'op-ed', 'description' => 'Tulisan gagasan dan analisis mendalam dari akademisi dan pakar.'],
+                ['name' => 'Editorial ISF', 'slug' => 'editorial', 'description' => 'Pandangan resmi Dewan Redaksi Indonesia Strategy Forum.'],
+                ['name' => 'Surat Pembaca', 'slug' => 'surat-pembaca', 'description' => 'Aspirasi dan kontribusi pemikiran langsung dari pembaca.'],
+            ];
+        }
+
+        // Query artikel opini
+        $query = Article::query()
+            ->terbit()
+            ->where('category', 'opini')
+            ->orderByDesc('published_at')
+            ->orderByDesc('id');
+
+        if ($subkategori && in_array($subkategori, ['op-ed', 'editorial', 'surat-pembaca'], true)) {
+            $query->where('subcategory', $subkategori);
+        }
+
+        $total = (clone $query)->count();
+        $lastPage = max(1, (int) ceil($total / $limit));
+        $articles = $query->skip(($page - 1) * $limit)
+            ->take($limit)
+            ->get();
+
+        $categoryLabel = $this->categoryLabeler();
+        $cardMapper = $this->articleCardMapper($categoryLabel);
+        $mappedArticles = $articles->map(function ($art) use ($cardMapper) {
+            $card = $cardMapper($art);
+            $card['is_editorial'] = $art->subcategory === 'editorial';
+            return $card;
+        })->values()->all();
+
+        // Headline
+        $headline = null;
+        $listArticles = $mappedArticles;
+        if ($page === 1 && count($mappedArticles) > 0) {
+            $headline = $mappedArticles[0];
+            $listArticles = array_slice($mappedArticles, 1);
+        }
+
+        // Reader Poll (Aktif & Featured)
+        $voterHash = $this->getVoterHash($request);
+        $activePoll = ReaderPoll::query()->aktif()
+            ->orderByDesc('is_featured')
+            ->orderBy('order', 'asc')
+            ->orderByDesc('id')
+            ->first();
+        $formattedPoll = $activePoll ? $this->formatPollResponse($activePoll, $voterHash) : null;
+
+        // Kutipan Publik (max 6)
+        $quotes = PublicQuote::query()->terbit()
+            ->with('tokoh:id,name,slug,position,photo_url')
+            ->orderBy('order', 'asc')
+            ->orderByDesc('quote_date')
+            ->orderByDesc('id')
+            ->take(6)
+            ->get()
+            ->map(fn (PublicQuote $q) => [
+                'id' => $q->id,
+                'quote' => $q->quote,
+                'author_name' => $q->author_name,
+                'author_title' => $q->author_title,
+                'author_type' => $q->author_type,
+                'topic' => $q->topic,
+                'source_title' => $q->source_title,
+                'source_url' => $q->source_url,
+                'quote_date' => $q->quote_date?->format('Y-m-d'),
+                'quote_date_formatted' => $q->quote_date ? \Carbon\Carbon::parse($q->quote_date)->locale('id')->isoFormat('D MMMM Y') : '',
+                'tokoh' => $q->tokoh ? [
+                    'id' => $q->tokoh->id,
+                    'name' => $q->tokoh->name,
+                    'slug' => $q->tokoh->slug,
+                    'position' => $q->tokoh->position,
+                    'to' => '/tokoh/' . $q->tokoh->slug,
+                ] : null,
+            ])->values()->all();
+
+        // Surat Pembaca yang disetujui (max 6)
+        $letters = Letter::query()->disetujui()->terbit()
+            ->orderBy('order', 'asc')
+            ->orderByDesc('published_at')
+            ->take(6)
+            ->get()
+            ->map(fn (Letter $l) => [
+                'id' => $l->id,
+                'title' => $l->title,
+                'slug' => $l->slug,
+                'body' => $l->body,
+                'sender_name' => $l->sender_name,
+                'sender_city' => $l->sender_city,
+                'published_at' => $l->published_at?->format('Y-m-d'),
+                'published_at_formatted' => $l->published_at ? \Carbon\Carbon::parse($l->published_at)->locale('id')->isoFormat('D MMMM Y') : '',
+            ])->values()->all();
+
+        return response()->json([
+            'rubrik' => [
+                'key' => 'opini',
+                'title' => 'Opini Publik',
+                'label' => 'Opini Publik',
+                'description' => 'Wadah pemikiran kritis, pandangan resmi redaksi ISF, dan suara kontribusi masyarakat Indonesia.',
+                'subkategori' => $subcategories,
+                'activeSubkategori' => $subkategori,
+            ],
+            'headline' => $headline,
+            'articles' => $listArticles,
+            'meta' => [
+                'currentPage' => $page,
+                'lastPage' => $lastPage,
+                'total' => $total,
+                'perPage' => $limit,
+            ],
+            'readerPoll' => $formattedPoll,
+            'kutipanPublik' => $quotes,
+            'suratPembaca' => $letters,
+        ]);
+    }
+
+    /**
+     * GET /api/isf/reader-poll
+     *
+     * Data polling aktif untuk pembaca.
+     */
+    public function readerPoll(Request $request): JsonResponse
+    {
+        $voterHash = $this->getVoterHash($request);
+        $polls = ReaderPoll::query()
+            ->whereIn('status', ['aktif', 'selesai'])
+            ->orderByDesc('is_featured')
+            ->orderBy('order', 'asc')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (ReaderPoll $p) => $this->formatPollResponse($p, $voterHash));
+
+        return response()->json([
+            'data' => $polls,
+        ]);
+    }
+
+    /**
+     * POST /api/isf/reader-poll/{id}/vote
+     *
+     * Berikan suara pada reader poll (1 suara per perangkat / voter hash).
+     */
+    public function voteReaderPoll(Request $request, int $id): JsonResponse
+    {
+        $optionId = (string) ($request->input('option_id') ?? $request->input('option_key') ?? '');
+        if ($optionId === '') {
+            return response()->json([
+                'message' => 'The option id field is required.',
+                'errors' => ['option_id' => ['The option id field is required.']],
+            ], 422);
+        }
+
+        $poll = ReaderPoll::find($id);
+        if (! $poll) {
+            return response()->json(['message' => 'Polling tidak ditemukan.'], 404);
+        }
+
+        if ($poll->status !== 'aktif') {
+            return response()->json(['message' => 'Polling ini sudah ditutup atau tidak aktif.'], 422);
+        }
+
+        $voterHash = $this->getVoterHash($request);
+
+        // Cek apakah perangkat/voter ini sudah memberikan suara
+        $existing = ReaderPollVote::where('poll_id', $poll->id)
+            ->where('voter_hash', $voterHash)
+            ->first();
+
+        if ($existing) {
+            return response()->json([
+                'message' => 'Anda sudah memberikan suara pada jajak pendapat ini.',
+                'voted_option_id' => $existing->option_id,
+                'poll' => $this->formatPollResponse($poll, $voterHash),
+            ], 422);
+        }
+
+        $options = is_array($poll->options) ? $poll->options : [];
+        $found = false;
+
+        foreach ($options as &$opt) {
+            $currKey = (string) ($opt['id'] ?? $opt['key'] ?? '');
+            if ($currKey === $optionId) {
+                $opt['votes'] = ((int) ($opt['votes'] ?? 0)) + 1;
+                $found = true;
+                break;
+            }
+        }
+        unset($opt);
+
+        if (! $found) {
+            return response()->json(['message' => 'Opsi pilihan tidak valid.'], 422);
+        }
+
+        ReaderPollVote::create([
+            'poll_id' => $poll->id,
+            'option_id' => $optionId,
+            'voter_hash' => $voterHash,
+            'ip_address' => $request->ip(),
+            'user_id' => $request->user()?->id,
+        ]);
+
+        $poll->options = $options;
+        $poll->total_votes = ((int) $poll->total_votes) + 1;
+        $poll->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Suara Anda berhasil dicatat. Terima kasih telah berpartisipasi!',
+            'data' => [
+                'id' => $poll->id,
+                'total_votes' => $poll->total_votes,
+                'voted_option_id' => $optionId,
+            ],
+            'voted_option_id' => $optionId,
+            'poll' => $this->formatPollResponse($poll, $voterHash),
+        ]);
+    }
+
+    /**
+     * GET /api/isf/kutipan-publik
+     *
+     * Kumpulan kutipan tajam tokoh & netizen.
+     */
+    public function kutipanPublik(Request $request): JsonResponse
+    {
+        $authorType = $request->query('author_type') ? strtolower(trim((string) $request->query('author_type'))) : null;
+        $q = trim((string) $request->input('q', ''));
+
+        $query = PublicQuote::query()->terbit()
+            ->with('tokoh:id,name,slug,position,photo_url');
+
+        if ($authorType && in_array($authorType, ['tokoh', 'netizen'], true)) {
+            $query->where('author_type', $authorType);
+        }
+
+        if ($q !== '') {
+            $query->where(function ($sub) use ($q) {
+                $sub->where('quote', 'like', "%{$q}%")
+                    ->orWhere('author_name', 'like', "%{$q}%")
+                    ->orWhere('topic', 'like', "%{$q}%");
+            });
+        }
+
+        $quotes = $query->orderBy('order', 'asc')
+            ->orderByDesc('quote_date')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (PublicQuote $q) => [
+                'id' => $q->id,
+                'quote' => $q->quote,
+                'author_name' => $q->author_name,
+                'author_title' => $q->author_title,
+                'author_type' => $q->author_type,
+                'topic' => $q->topic,
+                'source_title' => $q->source_title,
+                'source_url' => $q->source_url,
+                'quote_date' => $q->quote_date?->format('Y-m-d'),
+                'quote_date_formatted' => $q->quote_date ? \Carbon\Carbon::parse($q->quote_date)->locale('id')->isoFormat('D MMMM Y') : '',
+                'tokoh' => $q->tokoh ? [
+                    'id' => $q->tokoh->id,
+                    'name' => $q->tokoh->name,
+                    'slug' => $q->tokoh->slug,
+                    'position' => $q->tokoh->position,
+                    'to' => '/tokoh/' . $q->tokoh->slug,
+                ] : null,
+            ])->values()->all();
+
+        return response()->json(['data' => $quotes]);
+    }
+
+    /**
+     * GET /api/isf/surat-pembaca
+     *
+     * Daftar surat pembaca yang telah disetujui redaksi.
+     */
+    public function suratPembaca(Request $request): JsonResponse
+    {
+        $page = max(1, (int) $request->input('page', 1));
+        $limit = min(20, max(1, (int) $request->input('limit', 10)));
+        $q = trim((string) $request->input('q', ''));
+
+        $query = Letter::query()->disetujui()->terbit();
+
+        if ($q !== '') {
+            $query->where(function ($sub) use ($q) {
+                $sub->where('title', 'like', "%{$q}%")
+                    ->orWhere('body', 'like', "%{$q}%")
+                    ->orWhere('sender_name', 'like', "%{$q}%")
+                    ->orWhere('sender_city', 'like', "%{$q}%");
+            });
+        }
+
+        $total = (clone $query)->count();
+        $letters = $query->orderBy('order', 'asc')
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
+            ->skip(($page - 1) * $limit)
+            ->take($limit)
+            ->get()
+            ->map(fn (Letter $l) => [
+                'id' => $l->id,
+                'title' => $l->title,
+                'slug' => $l->slug,
+                'body' => $l->body,
+                'sender_name' => $l->sender_name,
+                'sender_city' => $l->sender_city,
+                'published_at' => $l->published_at?->format('Y-m-d'),
+                'published_at_formatted' => $l->published_at ? \Carbon\Carbon::parse($l->published_at)->locale('id')->isoFormat('D MMMM Y') : '',
+            ]);
+
+        return response()->json([
+            'data' => $letters,
+            'meta' => [
+                'currentPage' => $page,
+                'lastPage' => max(1, (int) ceil($total / $limit)),
+                'total' => $total,
+                'perPage' => $limit,
+            ],
+        ]);
+    }
+
+    /**
+     * POST /api/isf/surat-pembaca
+     *
+     * Kirim surat pembaca publik dengan validasi captcha.
+     */
+    public function submitSuratPembaca(LetterSubmissionRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+        $slug = Str::slug($validated['title']) . '-' . Str::lower(Str::random(5));
+
+        $letter = Letter::create([
+            'sender_name' => $validated['sender_name'],
+            'sender_email' => $validated['sender_email'],
+            'sender_city' => $validated['sender_city'] ?? null,
+            'title' => $validated['title'],
+            'slug' => $slug,
+            'body' => $validated['body'],
+            'moderation_status' => 'pending',
+            'status' => 'terbit',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Surat pembaca Anda berhasil dikirim dan masuk antrean moderasi redaksi. Surat akan ditayangkan setelah diverifikasi.',
+            'data' => [
+                'id' => $letter->id,
+                'title' => $letter->title,
+                'moderation_status' => $letter->moderation_status,
+            ],
+        ], 201);
     }
 
     /**

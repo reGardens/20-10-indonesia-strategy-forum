@@ -131,6 +131,24 @@ const menuGroups = computed(() => [
                 icon: "ChartBar",
                 visible: hasFeature("data_grafik"),
             },
+            {
+                label: "Reader Poll",
+                href: "/cms/reader-poll",
+                icon: "ChartBar",
+                visible: hasFeature("reader_poll"),
+            },
+            {
+                label: "Kutipan Publik",
+                href: "/cms/kutipan-publik",
+                icon: "Quote",
+                visible: hasFeature("kutipan_publik"),
+            },
+            {
+                label: "Surat Pembaca",
+                href: "/cms/surat-pembaca",
+                icon: "Mail",
+                visible: hasFeature("surat_pembaca"),
+            },
         ],
     },
     {

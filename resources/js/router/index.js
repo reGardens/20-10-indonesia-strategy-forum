@@ -289,9 +289,36 @@ const routes = [
     redirect: '/kebijakan-publik'
   },
   {
+    path: '/opini-publik',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-opini-publik',
+        component: () => import('../Pages/Isf/views/OpiniPublikView.vue'),
+        meta: { title: 'Opini Publik · Indonesia Strategy Forum' }
+      },
+      {
+        path: ':subkategori(op-ed|editorial|surat-pembaca|polling|kutipan)',
+        name: 'isf-opini-publik-subkategori',
+        component: () => import('../Pages/Isf/views/OpiniPublikView.vue'),
+        meta: { title: 'Opini Publik · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
+    path: '/artikel/opini',
+    redirect: '/opini-publik'
+  },
+  {
+    path: '/artikel/opini-publik',
+    redirect: '/opini-publik'
+  },
+  {
     // Artikel per kategori: /artikel/{kategori} = daftar, /artikel/{kategori}/{slug} = detail.
     // Detail = child route, jadi menu navbar kategori tetap aktif (router-link-active).
-    path: '/artikel/:kategori(hukum|kebijakan)',
+    path: '/artikel/:kategori(hukum|kebijakan|opini|opini-publik)',
+
     component: IsfPublicLayout,
     children: [
       {

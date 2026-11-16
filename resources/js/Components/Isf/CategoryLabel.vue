@@ -23,6 +23,8 @@ const LABELS = {
     kebijakan: "Kebijakan Publik",
     hukum: "Hukum",
     ruu: "Hukum",
+    opini: "Opini Publik",
+    "opini-publik": "Opini Publik",
 };
 
 const key = computed(() => String(props.category).toLowerCase());

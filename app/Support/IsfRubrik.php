@@ -31,12 +31,18 @@ final class IsfRubrik
             'label' => 'Kebijakan Publik',
             'description' => 'Kebijakan pemerintah, ekonomi, fiskal, dan dampaknya bagi dunia usaha.',
         ],
+        'opini' => [
+            'title' => 'Opini Publik',
+            'label' => 'Opini Publik',
+            'description' => 'Wadah pemikiran kritis, pandangan resmi redaksi, dan suara kontribusi publik.',
+        ],
     ];
 
     /** Kategori lama → kategori gabungan. */
     public const LEGACY = [
         'ruu' => 'hukum',
         'ekonomi' => 'kebijakan',
+        'opini-publik' => 'opini',
     ];
 
     /** @return string[] */

@@ -31,6 +31,9 @@ class User extends Authenticatable
         'timeline_kasus',
         'policy_brief',
         'monitoring_kebijakan',
+        'reader_poll',
+        'kutipan_publik',
+        'surat_pembaca',
     ];
 
     /**

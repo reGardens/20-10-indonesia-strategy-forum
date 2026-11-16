@@ -14,6 +14,9 @@ use App\Http\Controllers\Api\Isf\Cms\MediaUploadController;
 use App\Http\Controllers\Api\Isf\Cms\ParliamentSeatController;
 use App\Http\Controllers\Api\Isf\Cms\PolicyBriefController;
 use App\Http\Controllers\Api\Isf\Cms\PolicyMonitoringController;
+use App\Http\Controllers\Api\Isf\Cms\ReaderPollController;
+use App\Http\Controllers\Api\Isf\Cms\PublicQuoteController;
+use App\Http\Controllers\Api\Isf\Cms\LetterController;
 use App\Http\Controllers\Api\Isf\Cms\SettingController;
 use App\Http\Controllers\Api\Isf\Cms\TokohController;
 use App\Http\Controllers\Api\Isf\PublicAdController;
@@ -59,6 +62,12 @@ Route::middleware(['web'])->prefix('isf')->group(function () {
     Route::get('/kebijakan-publik', [PublicContentController::class, 'kebijakanPublik'])->name('api.isf.kebijakan-publik');
     Route::get('/policy-brief', [PublicContentController::class, 'policyBrief'])->name('api.isf.policy-brief');
     Route::get('/monitoring-kebijakan', [PublicContentController::class, 'monitoringKebijakan'])->name('api.isf.monitoring-kebijakan');
+    Route::get('/opini-publik', [PublicContentController::class, 'opiniPublik'])->name('api.isf.opini-publik');
+    Route::get('/reader-poll', [PublicContentController::class, 'readerPoll'])->name('api.isf.reader-poll');
+    Route::post('/reader-poll/{id}/vote', [PublicContentController::class, 'voteReaderPoll'])->middleware('throttle:10,1')->name('api.isf.reader-poll.vote');
+    Route::get('/kutipan-publik', [PublicContentController::class, 'kutipanPublik'])->name('api.isf.kutipan-publik');
+    Route::get('/surat-pembaca', [PublicContentController::class, 'suratPembaca'])->name('api.isf.surat-pembaca');
+    Route::post('/surat-pembaca', [PublicContentController::class, 'submitSuratPembaca'])->middleware('throttle:6,1')->name('api.isf.surat-pembaca.submit');
     Route::get('/kategori/{kategori}', [PublicContentController::class, 'kategori'])->name('api.isf.kategori');
     Route::get('/infografik', [PublicContentController::class, 'infografik'])->name('api.isf.infografik');
     Route::get('/infografik/{slug}', [PublicContentController::class, 'infografikDetail'])->name('api.isf.infografik.show');
@@ -104,6 +113,16 @@ Route::middleware(['web', 'auth'])->prefix('cms')->name('api.cms.')->group(funct
         ->parameters(['policy-brief' => 'policyBrief'])->middleware('feature:policy_brief');
     Route::apiResource('monitoring-kebijakan', PolicyMonitoringController::class)
         ->parameters(['monitoring-kebijakan' => 'policyMonitoring'])->middleware('feature:monitoring_kebijakan');
+    Route::apiResource('reader-poll', ReaderPollController::class)
+        ->parameters(['reader-poll' => 'readerPoll'])->middleware('feature:reader_poll');
+    Route::apiResource('kutipan-publik', PublicQuoteController::class)
+        ->parameters(['kutipan-publik' => 'kutipanPublik'])->middleware('feature:kutipan_publik');
+    Route::apiResource('surat-pembaca', LetterController::class)
+        ->parameters(['surat-pembaca' => 'suratPembaca'])->middleware('feature:surat_pembaca');
+    Route::post('/surat-pembaca/{suratPembaca}/approve', [LetterController::class, 'approve'])
+        ->middleware('feature:surat_pembaca')->name('api.cms.surat-pembaca.approve');
+    Route::post('/surat-pembaca/{suratPembaca}/reject', [LetterController::class, 'reject'])
+        ->middleware('feature:surat_pembaca')->name('api.cms.surat-pembaca.reject');
 
     Route::get('/pengaturan-halaman', [SettingController::class, 'show'])
         ->middleware('feature:pengaturan_halaman')->name('pengaturan-halaman.show');

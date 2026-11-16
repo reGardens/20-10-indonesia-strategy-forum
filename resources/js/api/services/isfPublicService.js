@@ -134,6 +134,44 @@ export function getMonitoringKebijakan(params = {}) {
   return get('/isf/monitoring-kebijakan' + (queryString ? `?${queryString}` : ''))
 }
 
+export function getOpiniPublik(subkategori = null, page = 1, limit = 9) {
+  const params = new URLSearchParams()
+  if (subkategori) params.set('subkategori', subkategori)
+  if (page > 1) params.set('page', String(page))
+  if (limit !== 9) params.set('limit', String(limit))
+  const qs = params.toString()
+  return get('/isf/opini-publik' + (qs ? `?${qs}` : ''))
+}
+
+export function getReaderPoll() {
+  return get('/isf/reader-poll')
+}
+
+export function voteReaderPoll(pollId, optionId) {
+  return http.post(`/isf/reader-poll/${pollId}/vote`, { option_id: optionId }).then((r) => r.data)
+}
+
+export function getKutipanPublik(authorType = null, q = '') {
+  const params = new URLSearchParams()
+  if (authorType) params.set('author_type', authorType)
+  if (q) params.set('q', q)
+  const qs = params.toString()
+  return get('/isf/kutipan-publik' + (qs ? `?${qs}` : ''))
+}
+
+export function getSuratPembaca(page = 1, limit = 10, q = '') {
+  const params = new URLSearchParams()
+  if (page > 1) params.set('page', String(page))
+  if (limit !== 10) params.set('limit', String(limit))
+  if (q) params.set('q', q)
+  const qs = params.toString()
+  return get('/isf/surat-pembaca' + (qs ? `?${qs}` : ''))
+}
+
+export function submitSuratPembaca(payload) {
+  return http.post('/isf/surat-pembaca', payload).then((r) => r.data)
+}
+
 export function searchContent(params = {}) {
   const query = typeof params === 'string' ? { q: params } : params
   const qs = new URLSearchParams()
@@ -189,4 +227,4 @@ export function isNotFound(error) {
   return error?.response?.status === 404
 }
 
-export default { getBeranda, getTokoh, getAnggota, getInfografik, getMediaDetail, getArtikel, getInfografikDetail, getKategori, getPolitik, getPetaKursi, getHukum, getGlosariumHukum, getTimelineKasus, getKebijakanPublik, getPolicyBriefs, getMonitoringKebijakan, searchContent, getAds, trackAdImpression, trackAdClick, isNotFound }
+export default { getBeranda, getTokoh, getAnggota, getInfografik, getMediaDetail, getArtikel, getInfografikDetail, getKategori, getPolitik, getPetaKursi, getHukum, getGlosariumHukum, getTimelineKasus, getKebijakanPublik, getPolicyBriefs, getMonitoringKebijakan, getOpiniPublik, getReaderPoll, voteReaderPoll, getKutipanPublik, getSuratPembaca, submitSuratPembaca, searchContent, getAds, trackAdImpression, trackAdClick, isNotFound }
