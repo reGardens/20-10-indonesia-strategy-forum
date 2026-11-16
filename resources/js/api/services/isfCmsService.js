@@ -48,6 +48,8 @@ export const cmsResources = {
   },
   kategori: createCmsResource('kategori'),
   kursiParlemen: createCmsResource('kursi-parlemen'),
+  glosariumHukum: createCmsResource('glosarium-hukum'),
+  timelineKasus: createCmsResource('timeline-kasus'),
   iklan: {
     ...createCmsResource('iklan'),
     reorder: (items) => http.post('/cms/iklan/reorder', { items }).then((r) => r.data),

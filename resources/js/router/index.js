@@ -245,6 +245,28 @@ const routes = [
     redirect: '/politik'
   },
   {
+    path: '/hukum',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-hukum',
+        component: () => import('../Pages/Isf/views/HukumView.vue'),
+        meta: { title: 'Hukum · Indonesia Strategy Forum' }
+      },
+      {
+        path: ':subkategori(regulasi|putusan|kasus|glosarium)',
+        name: 'isf-hukum-subkategori',
+        component: () => import('../Pages/Isf/views/HukumView.vue'),
+        meta: { title: 'Hukum · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
+    path: '/artikel/hukum',
+    redirect: '/hukum'
+  },
+  {
     // Artikel per kategori: /artikel/{kategori} = daftar, /artikel/{kategori}/{slug} = detail.
     // Detail = child route, jadi menu navbar kategori tetap aktif (router-link-active).
     path: '/artikel/:kategori(hukum|kebijakan)',

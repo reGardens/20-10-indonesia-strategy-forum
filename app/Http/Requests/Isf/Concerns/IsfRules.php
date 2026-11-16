@@ -22,6 +22,12 @@ trait IsfRules
         return ['required', 'string', Rule::in(IsfOptions::CATEGORIES)];
     }
 
+    /** Integer order for items sequence (0..9999). */
+    protected function orderRules(): array
+    {
+        return ['nullable', 'integer', 'min:0', 'max:9999'];
+    }
+
     /** Date in YYYY-MM-DD. */
     protected function dateRules(bool $required = true): array
     {

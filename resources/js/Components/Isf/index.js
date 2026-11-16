@@ -26,3 +26,6 @@ export { default as IsfProfileMenu } from './IsfProfileMenu.vue';
 export { default as WhatsAppVerifyDialog } from './WhatsAppVerifyDialog.vue';
 export { default as IsfShareBar } from './IsfShareBar.vue';
 export { default as PetaKursiParlemen } from './PetaKursiParlemen.vue';
+export { default as GlosariumHukum } from './GlosariumHukum.vue';
+export { default as TimelineKasus } from './TimelineKasus.vue';
+export { default as OpiniPakarCard } from './OpiniPakarCard.vue';
