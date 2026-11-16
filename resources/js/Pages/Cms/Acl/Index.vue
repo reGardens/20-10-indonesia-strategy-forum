@@ -39,7 +39,9 @@ const features = [
     { key: "email_briefing", label: "Email Briefing", desc: "Briefing eksklusif anggota, ringkasan eksekutif, dan pratinjau newsletter" },
     { key: "pengaturan_halaman", label: "Pengaturan Halaman", desc: "Baris sorotan (topBar), teks pengumuman, dan rentang tanggal pekan ini" },
     { key: "kategori", label: "Kategori & Sub-Kategori", desc: "Kelola struktur kategori dan sub-kategori konten (Politik, Hukum, Kebijakan, Pemilu, Parlemen, dll.)" },
-    { key: "kursi_parlemen", label: "Peta Kursi Parlemen", desc: "Kelola data komposisi kursi parlemen DPR/DPD/MPR per partai, warna, dan status publikasi" }
+    { key: "kursi_parlemen", label: "Peta Kursi Parlemen", desc: "Kelola data komposisi kursi parlemen DPR/DPD/MPR per partai, warna, dan status publikasi" },
+    { key: "glosarium_hukum", label: "Glosarium Hukum", desc: "Kamus istilah hukum interaktif, definisi, dasar hukum, istilah terkait, dan status" },
+    { key: "timeline_kasus", label: "Timeline Kasus", desc: "Kelola alur waktu kasus hukum besar/tipikor, kronologi peristiwa, tahap, dan sumber" }
 ];
 
 function toggleFeature(featureKey) {

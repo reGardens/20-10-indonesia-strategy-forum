@@ -31,6 +31,8 @@ class IsfPageController extends Controller
         'iklan' => 'Iklan',
         'kategori' => 'Kategori',
         'kursi-parlemen' => 'KursiParlemen',
+        'glosarium-hukum' => 'GlosariumHukum',
+        'timeline-kasus' => 'TimelineKasus',
     ];
 
     public function index(Request $request): Response

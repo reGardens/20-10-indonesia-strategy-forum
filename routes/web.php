@@ -24,6 +24,8 @@ Route::get('/tokoh/{slug}', [SpaController::class, 'index'])->name('isf.tokoh.sh
 Route::get('/media/{id}', [SpaController::class, 'index'])->name('isf.media.show');
 Route::get('/politik', [SpaController::class, 'index'])->name('isf.politik');
 Route::get('/politik/{subkategori}', [SpaController::class, 'index'])->whereIn('subkategori', ['pemilu', 'parlemen', 'pemerintahan', 'partai'])->name('isf.politik.subkategori');
+Route::get('/hukum', [SpaController::class, 'index'])->name('isf.hukum');
+Route::get('/hukum/{subkategori}', [SpaController::class, 'index'])->whereIn('subkategori', ['regulasi', 'putusan', 'kasus', 'glosarium'])->name('isf.hukum.subkategori');
 // Artikel per kategori: /artikel/{kategori} = daftar (mis. /artikel/ruu), /artikel/{kategori}/{slug} = detail.
 Route::get('/artikel/{kategori}', [SpaController::class, 'index'])->whereIn('kategori', IsfRubrik::keys())->name('isf.kategori');
 Route::get('/artikel/{kategori}/{slug}', [ArticlePageController::class, 'show'])->whereIn('kategori', IsfRubrik::keys())->name('isf.artikel.show');
@@ -96,6 +98,8 @@ Route::middleware('auth')->group(function () {
         'email-briefing' => 'email_briefing',
         'kategori' => 'kategori',
         'kursi-parlemen' => 'kursi_parlemen',
+        'glosarium-hukum' => 'glosarium_hukum',
+        'timeline-kasus' => 'timeline_kasus',
     ];
     foreach ($isfModules as $segment => $feature) {
         Route::middleware("feature:{$feature}")->prefix("cms/{$segment}")->group(function () use ($segment) {

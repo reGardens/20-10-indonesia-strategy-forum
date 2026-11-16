@@ -84,6 +84,30 @@ export function getPetaKursi(lembaga = 'DPR', periode = '2024-2029') {
   return get('/isf/peta-kursi?' + qs.toString())
 }
 
+export function getHukum(subkategori = null, page = 1, limit = 9) {
+  const qs = new URLSearchParams()
+  if (subkategori) qs.set('subkategori', subkategori)
+  if (page) qs.set('page', String(page))
+  if (limit) qs.set('limit', String(limit))
+  const queryString = qs.toString()
+  return get('/isf/hukum' + (queryString ? `?${queryString}` : ''))
+}
+
+export function getGlosariumHukum(params = {}) {
+  const qs = new URLSearchParams()
+  if (params.q) qs.set('q', params.q)
+  if (params.letter) qs.set('letter', params.letter)
+  const queryString = qs.toString()
+  return get('/isf/glosarium-hukum' + (queryString ? `?${queryString}` : ''))
+}
+
+export function getTimelineKasus(slug = null) {
+  const qs = new URLSearchParams()
+  if (slug) qs.set('slug', slug)
+  const queryString = qs.toString()
+  return get('/isf/timeline-kasus' + (queryString ? `?${queryString}` : ''))
+}
+
 export function searchContent(params = {}) {
   const query = typeof params === 'string' ? { q: params } : params
   const qs = new URLSearchParams()

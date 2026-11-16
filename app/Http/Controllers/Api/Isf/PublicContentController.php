@@ -12,9 +12,12 @@ use App\Models\Isf\Alert;
 use App\Models\Isf\Article;
 use App\Models\Isf\Banner;
 use App\Models\Isf\Briefing;
+use App\Models\Isf\CaseEvent;
+use App\Models\Isf\CaseTimeline;
 use App\Models\Isf\Category;
 use App\Models\Isf\Chart;
 use App\Models\Isf\Infographic;
+use App\Models\Isf\LegalGlossary;
 use App\Models\Isf\ParliamentSeat;
 use App\Support\IsfRubrik;
 use App\Models\Isf\Setting;
@@ -741,6 +744,268 @@ class PublicContentController extends Controller
             'periode' => $periode,
             'totalKursi' => $totalKursi,
             'items' => $items,
+        ]);
+    }
+
+    /**
+     * GET /api/isf/hukum
+     *
+     * Halaman Rubrik Hukum:
+     * - Kategori induk Hukum & sub-kategori (/hukum/regulasi, /hukum/putusan, /hukum/kasus)
+     * - Headline utama hukum (artikel hero hukum atau artikel terbaru)
+     * - Opini Pakar Hukum (artikel hukum dengan is_expert_opinion = true)
+     * - Timeline Kasus Hukum Besar (alur waktu visual beserta peristiwanya)
+     * - Glosarium Hukum (kamus istilah interaktif A-Z)
+     * - Arsip artikel hukum terpaginasi (mendukung filter subkategori)
+     */
+    public function hukum(Request $request): JsonResponse
+    {
+        $subkategori = $request->query('subkategori') ? strtolower(trim((string) $request->query('subkategori'))) : null;
+        $page = max(1, (int) $request->input('page', 1));
+        $limit = min(24, max(1, (int) $request->input('limit', 9)));
+
+        // Kategori induk Hukum
+        $hukumCat = Category::query()->terbit()->where('slug', 'hukum')->first();
+        $subcategories = [];
+        if ($hukumCat) {
+            $subcategories = Category::query()
+                ->terbit()
+                ->where('parent_id', $hukumCat->id)
+                ->orderBy('order', 'asc')
+                ->orderBy('id', 'asc')
+                ->get(['id', 'name', 'slug', 'description', 'color'])
+                ->map(fn (Category $c) => [
+                    'id' => $c->id,
+                    'name' => $c->name,
+                    'slug' => $c->slug,
+                    'description' => $c->description,
+                    'color' => $c->color,
+                ])
+                ->values()
+                ->all();
+        }
+
+        if (empty($subcategories)) {
+            $subcategories = [
+                ['name' => 'Regulasi & Perundang-undangan', 'slug' => 'regulasi', 'description' => 'UU, Perpres, Perda baru, dan analisis kepatuhan regulasi.'],
+                ['name' => 'Putusan Peradilan', 'slug' => 'putusan', 'description' => 'Analisis Putusan MK, MA, dan peradilan umum.'],
+                ['name' => 'Kasus Hukum', 'slug' => 'kasus', 'description' => 'Kasus hukum besar, tipikor, dan proses peradilan.'],
+            ];
+        }
+
+        // Query artikel kategori hukum (termasuk legacy 'ruu')
+        $query = Article::query()->terbit()->whereIn('category', ['hukum', 'ruu']);
+
+        if ($subkategori && $subkategori !== 'semua' && $subkategori !== 'glosarium') {
+            $query->where(function ($q) use ($subkategori) {
+                $q->where('subcategory', $subkategori)
+                    ->orWhere('category', $subkategori);
+            });
+        }
+
+        $total = (clone $query)->count();
+        $lastPage = max(1, (int) ceil($total / $limit));
+        $articles = $query->orderByDesc('published_at')->orderByDesc('id')
+            ->forPage($page, $limit)
+            ->get();
+
+        $categoryLabel = $this->categoryLabeler();
+        $cardMapper = $this->articleCardMapper($categoryLabel);
+        $mappedArticles = $articles->map($cardMapper)->values()->all();
+
+        // Headline: pada halaman 1, artikel pertama dijadikan headline
+        $headline = null;
+        $listArticles = $mappedArticles;
+        if ($page === 1 && count($mappedArticles) > 0) {
+            $headline = $mappedArticles[0];
+            $listArticles = array_slice($mappedArticles, 1);
+        }
+
+        // Opini Pakar Hukum
+        $opiniPakar = Article::query()
+            ->terbit()
+            ->whereIn('category', ['hukum', 'ruu'])
+            ->where('is_expert_opinion', true)
+            ->orderByDesc('published_at')
+            ->take(4)
+            ->get()
+            ->map(function (Article $a) {
+                return [
+                    'id' => $a->id,
+                    'slug' => $a->slug,
+                    'title' => $a->title,
+                    'summary' => $a->summary,
+                    'expert_name' => $a->expert_name ?: ($a->author_name ?: 'Pakar Hukum'),
+                    'expert_title' => $a->expert_title ?: ($a->author_role ?: 'Akademisi & Praktisi Hukum'),
+                    'expert_avatar' => $a->expert_avatar ?: $a->image_url,
+                    'publishedAt' => $a->published_at?->format('Y-m-d'),
+                    'readingMinutes' => $a->reading_minutes,
+                    'to' => $a->publicUrl(),
+                ];
+            })->values()->all();
+
+        // Timeline Kasus Hukum
+        $timelines = CaseTimeline::query()
+            ->terbit()
+            ->with(['events' => function ($q) {
+                $q->terbit()->orderBy('tanggal_peristiwa', 'asc')->orderBy('urutan', 'asc');
+            }])
+            ->orderBy('urutan', 'asc')
+            ->orderByDesc('id')
+            ->take(5)
+            ->get()
+            ->map(function (CaseTimeline $t) {
+                return [
+                    'id' => $t->id,
+                    'judul_kasus' => $t->judul_kasus,
+                    'slug' => $t->slug,
+                    'kategori_kasus' => $t->kategori_kasus,
+                    'deskripsi' => $t->deskripsi,
+                    'status_kasus' => $t->status_kasus,
+                    'gambar' => $t->gambar,
+                    'events' => $t->events->map(fn (CaseEvent $e) => [
+                        'id' => $e->id,
+                        'tanggal' => $e->tanggal_peristiwa?->format('Y-m-d'),
+                        'tanggal_formatted' => $e->tanggal_peristiwa ? \Carbon\Carbon::parse($e->tanggal_peristiwa)->locale('id')->isoFormat('D MMMM Y') : '',
+                        'tahap' => $e->tahap,
+                        'judul' => $e->judul,
+                        'deskripsi' => $e->deskripsi,
+                        'sumber_tautan' => $e->sumber_tautan,
+                    ])->values()->all(),
+                ];
+            })->values()->all();
+
+        // Glosarium Hukum istilah terbit
+        $glossaryQuery = LegalGlossary::query()->terbit()->orderBy('abjad', 'asc')->orderBy('istilah', 'asc');
+        $glossaryTerms = $glossaryQuery->get()->map(fn (LegalGlossary $g) => [
+            'id' => $g->id,
+            'istilah' => $g->istilah,
+            'slug' => $g->slug,
+            'abjad' => $g->abjad,
+            'definisi' => $g->definisi,
+            'dasar_hukum' => $g->dasar_hukum,
+            'istilah_terkait' => $g->istilah_terkait ?: [],
+        ])->values()->all();
+
+        return response()->json([
+            'rubrik' => [
+                'key' => 'hukum',
+                'title' => 'Hukum',
+                'label' => 'Hukum',
+                'description' => 'Analisis yuridis, putusan pengadilan, kepatuhan regulasi, dan kasus hukum nasional.',
+                'subkategori' => $subcategories,
+                'activeSubkategori' => $subkategori,
+            ],
+            'headline' => $headline,
+            'articles' => $listArticles,
+            'meta' => [
+                'currentPage' => $page,
+                'lastPage' => $lastPage,
+                'total' => $total,
+                'perPage' => $limit,
+            ],
+            'opiniPakar' => $opiniPakar,
+            'timelineKasus' => $timelines,
+            'glosarium' => $glossaryTerms,
+        ]);
+    }
+
+    /**
+     * GET /api/isf/glosarium-hukum
+     *
+     * Kamus istilah hukum interaktif dengan pencarian dan filter huruf A-Z.
+     */
+    public function glosariumHukum(Request $request): JsonResponse
+    {
+        $q = trim((string) $request->input('q', ''));
+        $letter = strtoupper(trim((string) $request->input('letter', '')));
+
+        $query = LegalGlossary::query()->terbit();
+
+        if ($letter !== '' && strlen($letter) === 1) {
+            $query->where('abjad', $letter);
+        }
+
+        if ($q !== '') {
+            $query->where(function ($sub) use ($q) {
+                $sub->where('istilah', 'like', "%{$q}%")
+                    ->orWhere('definisi', 'like', "%{$q}%")
+                    ->orWhere('dasar_hukum', 'like', "%{$q}%");
+            });
+            $query->orderByRaw("CASE WHEN istilah LIKE ? THEN 0 ELSE 1 END", ["%{$q}%"]);
+        }
+
+        $items = $query->orderBy('abjad', 'asc')
+            ->orderBy('istilah', 'asc')
+            ->get()
+            ->map(fn (LegalGlossary $g) => [
+                'id' => $g->id,
+                'istilah' => $g->istilah,
+                'slug' => $g->slug,
+                'abjad' => $g->abjad,
+                'definisi' => $g->definisi,
+                'dasar_hukum' => $g->dasar_hukum,
+                'istilah_terkait' => $g->istilah_terkait ?: [],
+            ])->values()->all();
+
+        // Hitung ketersediaan istilah per abjad A-Z
+        $allCounts = LegalGlossary::query()->terbit()
+            ->selectRaw('abjad, count(*) as total')
+            ->groupBy('abjad')
+            ->pluck('total', 'abjad')
+            ->all();
+
+        return response()->json([
+            'query' => $q,
+            'letter' => $letter,
+            'total' => count($items),
+            'availableLetters' => $allCounts,
+            'items' => $items,
+        ]);
+    }
+
+    /**
+     * GET /api/isf/timeline-kasus
+     *
+     * Alur kronologis kasus hukum besar & peristiwa.
+     */
+    public function timelineKasus(Request $request): JsonResponse
+    {
+        $slug = trim((string) $request->input('slug', ''));
+
+        $query = CaseTimeline::query()->terbit()
+            ->with(['events' => function ($q) {
+                $q->terbit()->orderBy('tanggal_peristiwa', 'asc')->orderBy('urutan', 'asc');
+            }]);
+
+        if ($slug !== '') {
+            $query->where('slug', $slug);
+        }
+
+        $timelines = $query->orderBy('urutan', 'asc')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (CaseTimeline $t) => [
+                'id' => $t->id,
+                'judul_kasus' => $t->judul_kasus,
+                'slug' => $t->slug,
+                'kategori_kasus' => $t->kategori_kasus,
+                'deskripsi' => $t->deskripsi,
+                'status_kasus' => $t->status_kasus,
+                'gambar' => $t->gambar,
+                'events' => $t->events->map(fn (CaseEvent $e) => [
+                    'id' => $e->id,
+                    'tanggal' => $e->tanggal_peristiwa?->format('Y-m-d'),
+                    'tanggal_formatted' => $e->tanggal_peristiwa ? \Carbon\Carbon::parse($e->tanggal_peristiwa)->locale('id')->isoFormat('D MMMM Y') : '',
+                    'tahap' => $e->tahap,
+                    'judul' => $e->judul,
+                    'deskripsi' => $e->deskripsi,
+                    'sumber_tautan' => $e->sumber_tautan,
+                ])->values()->all(),
+            ])->values()->all();
+
+        return response()->json([
+            'data' => $timelines,
         ]);
     }
 

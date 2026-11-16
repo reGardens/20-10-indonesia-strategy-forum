@@ -62,6 +62,10 @@ const { form, errors, err, loading, loadError, saving, save, load } = useCmsForm
     link_url: '',
     fact_blocks: [],
     is_hero: false,
+    is_expert_opinion: false,
+    expert_name: '',
+    expert_title: '',
+    expert_avatar: '',
     show_in_terkini: true,
     is_popular: false,
     popular_rank: null,
@@ -120,6 +124,13 @@ const availableSubcategories = computed(() => {
       { value: 'parlemen', label: 'DPR/DPD/MPR' },
       { value: 'pemerintahan', label: 'Eksekutif' },
       { value: 'partai', label: 'Dinamika Partai' },
+    ]
+  }
+  if (form.category === 'hukum') {
+    return [
+      { value: 'regulasi', label: 'Regulasi & Perundang-undangan' },
+      { value: 'putusan', label: 'Putusan Peradilan' },
+      { value: 'kasus', label: 'Kasus Hukum' },
     ]
   }
   return []
@@ -434,6 +445,55 @@ watch(
                 <div class="text-[11px] text-muted-foreground mt-0.5">Tampil di sidebar isu terpopuler.</div>
               </div>
             </label>
+
+            <label class="flex items-start gap-2.5 p-3 rounded-lg border border-border bg-card cursor-pointer hover:border-red-500/50 transition">
+              <input
+                type="checkbox"
+                v-model="form.is_expert_opinion"
+                class="mt-0.5 rounded border-input text-red-600 focus:ring-red-500 h-4 w-4"
+              />
+              <div>
+                <div class="text-xs font-semibold text-foreground">Opini Dewan Pakar</div>
+                <div class="text-[11px] text-muted-foreground mt-0.5">Tampil di section Opini Pakar Hukum.</div>
+              </div>
+            </label>
+          </div>
+
+          <!-- Input Detail Penulis Pakar (jika Opini Pakar dicentang) -->
+          <div v-if="form.is_expert_opinion" class="p-4 rounded-lg bg-muted/40 border border-border space-y-3 mt-3">
+            <div class="text-xs font-semibold text-foreground flex items-center gap-1.5 text-isf-red">
+              <IconComponent name="IconQuote" class="w-4 h-4" />
+              <span>Profil Penulis Pakar</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div class="space-y-1">
+                <Label for="expert_name" class="text-xs font-medium">Nama Lengkap & Gelar Pakar</Label>
+                <Input
+                  id="expert_name"
+                  v-model="form.expert_name"
+                  placeholder="e.g. Prof. Dr. Mahfud MD, S.H."
+                  class="h-8 text-xs"
+                />
+              </div>
+              <div class="space-y-1">
+                <Label for="expert_title" class="text-xs font-medium">Afiliasi / Bidang Keahlian</Label>
+                <Input
+                  id="expert_title"
+                  v-model="form.expert_title"
+                  placeholder="e.g. Guru Besar Hukum Tata Negara"
+                  class="h-8 text-xs"
+                />
+              </div>
+              <div class="space-y-1">
+                <Label for="expert_avatar" class="text-xs font-medium">URL Foto Pakar (Opsional)</Label>
+                <Input
+                  id="expert_avatar"
+                  v-model="form.expert_avatar"
+                  placeholder="https://... / foto pakar"
+                  class="h-8 text-xs"
+                />
+              </div>
+            </div>
           </div>
 
           <div v-if="form.is_popular" class="w-full sm:w-60 pt-2 space-y-1">

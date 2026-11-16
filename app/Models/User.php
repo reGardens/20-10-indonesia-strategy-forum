@@ -27,6 +27,8 @@ class User extends Authenticatable
         'pengaturan_halaman',
         'kategori',
         'kursi_parlemen',
+        'glosarium_hukum',
+        'timeline_kasus',
     ];
 
     /**

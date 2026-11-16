@@ -102,6 +102,18 @@ const menuGroups = computed(() => [
                 visible: hasFeature("kursi_parlemen"),
             },
             {
+                label: "Glosarium Hukum",
+                href: "/cms/glosarium-hukum",
+                icon: "Book",
+                visible: hasFeature("glosarium_hukum"),
+            },
+            {
+                label: "Timeline Kasus",
+                href: "/cms/timeline-kasus",
+                icon: "Clock",
+                visible: hasFeature("timeline_kasus"),
+            },
+            {
                 label: "ISF Insight (Grafik)",
                 href: "/cms/data-grafik",
                 icon: "ChartBar",
