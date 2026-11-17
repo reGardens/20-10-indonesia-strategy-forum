@@ -21,12 +21,17 @@
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.5rem">
           <input v-model="newGuest.phone" type="text" class="field-input" placeholder="No HP (opsional)" />
-          <select v-model="newGuest.category" class="field-input">
-            <option value="keluarga">👨‍👩‍👧 Keluarga</option>
-            <option value="teman">👫 Teman</option>
-            <option value="kantor">💼 Rekan Kerja</option>
-            <option value="lainnya">👤 Lainnya</option>
-          </select>
+          <Select v-model="newGuest.category">
+            <SelectTrigger class="w-full text-xs">
+              <SelectValue placeholder="Pilih Kategori..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="keluarga" class="text-xs font-medium cursor-pointer">👨‍👩‍👧 Keluarga</SelectItem>
+              <SelectItem value="teman" class="text-xs font-medium cursor-pointer">👫 Teman</SelectItem>
+              <SelectItem value="kantor" class="text-xs font-medium cursor-pointer">💼 Rekan Kerja</SelectItem>
+              <SelectItem value="lainnya" class="text-xs font-medium cursor-pointer">👤 Lainnya</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -115,6 +120,13 @@
 <script setup>
 import { ref, computed } from 'vue'
 import './section.css'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/Components/UI'
 
 const saving = ref(false)
 const saved = ref(false)

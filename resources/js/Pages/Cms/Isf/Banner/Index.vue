@@ -24,35 +24,34 @@ import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 defineOptions({ layout: CmsLayout })
 
 const items = ref([])
-const meta = ref({ current_page: 1, last_page: 1, total: 0, per_page: 15 })
 const loading = ref(true)
 const errorMsg = ref('')
 const reordering = ref(false)
 
 const search = ref('')
 const statusFilter = ref('')
-const page = ref(1)
+const currentPage = ref(1)
+const perPage = ref(10)
 let searchTimeout = null
 
 const isFiltered = computed(() => Boolean(search.value || statusFilter.value))
+
+const paginatedItems = computed(() => {
+  const start = (currentPage.value - 1) * perPage.value
+  return items.value.slice(start, start + perPage.value)
+})
 
 async function loadData() {
   loading.value = true
   errorMsg.value = ''
   try {
     const res = await cmsResources.banner.list({
-      page: page.value,
+      per_page: 500,
       q: search.value || undefined,
       status: statusFilter.value || undefined
     })
-    const list = res.data || []
+    const list = Array.isArray(res) ? res : (res?.data || [])
     items.value = [...list].sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
-    meta.value = {
-      current_page: res.current_page || 1,
-      last_page: res.last_page || 1,
-      total: res.total || 0,
-      per_page: res.per_page || 15
-    }
   } catch (err) {
     errorMsg.value = err?.response?.data?.message || 'Gagal memuat banner.'
   } finally {
@@ -63,19 +62,14 @@ async function loadData() {
 function onSearchInput() {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
-    page.value = 1
+    currentPage.value = 1
     loadData()
   }, 350)
 }
 
 function onStatusChange(val) {
   statusFilter.value = val
-  page.value = 1
-  loadData()
-}
-
-function onPageChange(newPage) {
-  page.value = newPage
+  currentPage.value = 1
   loadData()
 }
 
@@ -217,44 +211,58 @@ onMounted(() => {
     <ErrorMessage v-else-if="errorMsg" :message="errorMsg" @retry="loadData" />
 
     <!-- Table -->
-    <div v-else class="rounded-lg border border-border bg-card overflow-hidden shadow-sm">
-      <Table>
-        <TableHeader class="bg-muted/30">
-          <TableRow>
+    <div v-else class="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
+      <Table
+        :current-page="currentPage"
+        :per-page="perPage"
+        :total="items.length"
+        @update:current-page="currentPage = $event"
+        @update:per-page="perPage = $event; currentPage = 1"
+      >
+        <TableHeader>
+          <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
             <TableHead class="w-24 text-center text-xs">Urutan</TableHead>
             <TableHead class="w-32">Gambar</TableHead>
             <TableHead>Nama Banner & Tautan</TableHead>
-            <TableHead class="w-32">Status</TableHead>
+            <TableHead class="w-32 text-center">Status</TableHead>
             <TableHead class="w-32 text-right">Aksi</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
+          <TableRow v-if="paginatedItems.length === 0">
+            <TableCell colspan="5" class="h-32 text-center text-xs text-muted-foreground">
+              <div class="flex flex-col items-center justify-center gap-1.5">
+                <IconComponent name="Slideshow" :size="24" class="text-muted-foreground/60" />
+                <span>Tidak ada data banner yang ditemukan.</span>
+              </div>
+            </TableCell>
+          </TableRow>
           <TableRow
-            v-for="(item, idx) in items"
+            v-for="(item, idx) in paginatedItems"
             :key="item.id"
-            class="hover:bg-muted/30 transition-colors"
+            class="hover:bg-muted/30 transition border-b border-border/50"
           >
             <TableCell class="text-center text-xs">
               <div class="inline-flex items-center justify-center gap-1.5">
                 <span class="font-mono font-bold text-foreground text-xs min-w-[1.25rem] text-center">
-                  {{ item.order ?? (idx + 1) }}
+                  {{ item.order ?? (idx + 1 + (currentPage - 1) * perPage) }}
                 </span>
                 <div class="inline-flex flex-col gap-0.5">
                   <button
                     type="button"
                     :title="isFiltered ? 'Reset filter untuk mengubah urutan' : 'Pindah Urutan Naik'"
-                    :disabled="idx === 0 || reordering || isFiltered"
-                    @click="moveOrder(idx, -1)"
-                    class="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-25 disabled:cursor-not-allowed transition"
+                    :disabled="(idx === 0 && currentPage === 1) || reordering || isFiltered"
+                    @click="moveOrder((currentPage - 1) * perPage + idx, -1)"
+                    class="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-25 disabled:cursor-not-allowed transition cursor-pointer"
                   >
                     <IconComponent name="ChevronUp" :size="13" />
                   </button>
                   <button
                     type="button"
                     :title="isFiltered ? 'Reset filter untuk mengubah urutan' : 'Pindah Urutan Turun'"
-                    :disabled="idx === items.length - 1 || reordering || isFiltered"
-                    @click="moveOrder(idx, 1)"
-                    class="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-25 disabled:cursor-not-allowed transition"
+                    :disabled="((currentPage - 1) * perPage + idx) === items.length - 1 || reordering || isFiltered"
+                    @click="moveOrder((currentPage - 1) * perPage + idx, 1)"
+                    class="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-25 disabled:cursor-not-allowed transition cursor-pointer"
                   >
                     <IconComponent name="ChevronDown" :size="13" />
                   </button>
@@ -291,7 +299,7 @@ onMounted(() => {
               </div>
             </TableCell>
 
-            <TableCell>
+            <TableCell class="text-center">
               <StatusBadge :status="item.status" />
             </TableCell>
 
@@ -315,32 +323,8 @@ onMounted(() => {
               </div>
             </TableCell>
           </TableRow>
-
-          <TableRow v-if="items.length === 0">
-            <TableCell colspan="5" class="h-32 text-center text-xs text-muted-foreground">
-              <div class="flex flex-col items-center justify-center gap-1.5">
-                <IconComponent name="Slideshow" :size="24" class="text-muted-foreground/60" />
-                <span>Tidak ada data banner yang ditemukan.</span>
-              </div>
-            </TableCell>
-          </TableRow>
         </TableBody>
       </Table>
-
-      <!-- Pagination -->
-      <div
-        v-if="meta.last_page > 1"
-        class="flex items-center justify-between px-4 py-3 border-t border-border bg-card/40"
-      >
-        <span class="text-xs text-muted-foreground">
-          Menampilkan {{ items.length }} dari {{ meta.total }} banner
-        </span>
-        <Pagination
-          :current-page="meta.current_page"
-          :total-pages="meta.last_page"
-          @update:current-page="onPageChange"
-        />
-      </div>
     </div>
   </div>
 </template>

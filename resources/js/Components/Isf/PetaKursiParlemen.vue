@@ -294,7 +294,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="peta-kursi-widget w-full" :class="props.class">
-    <!-- Header Controls & Switcher Lembaga -->
+    <!-- Header Controls -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-3 sm:pb-4 border-b border-neutral-700/60">
       <div class="min-w-0">
         <div class="flex flex-wrap items-center gap-2">
@@ -311,27 +311,6 @@ onBeforeUnmount(() => {
         <p class="text-[11px] sm:text-xs text-neutral-400 mt-1 font-space-grotesk">
           Total <strong class="text-white">{{ totalKursi }} Kursi</strong> • Ambang Mayoritas: <strong class="text-amber-400">{{ thresholdMajority }} Kursi</strong>
         </p>
-      </div>
-
-      <!-- Tab Lembaga: responsive full-width on mobile -->
-      <div class="flex items-center gap-1.5 w-full sm:w-auto bg-neutral-900/80 p-1 rounded-lg border border-neutral-700/80" role="tablist" aria-label="Pilih Lembaga Parlemen">
-        <button
-          v-for="lem in ['DPR', 'DPD', 'MPR']"
-          :key="lem"
-          role="tab"
-          :aria-selected="activeLembaga === lem"
-          :tabindex="activeLembaga === lem ? 0 : -1"
-          type="button"
-          @click="changeLembaga(lem)"
-          :class="[
-            'flex-1 sm:flex-initial px-3 py-1.5 text-xs font-space-grotesk font-bold rounded-md transition-all text-center cursor-pointer',
-            activeLembaga === lem
-              ? 'bg-isf-red text-white shadow-xs'
-              : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
-          ]"
-        >
-          {{ lem }}
-        </button>
       </div>
     </div>
 
@@ -463,7 +442,6 @@ onBeforeUnmount(() => {
               <th scope="col" class="py-2.5 px-3 font-semibold whitespace-nowrap" style="min-width: 110px;">Singkatan</th>
               <th scope="col" class="py-2.5 px-3 font-semibold text-right whitespace-nowrap" style="min-width: 100px;">Jumlah Kursi</th>
               <th scope="col" class="py-2.5 px-3 font-semibold text-right whitespace-nowrap" style="min-width: 80px;">Persentase</th>
-              <th scope="col" class="py-2.5 px-3 font-semibold text-center whitespace-nowrap" style="min-width: 80px;">Status</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-neutral-800/60">
@@ -479,17 +457,9 @@ onBeforeUnmount(() => {
                 {{ idx + 1 }}
               </td>
               <td class="py-2.5 px-3 font-medium text-white" style="min-width: 190px; max-width: 250px;">
-                <div class="flex items-start gap-2.5">
-                  <span
-                    class="w-3 h-3 rounded-full shrink-0 mt-0.5 shadow-2xs"
-                    :style="{ backgroundColor: row.warna_partai }"
-                  />
-                  <div class="min-w-0 flex-1">
-                    <span class="block text-xs font-semibold text-white line-clamp-2 leading-snug break-words">
-                      {{ row.partai }}
-                    </span>
-                  </div>
-                </div>
+                <span class="block text-xs font-semibold text-white line-clamp-2 leading-snug break-words">
+                  {{ row.partai }}
+                </span>
               </td>
               <td class="py-2.5 px-3 text-neutral-300 font-mono text-xs whitespace-nowrap" style="min-width: 110px;">
                 {{ row.singkatan || '-' }}
@@ -499,11 +469,6 @@ onBeforeUnmount(() => {
               </td>
               <td class="py-2.5 px-3 text-right text-amber-400 font-mono text-xs whitespace-nowrap" style="min-width: 80px;">
                 {{ row.persentase }}%
-              </td>
-              <td class="py-2.5 px-3 text-center whitespace-nowrap" style="min-width: 80px;">
-                <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  Terbit
-                </span>
               </td>
             </tr>
           </tbody>
@@ -517,9 +482,6 @@ onBeforeUnmount(() => {
               </td>
               <td class="py-2.5 px-3 text-right font-mono text-xs whitespace-nowrap">
                 100%
-              </td>
-              <td class="py-2.5 px-3 text-center text-neutral-400 font-mono text-xs whitespace-nowrap">
-                -
               </td>
             </tr>
           </tfoot>

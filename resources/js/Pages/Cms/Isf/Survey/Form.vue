@@ -16,6 +16,11 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -262,7 +267,7 @@ onMounted(() => {
 <template>
   <Head :title="`${isEdit ? 'Edit' : 'Tambah'} Survei — CMS ISF`" />
 
-  <div class="p-6 space-y-6 w-full max-w-5xl">
+  <div class="p-6 space-y-6 w-full">
     <!-- Header -->
     <div class="flex items-center justify-between pb-4 border-b border-border">
       <div class="flex items-center gap-3">
@@ -373,25 +378,41 @@ onMounted(() => {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label for="topic" class="text-xs font-semibold">Kategori Isu <span class="text-red-500">*</span></Label>
-              <select
-                id="topic"
-                v-model="form.topic"
-                class="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                <option v-for="t in topicOptions" :key="t.value" :value="t.value">{{ t.label }}</option>
-              </select>
+              <Select v-model="form.topic">
+                <SelectTrigger id="topic" class="mt-1 h-9 text-xs font-medium bg-background border-input">
+                  <SelectValue placeholder="Pilih Kategori Isu..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="t in topicOptions"
+                    :key="t.value"
+                    :value="t.value"
+                    class="text-xs font-medium cursor-pointer"
+                  >
+                    {{ t.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
               <p v-if="errors.topic" class="text-xs text-red-500 mt-1">{{ errors.topic[0] }}</p>
             </div>
 
             <div>
               <Label for="region" class="text-xs font-semibold">Cakupan Wilayah <span class="text-red-500">*</span></Label>
-              <select
-                id="region"
-                v-model="form.region"
-                class="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                <option v-for="r in regionOptions" :key="r.value" :value="r.value">{{ r.label }}</option>
-              </select>
+              <Select v-model="form.region">
+                <SelectTrigger id="region" class="mt-1 h-9 text-xs font-medium bg-background border-input">
+                  <SelectValue placeholder="Pilih Cakupan Wilayah..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="r in regionOptions"
+                    :key="r.value"
+                    :value="r.value"
+                    class="text-xs font-medium cursor-pointer"
+                  >
+                    {{ r.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
               <p v-if="errors.region" class="text-xs text-red-500 mt-1">{{ errors.region[0] }}</p>
             </div>
           </div>

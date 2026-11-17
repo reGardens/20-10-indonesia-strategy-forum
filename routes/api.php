@@ -8,12 +8,15 @@ use App\Http\Controllers\Api\Isf\Cms\BriefingController;
 use App\Http\Controllers\Api\Isf\Cms\CaseTimelineController;
 use App\Http\Controllers\Api\Isf\Cms\CategoryController;
 use App\Http\Controllers\Api\Isf\Cms\ChartController;
+use App\Http\Controllers\Api\Isf\Cms\DatabasePeraturanController;
 use App\Http\Controllers\Api\Isf\Cms\InfographicController;
 use App\Http\Controllers\Api\Isf\Cms\LegalGlossaryController;
+use App\Http\Controllers\Api\Isf\Cms\LegalTermController;
 use App\Http\Controllers\Api\Isf\Cms\MediaUploadController;
 use App\Http\Controllers\Api\Isf\Cms\ParliamentSeatController;
 use App\Http\Controllers\Api\Isf\Cms\PolicyBriefController;
 use App\Http\Controllers\Api\Isf\Cms\PolicyMonitoringController;
+use App\Http\Controllers\Api\Isf\Cms\PolicySectorController;
 use App\Http\Controllers\Api\Isf\Cms\ReaderPollController;
 use App\Http\Controllers\Api\Isf\Cms\PublicQuoteController;
 use App\Http\Controllers\Api\Isf\Cms\LetterController;
@@ -114,14 +117,22 @@ Route::middleware(['web', 'auth'])->prefix('cms')->name('api.cms.')->group(funct
         ->parameters(['email-briefing' => 'briefing'])->middleware('feature:email_briefing');
     Route::apiResource('kategori', CategoryController::class)
         ->parameters(['kategori' => 'category']);
+    Route::post('kursi-parlemen/reorder', [ParliamentSeatController::class, 'reorder'])
+        ->middleware('feature:kursi_parlemen')->name('kursi-parlemen.reorder');
     Route::apiResource('kursi-parlemen', ParliamentSeatController::class)
         ->parameters(['kursi-parlemen' => 'parliamentSeat'])->middleware('feature:kursi_parlemen');
     Route::apiResource('glosarium-hukum', LegalGlossaryController::class)
         ->parameters(['glosarium-hukum' => 'legalGlossary'])->middleware('feature:glosarium_hukum');
+    Route::apiResource('istilah-hukum', LegalTermController::class)
+        ->parameters(['istilah-hukum' => 'legalTerm'])->middleware('feature:glosarium_hukum');
     Route::apiResource('timeline-kasus', CaseTimelineController::class)
         ->parameters(['timeline-kasus' => 'caseTimeline'])->middleware('feature:timeline_kasus');
     Route::apiResource('policy-brief', PolicyBriefController::class)
         ->parameters(['policy-brief' => 'policyBrief'])->middleware('feature:policy_brief');
+    Route::apiResource('kategori-sektor', PolicySectorController::class)
+        ->parameters(['kategori-sektor' => 'kategoriSektor'])->middleware('feature:policy_brief');
+    Route::apiResource('database-peraturan', DatabasePeraturanController::class)
+        ->parameters(['database-peraturan' => 'databasePeraturan'])->middleware('feature:policy_brief');
     Route::apiResource('monitoring-kebijakan', PolicyMonitoringController::class)
         ->parameters(['monitoring-kebijakan' => 'policyMonitoring'])->middleware('feature:monitoring_kebijakan');
     Route::apiResource('reader-poll', ReaderPollController::class)

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Head, Link } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
 import { cmsResources, errorMessage } from '@/api/services/isfCmsService'
@@ -29,7 +29,14 @@ const loadError = ref('')
 const search = ref('')
 const abjadFilter = ref('')
 const statusFilter = ref('')
+const currentPage = ref(1)
+const perPage = ref(10)
 let searchTimeout = null
+
+const paginatedItems = computed(() => {
+  const start = (currentPage.value - 1) * perPage.value
+  return items.value.slice(start, start + perPage.value)
+})
 
 const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 const abjadOptions = [
@@ -57,16 +64,19 @@ async function loadData() {
 function onSearchInput() {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
+    currentPage.value = 1
     loadData()
   }, 350)
 }
 
 function onAbjadChange() {
+  currentPage.value = 1
   loadData()
 }
 
 function onStatusChange(status) {
   statusFilter.value = status
+  currentPage.value = 1
   loadData()
 }
 
@@ -196,32 +206,37 @@ onMounted(() => {
     />
 
     <div v-else class="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
-      <Table>
+      <Table
+        :current-page="currentPage"
+        :per-page="perPage"
+        :total="items.length"
+        @update:current-page="currentPage = $event"
+        @update:per-page="perPage = $event; currentPage = 1"
+      >
         <TableHeader>
           <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
             <TableHead class="w-12 text-center text-xs">#</TableHead>
             <TableHead class="w-16 text-center text-xs">Abjad</TableHead>
-            <TableHead class="min-w-[180px]">Istilah & Slug</TableHead>
-            <TableHead class="min-w-[280px]">Definisi</TableHead>
+            <TableHead class="min-w-[280px]">Istilah & Definisi</TableHead>
             <TableHead class="min-w-[180px]">Dasar Hukum</TableHead>
             <TableHead class="min-w-[150px]">Istilah Terkait</TableHead>
             <TableHead class="w-24 text-center">Status</TableHead>
-            <TableHead class="text-right">Aksi</TableHead>
+            <TableHead class="w-36 text-right text-xs">Aksi</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow v-if="items.length === 0">
-            <TableCell colspan="8" class="text-center py-10 text-muted-foreground text-sm">
-              Tidak ada istilah glosarium hukum ditemukan.
+            <TableCell colspan="7" class="text-center py-10 text-muted-foreground text-xs">
+              Belum ada istilah glosarium hukum yang sesuai filter.
             </TableCell>
           </TableRow>
           <TableRow
-            v-for="(item, idx) in items"
+            v-for="(item, idx) in paginatedItems"
             :key="item.id"
             class="hover:bg-muted/30 transition border-b border-border/50"
           >
             <TableCell class="text-center font-mono text-xs text-muted-foreground">
-              {{ idx + 1 }}
+              {{ idx + 1 + (currentPage - 1) * perPage }}
             </TableCell>
             <TableCell class="text-center">
               <span class="inline-flex items-center justify-center w-7 h-7 rounded bg-amber-500/10 text-amber-600 font-mono font-bold text-xs border border-amber-500/20">
@@ -229,21 +244,20 @@ onMounted(() => {
               </span>
             </TableCell>
             <TableCell class="py-3">
-              <div class="font-semibold text-foreground text-sm">
+              <div class="font-semibold text-foreground text-sm line-clamp-1">
                 {{ item.istilah }}
               </div>
-              <div class="text-xs text-muted-foreground font-mono mt-0.5 truncate">
-                #istilah-{{ item.slug }}
-              </div>
+              <p class="text-xs text-muted-foreground line-clamp-2 leading-relaxed mt-0.5 max-w-md">
+                {{ item.definisi }}
+              </p>
             </TableCell>
-            <TableCell class="text-xs text-muted-foreground line-clamp-2 max-w-xs leading-relaxed">
-              {{ item.definisi }}
+            <TableCell class="py-3">
+              <p class="text-xs text-muted-foreground line-clamp-2 max-w-xs">
+                {{ item.dasar_hukum || '-' }}
+              </p>
             </TableCell>
-            <TableCell class="text-xs text-muted-foreground">
-              {{ item.dasar_hukum || '-' }}
-            </TableCell>
-            <TableCell>
-              <div v-if="Array.isArray(item.istilah_terkait) && item.istilah_terkait.length > 0" class="flex flex-wrap gap-1">
+            <TableCell class="py-3">
+              <div v-if="Array.isArray(item.istilah_terkait) && item.istilah_terkait.length > 0" class="flex flex-wrap gap-1 max-h-10 overflow-hidden">
                 <Badge
                   v-for="rel in item.istilah_terkait"
                   :key="rel"
@@ -261,19 +275,25 @@ onMounted(() => {
             <TableCell class="text-right">
               <div class="flex items-center justify-end gap-1.5">
                 <Link :href="`/cms/glosarium-hukum/${item.id}/edit`">
-                  <Button variant="outline" size="sm" class="h-8 px-2.5 text-xs font-medium hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center">
-                    <IconComponent name="Edit" :size="14" class="mr-1" />
-                    Edit
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    class="h-8 px-2.5 text-xs inline-flex items-center gap-1 border-border hover:bg-muted"
+                  >
+                    <IconComponent name="Edit" :size="13" />
+                    <span>Edit</span>
                   </Button>
                 </Link>
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
-                  class="h-8 px-2.5 text-xs font-medium text-red-500 border-red-500/30 hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center"
+                  class="h-8 px-2.5 text-xs inline-flex items-center gap-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 border-red-500/20"
                   @click="handleDelete(item)"
                 >
-                  <IconComponent name="Trash" :size="14" class="mr-1" />
-                  Hapus
+                  <IconComponent name="Trash" :size="13" />
+                  <span>Hapus</span>
                 </Button>
               </div>
             </TableCell>

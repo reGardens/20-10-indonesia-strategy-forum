@@ -31,13 +31,18 @@
 
       <div class="field-group">
         <label class="field-label" for="streamPlatform">Platform</label>
-        <select id="streamPlatform" v-model="form.platform" class="field-input">
-          <option value="youtube">▶️ YouTube Live</option>
-          <option value="zoom">🔵 Zoom Webinar</option>
-          <option value="instagram">📸 Instagram Live</option>
-          <option value="tiktok">🎵 TikTok Live</option>
-          <option value="other">🌐 Lainnya</option>
-        </select>
+        <Select v-model="form.platform">
+          <SelectTrigger id="streamPlatform" class="w-full text-xs">
+            <SelectValue placeholder="Pilih Platform..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="youtube" class="text-xs font-medium cursor-pointer">▶️ YouTube Live</SelectItem>
+            <SelectItem value="zoom" class="text-xs font-medium cursor-pointer">🔵 Zoom Webinar</SelectItem>
+            <SelectItem value="instagram" class="text-xs font-medium cursor-pointer">📸 Instagram Live</SelectItem>
+            <SelectItem value="tiktok" class="text-xs font-medium cursor-pointer">🎵 TikTok Live</SelectItem>
+            <SelectItem value="other" class="text-xs font-medium cursor-pointer">🌐 Lainnya</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div class="field-group">
@@ -94,6 +99,13 @@
 <script setup>
 import { ref, computed } from 'vue'
 import './section.css'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/Components/UI'
 
 const saving = ref(false)
 const saved = ref(false)

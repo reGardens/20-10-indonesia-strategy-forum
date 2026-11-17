@@ -27,7 +27,7 @@ Route::get('/politik/{subkategori}', [SpaController::class, 'index'])->whereIn('
 Route::get('/hukum', [SpaController::class, 'index'])->name('isf.hukum');
 Route::get('/hukum/{subkategori}', [SpaController::class, 'index'])->whereIn('subkategori', ['regulasi', 'putusan', 'kasus', 'glosarium'])->name('isf.hukum.subkategori');
 Route::get('/kebijakan-publik', [SpaController::class, 'index'])->name('isf.kebijakan-publik');
-Route::get('/kebijakan-publik/{subkategori}', [SpaController::class, 'index'])->whereIn('subkategori', ['ekonomi', 'kesehatan', 'pendidikan', 'pertahanan', 'lingkungan', 'policy-brief', 'monitoring'])->name('isf.kebijakan-publik.subkategori');
+Route::get('/kebijakan-publik/{subkategori}', [SpaController::class, 'index'])->whereIn('subkategori', ['ekonomi', 'kesehatan', 'pendidikan', 'pertahanan', 'lingkungan', 'policy-brief', 'monitoring', 'data-statistik', 'isf-insight', 'database-peraturan'])->name('isf.kebijakan-publik.subkategori');
 Route::get('/sosok', [SpaController::class, 'index'])->name('isf.sosok');
 Route::get('/sosok/{kategori}', [SpaController::class, 'index'])->whereIn('kategori', ['eksekutif', 'legislatif', 'yudikatif', 'pakar', 'militer', 'pengusaha'])->name('isf.sosok.kategori');
 Route::get('/sosok/{slug}', [SpaController::class, 'index'])->name('isf.sosok.show');
@@ -109,8 +109,11 @@ Route::middleware('auth')->group(function () {
         'kategori' => 'kategori',
         'kursi-parlemen' => 'kursi_parlemen',
         'glosarium-hukum' => 'glosarium_hukum',
+        'istilah-hukum' => 'glosarium_hukum',
         'timeline-kasus' => 'timeline_kasus',
         'policy-brief' => 'policy_brief',
+        'kategori-sektor' => 'policy_brief',
+        'database-peraturan' => 'policy_brief',
         'monitoring-kebijakan' => 'monitoring_kebijakan',
         'reader-poll' => 'reader_poll',
         'kutipan-publik' => 'kutipan_publik',

@@ -133,15 +133,22 @@
             />
           </div>
           <div>
-            <select
-              v-model="giftForm.method"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200"
-            >
-              <option value="">Pilih metode pembayaran</option>
-              <option value="transfer_bank">Transfer Bank</option>
-              <option value="qris">QRIS</option>
-              <option value="e_wallet">E-Wallet</option>
-            </select>
+            <Select v-model="giftForm.method">
+              <SelectTrigger class="w-full text-sm">
+                <SelectValue placeholder="Pilih metode pembayaran" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="transfer_bank" class="text-sm font-medium cursor-pointer">
+                  Transfer Bank
+                </SelectItem>
+                <SelectItem value="qris" class="text-sm font-medium cursor-pointer">
+                  QRIS
+                </SelectItem>
+                <SelectItem value="e_wallet" class="text-sm font-medium cursor-pointer">
+                  E-Wallet
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <textarea
@@ -224,6 +231,13 @@
 import { computed, reactive, ref } from "vue";
 import { useClipboard } from "@/Composables/useClipboard.js";
 import { paymentService } from "@/api/services/paymentService.js";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/Components/UI";
 
 const props = defineProps({
   bankAccounts: {

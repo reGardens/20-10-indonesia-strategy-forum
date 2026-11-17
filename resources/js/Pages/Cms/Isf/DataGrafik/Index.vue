@@ -17,15 +17,15 @@ import {
   TableBody,
   TableRow,
   TableHead,
-  TableCell,
-  Pagination
+  TableCell
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
 defineOptions({ layout: CmsLayout })
 
 const items = ref([])
-const meta = ref({ current_page: 1, last_page: 1, total: 0, per_page: 15 })
+const currentPage = ref(1)
+const perPage = ref(10)
 const liveId = ref(null)
 const loading = ref(true)
 const errorMsg = ref('')
@@ -33,28 +33,26 @@ const reordering = ref(false)
 
 const search = ref('')
 const statusFilter = ref('')
-const page = ref(1)
 let searchTimeout = null
 
 const isFiltered = computed(() => Boolean(search.value || statusFilter.value))
+
+const paginatedItems = computed(() => {
+  const start = (currentPage.value - 1) * perPage.value
+  return items.value.slice(start, start + perPage.value)
+})
 
 async function loadData() {
   loading.value = true
   errorMsg.value = ''
   try {
     const res = await cmsResources.dataGrafik.list({
-      page: page.value,
+      per_page: 500,
       q: search.value || undefined,
       status: statusFilter.value || undefined
     })
     const list = res.data || []
     items.value = [...list].sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
-    meta.value = {
-      current_page: res.current_page || 1,
-      last_page: res.last_page || 1,
-      total: res.total || 0,
-      per_page: res.per_page || 15
-    }
     liveId.value = res.live_id || null
   } catch (err) {
     errorMsg.value = err?.response?.data?.message || 'Gagal memuat daftar data grafik.'
@@ -66,19 +64,14 @@ async function loadData() {
 function onSearchInput() {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
-    page.value = 1
+    currentPage.value = 1
     loadData()
   }, 350)
 }
 
 function onStatusChange(val) {
   statusFilter.value = val
-  page.value = 1
-  loadData()
-}
-
-function onPageChange(newPage) {
-  page.value = newPage
+  currentPage.value = 1
   loadData()
 }
 
@@ -225,7 +218,13 @@ onMounted(() => {
 
     <!-- Table -->
     <div v-else class="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
-      <Table>
+      <Table
+        :current-page="currentPage"
+        :per-page="perPage"
+        :total="items.length"
+        @update:current-page="currentPage = $event"
+        @update:per-page="perPage = $event; currentPage = 1"
+      >
         <TableHeader>
           <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
             <TableHead class="w-12 text-center text-xs">#</TableHead>
@@ -244,12 +243,12 @@ onMounted(() => {
             </TableCell>
           </TableRow>
           <TableRow
-            v-for="(item, idx) in items"
+            v-for="(item, idx) in paginatedItems"
             :key="item.id"
             class="hover:bg-muted/30 transition border-b border-border/50"
           >
             <TableCell class="text-center text-xs font-mono text-muted-foreground">
-              {{ (meta.current_page - 1) * meta.per_page + idx + 1 }}
+              {{ (currentPage - 1) * perPage + idx + 1 }}
             </TableCell>
             <TableCell class="py-3 text-foreground text-sm">
               <div class="font-semibold line-clamp-2">{{ item.title }}</div>
@@ -264,14 +263,14 @@ onMounted(() => {
             <TableCell class="text-center text-xs">
               <div class="inline-flex items-center justify-center gap-1.5">
                 <span class="font-mono font-bold text-foreground text-xs min-w-[1.25rem] text-center">
-                  {{ item.order ?? (idx + 1) }}
+                  {{ item.order ?? ((currentPage - 1) * perPage + idx + 1) }}
                 </span>
                 <div class="inline-flex flex-col gap-0.5">
                   <button
                     type="button"
                     :title="isFiltered ? 'Reset filter untuk mengubah urutan' : 'Pindah Urutan Naik'"
-                    :disabled="idx === 0 || reordering || isFiltered"
-                    @click="moveOrder(idx, -1)"
+                    :disabled="(currentPage - 1) * perPage + idx === 0 || reordering || isFiltered"
+                    @click="moveOrder((currentPage - 1) * perPage + idx, -1)"
                     class="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-25 disabled:cursor-not-allowed transition"
                   >
                     <IconComponent name="ChevronUp" :size="13" />
@@ -279,8 +278,8 @@ onMounted(() => {
                   <button
                     type="button"
                     :title="isFiltered ? 'Reset filter untuk mengubah urutan' : 'Pindah Urutan Turun'"
-                    :disabled="idx === items.length - 1 || reordering || isFiltered"
-                    @click="moveOrder(idx, 1)"
+                    :disabled="(currentPage - 1) * perPage + idx === items.length - 1 || reordering || isFiltered"
+                    @click="moveOrder((currentPage - 1) * perPage + idx, 1)"
                     class="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-25 disabled:cursor-not-allowed transition"
                   >
                     <IconComponent name="ChevronDown" :size="13" />
@@ -330,16 +329,6 @@ onMounted(() => {
           </TableRow>
         </TableBody>
       </Table>
-
-      <!-- Pagination -->
-      <div v-if="meta.last_page > 1" class="p-4 border-t border-border flex justify-between items-center text-xs text-muted-foreground">
-        <div>Halaman {{ meta.current_page }} dari {{ meta.last_page }} ({{ meta.total }} data)</div>
-        <Pagination
-          :currentPage="meta.current_page"
-          :totalPages="meta.last_page"
-          @update:currentPage="onPageChange"
-        />
-      </div>
     </div>
   </div>
 </template>

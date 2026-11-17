@@ -19,6 +19,8 @@ import { useRoute, useRouter } from 'vue-router'
 import {
   IconClock,
   IconChevronRight,
+  IconAlertCircle,
+  IconExternalLink,
 } from '@tabler/icons-vue'
 import {
   ImagePlaceholder,
@@ -50,7 +52,7 @@ const currentPage = ref(1)
 
 // Fetch data rubrik kebijakan publik
 const { data, status, load } = useIsfContent(() => {
-  const param = ['policy-brief', 'monitoring'].includes(currentSubkategori.value)
+  const param = ['policy-brief', 'monitoring', 'data-statistik', 'isf-insight', 'database-peraturan'].includes(currentSubkategori.value)
     ? null
     : currentSubkategori.value
   return getKebijakanPublik(param, currentPage.value, 8)
@@ -75,6 +77,8 @@ const activeSubkategoriName = computed(() => {
   if (!currentSubkategori.value) return null
   if (currentSubkategori.value === 'policy-brief') return 'Policy Brief'
   if (currentSubkategori.value === 'monitoring') return 'Monitoring Kebijakan'
+  if (currentSubkategori.value === 'data-statistik' || currentSubkategori.value === 'isf-insight') return 'ISF Insight (Grafik)'
+  if (currentSubkategori.value === 'database-peraturan') return 'Database Peraturan'
   const found = subkategoriList.value.find(s => s.slug === currentSubkategori.value)
   return found?.name || currentSubkategori.value
 })
@@ -84,6 +88,7 @@ const articles = computed(() => data.value?.articles || [])
 const meta = computed(() => data.value?.meta || { currentPage: 1, lastPage: 1, total: 0, perPage: 8 })
 const policyBriefs = computed(() => data.value?.policyBriefs || [])
 const dataGrafik = computed(() => data.value?.dataGrafik || [])
+const databasePeraturans = computed(() => data.value?.databasePeraturans || [])
 const monitoringData = computed(() => data.value?.monitoringKebijakan || [])
 
 function navigateSubkategori(slug) {
@@ -103,30 +108,19 @@ function onPageChange(page) {
   }
 }
 
-// Reset dan reload saat subkategori berganti
+// Reset dan reload saat subkategori berganti (tanpa click-to-scroll sesuai instruksi)
 watch(
   () => route.params?.subkategori,
   () => {
     currentPage.value = 1
     load()
-    if (route.params?.subkategori === 'policy-brief') {
-      setTimeout(() => {
-        const el = document.getElementById('isf-policy-brief-section')
-        if (el) el.scrollIntoView({ behavior: 'smooth' })
-      }, 300)
-    } else if (route.params?.subkategori === 'monitoring') {
-      setTimeout(() => {
-        const el = document.getElementById('isf-monitoring-kebijakan-section')
-        if (el) el.scrollIntoView({ behavior: 'smooth' })
-      }, 300)
-    }
   },
   { immediate: true }
 )
 </script>
 
 <template>
-  <div class="isf-content-layer min-h-screen bg-[#FBF9F4] text-neutral-900 pb-20">
+  <div class="isf-content-layer min-h-screen bg-white text-neutral-900 pb-20">
     <!-- ═══ 1. HEADER HERO RUBRIK (NAVY EDITORIAL) ═══════════════════════════ -->
     <header class="bg-isf-navy text-white border-b border-neutral-800 pt-8 sm:pt-12 pb-6 sm:pb-8">
       <div class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12">
@@ -149,31 +143,29 @@ watch(
           </template>
         </nav>
 
-        <!-- Rubrik Title & Quick Pill Tabs (di bawah Deskripsi, tanpa divider ganda/gap kosong) -->
-        <div class="space-y-4">
-          <div>
-            <div class="flex items-center gap-2 text-xs font-mono font-bold tracking-widest text-isf-red uppercase mb-1.5">
-              <span class="inline-block w-2.5 h-2.5 bg-isf-red rounded-xs"></span>
-              <span>RUBRIK ANALISIS KEBIJAKAN & REGULASI PUBLIK</span>
-            </div>
-            <h1 class="font-headline text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-none text-white">
-              KEBIJAKAN PUBLIK
-            </h1>
-            <p class="text-xs sm:text-sm md:text-base text-neutral-300 mt-2 max-w-3xl leading-relaxed">
-              {{ rubrik.description }}
-            </p>
+        <!-- Rubrik Title & Deskripsi + Filter Pills -->
+        <div>
+          <div class="flex items-center gap-2 text-xs font-mono font-bold tracking-widest text-isf-red uppercase mb-1.5">
+            <span class="inline-block w-2.5 h-2.5 bg-isf-red rounded-xs"></span>
+            <span>RUBRIK ANALISIS KEBIJAKAN & REGULASI PUBLIK</span>
           </div>
+          <h1 class="font-headline text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-none text-white">
+            KEBIJAKAN PUBLIK
+          </h1>
+          <p class="text-xs sm:text-sm md:text-base text-neutral-300 mt-2 max-w-3xl leading-relaxed">
+            {{ rubrik.description }}
+          </p>
 
-          <!-- Quick Navigation Pill Tabs di Bawah Deskripsi -->
-          <div class="flex items-center gap-1.5 overflow-x-auto isf-no-scrollbar -mx-1 px-1 py-1" role="tablist" aria-label="Filter Subkategori Kebijakan Publik">
+          <!-- Filter Pills Kategori Kebijakan Publik (Di dalam hero header navy di bawah deskripsi) -->
+          <div class="mt-6 flex items-center gap-2 overflow-x-auto isf-no-scrollbar -mx-1 px-1 py-1" role="tablist" aria-label="Filter Subkategori Kebijakan Publik">
             <button
               type="button"
               @click="navigateSubkategori(null)"
               :class="[
-                'px-3.5 py-1.5 rounded-full text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer',
+                'px-4 py-2 rounded text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer',
                 !currentSubkategori
-                  ? 'bg-isf-red text-white shadow-xs'
-                  : 'bg-white/10 text-neutral-300 hover:bg-white/20 hover:text-white'
+                  ? 'bg-isf-red text-white'
+                  : 'bg-[#1a2333] text-neutral-300 hover:bg-[#253247] hover:text-white border border-neutral-700/60'
               ]"
             >
               Semua Artikel
@@ -184,10 +176,10 @@ watch(
               type="button"
               @click="navigateSubkategori(sub.slug)"
               :class="[
-                'px-3.5 py-1.5 rounded-full text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer',
+                'px-4 py-2 rounded text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer',
                 currentSubkategori === sub.slug
-                  ? 'bg-isf-red text-white shadow-xs'
-                  : 'bg-white/10 text-neutral-300 hover:bg-white/20 hover:text-white'
+                  ? 'bg-isf-red text-white'
+                  : 'bg-[#1a2333] text-neutral-300 hover:bg-[#253247] hover:text-white border border-neutral-700/60'
               ]"
             >
               {{ sub.name }}
@@ -196,25 +188,37 @@ watch(
               type="button"
               @click="navigateSubkategori('policy-brief')"
               :class="[
-                'px-3.5 py-1.5 rounded-full text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer border border-blue-400/40',
+                'px-4 py-2 rounded text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer border',
                 currentSubkategori === 'policy-brief'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-blue-400/10 text-blue-300 hover:bg-blue-400/20'
+                  ? 'bg-isf-red text-white border-isf-red shadow-xs'
+                  : 'bg-[#1a2333] text-neutral-300 hover:bg-[#253247] hover:text-white border border-neutral-700/60'
               ]"
             >
               Policy Brief
             </button>
             <button
               type="button"
-              @click="navigateSubkategori('monitoring')"
+              @click="navigateSubkategori('data-statistik')"
               :class="[
-                'px-3.5 py-1.5 rounded-full text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer border border-emerald-400/40',
-                currentSubkategori === 'monitoring'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'bg-emerald-400/10 text-emerald-300 hover:bg-emerald-400/20'
+                'px-4 py-2 rounded text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer border',
+                currentSubkategori === 'data-statistik' || currentSubkategori === 'isf-insight'
+                  ? 'bg-isf-red text-white border-isf-red shadow-xs'
+                  : 'bg-[#1a2333] text-neutral-300 hover:bg-[#253247] hover:text-white border border-neutral-700/60'
               ]"
             >
-              Monitoring Janji
+              ISF Insight (Grafik)
+            </button>
+            <button
+              type="button"
+              @click="navigateSubkategori('database-peraturan')"
+              :class="[
+                'px-4 py-2 rounded text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer border',
+                currentSubkategori === 'database-peraturan'
+                  ? 'bg-isf-red text-white border-isf-red shadow-xs'
+                  : 'bg-[#1a2333] text-neutral-300 hover:bg-[#253247] hover:text-white border border-neutral-700/60'
+              ]"
+            >
+              Database Peraturan
             </button>
           </div>
         </div>
@@ -246,9 +250,9 @@ watch(
         </div>
       </div>
 
-      <!-- Section 2 Skeleton: Policy Brief Cream -->
-      <div class="bg-[#FBF9F4] rounded-lg border border-neutral-300 shadow-xs overflow-hidden">
-        <div class="border-b border-neutral-300 bg-white/60 px-4 py-3 sm:px-6 sm:py-4">
+      <!-- Section 2 Skeleton: Policy Brief -->
+      <div class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden">
+        <div class="border-b border-neutral-200 px-4 py-3 sm:px-6 sm:py-4">
           <div class="h-4 w-44 bg-neutral-300 rounded"></div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 sm:p-6">
@@ -311,7 +315,7 @@ watch(
     <main v-else class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12 mt-8 sm:mt-12 space-y-8 sm:space-y-12">
       <!-- ═══ SECTION 1: SOROTAN UTAMA (HEADLINE) ═════════════════════════ -->
       <section
-        v-if="headline"
+        v-if="headline && (!currentSubkategori || ['ekonomi', 'kesehatan', 'pendidikan', 'pertahanan', 'lingkungan'].includes(currentSubkategori))"
         aria-labelledby="headline-kebijakan"
         class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden"
       >
@@ -368,14 +372,14 @@ watch(
         </IsfLink>
       </section>
 
-      <!-- ═══ SECTION 2: POLICY BRIEF & REKOMENDASI KEBIJAKAN (CREAM) ═════ -->
+      <!-- ═══ SECTION 2: POLICY BRIEF & REKOMENDASI KEBIJAKAN ═════ -->
       <section
         id="isf-policy-brief-section"
-        v-if="policyBriefs && policyBriefs.length > 0"
+        v-if="policyBriefs && policyBriefs.length > 0 && (!currentSubkategori || currentSubkategori === 'policy-brief')"
         aria-labelledby="policy-brief-title"
-        class="bg-[#FBF9F4] rounded-lg border border-neutral-300 shadow-xs overflow-hidden"
+        class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden"
       >
-        <div class="border-b border-neutral-300 bg-white/60">
+        <div class="border-b border-neutral-200">
           <SectionHeading
             id="policy-brief-title"
             title="Policy Brief & Rekomendasi Kebijakan"
@@ -397,59 +401,28 @@ watch(
         </div>
       </section>
 
-      <!-- ═══ SECTION 3: WIDGET MONITORING KEBIJAKAN (NAVY) ═════════════════ -->
+      <!-- ═══ SECTION 3: ISF INSIGHT (GRAFIK) ═════════════ -->
       <section
-        id="isf-monitoring-kebijakan-section"
-        v-if="monitoringData && monitoringData.length > 0"
-        aria-labelledby="monitoring-title"
-        class="bg-isf-navy text-white rounded-lg border border-neutral-800 shadow-sm overflow-hidden"
-      >
-        <div class="border-b border-neutral-800 px-4 py-3 sm:px-6 sm:py-4 flex flex-wrap items-center justify-between gap-2">
-          <div class="flex items-center gap-2">
-            <span class="inline-block w-2.5 h-2.5 bg-isf-red rounded-xs"></span>
-            <span class="text-xs font-mono font-bold tracking-widest uppercase text-isf-red">
-              Indikator Kinerja Nasional
-            </span>
-            <span class="text-neutral-600">•</span>
-            <h2 id="monitoring-title" class="font-space-grotesk text-sm sm:text-base font-bold text-white uppercase tracking-wider">
-              Monitoring Kebijakan Publik
-            </h2>
-          </div>
-          <span class="text-[11px] font-mono text-neutral-400">
-            Pelacakan Komparatif Realisasi vs Janji
-          </span>
-        </div>
-
-        <div :class="[sectionPad, 'py-4 sm:py-6']">
-          <MonitoringKebijakan
-            :trackers="monitoringData"
-            :is-dark="true"
-          />
-        </div>
-      </section>
-
-      <!-- ═══ SECTION 4: DATA & STATISTIK KEBIJAKAN (APBN, BPS) ═════════════ -->
-      <section
-        v-if="dataGrafik && dataGrafik.length > 0"
+        v-if="dataGrafik && dataGrafik.length > 0 && (!currentSubkategori || currentSubkategori === 'data-statistik' || currentSubkategori === 'isf-insight')"
         aria-labelledby="data-grafik-title"
         class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden"
       >
         <div class="border-b border-neutral-200">
           <SectionHeading
             id="data-grafik-title"
-            title="Data & Statistik Kebijakan Strategis"
+            title="ISF Insight (Grafik)"
             size="lg"
             :class="sectionPad"
           >
-            <template #eyebrow>Dasbor Indikator Publik</template>
+            <template #eyebrow>Data & Statistik Kebijakan Strategis</template>
           </SectionHeading>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8" :class="[sectionPad, 'py-5 sm:py-7']">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" :class="[sectionPad, 'py-5 sm:py-7']">
           <div
             v-for="chart in dataGrafik"
             :key="chart.id"
-            class="rounded-xl border border-neutral-200/80 p-5 bg-[#FBF9F4]/50 flex flex-col justify-between"
+            class="flex flex-col justify-between p-4 rounded-xl border border-neutral-200/90 bg-white hover:border-neutral-300 shadow-2xs hover:shadow-xs transition"
           >
             <SimpleBarChart
               :title="chart.title"
@@ -460,15 +433,16 @@ watch(
               :source-url="chart.source_url || '#'"
               :compact="true"
             />
-            <div v-if="chart.author_name" class="mt-4 pt-3 border-t border-neutral-200/70 text-[11px] text-neutral-500 font-mono">
+            <div v-if="chart.author_name" class="mt-3 pt-2 border-t border-neutral-100 text-[11px] text-neutral-500 font-mono">
               Analis: {{ chart.author_name }} {{ chart.author_role ? `(${chart.author_role})` : '' }}
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ═══ SECTION 5: ARSIP ARTIKEL TERBARU + PAGINATION (Tampil di Semua Filter) ═ -->
+      <!-- ═══ SECTION 5: ARSIP ARTIKEL TERBARU + PAGINATION ═ -->
       <section
+        v-if="!currentSubkategori || ['ekonomi', 'kesehatan', 'pendidikan', 'pertahanan', 'lingkungan'].includes(currentSubkategori)"
         aria-labelledby="daftar-artikel-kebijakan"
         class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden"
       >
@@ -537,6 +511,101 @@ watch(
             :total-pages="meta.lastPage"
             @update:current-page="onPageChange"
           />
+        </div>
+      </section>
+
+      <!-- ═══ SECTION AKHIR: TENTANG DATABASE PERATURAN, DISCLAIMER & LINK TERKAIT (SUMBER PERATURAN.BPK.GO.ID) ═══ -->
+      <section
+        v-if="!currentSubkategori || currentSubkategori === 'database-peraturan'"
+        aria-labelledby="database-peraturan-title"
+        class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden"
+      >
+        <div class="border-b border-neutral-200">
+          <SectionHeading
+            id="database-peraturan-title"
+            title="Database Peraturan & Rekomendasi Kebijakan"
+            size="lg"
+            :class="sectionPad"
+          >
+            <template #eyebrow>Rujukan Resmi Regulasi & Dokumen Publik</template>
+          </SectionHeading>
+        </div>
+
+        <div :class="[sectionPad, 'py-6 sm:py-8 space-y-6']">
+          <!-- Tentang Database Peraturan -->
+          <div class="space-y-2">
+            <h4 class="font-space-grotesk text-sm sm:text-base font-bold text-neutral-900 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-xs bg-isf-red"></span>
+              <span>Tentang Database Peraturan & Risalah Kebijakan ISF</span>
+            </h4>
+            <p class="text-xs sm:text-sm font-serif text-neutral-700 leading-relaxed max-w-4xl">
+              Basis data peraturan dan rekomendasi kebijakan Indonesia Strategy Forum (ISF) menghimpun dokumen perundang-undangan, policy brief strategis, serta analisis dampak kebijakan publik. Repositori ini dirancang untuk memudahkan para pengambil kebijakan, akademisi, dan publik dalam mengakses rujukan hukum yang valid, akurat, dan terstruktur.
+            </p>
+          </div>
+
+          <!-- Disclaimer Resmi -->
+          <div class="rounded-xl p-4 sm:p-5 bg-amber-50/70 border border-amber-200/80 space-y-2">
+            <div class="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-amber-900">
+              <IconAlertCircle class="w-4 h-4 text-amber-700 shrink-0" />
+              <span>Disclaimer Resmi & Batasan Tanggung Jawab</span>
+            </div>
+            <p class="text-xs text-amber-950 font-serif leading-relaxed">
+              Seluruh naskah peraturan perundang-undangan dan dokumen kebijakan publik dalam platform ini bersumber dari portal resmi JDIH Badan Pemeriksa Keuangan Republik Indonesia (<a href="https://peraturan.bpk.go.id" target="_blank" rel="noopener noreferrer" class="underline font-bold text-amber-900 hover:text-amber-700">peraturan.bpk.go.id</a>), JDIHN Nasional, serta kementerian/lembaga negara terkait. Data disediakan untuk keperluan riset, transparansi publik, dan analisis independen non-komersial. Naskah yang berkekuatan hukum tetap adalah dokumen autentik yang termuat dalam Lembaran Negara Republik Indonesia dan Berita Negara Republik Indonesia.
+            </p>
+          </div>
+
+          <!-- Tautan Rujukan Resmi -->
+          <div class="pt-2 border-t border-neutral-200/80">
+            <h5 class="text-xs font-space-grotesk font-bold uppercase tracking-wider text-neutral-500 mb-3">
+              Tautan Terkait & Sumber Resmi:
+            </h5>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <a
+                href="https://peraturan.bpk.go.id"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group flex items-center justify-between p-3 rounded-lg border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 hover:border-neutral-300 transition-all text-xs"
+              >
+                <div class="min-w-0 pr-2">
+                  <div class="font-bold text-neutral-900 group-hover:text-isf-red transition-colors truncate">
+                    JDIH BPK RI
+                  </div>
+                  <div class="text-[11px] text-neutral-500 truncate">peraturan.bpk.go.id</div>
+                </div>
+                <IconExternalLink class="w-4 h-4 text-neutral-400 group-hover:text-isf-red shrink-0" />
+              </a>
+
+              <a
+                href="https://jdihn.go.id"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group flex items-center justify-between p-3 rounded-lg border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 hover:border-neutral-300 transition-all text-xs"
+              >
+                <div class="min-w-0 pr-2">
+                  <div class="font-bold text-neutral-900 group-hover:text-isf-red transition-colors truncate">
+                    JDIHN Nasional
+                  </div>
+                  <div class="text-[11px] text-neutral-500 truncate">jdihn.go.id</div>
+                </div>
+                <IconExternalLink class="w-4 h-4 text-neutral-400 group-hover:text-isf-red shrink-0" />
+              </a>
+
+              <a
+                href="https://setkab.go.id"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group flex items-center justify-between p-3 rounded-lg border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 hover:border-neutral-300 transition-all text-xs"
+              >
+                <div class="min-w-0 pr-2">
+                  <div class="font-bold text-neutral-900 group-hover:text-isf-red transition-colors truncate">
+                    Sekretariat Kabinet RI
+                  </div>
+                  <div class="text-[11px] text-neutral-500 truncate">setkab.go.id</div>
+                </div>
+                <IconExternalLink class="w-4 h-4 text-neutral-400 group-hover:text-isf-red shrink-0" />
+              </a>
+            </div>
+          </div>
         </div>
       </section>
     </main>

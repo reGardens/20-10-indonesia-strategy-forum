@@ -15,7 +15,12 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardContent
+  CardContent,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -58,6 +63,15 @@ const availableParents = computed(() => {
     if (props.id && c.id === props.id) return false
     return !c.parent_id
   })
+})
+
+const parentIdValue = computed({
+  get() {
+    return form.parent_id ? String(form.parent_id) : '__NONE__'
+  },
+  set(val) {
+    form.parent_id = (!val || val === '__NONE__') ? null : Number(val)
+  }
 })
 
 function generateSlug(val) {
@@ -173,27 +187,24 @@ function onSlugInput() {
           <!-- Kategori Induk (Parent) -->
           <div class="space-y-1.5">
             <Label for="parent_id" class="text-xs font-medium text-foreground">Kategori Induk (Opsional)</Label>
-            <div class="relative">
-              <select
-                id="parent_id"
-                v-model="form.parent_id"
-                class="w-full h-9 rounded-md border border-input bg-background pl-3 pr-9 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring appearance-none"
-              >
-                <option :value="null">-- Kategori Utama (Tanpa Induk) --</option>
-                <option
+            <Select v-model="parentIdValue">
+              <SelectTrigger id="parent_id" class="h-9 text-xs font-medium bg-background border-input">
+                <SelectValue placeholder="-- Kategori Utama (Tanpa Induk) --" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__NONE__" class="text-xs font-medium cursor-pointer">
+                  -- Kategori Utama (Tanpa Induk) --
+                </SelectItem>
+                <SelectItem
                   v-for="parent in availableParents"
                   :key="parent.id"
-                  :value="parent.id"
+                  :value="String(parent.id)"
+                  class="text-xs font-medium cursor-pointer"
                 >
                   {{ parent.name }}
-                </option>
-              </select>
-              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-muted-foreground">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
             <p class="text-[11px] text-muted-foreground">
               Pilih kategori induk jika kategori ini merupakan sub-kategori (misal: sub-kategori dari Politik). Kosongkan jika merupakan kategori utama.
             </p>

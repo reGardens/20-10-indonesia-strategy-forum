@@ -27,13 +27,21 @@ const loading = ref(true)
 const loadError = ref('')
 const search = ref('')
 const statusFilter = ref('')
+const currentPage = ref(1)
+const perPage = ref(10)
 let searchTimeout = null
+
+const paginatedItems = computed(() => {
+  const start = (currentPage.value - 1) * perPage.value
+  return items.value.slice(start, start + perPage.value)
+})
 
 async function loadData() {
   loading.value = true
   loadError.value = ''
   try {
     const res = await cmsResources.hotNews.list({
+      per_page: 500,
       q: search.value || undefined,
       status: statusFilter.value || undefined
     })
@@ -48,12 +56,14 @@ async function loadData() {
 function onSearchInput() {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
+    currentPage.value = 1
     loadData()
   }, 350)
 }
 
 function onStatusChange(status) {
   statusFilter.value = status
+  currentPage.value = 1
   loadData()
 }
 
@@ -163,36 +173,43 @@ onMounted(loadData)
     <ErrorMessage v-if="loadError" :message="loadError" />
 
     <!-- Table -->
-    <div class="rounded-lg border border-border bg-card overflow-hidden shadow-sm">
+    <div class="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
       <LoadingIndicator v-if="loading" class="py-12" />
 
-      <Table v-else>
+      <Table
+        v-else
+        :current-page="currentPage"
+        :per-page="perPage"
+        :total="items.length"
+        @update:current-page="currentPage = $event"
+        @update:per-page="perPage = $event; currentPage = 1"
+      >
         <TableHeader>
-          <TableRow class="bg-muted/50 hover:bg-muted/50">
+          <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
             <TableHead class="w-12 text-center text-xs font-semibold">#</TableHead>
             <TableHead class="text-xs font-semibold">Judul Headline</TableHead>
             <TableHead class="w-40 text-xs font-semibold">Kategori</TableHead>
             <TableHead class="w-48 text-xs font-semibold">Target Tautan</TableHead>
             <TableHead class="w-32 text-xs font-semibold">Tanggal</TableHead>
             <TableHead class="w-24 text-center text-xs font-semibold">Status</TableHead>
-            <TableHead class="w-24 text-right text-xs font-semibold pr-4">Aksi</TableHead>
+            <TableHead class="w-36 text-right text-xs font-semibold">Aksi</TableHead>
           </TableRow>
         </TableHeader>
 
         <TableBody>
-          <TableRow v-if="items.length === 0">
+          <TableRow v-if="paginatedItems.length === 0">
             <TableCell colspan="7" class="text-center py-10 text-muted-foreground text-xs">
               Belum ada data hot news. Klik <strong>"Tambah Hot News"</strong> atau <strong>"Sinkronkan Artikel Terbit"</strong> untuk mengisi secara otomatis.
             </TableCell>
           </TableRow>
 
           <TableRow
-            v-for="(item, index) in items"
+            v-for="(item, index) in paginatedItems"
             :key="item.id || index"
-            class="hover:bg-muted/30 transition-colors"
+            class="hover:bg-muted/30 transition border-b border-border/50"
           >
             <TableCell class="text-center text-xs text-muted-foreground font-mono">
-              {{ index + 1 }}
+              {{ index + 1 + (currentPage - 1) * perPage }}
             </TableCell>
 
             <TableCell class="font-medium text-xs text-foreground">
@@ -220,20 +237,22 @@ onMounted(loadData)
               <StatusBadge :status="item.status || 'terbit'" />
             </TableCell>
 
-            <TableCell class="text-right pr-4 whitespace-nowrap">
-              <div class="flex items-center justify-end gap-1">
+            <TableCell class="text-right">
+              <div class="flex items-center justify-end gap-1.5">
                 <Link :href="`/cms/hot-news/${item.id}/edit`">
-                  <Button variant="ghost" size="sm" class="h-8 w-8 p-0 text-muted-foreground hover:text-foreground">
-                    <IconComponent name="Edit" :size="15" />
+                  <Button variant="outline" size="sm" class="h-8 px-2.5 text-xs font-medium hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center">
+                    <IconComponent name="Edit" :size="14" class="mr-1" />
+                    Edit
                   </Button>
                 </Link>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  class="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+                  class="h-8 px-2.5 text-xs font-medium text-red-500 border-red-500/30 hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center"
                   @click="handleDelete(item)"
                 >
-                  <IconComponent name="Trash" :size="15" />
+                  <IconComponent name="Trash" :size="14" class="mr-1" />
+                  Hapus
                 </Button>
               </div>
             </TableCell>

@@ -16,6 +16,7 @@ use App\Models\Isf\CaseEvent;
 use App\Models\Isf\CaseTimeline;
 use App\Models\Isf\Category;
 use App\Models\Isf\Chart;
+use App\Models\Isf\DatabasePeraturan;
 use App\Models\Isf\Infographic;
 use App\Models\Isf\LegalGlossary;
 use App\Models\Isf\ParliamentSeat;
@@ -582,53 +583,71 @@ class PublicContentController extends Controller
     public function politik(Request $request): JsonResponse
     {
         $subkategori = $request->query('subkategori') ? strtolower(trim((string) $request->query('subkategori'))) : null;
+        $search = $request->query('q') ? trim((string) $request->query('q')) : null;
+        $date = $request->query('date') ? trim((string) $request->query('date')) : null;
         $page = max(1, (int) $request->input('page', 1));
-        $limit = min(24, max(1, (int) $request->input('limit', 9)));
+        $limit = min(48, max(1, (int) $request->input('limit', 9)));
 
-        // Kategori induk Politik
-        $politikCat = Category::query()->terbit()->where('slug', 'politik')->first();
-        $subcategories = [];
-        if ($politikCat) {
-            $subcategories = Category::query()
-                ->terbit()
-                ->where('parent_id', $politikCat->id)
-                ->orderBy('order', 'asc')
-                ->orderBy('id', 'asc')
-                ->get(['id', 'name', 'slug', 'description', 'color'])
-                ->map(fn (Category $c) => [
-                    'id' => $c->id,
-                    'name' => $c->name,
-                    'slug' => $c->slug,
-                    'description' => $c->description,
-                    'color' => $c->color,
-                ])
-                ->values()
-                ->all();
-        }
+        // Daftar subkategori lengkap sesuai kebutuhan rubrik Politik ISF
+        $subcategories = [
+            ['name' => 'Sorotan', 'slug' => 'sorotan', 'description' => 'Isu dan laporan khusus sorotan politik nasional.'],
+            ['name' => 'Eksekutif', 'slug' => 'eksekutif', 'description' => 'Kebijakan kementerian, kabinet, dan lembaga eksekutif.'],
+            ['name' => 'Legislatif', 'slug' => 'legislatif', 'description' => 'Kinerja legislasi, rapat komisi, dan dinamika parlemen DPR RI.'],
+            ['name' => 'Dinamika Partai', 'slug' => 'dinamika-partai', 'description' => 'Perkembangan internal, suksesi, dan peta koalisi partai politik.'],
+            ['name' => 'Pemilu Pilkada', 'slug' => 'pemilu-pilkada', 'description' => 'Isu dinamika Pemilu, Pilpres, Pilkada, dan kepemiluan.'],
+            ['name' => 'Kegiatan Istana', 'slug' => 'kegiatan-istana', 'description' => 'Agenda, arahan strategis, dan kegiatan kepresidenan.'],
+        ];
 
-        // Fallback subcategories bila belum ada di DB
-        if (empty($subcategories)) {
-            $subcategories = [
-                ['name' => 'Pemilu & Pilkada', 'slug' => 'pemilu', 'description' => 'Isu dinamika Pemilu, Pilpres, Pilkada, dan kepemiluan.'],
-                ['name' => 'DPR/DPD/MPR', 'slug' => 'parlemen', 'description' => 'Kinerja legislasi, rapat komisi, dan dinamika parlemen.'],
-                ['name' => 'Eksekutif', 'slug' => 'pemerintahan', 'description' => 'Kebijakan kementerian, kabinet, dan lembaga eksekutif.'],
-                ['name' => 'Dinamika Partai', 'slug' => 'partai', 'description' => 'Perkembangan internal, suksesi, dan peta koalisi partai politik.'],
-            ];
-        }
+        // Query artikel politik
+        $query = Article::query()->terbit()->where(function ($q) {
+            $q->where('category', 'politik')
+                ->orWhere('category', 'like', '%politik%');
+        });
 
-        // Query artikel
-        $query = Article::query()->terbit()->where('category', 'politik');
-
-        if ($subkategori) {
+        if ($subkategori && !in_array($subkategori, ['all', 'semua'])) {
             $subQuery = (clone $query)->where(function ($q) use ($subkategori) {
-                $q->where('subcategory', $subkategori)
-                    ->orWhere('category', $subkategori);
+                if ($subkategori === 'sorotan') {
+                    $q->where('is_hero', true)
+                        ->orWhere('subcategory', 'like', '%sorotan%');
+                } elseif ($subkategori === 'eksekutif' || $subkategori === 'pemerintahan') {
+                    $q->whereIn('subcategory', ['eksekutif', 'pemerintahan'])
+                        ->orWhere('category', 'eksekutif');
+                } elseif ($subkategori === 'legislatif' || $subkategori === 'parlemen') {
+                    $q->whereIn('subcategory', ['legislatif', 'parlemen', 'dpr', 'dpd', 'mpr'])
+                        ->orWhere('category', 'legislatif');
+                } elseif ($subkategori === 'dinamika-partai' || $subkategori === 'partai') {
+                    $q->whereIn('subcategory', ['dinamika-partai', 'partai'])
+                        ->orWhere('subcategory', 'like', '%partai%');
+                } elseif ($subkategori === 'pemilu-pilkada' || $subkategori === 'pemilu') {
+                    $q->whereIn('subcategory', ['pemilu-pilkada', 'pemilu'])
+                        ->orWhere('subcategory', 'like', '%pemilu%');
+                } elseif ($subkategori === 'kegiatan-istana' || $subkategori === 'istana') {
+                    $q->whereIn('subcategory', ['kegiatan-istana', 'istana'])
+                        ->orWhere('subcategory', 'like', '%istana%');
+                } else {
+                    $q->where('subcategory', $subkategori)
+                        ->orWhere('category', $subkategori);
+                }
             });
-            // Jika ada artikel dengan subkategori tersebut, terapkan filternya.
-            // Jika subkategori belum memiliki artikel khusus, fallback menampilkan artikel terbaru politik agar filter tidak kosong.
+
+            // Terapkan jika artikel dengan subkategori tersebut ada; jika belum ada, fallback ke artikel politik umum agar tidak kosong
             if ($subQuery->count() > 0) {
                 $query = $subQuery;
             }
+        }
+
+        // Filter full date (YYYY-MM-DD)
+        if ($date) {
+            $query->whereDate('published_at', $date);
+        }
+
+        // Filter search pencarian
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('summary', 'like', "%{$search}%")
+                    ->orWhere('author_name', 'like', "%{$search}%");
+            });
         }
 
         $total = (clone $query)->count();
@@ -1147,7 +1166,7 @@ class PublicContentController extends Controller
         }
         $dataGrafik = $chartQuery->orderBy('order', 'asc')
             ->orderByDesc('id')
-            ->take(4)
+            ->take(5)
             ->get()
             ->map(fn (Chart $c) => [
                 'id' => $c->id,
@@ -1186,6 +1205,23 @@ class PublicContentController extends Controller
                 'last_updated_formatted' => $t->last_updated_date ? \Carbon\Carbon::parse($t->last_updated_date)->locale('id')->isoFormat('D MMMM Y') : '',
             ])->values()->all();
 
+        // Database Peraturan & Rekomendasi Kebijakan Dinamis
+        $databasePeraturans = DatabasePeraturan::query()->terbit()
+            ->orderBy('urutan', 'asc')
+            ->orderByDesc('id')
+            ->take(12)
+            ->get()
+            ->map(fn (DatabasePeraturan $dp) => [
+                'id' => $dp->id,
+                'judul' => $dp->judul,
+                'nomor' => $dp->nomor,
+                'tahun' => $dp->tahun,
+                'kategori' => $dp->kategori,
+                'tentang' => $dp->tentang,
+                'url_dokumen' => $dp->url_dokumen,
+                'lembaga' => $dp->lembaga,
+            ])->values()->all();
+
         return response()->json([
             'rubrik' => [
                 'key' => 'kebijakan',
@@ -1206,6 +1242,7 @@ class PublicContentController extends Controller
             'policyBriefs' => $policyBriefs,
             'dataGrafik' => $dataGrafik,
             'monitoringKebijakan' => $monitoringKebijakan,
+            'databasePeraturans' => $databasePeraturans,
         ]);
     }
 
@@ -3164,7 +3201,7 @@ HTML;
             'publicQuotes' => $publicQuotes,
         ];
 
-        // Related Tokoh
+        // Related Tokoh: serumpun & terbagi menjadi Tokoh Eksekutif dan Tokoh Legislatif
         $related = Tokoh::query()->terbit()
             ->where('id', '!=', $tokoh->id)
             ->where('role_category', $tokoh->role_category)
@@ -3176,6 +3213,50 @@ HTML;
                 ->where('id', '!=', $tokoh->id)
                 ->limit(4)
                 ->get();
+        }
+
+        // Tokoh Eksekutif (Pemerintahan / Kementerian / Presiden)
+        $tokohEksekutif = Tokoh::query()->terbit()
+            ->where('id', '!=', $tokoh->id)
+            ->where(function ($q) {
+                $q->where('role_category', 'eksekutif')
+                  ->orWhere('position', 'like', '%menteri%')
+                  ->orWhere('position', 'like', '%presiden%')
+                  ->orWhere('position', 'like', '%gubernur%');
+            })
+            ->limit(4)
+            ->get();
+
+        if ($tokohEksekutif->isEmpty()) {
+            $tokohEksekutif = Tokoh::query()->terbit()
+                ->where('id', '!=', $tokoh->id)
+                ->limit(4)
+                ->get();
+        }
+
+        // Tokoh Legislatif (Parlemen DPR / DPD / MPR)
+        $tokohLegislatif = Tokoh::query()->terbit()
+            ->where('id', '!=', $tokoh->id)
+            ->where(function ($q) {
+                $q->where('role_category', 'legislatif')
+                  ->orWhere('position', 'like', '%dpr%')
+                  ->orWhere('position', 'like', '%dpd%')
+                  ->orWhere('position', 'like', '%mpr%')
+                  ->orWhere('position', 'like', '%komisi%');
+            })
+            ->limit(4)
+            ->get();
+
+        if ($tokohLegislatif->isEmpty()) {
+            $tokohLegislatif = Tokoh::query()->terbit()
+                ->where('id', '!=', $tokoh->id)
+                ->whereNotIn('id', $tokohEksekutif->pluck('id')->all())
+                ->limit(4)
+                ->get();
+
+            if ($tokohLegislatif->isEmpty()) {
+                $tokohLegislatif = $tokohEksekutif;
+            }
         }
 
         return response()->json([
@@ -3193,6 +3274,8 @@ HTML;
                 'events' => $tokoh->calendar_events ?? [],
             ],
             'relatedTokoh' => $related->map($cardMapper)->values()->all(),
+            'tokohEksekutif' => $tokohEksekutif->map($cardMapper)->values()->all(),
+            'tokohLegislatif' => $tokohLegislatif->map($cardMapper)->values()->all(),
         ]);
     }
 

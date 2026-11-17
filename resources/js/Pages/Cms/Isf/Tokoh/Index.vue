@@ -18,7 +18,6 @@ import {
   TableRow,
   TableHead,
   TableCell,
-  Pagination,
   FilterSelect
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
@@ -26,7 +25,8 @@ import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 defineOptions({ layout: CmsLayout })
 
 const items = ref([])
-const meta = ref({ current_page: 1, last_page: 1, total: 0, per_page: 15 })
+const perPage = ref(10)
+const meta = ref({ current_page: 1, last_page: 1, total: 0, per_page: 10 })
 const liveId = ref(null)
 const loading = ref(true)
 const errorMsg = ref('')
@@ -72,6 +72,7 @@ async function loadData() {
   try {
     const res = await cmsResources.tokoh.list({
       page: page.value,
+      per_page: perPage.value,
       q: search.value || undefined,
       status: statusFilter.value || undefined,
       role_category: kategoriFilter.value || undefined
@@ -81,7 +82,7 @@ async function loadData() {
       current_page: res.current_page || 1,
       last_page: res.last_page || 1,
       total: res.total || 0,
-      per_page: res.per_page || 15
+      per_page: res.per_page || perPage.value
     }
     liveId.value = res.live_id || null
   } catch (err) {
@@ -113,6 +114,12 @@ function onKategoriChange(val) {
 
 function onPageChange(newPage) {
   page.value = newPage
+  loadData()
+}
+
+function onPerPageChange(newPerPage) {
+  perPage.value = newPerPage
+  page.value = 1
   loadData()
 }
 
@@ -236,7 +243,14 @@ onMounted(() => {
 
     <!-- Table -->
     <div v-else class="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
-      <Table>
+      <Table
+        :current-page="meta.current_page"
+        :per-page="meta.per_page"
+        :total="meta.total"
+        :total-pages="meta.last_page"
+        @update:current-page="onPageChange"
+        @update:per-page="onPerPageChange"
+      >
         <TableHeader>
           <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
             <TableHead class="w-12 text-center text-xs">#</TableHead>
@@ -335,16 +349,6 @@ onMounted(() => {
           </TableRow>
         </TableBody>
       </Table>
-
-      <!-- Pagination -->
-      <div v-if="meta.last_page > 1" class="p-4 border-t border-border flex justify-between items-center text-xs text-muted-foreground">
-        <div>Halaman {{ meta.current_page }} dari {{ meta.last_page }} ({{ meta.total }} data)</div>
-        <Pagination
-          :currentPage="meta.current_page"
-          :totalPages="meta.last_page"
-          @update:currentPage="onPageChange"
-        />
-      </div>
     </div>
   </div>
 </template>

@@ -17,7 +17,12 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-  DatePicker
+  DatePicker,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -111,22 +116,21 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="space-y-1.5">
               <Label for="priority" class="text-xs font-medium">Tingkat Prioritas <span class="text-red-500">*</span></Label>
-              <div class="relative">
-                <select
-                  id="priority"
-                  v-model="form.priority"
-                  class="w-full h-9 rounded-md border border-input bg-background pl-3 pr-9 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring font-medium appearance-none"
-                >
-                  <option v-for="p in PRIORITIES" :key="p.value" :value="p.value">
+              <Select v-model="form.priority">
+                <SelectTrigger id="priority" class="h-9 text-xs font-medium bg-background border-input">
+                  <SelectValue placeholder="Pilih Tingkat Prioritas..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="p in PRIORITIES"
+                    :key="p.value"
+                    :value="p.value"
+                    class="text-xs font-medium cursor-pointer"
+                  >
                     {{ p.label }}
-                  </option>
-                </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground">
-                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div class="space-y-1.5">

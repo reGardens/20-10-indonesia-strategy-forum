@@ -179,7 +179,7 @@ watch(
 </script>
 
 <template>
-  <div class="isf-theme font-space-grotesk min-h-screen bg-[#FBF9F4] text-neutral-900 antialiased pb-20">
+  <div class="isf-theme font-space-grotesk min-h-screen bg-white text-neutral-900 antialiased pb-20">
     <!-- ═══ 1. HEADER HERO RUBRIK SURVEI (Gaya Editorial Navy identik dengan Politik) ═══ -->
     <header class="bg-isf-navy text-white border-b border-neutral-800 pt-8 sm:pt-12 pb-8">
       <div class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12">
@@ -206,33 +206,35 @@ watch(
           </template>
         </nav>
 
-        <!-- Rubrik Title & Description -->
-        <div class="space-y-4 border-b border-neutral-800/80 pb-6">
-          <div>
-            <div class="flex items-center gap-2 text-xs font-mono font-bold tracking-widest text-isf-red uppercase mb-1.5">
-              <span class="inline-block w-2.5 h-2.5 bg-isf-red rounded-xs"></span>
-              <span>PUSAT DATA RISET & TEMUAN EMPIRIS</span>
-            </div>
-            <h1 class="font-headline text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-none text-white">
-              SURVEI
-            </h1>
-            <p class="text-xs sm:text-sm md:text-base text-neutral-300 mt-2 max-w-3xl leading-relaxed">
-              {{ rubrik.description }}
-            </p>
+        <!-- Rubrik Title & Description (Tanpa filter di dalam background gelap) -->
+        <div>
+          <div class="flex items-center gap-2 text-xs font-mono font-bold tracking-widest text-isf-red uppercase mb-1.5">
+            <span class="inline-block w-2.5 h-2.5 bg-isf-red rounded-xs"></span>
+            <span>PUSAT DATA RISET & TEMUAN EMPIRIS</span>
           </div>
+          <h1 class="font-headline text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-none text-white">
+            SURVEI
+          </h1>
+          <p class="text-xs sm:text-sm md:text-base text-neutral-300 mt-2 max-w-3xl leading-relaxed">
+            {{ rubrik.description }}
+          </p>
         </div>
+      </div>
+    </header>
 
-        <!-- Filter Bar: Dropdown Isu & Wilayah (Kiri) + Search Input (Kanan) -->
-        <div class="pt-4 sm:pt-5 flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 text-xs">
+    <!-- ═══ FILTER BAR (DI KELUARKAN DARI BACKGROUND HITAM/NAVY) ═══ -->
+    <div class="bg-white border-b border-neutral-200/90 shadow-2xs py-4 sm:py-5">
+      <div class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 text-xs">
           <!-- Left: Dropdown Filter Isu + Wilayah + Reset Button -->
           <div class="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
             <!-- Filter Isu Dropdown (FilterSelect) -->
-            <div class="flex items-center gap-1.5 text-xs text-neutral-300">
-              <span class="text-neutral-400 font-medium whitespace-nowrap">Isu:</span>
+            <div class="flex items-center gap-1.5 text-xs text-neutral-600">
+              <span class="text-neutral-500 font-medium whitespace-nowrap">Isu:</span>
               <FilterSelect
                 :model-value="currentIsu"
                 :options="rubrik.topics"
-                :is-dark="true"
+                :is-dark="false"
                 size="sm"
                 aria-label="Filter Isu Survei"
                 class="min-w-[150px]"
@@ -241,12 +243,12 @@ watch(
             </div>
 
             <!-- Filter Wilayah Dropdown (FilterSelect) -->
-            <div class="flex items-center gap-1.5 text-xs text-neutral-300">
-              <span class="text-neutral-400 font-medium whitespace-nowrap">Wilayah:</span>
+            <div class="flex items-center gap-1.5 text-xs text-neutral-600">
+              <span class="text-neutral-500 font-medium whitespace-nowrap">Wilayah:</span>
               <FilterSelect
                 :model-value="currentWilayah"
                 :options="rubrik.regions"
-                :is-dark="true"
+                :is-dark="false"
                 size="sm"
                 aria-label="Filter Wilayah Survei"
                 class="min-w-[160px]"
@@ -259,7 +261,7 @@ watch(
               v-if="hasActiveFilter"
               type="button"
               @click="resetAllFilters"
-              class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium text-neutral-300 hover:text-white bg-white/10 hover:bg-white/20 border border-neutral-700 transition-colors cursor-pointer"
+              class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium text-isf-red bg-red-50 hover:bg-red-100 border border-red-200 transition-colors cursor-pointer"
               title="Reset semua filter survei"
             >
               <IconX class="w-3.5 h-3.5" />
@@ -275,13 +277,13 @@ watch(
               type="text"
               placeholder="Cari survei atau lembaga..."
               @input="onSearchInput"
-              class="w-full h-9 pl-9 pr-8 rounded-md bg-neutral-900/90 border border-neutral-700 text-xs text-white placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-isf-red focus:border-isf-red transition-all"
+              class="w-full h-9 pl-9 pr-8 rounded-lg bg-neutral-50 border border-neutral-300 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:bg-white focus:ring-1 focus:ring-isf-red focus:border-isf-red transition-all"
             />
             <button
               v-if="currentSearch"
               type="button"
               @click="clearSearch"
-              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white text-xs px-1 cursor-pointer"
+              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 text-xs px-1 cursor-pointer"
               aria-label="Hapus pencarian"
             >
               ✕
@@ -289,7 +291,7 @@ watch(
           </div>
         </div>
       </div>
-    </header>
+    </div>
 
     <!-- ═══ 2. SKELETON LOADER (Presisi mencerminkan struktur konten di Desktop & Mobile) ═══ -->
     <main
@@ -630,12 +632,12 @@ watch(
         </div>
       </section>
 
-      <!-- ═══ SECTION 4: STANDAR METODOLOGI & INTEGRITAS DATA ISF (CREAM) ═════ -->
+      <!-- ═══ SECTION 4: STANDAR METODOLOGI & INTEGRITAS DATA ISF ═════ -->
       <section
         aria-labelledby="standar-integritas-title"
-        class="bg-[#FBF9F4] rounded-lg border border-neutral-300 shadow-xs overflow-hidden"
+        class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden"
       >
-        <div class="border-b border-neutral-300 bg-white/60">
+        <div class="border-b border-neutral-200">
           <SectionHeading
             id="standar-integritas-title"
             title="Standar Etika & Kredibilitas Riset"

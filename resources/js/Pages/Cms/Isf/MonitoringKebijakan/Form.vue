@@ -11,6 +11,11 @@ import {
   Button,
   Input,
   Label,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -200,16 +205,21 @@ onMounted(() => {
               <Label for="sector" class="font-medium text-xs">
                 Sektor Kebijakan <span class="text-red-500">*</span>
               </Label>
-              <select
-                id="sector"
-                v-model="form.sector"
-                required
-                class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-xs font-medium focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-              >
-                <option v-for="sec in sectorOptions" :key="sec.value" :value="sec.value">
-                  {{ sec.label }}
-                </option>
-              </select>
+              <Select v-model="form.sector">
+                <SelectTrigger id="sector" class="h-9 text-xs font-medium bg-background border-input">
+                  <SelectValue placeholder="Pilih Sektor Kebijakan..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="sec in sectorOptions"
+                    :key="sec.value"
+                    :value="sec.value"
+                    class="text-xs font-medium cursor-pointer"
+                  >
+                    {{ sec.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
               <p v-if="errors.sector" class="text-xs text-red-600 font-medium">{{ errors.sector[0] }}</p>
             </div>
           </div>
@@ -271,16 +281,21 @@ onMounted(() => {
             <Label for="status_label" class="font-medium text-xs">
               Status Capaian / Progres <span class="text-red-500">*</span>
             </Label>
-            <select
-              id="status_label"
-              v-model="form.status_label"
-              required
-              class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-xs font-medium focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-            >
-              <option v-for="st in statusLabelOptions" :key="st.value" :value="st.value">
-                {{ st.label }}
-              </option>
-            </select>
+            <Select v-model="form.status_label">
+              <SelectTrigger id="status_label" class="h-9 text-xs font-medium bg-background border-input">
+                <SelectValue placeholder="Pilih Status Capaian..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="st in statusLabelOptions"
+                  :key="st.value"
+                  :value="st.value"
+                  class="text-xs font-medium cursor-pointer"
+                >
+                  {{ st.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
             <p v-if="errors.status_label" class="text-xs text-red-600 font-medium">{{ errors.status_label[0] }}</p>
           </div>
         </div>

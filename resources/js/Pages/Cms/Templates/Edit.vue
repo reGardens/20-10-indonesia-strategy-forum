@@ -2,7 +2,16 @@
 import { Head, Link, useForm, router, usePage } from "@inertiajs/vue3";
 import { ref, computed, watch } from "vue";
 import CmsLayout from "@/Layouts/CmsLayout.vue";
-import { Button, Input, Label } from "@/Components/UI";
+import {
+    Button,
+    Input,
+    Label,
+    Select,
+    SelectTrigger,
+    SelectValue,
+    SelectContent,
+    SelectItem
+} from "@/Components/UI";
 import IconComponent from "@/Components/IconComponent/IconComponent.vue";
 
 defineOptions({ layout: CmsLayout });
@@ -273,28 +282,42 @@ const dynamicStyles = computed(() => {
                         <div class="grid gap-4 sm:grid-cols-2">
                             <div class="space-y-1.5">
                                 <Label for="font_family">Font Family Utama</Label>
-                                <select
-                                    id="font_family"
-                                    v-model="form.config.font_family"
-                                    class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-600"
-                                    required
-                                >
-                                    <option v-for="font in fontOptions" :key="font" :value="font">{{ font }}</option>
-                                </select>
+                                <Select v-model="form.config.font_family">
+                                    <SelectTrigger id="font_family" class="h-9 text-sm">
+                                        <SelectValue placeholder="Pilih Font..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem
+                                            v-for="font in fontOptions"
+                                            :key="font"
+                                            :value="font"
+                                            class="text-sm font-medium cursor-pointer"
+                                        >
+                                            {{ font }}
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
                                 <p class="text-xs text-muted-foreground mt-1" :style="{ fontFamily: form.config.font_family }">
                                     Contoh teks: Bismillah, Atas ijin Allah SWT...
                                 </p>
                             </div>
                             <div class="space-y-1.5">
                                 <Label for="animation_style">Gaya Animasi Transisi</Label>
-                                <select
-                                    id="animation_style"
-                                    v-model="form.config.animation_style"
-                                    class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-600"
-                                    required
-                                >
-                                    <option v-for="opt in animationOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                                </select>
+                                <Select v-model="form.config.animation_style">
+                                    <SelectTrigger id="animation_style" class="h-9 text-sm">
+                                        <SelectValue placeholder="Pilih Gaya Animasi..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem
+                                            v-for="opt in animationOptions"
+                                            :key="opt.value"
+                                            :value="opt.value"
+                                            class="text-sm font-medium cursor-pointer"
+                                        >
+                                            {{ opt.label }}
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
                         <div class="space-y-1.5">

@@ -200,11 +200,13 @@ describe("PolitikView.vue", () => {
         expect(root.textContent).toContain("Dinamika politik nasional");
 
         // Subcategory navigation tabs
-        expect(root.textContent).toContain("Semua");
-        expect(root.textContent).toContain("Pemilu & Pilkada");
-        expect(root.textContent).toContain("DPR/DPD/MPR");
+        expect(root.textContent).toContain("Semua Artikel");
+        expect(root.textContent).toContain("Pemilu Pilkada");
+        expect(root.textContent).toContain("Legislatif");
         expect(root.textContent).toContain("Eksekutif");
         expect(root.textContent).toContain("Dinamika Partai");
+        expect(root.textContent).toContain("Sorotan");
+        expect(root.textContent).toContain("Kegiatan Istana");
 
         // Headline
         expect(root.textContent).toContain("Uji Headline Sorotan Politik");

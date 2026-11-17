@@ -24,11 +24,16 @@
 
       <div class="field-group">
         <label class="field-label" for="qrStyle">Gaya QR Code</label>
-        <select id="qrStyle" v-model="form.style" class="field-input">
-          <option value="square">◼ Kotak Klasik</option>
-          <option value="rounded">⬛ Sudut Membulat</option>
-          <option value="dots">⚫ Titik-Titik</option>
-        </select>
+        <Select v-model="form.style">
+          <SelectTrigger id="qrStyle" class="w-full text-xs">
+            <SelectValue placeholder="Pilih Gaya QR..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="square" class="text-xs font-medium cursor-pointer">◼ Kotak Klasik</SelectItem>
+            <SelectItem value="rounded" class="text-xs font-medium cursor-pointer">⬛ Sudut Membulat</SelectItem>
+            <SelectItem value="dots" class="text-xs font-medium cursor-pointer">⚫ Titik-Titik</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div class="field-group">
@@ -102,6 +107,13 @@
 <script setup>
 import { ref } from 'vue'
 import './section.css'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/Components/UI'
 
 const saving = ref(false)
 const saved = ref(false)

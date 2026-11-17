@@ -263,7 +263,7 @@ const routes = [
         meta: { title: 'Politik · Indonesia Strategy Forum' }
       },
       {
-        path: ':subkategori(pemilu|parlemen|pemerintahan|partai)',
+        path: ':subkategori(pemilu|parlemen|pemerintahan|partai|sorotan|eksekutif|legislatif|dinamika-partai|pemilu-pilkada|kegiatan-istana)',
         name: 'isf-politik-subkategori',
         component: () => import('../Pages/Isf/views/PolitikView.vue'),
         meta: { title: 'Politik · Indonesia Strategy Forum' }
@@ -307,7 +307,7 @@ const routes = [
         meta: { title: 'Kebijakan Publik · Indonesia Strategy Forum' }
       },
       {
-        path: ':subkategori(ekonomi|kesehatan|pendidikan|pertahanan|lingkungan|policy-brief|monitoring)',
+        path: ':subkategori(ekonomi|kesehatan|pendidikan|pertahanan|lingkungan|policy-brief|monitoring|data-statistik|isf-insight|database-peraturan)',
         name: 'isf-kebijakan-publik-subkategori',
         component: () => import('../Pages/Isf/views/KebijakanPublikView.vue'),
         meta: { title: 'Kebijakan Publik · Indonesia Strategy Forum' }

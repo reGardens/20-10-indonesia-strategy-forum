@@ -16,7 +16,12 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardContent
+  CardContent,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -57,12 +62,11 @@ async function fetchArticleOptions() {
   }
 }
 
-function onSelectArticle(event) {
-  const articleId = event.target.value
-  selectedArticleId.value = articleId
-  if (!articleId) return
+function onArticleChange(val) {
+  selectedArticleId.value = val === '__NONE__' ? '' : val
+  if (!selectedArticleId.value) return
 
-  const selected = articleOptions.value.find((a) => String(a.id) === String(articleId))
+  const selected = articleOptions.value.find((a) => String(a.id) === String(selectedArticleId.value))
   if (selected) {
     form.title = selected.title
     form.to = selected.url || `/isu/${selected.slug || ''}`
@@ -139,20 +143,28 @@ onMounted(() => {
           </CardHeader>
           <CardContent>
             <div class="space-y-1.5">
-              <select
-                class="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              <Select
+                :model-value="selectedArticleId || '__NONE__'"
                 :disabled="loadingArticles"
-                @change="onSelectArticle"
+                @update:model-value="onArticleChange"
               >
-                <option value="">-- Pilih Artikel untuk Mengisi Otomatis --</option>
-                <option
-                  v-for="art in articleOptions"
-                  :key="art.id"
-                  :value="art.id"
-                >
-                  [{{ art.category }}] {{ art.title }} ({{ art.published_at }})
-                </option>
-              </select>
+                <SelectTrigger class="h-9 text-xs font-medium bg-background border-input">
+                  <SelectValue placeholder="-- Pilih Artikel untuk Mengisi Otomatis --" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__NONE__" class="text-xs font-medium cursor-pointer">
+                    -- Pilih Artikel untuk Mengisi Otomatis --
+                  </SelectItem>
+                  <SelectItem
+                    v-for="art in articleOptions"
+                    :key="art.id"
+                    :value="String(art.id)"
+                    class="text-xs font-medium cursor-pointer"
+                  >
+                    [{{ art.category }}] {{ art.title }} ({{ art.published_at }})
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
@@ -213,33 +225,28 @@ onMounted(() => {
                   Kelola Kategori &rarr;
                 </Link>
               </div>
-              <div class="relative">
-                <select
-                  id="category"
-                  v-model="form.category"
-                  class="w-full h-9 rounded-md border border-input bg-background pl-3 pr-9 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring appearance-none"
-                >
-                  <option value="">-- Pilih Kategori Konten --</option>
-                  <option
+              <Select v-model="form.category">
+                <SelectTrigger id="category" class="h-9 text-xs font-medium bg-background border-input">
+                  <SelectValue placeholder="-- Pilih Kategori Konten --" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
                     v-for="cat in CATEGORIES"
                     :key="cat.value || cat.id"
                     :value="cat.label || cat.name || cat.value"
+                    class="text-xs font-medium cursor-pointer"
                   >
                     {{ cat.label || cat.name }}
-                  </option>
-                  <option
+                  </SelectItem>
+                  <SelectItem
                     v-if="form.category && !CATEGORIES.some((c) => (c.label || c.name || c.value) === form.category)"
                     :value="form.category"
+                    class="text-xs font-medium cursor-pointer"
                   >
                     {{ form.category }} (Kategori Kustom)
-                  </option>
-                </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground">
-                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
               <p class="text-[11px] text-muted-foreground">
                 Kategori terhubung langsung dengan menu master <strong>Kategori</strong>.
               </p>

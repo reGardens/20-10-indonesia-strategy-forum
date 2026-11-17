@@ -47,10 +47,16 @@ export const cmsResources = {
     syncArticles: () => http.post('/cms/hot-news/sync-articles').then((r) => r.data.data)
   },
   kategori: createCmsResource('kategori'),
-  kursiParlemen: createCmsResource('kursi-parlemen'),
+  kursiParlemen: {
+    ...createCmsResource('kursi-parlemen'),
+    reorder: (items) => http.post('/cms/kursi-parlemen/reorder', { items }).then((r) => r.data)
+  },
   glosariumHukum: createCmsResource('glosarium-hukum'),
+  istilahHukum: createCmsResource('istilah-hukum'),
   timelineKasus: createCmsResource('timeline-kasus'),
   policyBrief: createCmsResource('policy-brief'),
+  kategoriSektor: createCmsResource('kategori-sektor'),
+  databasePeraturan: createCmsResource('database-peraturan'),
   monitoringKebijakan: createCmsResource('monitoring-kebijakan'),
   readerPoll: createCmsResource('reader-poll'),
   kutipanPublik: createCmsResource('kutipan-publik'),

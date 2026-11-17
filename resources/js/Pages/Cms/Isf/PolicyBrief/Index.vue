@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Head, Link } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
 import { cmsResources, errorMessage } from '@/api/services/isfCmsService'
@@ -29,26 +29,66 @@ const loadError = ref('')
 const search = ref('')
 const sectorFilter = ref('')
 const statusFilter = ref('')
+const currentPage = ref(1)
+const perPage = ref(10)
 let searchTimeout = null
 
-const sectorOptions = [
+const paginatedItems = computed(() => {
+  const start = (currentPage.value - 1) * perPage.value
+  return items.value.slice(start, start + perPage.value)
+})
+
+const sectorOptions = ref([
   { value: '', label: 'Semua Sektor' },
   { value: 'ekonomi', label: 'Ekonomi & Fiskal' },
   { value: 'kesehatan', label: 'Kesehatan Masyarakat' },
   { value: 'pendidikan', label: 'Pendidikan & Riset' },
   { value: 'pertahanan', label: 'Pertahanan & Keamanan' },
   { value: 'lingkungan', label: 'Lingkungan & Energi' },
-]
+])
+
+async function loadSectors() {
+  try {
+    const res = await cmsResources.kategoriSektor.list({ per_page: 100 })
+    const list = Array.isArray(res) ? res : (res?.data || [])
+    if (list.length > 0) {
+      sectorOptions.value = [
+        { value: '', label: 'Semua Sektor' },
+        ...list.map((s) => ({ value: s.slug, label: s.nama }))
+      ]
+    }
+  } catch {}
+}
+
+function formatDateIndo(val) {
+  if (!val) return '-'
+  try {
+    const d = new Date(val)
+    if (isNaN(d.getTime())) return val
+    return new Intl.DateTimeFormat('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }).format(d)
+  } catch {
+    return val
+  }
+}
 
 function getSectorBadge(sector) {
+  const found = sectorOptions.value.find((s) => s.value === sector)
+  const label = found ? found.label : (sector || '-')
   const map = {
-    ekonomi: { label: 'Ekonomi & Fiskal', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
-    kesehatan: { label: 'Kesehatan', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
-    pendidikan: { label: 'Pendidikan', color: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
-    pertahanan: { label: 'Pertahanan', color: 'bg-slate-500/10 text-slate-600 border-slate-500/20' },
-    lingkungan: { label: 'Lingkungan', color: 'bg-teal-500/10 text-teal-600 border-teal-500/20' },
+    ekonomi: { color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
+    kesehatan: { color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
+    pendidikan: { color: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
+    pertahanan: { color: 'bg-slate-500/10 text-slate-600 border-slate-500/20' },
+    lingkungan: { color: 'bg-teal-500/10 text-teal-600 border-teal-500/20' },
   }
-  return map[sector] || { label: sector || '-', color: 'bg-muted text-muted-foreground border-border' }
+  return {
+    label,
+    color: map[sector]?.color || 'bg-muted text-muted-foreground border-border'
+  }
 }
 
 async function loadData() {
@@ -71,16 +111,19 @@ async function loadData() {
 function onSearchInput() {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
+    currentPage.value = 1
     loadData()
   }, 350)
 }
 
 function onSectorChange() {
+  currentPage.value = 1
   loadData()
 }
 
 function onStatusChange(status) {
   statusFilter.value = status
+  currentPage.value = 1
   loadData()
 }
 
@@ -100,6 +143,7 @@ async function handleDelete(item) {
 }
 
 onMounted(() => {
+  loadSectors()
   loadData()
 })
 </script>
@@ -210,31 +254,36 @@ onMounted(() => {
     />
 
     <div v-else class="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
-      <Table>
+      <Table
+        :current-page="currentPage"
+        :per-page="perPage"
+        :total="items.length"
+        @update:current-page="currentPage = $event"
+        @update:per-page="perPage = $event; currentPage = 1"
+      >
         <TableHeader>
           <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
             <TableHead class="w-12 text-center text-xs">#</TableHead>
             <TableHead class="min-w-[240px]">Judul & Penulis</TableHead>
             <TableHead class="w-36">Sektor</TableHead>
-            <TableHead class="w-28">Dokumen</TableHead>
-            <TableHead class="w-28">Tanggal</TableHead>
+            <TableHead class="w-32">Tanggal</TableHead>
             <TableHead class="w-24 text-center">Status</TableHead>
             <TableHead class="text-right">Aksi</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow v-if="items.length === 0">
-            <TableCell colspan="7" class="text-center py-10 text-muted-foreground text-sm">
+            <TableCell colspan="6" class="text-center py-10 text-muted-foreground text-sm">
               Tidak ada data policy brief ditemukan.
             </TableCell>
           </TableRow>
           <TableRow
-            v-for="(item, idx) in items"
+            v-for="(item, idx) in paginatedItems"
             :key="item.id"
             class="hover:bg-muted/30 transition border-b border-border/50"
           >
             <TableCell class="text-center font-mono text-xs text-muted-foreground">
-              {{ idx + 1 }}
+              {{ idx + 1 + (currentPage - 1) * perPage }}
             </TableCell>
             <TableCell class="py-3">
               <div class="font-semibold text-foreground text-sm leading-snug line-clamp-2">
@@ -254,15 +303,8 @@ onMounted(() => {
                 {{ getSectorBadge(item.sector).label }}
               </span>
             </TableCell>
-            <TableCell class="text-xs text-muted-foreground">
-              <span v-if="item.pdf_path" class="inline-flex items-center gap-1 text-emerald-600 font-medium">
-                <IconComponent name="FileText" :size="13" />
-                {{ item.pdf_size || 'PDF' }}
-              </span>
-              <span v-else class="text-muted-foreground">-</span>
-            </TableCell>
             <TableCell class="text-xs text-muted-foreground whitespace-nowrap">
-              {{ item.published_at || '-' }}
+              {{ formatDateIndo(item.published_at) }}
             </TableCell>
             <TableCell class="text-center">
               <StatusBadge :status="item.status" />

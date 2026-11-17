@@ -115,7 +115,7 @@ watch(
 </script>
 
 <template>
-  <div class="isf-theme font-space-grotesk min-h-screen bg-[#FBF9F4] text-neutral-900 antialiased pb-20">
+  <div class="isf-theme font-space-grotesk min-h-screen bg-white text-neutral-900 antialiased pb-20">
     <!-- ═══ 1. HEADER HERO DETAIL SURVEI (Gaya Editorial Navy identik dengan Politik) ═══ -->
     <header class="bg-isf-navy text-white border-b border-neutral-800 pt-8 sm:pt-12 pb-8 sm:pb-10">
       <div class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12">
@@ -404,7 +404,7 @@ watch(
 
       <!-- ═══ SECTION 5: UNDUH DOKUMEN LAPORAN LENGKAP (PDF CALLOUT) ══════════ -->
       <section v-if="survey.pdf_path" aria-label="Unduh Dokumen Laporan Lengkap">
-        <div class="bg-[#FBF9F4] rounded-lg border-2 border-dashed border-neutral-300 p-5 sm:p-7 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
+        <div class="bg-white rounded-lg border-2 border-dashed border-neutral-300 p-5 sm:p-7 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
           <div class="flex items-center gap-4">
             <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-isf-red/10 text-isf-red flex items-center justify-center shrink-0 border border-isf-red/20">
               <IconFileText class="w-6 h-6 sm:w-8 sm:h-8" />

@@ -18,7 +18,12 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardContent
+  CardContent,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -318,15 +323,21 @@ function onMatrixColumnsChange(newColumns) {
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="space-y-1.5">
               <Label for="role_category" class="text-xs font-medium">Kategori Peran <span class="text-red-500">*</span></Label>
-              <select
-                id="role_category"
-                v-model="form.role_category"
-                class="w-full h-9 rounded-md border border-input bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                <option v-for="opt in ROLE_OPTIONS" :key="opt.value" :value="opt.value">
-                  {{ opt.label }}
-                </option>
-              </select>
+              <Select v-model="form.role_category">
+                <SelectTrigger id="role_category" class="h-9 text-xs font-medium bg-background border-input">
+                  <SelectValue placeholder="Pilih Kategori Peran..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="opt in ROLE_OPTIONS"
+                    :key="opt.value"
+                    :value="opt.value"
+                    class="text-xs font-medium cursor-pointer"
+                  >
+                    {{ opt.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
               <p v-if="err('role_category')" class="text-xs text-red-500 font-medium">{{ err('role_category') }}</p>
             </div>
 

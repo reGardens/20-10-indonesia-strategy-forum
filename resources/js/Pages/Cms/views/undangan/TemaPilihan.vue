@@ -52,9 +52,21 @@
 
       <div class="field-group">
         <label class="field-label" for="fontFamily">Font Huruf</label>
-        <select id="fontFamily" v-model="form.fontFamily" class="field-input">
-          <option v-for="f in fonts" :key="f" :value="f">{{ f }}</option>
-        </select>
+        <Select v-model="form.fontFamily">
+          <SelectTrigger id="fontFamily" class="w-full text-xs">
+            <SelectValue placeholder="Pilih Font..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem
+              v-for="f in fonts"
+              :key="f"
+              :value="f"
+              class="text-xs font-medium cursor-pointer"
+            >
+              {{ f }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div class="save-bar">
@@ -104,6 +116,13 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import './section.css'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/Components/UI'
 
 const store = useStore()
 const saving = ref(false)

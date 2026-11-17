@@ -4,7 +4,6 @@ import { Head, Link } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
 import { cmsResources } from '@/api/services/isfCmsService'
 import { useCmsForm } from '@/Composables/useCmsForm'
-import { activeCategories as CATEGORIES, loadCategories } from '@/Pages/Cms/Isf/options'
 import LoadingIndicator from '@/Pages/Cms/components/shared/LoadingIndicator.vue'
 import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
 import ImageUploadTab from '@/Components/Cms/ImageUploadTab.vue'
@@ -17,7 +16,12 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardContent
+  CardContent,
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -28,6 +32,27 @@ const props = defineProps({
 })
 
 const isEdit = computed(() => Boolean(props.id))
+
+const defaultKickerOptions = [
+  'Sorotan',
+  'Politik',
+  'Kebijakan Publik',
+  'Hukum',
+  'Tokoh Pekan Ini',
+  'Riset Khusus',
+  'Opini Publik',
+  'Survei',
+  'Pengumuman',
+  'Agenda'
+]
+
+const kickerOptions = computed(() => {
+  const list = [...defaultKickerOptions]
+  if (form.kicker && !list.includes(form.kicker)) {
+    list.unshift(form.kicker)
+  }
+  return list.map(item => ({ value: item, label: item }))
+})
 
 const targetType = ref('/tokoh')
 const targetPath = ref('')
@@ -95,7 +120,6 @@ function updateFormTo() {
 }
 
 onMounted(async () => {
-  loadCategories()
   if (!isEdit.value) {
     try {
       const res = await cmsResources.banner.list({ per_page: 100 })
@@ -156,6 +180,7 @@ onMounted(async () => {
 
     <!-- Form Content -->
     <form v-else @submit.prevent="save" class="space-y-6">
+      <!-- Informasi Banner Card -->
       <Card class="bg-card border-border shadow-sm">
         <CardHeader class="pb-4">
           <CardTitle class="text-base font-semibold text-foreground">Informasi Banner</CardTitle>
@@ -166,26 +191,22 @@ onMounted(async () => {
         <CardContent class="space-y-4">
           <!-- Kategori / Kicker -->
           <div class="space-y-1.5">
-            <div class="flex items-center justify-between">
-              <Label for="kicker" class="text-xs font-medium text-foreground">Kategori / Label Sorotan (Kicker)</Label>
-              <div class="flex gap-1 overflow-x-auto">
-                <button
-                  v-for="cat in CATEGORIES"
-                  :key="cat.value"
-                  type="button"
-                  @click="form.kicker = cat.label || cat.name"
-                  class="text-[10px] px-1.5 py-0.5 rounded border border-border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition"
+            <Label for="kicker" class="text-xs font-medium text-foreground">Kategori / Label Sorotan (Kicker)</Label>
+            <Select v-model="form.kicker">
+              <SelectTrigger id="kicker" class="h-9 text-xs font-medium">
+                <SelectValue placeholder="Pilih Kategori / Label Sorotan..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="opt in kickerOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                  class="text-xs font-medium"
                 >
-                  {{ cat.label || cat.name }}
-                </button>
-              </div>
-            </div>
-            <Input
-              id="kicker"
-              v-model="form.kicker"
-              placeholder="Contoh: Sorotan, Tokoh Pekan Ini, Politik..."
-              class="h-9 text-xs font-medium"
-            />
+                  {{ opt.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
             <p v-if="err('kicker')" class="text-xs text-red-400 mt-1">{{ err('kicker') }}</p>
           </div>
 
@@ -208,23 +229,19 @@ onMounted(async () => {
               <span class="text-[11px] text-muted-foreground">Pilih kategori / jenis tujuan di depan</span>
             </div>
             <div class="flex flex-col sm:flex-row gap-2">
-              <div class="relative w-full sm:w-44 shrink-0">
-                <select
-                  v-model="targetType"
-                  @change="updateFormTo"
-                  class="w-full h-9 rounded-md border border-input bg-background pl-3 pr-8 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring appearance-none font-medium cursor-pointer"
-                >
-                  <option value="/tokoh">/tokoh (Profil Tokoh)</option>
-                  <option value="/artikel">/artikel (Artikel)</option>
-                  <option value="/infografik">/infografik (Infografik)</option>
-                  <option value="external">https:// (Tautan Luar)</option>
-                  <option value="custom">Kustom (Lainnya)</option>
-                </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-muted-foreground">
-                  <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
+              <div class="w-full sm:w-48 shrink-0">
+                <Select :model-value="targetType" @update:model-value="targetType = $event; updateFormTo()">
+                  <SelectTrigger class="h-9 text-xs font-medium bg-background border-input">
+                    <SelectValue placeholder="Pilih Jenis Tautan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="/tokoh" class="text-xs font-medium">/tokoh (Profil Tokoh)</SelectItem>
+                    <SelectItem value="/artikel" class="text-xs font-medium">/artikel (Artikel)</SelectItem>
+                    <SelectItem value="/infografik" class="text-xs font-medium">/infografik (Infografik)</SelectItem>
+                    <SelectItem value="external" class="text-xs font-medium">https:// (Tautan Luar)</SelectItem>
+                    <SelectItem value="custom" class="text-xs font-medium">Kustom (Lainnya)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div class="flex-1 relative flex items-center">
@@ -271,6 +288,9 @@ onMounted(async () => {
               aspect-class="aspect-[21/9]"
               placeholder="https://images.unsplash.com/... atau /images/..."
             />
+            <p class="text-[11px] text-muted-foreground">
+              Masukkan URL gambar eksternal atau beralih ke tab Pratinjau Tampilan untuk mengunggah file.
+            </p>
             <p v-if="err('image_url')" class="text-xs text-red-400 mt-1">{{ err('image_url') }}</p>
           </div>
 
@@ -309,9 +329,6 @@ onMounted(async () => {
                 v-model.number="form.order"
                 class="h-9 text-xs w-full font-mono"
               />
-              <p class="text-[11px] text-muted-foreground">
-                Urutan slide dalam carousel (dimulai dari angka terkecil, misal: 1, 2, 3...).
-              </p>
               <p v-if="err('order')" class="text-xs text-red-400 mt-1">{{ err('order') }}</p>
             </div>
 
