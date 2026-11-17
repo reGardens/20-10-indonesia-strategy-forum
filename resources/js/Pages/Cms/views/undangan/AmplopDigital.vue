@@ -16,13 +16,18 @@
         </div>
         <div class="field-group">
           <label class="field-label" style="font-size:.75rem">Jenis</label>
-          <select v-model="acc.type" class="field-input">
-            <option value="bank">🏦 Bank</option>
-            <option value="dana">💙 DANA</option>
-            <option value="ovo">💜 OVO</option>
-            <option value="gopay">🟢 GoPay</option>
-            <option value="shopeepay">🟠 ShopeePay</option>
-          </select>
+          <Select v-model="acc.type">
+            <SelectTrigger class="w-full text-xs">
+              <SelectValue placeholder="Pilih Jenis..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="bank" class="text-xs font-medium cursor-pointer">🏦 Bank</SelectItem>
+              <SelectItem value="dana" class="text-xs font-medium cursor-pointer">💙 DANA</SelectItem>
+              <SelectItem value="ovo" class="text-xs font-medium cursor-pointer">💜 OVO</SelectItem>
+              <SelectItem value="gopay" class="text-xs font-medium cursor-pointer">🟢 GoPay</SelectItem>
+              <SelectItem value="shopeepay" class="text-xs font-medium cursor-pointer">🟠 ShopeePay</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div class="field-group">
           <label class="field-label" style="font-size:.75rem">
@@ -95,6 +100,13 @@
 <script setup>
 import { ref } from 'vue'
 import './section.css'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/Components/UI'
 
 const saving = ref(false)
 const saved = ref(false)

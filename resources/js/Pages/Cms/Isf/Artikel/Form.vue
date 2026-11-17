@@ -20,7 +20,12 @@ import {
   CardDescription,
   CardContent,
   RichTextEditor,
-  DatePicker
+  DatePicker,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -136,6 +141,13 @@ const availableSubcategories = computed(() => {
   return []
 })
 
+const subcategoryValue = computed({
+  get: () => form.subcategory || '__NONE__',
+  set: (val) => {
+    form.subcategory = val === '__NONE__' ? '' : val
+  }
+})
+
 watch(
   () => form.category,
   () => {
@@ -244,45 +256,45 @@ watch(
 
             <div class="space-y-1.5">
               <Label for="category" class="text-xs font-medium">Kategori <span class="text-red-500">*</span></Label>
-              <div class="relative">
-                <select
-                  id="category"
-                  v-model="form.category"
-                  class="w-full h-9 rounded-md border border-input bg-background pl-3 pr-9 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring appearance-none"
-                >
-                  <option v-for="cat in CATEGORIES" :key="cat.value" :value="cat.value">
+              <Select v-model="form.category">
+                <SelectTrigger id="category" class="h-9 text-xs font-medium bg-background border-input">
+                  <SelectValue placeholder="Pilih Kategori..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="cat in CATEGORIES"
+                    :key="cat.value"
+                    :value="cat.value"
+                    class="text-xs font-medium cursor-pointer"
+                  >
                     {{ cat.label }}
-                  </option>
-                </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground">
-                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
               <p v-if="err('category')" class="text-xs text-red-500 font-medium">{{ err('category') }}</p>
             </div>
 
             <!-- Sub-Kategori (jika ada) -->
             <div v-if="availableSubcategories.length > 0" class="space-y-1.5 sm:col-span-2">
               <Label for="subcategory" class="text-xs font-medium">Sub-Kategori</Label>
-              <div class="relative">
-                <select
-                  id="subcategory"
-                  v-model="form.subcategory"
-                  class="w-full h-9 rounded-md border border-input bg-background pl-3 pr-9 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring appearance-none"
-                >
-                  <option value="">-- Tanpa Sub-Kategori (Utama) --</option>
-                  <option v-for="sub in availableSubcategories" :key="sub.value" :value="sub.value">
+              <Select v-model="subcategoryValue">
+                <SelectTrigger id="subcategory" class="h-9 text-xs font-medium bg-background border-input">
+                  <SelectValue placeholder="-- Tanpa Sub-Kategori (Utama) --" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__NONE__" class="text-xs font-medium cursor-pointer">
+                    -- Tanpa Sub-Kategori (Utama) --
+                  </SelectItem>
+                  <SelectItem
+                    v-for="sub in availableSubcategories"
+                    :key="sub.value"
+                    :value="sub.value"
+                    class="text-xs font-medium cursor-pointer"
+                  >
                     {{ sub.label }}
-                  </option>
-                </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground">
-                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
               <p class="text-[11px] text-muted-foreground">
                 Tentukan sub-rubrik artikel (mis. Pemilu & Pilkada, DPR/DPD/MPR, Eksekutif, Dinamika Partai).
               </p>

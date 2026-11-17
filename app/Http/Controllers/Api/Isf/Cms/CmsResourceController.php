@@ -37,7 +37,7 @@ abstract class CmsResourceController extends Controller
     protected array $order = ['id' => 'desc'];
 
     /**
-     * GET  ?q=keyword&status=draf|terbit&page=N  → paginated list (15 per page).
+     * GET  ?q=keyword&status=draf|terbit&page=N&per_page=10  → paginated list (default 10 per page).
      *      + ?{kolom}=nilai untuk kolom di $filterColumns (mis. ?category=hukum).
      */
     public function index(Request $request): JsonResponse
@@ -45,6 +45,7 @@ abstract class CmsResourceController extends Controller
         $request->validate([
             'q' => ['nullable', 'string', 'max:100'],
             'status' => ['nullable', 'in:'.implode(',', IsfOptions::STATUSES)],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:500'],
             ...array_fill_keys($this->filterColumns, ['nullable', 'string', 'max:100']),
         ]);
 
@@ -79,8 +80,13 @@ abstract class CmsResourceController extends Controller
             $query->orderBy($column, $direction);
         }
 
+        $perPage = (int) $request->query('per_page', 10);
+        if ($perPage < 1 || $perPage > 500) {
+            $perPage = 10;
+        }
+
         return response()->json(array_merge(
-            $query->paginate(15)->withQueryString()->toArray(),
+            $query->paginate($perPage)->withQueryString()->toArray(),
             ['live_id' => $liveId],
         ));
     }

@@ -26,13 +26,21 @@ const loading = ref(true)
 const loadError = ref('')
 const search = ref('')
 const statusFilter = ref('')
+const currentPage = ref(1)
+const perPage = ref(10)
 let searchTimeout = null
+
+const paginatedItems = computed(() => {
+  const start = (currentPage.value - 1) * perPage.value
+  return items.value.slice(start, start + perPage.value)
+})
 
 async function loadData() {
   loading.value = true
   loadError.value = ''
   try {
     const res = await cmsResources.runningText.list({
+      per_page: 500,
       q: search.value || undefined,
       status: statusFilter.value || undefined
     })
@@ -48,12 +56,14 @@ async function loadData() {
 function onSearchInput() {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
+    currentPage.value = 1
     loadData()
   }, 350)
 }
 
 function onStatusChange(status) {
   statusFilter.value = status
+  currentPage.value = 1
   loadData()
 }
 
@@ -162,9 +172,15 @@ onMounted(loadData)
 
     <!-- Table -->
     <div v-else class="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
-      <Table>
-        <TableHeader class="bg-muted/40">
-          <TableRow>
+      <Table
+        :current-page="currentPage"
+        :per-page="perPage"
+        :total="items.length"
+        @update:current-page="currentPage = $event"
+        @update:per-page="perPage = $event; currentPage = 1"
+      >
+        <TableHeader>
+          <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
             <TableHead class="w-12 text-center text-xs">#</TableHead>
             <TableHead class="w-32 text-xs">Badge</TableHead>
             <TableHead class="text-xs">Teks Pengumuman (Running Text)</TableHead>
@@ -174,7 +190,7 @@ onMounted(loadData)
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow v-if="items.length === 0">
+          <TableRow v-if="paginatedItems.length === 0">
             <TableCell colspan="6" class="text-center py-12 text-xs text-muted-foreground">
               <div class="flex flex-col items-center justify-center gap-2">
                 <IconComponent name="Speakerphone" :size="32" class="text-muted-foreground/40" />
@@ -192,12 +208,12 @@ onMounted(loadData)
             </TableCell>
           </TableRow>
           <TableRow
-            v-for="(item, idx) in items"
+            v-for="(item, idx) in paginatedItems"
             :key="item.id || idx"
             class="hover:bg-muted/30 transition border-b border-border/50"
           >
             <TableCell class="text-center text-xs font-mono text-muted-foreground">
-              {{ idx + 1 }}
+              {{ idx + 1 + (currentPage - 1) * perPage }}
             </TableCell>
             <TableCell>
               <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider bg-red-500/10 text-red-500 border border-red-500/20 pointer-events-none select-none">

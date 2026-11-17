@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { Head, Link, router } from "@inertiajs/vue3";
 import CmsLayout from "@/Layouts/CmsLayout.vue";
 import { useI18n } from "@/Composables/useI18n";
@@ -26,6 +26,14 @@ const { t } = useI18n();
 
 const props = defineProps({
     roles: { type: Array, required: true },
+});
+
+const currentPage = ref(1);
+const perPage = ref(10);
+
+const paginatedRoles = computed(() => {
+    const start = (currentPage.value - 1) * perPage.value;
+    return props.roles.slice(start, start + perPage.value);
 });
 
 const showDeleteDialog = ref(false);
@@ -65,11 +73,17 @@ function deleteRole() {
             </Link>
         </div>
 
-        <div class="rounded-xl border border-border overflow-hidden">
-            <Table>
+        <div class="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
+            <Table
+                :current-page="currentPage"
+                :per-page="perPage"
+                :total="roles.length"
+                @update:current-page="currentPage = $event"
+                @update:per-page="perPage = $event; currentPage = 1"
+            >
                 <TableHeader>
-                    <TableRow>
-                        <TableHead>#</TableHead>
+                    <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                        <TableHead class="w-12 text-center text-xs">#</TableHead>
                         <TableHead>{{ t("role.name") }}</TableHead>
                         <TableHead>{{ t("role.guard") }}</TableHead>
                         <TableHead>Users</TableHead>
@@ -79,8 +93,14 @@ function deleteRole() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    <TableRow v-for="(role, idx) in roles" :key="role.id">
-                        <TableCell class="font-medium">{{ idx + 1 }}</TableCell>
+                    <TableRow
+                        v-for="(role, idx) in paginatedRoles"
+                        :key="role.id"
+                        class="hover:bg-muted/30 transition border-b border-border/50"
+                    >
+                        <TableCell class="text-center font-mono text-xs text-muted-foreground">
+                            {{ idx + 1 + (currentPage - 1) * perPage }}
+                        </TableCell>
                         <TableCell>
                             <Badge
                                 class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300"
@@ -106,6 +126,11 @@ function deleteRole() {
                             >
                                 {{ t("common.delete") }}
                             </Button>
+                        </TableCell>
+                    </TableRow>
+                    <TableRow v-if="roles.length === 0">
+                        <TableCell colspan="5" class="text-center py-8 text-muted-foreground">
+                            {{ t("common.no_data") }}
                         </TableCell>
                     </TableRow>
                 </TableBody>

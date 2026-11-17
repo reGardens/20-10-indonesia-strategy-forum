@@ -1,21 +1,21 @@
 <script setup>
 /**
  * GlosariumHukum.vue — Kamus Terminologi & Asas Hukum Interaktif
- * Didesain ulang untuk UX yang ringkas, bersih, dan modern:
- * - Search bar instan dengan tombol clear (X) dan filter A-Z responsif.
- * - Tata letak kartu 2 kolom yang langsung dapat dibaca tanpa layout jumping accordion.
- * - Rujukan dasar hukum & chip istilah terkait interaktif.
- * - Salin tautan jangkar (anchor link) dengan feedback visual checkmark.
+ *
+ * Mengimplementasikan:
+ * - Toolbar pencarian instan dan filter A-Z responsif.
+ * - Tampilan default 4 kartu utama dengan permainan warna identitas ISF (Navy, Crimson Red, Amber, Slate).
+ * - Konten lengkap muncul otomatis ketika abjad diklik atau dilakukan pencarian.
+ * - CTA link jangkar dihapus sesuai instruksi.
  */
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref } from 'vue'
 import {
   IconSearch,
   IconBook,
   IconScale,
-  IconLink,
-  IconCheck,
   IconX,
   IconArrowRight,
+  IconInfoCircle,
 } from '@tabler/icons-vue'
 
 const props = defineProps({
@@ -37,10 +37,45 @@ const props = defineProps({
 })
 
 const searchQuery = ref('')
-const selectedLetter = ref(props.initialLetter || 'SEMUA')
-const copiedSlug = ref(null)
+const selectedLetter = ref(props.initialLetter || '')
 
 const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+
+// Palet warna identitas ISF untuk memperkaya tampilan kartu glosarium agar tidak polos
+const cardThemes = [
+  {
+    border: 'border-t-4 border-t-isf-red',
+    badge: 'bg-isf-red text-white shadow-xs',
+    kicker: 'text-isf-red',
+    iconColor: 'text-isf-red',
+    titleHover: 'group-hover:text-isf-red',
+  },
+  {
+    border: 'border-t-4 border-t-[#0B1220]',
+    badge: 'bg-[#0B1220] text-amber-400 shadow-xs border border-neutral-700',
+    kicker: 'text-[#0B1220] dark:text-amber-400',
+    iconColor: 'text-[#0B1220] dark:text-amber-400',
+    titleHover: 'group-hover:text-amber-700 dark:group-hover:text-amber-400',
+  },
+  {
+    border: 'border-t-4 border-t-amber-600',
+    badge: 'bg-amber-600 text-white shadow-xs',
+    kicker: 'text-amber-600',
+    iconColor: 'text-amber-600',
+    titleHover: 'group-hover:text-amber-700',
+  },
+  {
+    border: 'border-t-4 border-t-slate-700',
+    badge: 'bg-slate-800 text-white shadow-xs',
+    kicker: 'text-slate-700 dark:text-slate-300',
+    iconColor: 'text-slate-700 dark:text-slate-300',
+    titleHover: 'group-hover:text-slate-900',
+  },
+]
+
+function getTheme(idx) {
+  return cardThemes[idx % cardThemes.length]
+}
 
 // Map terms by uppercase first letter
 const availableLettersSet = computed(() => {
@@ -50,6 +85,14 @@ const availableLettersSet = computed(() => {
     if (letter) set.add(letter)
   })
   return set
+})
+
+// Whether active filtering is engaged
+const isFiltering = computed(() => {
+  return Boolean(
+    searchQuery.value.trim() ||
+    (selectedLetter.value && selectedLetter.value !== '' && selectedLetter.value !== 'SEMUA')
+  )
 })
 
 // Filtered terms based on letter and search query
@@ -84,65 +127,38 @@ const filteredTerms = computed(() => {
   })
 })
 
+// Displayed terms: default 4 cards if not filtering, otherwise all filtered terms
+const displayedTerms = computed(() => {
+  if (!isFiltering.value) {
+    return props.terms.slice(0, 4)
+  }
+  return filteredTerms.value
+})
+
 function selectLetter(letter) {
-  selectedLetter.value = letter
+  if (selectedLetter.value === letter) {
+    selectedLetter.value = ''
+  } else {
+    selectedLetter.value = letter
+  }
 }
 
 function clearFilters() {
   searchQuery.value = ''
-  selectedLetter.value = 'SEMUA'
+  selectedLetter.value = ''
 }
 
 function handleRelatedClick(relatedTerm) {
   searchQuery.value = relatedTerm
-  selectedLetter.value = 'SEMUA'
+  selectedLetter.value = ''
   const el = document.getElementById('isf-glosarium-hukum-section')
   if (el) el.scrollIntoView({ behavior: 'smooth' })
 }
-
-async function copyAnchorLink(slug) {
-  const url = `${window.location.origin}${window.location.pathname}#istilah-${slug}`
-  try {
-    if (navigator?.clipboard?.writeText) {
-      await navigator.clipboard.writeText(url)
-    } else {
-      const ta = document.createElement('textarea')
-      ta.value = url
-      document.body.appendChild(ta)
-      ta.select()
-      document.execCommand('copy')
-      document.body.removeChild(ta)
-    }
-    copiedSlug.value = slug
-    setTimeout(() => {
-      if (copiedSlug.value === slug) copiedSlug.value = null
-    }, 2000)
-  } catch {
-    // fallback silent
-  }
-}
-
-// On mount: check window.location.hash to open anchor term
-onMounted(() => {
-  if (typeof window !== 'undefined' && window.location.hash) {
-    const hash = window.location.hash.replace('#istilah-', '').replace('#', '')
-    if (hash) {
-      const found = props.terms.find((t) => t.slug === hash)
-      if (found) {
-        selectedLetter.value = (found.abjad || found.istilah?.[0] || '').toUpperCase()
-        setTimeout(() => {
-          const el = document.getElementById(`istilah-${found.slug}`)
-          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        }, 300)
-      }
-    }
-  }
-})
 </script>
 
 <template>
   <div id="isf-glosarium-hukum-section" class="space-y-5">
-    <!-- Screen-reader accessible title for semantic & test compatibility -->
+    <!-- Screen-reader accessible title -->
     <div class="sr-only">
       <h3>Glosarium Hukum Nasional</h3>
     </div>
@@ -182,11 +198,11 @@ onMounted(() => {
       <div class="flex items-center gap-1.5 overflow-x-auto isf-no-scrollbar pb-1">
         <button
           type="button"
-          @click="selectLetter('SEMUA')"
+          @click="clearFilters"
           :class="[
             'px-3 py-1.5 rounded-lg text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer',
-            selectedLetter === 'SEMUA'
-              ? 'bg-isf-navy text-white shadow-xs'
+            !selectedLetter
+              ? 'bg-isf-navy text-white shadow-xs ring-1 ring-neutral-700'
               : isDark
                 ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
                 : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
@@ -220,15 +236,27 @@ onMounted(() => {
       </div>
     </div>
 
+    <!-- Info Banner Default State (Sebelum Filter / Search Digunakan) -->
+    <div
+      v-if="!isFiltering"
+      class="flex items-center justify-between py-2 px-3.5 rounded-lg text-xs font-space-grotesk border"
+      :class="isDark ? 'bg-neutral-900 border-neutral-800 text-neutral-300' : 'bg-amber-50/70 border-amber-200/80 text-amber-800'"
+    >
+      <div class="flex items-center gap-2">
+        <IconInfoCircle class="w-4 h-4 shrink-0 text-amber-600" />
+        <span>Menampilkan <strong>4 istilah utama</strong> sebagai ringkasan awal. Klik huruf abjad A–Z atau ketik di pencarian untuk membuka seluruh kamus.</span>
+      </div>
+    </div>
+
     <!-- Active Filter Status Chip (jika sedang memfilter) -->
     <div
-      v-if="searchQuery || (selectedLetter && selectedLetter !== 'SEMUA')"
-      class="flex items-center justify-between py-2 px-3 rounded-lg text-xs font-space-grotesk border"
+      v-else
+      class="flex items-center justify-between py-2 px-3.5 rounded-lg text-xs font-space-grotesk border"
       :class="isDark ? 'bg-neutral-900 border-neutral-800 text-neutral-300' : 'bg-neutral-50 border-neutral-200 text-neutral-600'"
     >
       <div class="flex items-center gap-2 truncate">
         <span>Menemukan <strong>{{ filteredTerms.length }}</strong> istilah</span>
-        <span v-if="selectedLetter !== 'SEMUA'" class="px-2 py-0.5 rounded bg-isf-red text-white font-mono text-[10px] font-bold">
+        <span v-if="selectedLetter && selectedLetter !== 'SEMUA'" class="px-2 py-0.5 rounded bg-isf-red text-white font-mono text-[10px] font-bold">
           Huruf {{ selectedLetter }}
         </span>
         <span v-if="searchQuery" class="px-2 py-0.5 rounded text-[11px]" :class="isDark ? 'bg-neutral-800' : 'bg-neutral-200'">
@@ -246,7 +274,7 @@ onMounted(() => {
 
     <!-- 2. Empty State -->
     <div
-      v-if="filteredTerms.length === 0"
+      v-if="displayedTerms.length === 0"
       class="py-12 text-center rounded-xl border border-dashed p-8"
       :class="isDark ? 'border-neutral-800' : 'border-neutral-300'"
     >
@@ -264,56 +292,46 @@ onMounted(() => {
         @click="clearFilters"
         class="mt-4 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-isf-red text-white hover:bg-red-700 transition-colors cursor-pointer"
       >
-        Tampilkan Semua Istilah
+        Kembali ke Ringkasan Utama
       </button>
     </div>
 
-    <!-- 3. Clean Definition Cards Grid (2 Kolom Bersih & Rapi) -->
+    <!-- 3. Clean Definition Cards Grid dengan Permainan Warna Identitas ISF -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div
-        v-for="term in filteredTerms"
-        :key="term.id || term.slug"
+        v-for="(term, idx) in displayedTerms"
+        :key="term.id || term.slug || idx"
         :id="`istilah-${term.slug}`"
-        class="rounded-xl border p-4 sm:p-5 flex flex-col justify-between transition-all duration-200 group"
+        class="rounded-xl border p-4 sm:p-5 flex flex-col justify-between transition-all duration-200 group shadow-xs hover:shadow-md"
         :class="[
+          getTheme(idx).border,
           isDark
-            ? 'bg-neutral-900/60 border-neutral-800 hover:border-neutral-700 hover:bg-neutral-900'
-            : 'bg-white border-neutral-200/90 hover:border-neutral-300 hover:shadow-xs'
+            ? 'bg-neutral-900/80 border-neutral-800 hover:border-neutral-700 hover:bg-neutral-900'
+            : 'bg-white border-neutral-200/90 hover:border-neutral-300'
         ]"
       >
         <div>
-          <!-- Header: Huruf Badge + Istilah + Salin Tautan -->
-          <div class="flex items-start justify-between gap-3 mb-2.5">
-            <div class="flex items-center gap-2">
-              <span
-                class="w-6 h-6 rounded flex items-center justify-center font-mono font-bold text-[11px] shrink-0"
-                :class="isDark ? 'bg-neutral-800 text-amber-400 border border-neutral-700' : 'bg-amber-50 text-amber-700 border border-amber-200'"
-              >
-                {{ (term.abjad || term.istilah?.[0] || 'A').toUpperCase() }}
-              </span>
+          <!-- Header: Huruf Badge + Istilah (Tanpa CTA copy link) -->
+          <div class="flex items-start gap-3 mb-2.5">
+            <span
+              class="w-7 h-7 rounded-lg flex items-center justify-center font-mono font-bold text-xs shrink-0"
+              :class="getTheme(idx).badge"
+            >
+              {{ (term.abjad || term.istilah?.[0] || 'A').toUpperCase() }}
+            </span>
+            <div class="min-w-0 flex-1">
               <h4
                 class="font-space-grotesk font-bold text-sm sm:text-base tracking-tight leading-snug transition-colors"
-                :class="isDark ? 'text-white group-hover:text-red-400' : 'text-neutral-900 group-hover:text-isf-red'"
+                :class="[isDark ? 'text-white' : 'text-neutral-900', getTheme(idx).titleHover]"
               >
                 {{ term.istilah }}
               </h4>
             </div>
-
-            <button
-              type="button"
-              @click="copyAnchorLink(term.slug)"
-              :title="copiedSlug === term.slug ? 'Tautan disalin!' : 'Salin tautan ke istilah ini'"
-              class="p-1.5 rounded-md transition-colors cursor-pointer shrink-0"
-              :class="isDark ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100'"
-            >
-              <IconCheck v-if="copiedSlug === term.slug" class="w-3.5 h-3.5 text-emerald-500" />
-              <IconLink v-else class="w-3.5 h-3.5" />
-            </button>
           </div>
 
-          <!-- Definisi (Jelas, Langsung Terbaca) -->
+          <!-- Definisi -->
           <p
-            class="text-xs sm:text-sm font-space-grotesk leading-relaxed"
+            class="text-xs sm:text-sm font-space-grotesk leading-relaxed mt-2"
             :class="isDark ? 'text-neutral-300' : 'text-neutral-600'"
           >
             {{ term.definisi }}
@@ -325,7 +343,7 @@ onMounted(() => {
             class="mt-3 pt-2.5 border-t flex items-start gap-2 text-xs font-space-grotesk"
             :class="isDark ? 'border-neutral-800 text-neutral-400' : 'border-neutral-100 text-neutral-500'"
           >
-            <IconScale class="w-3.5 h-3.5 text-isf-red shrink-0 mt-0.5" />
+            <IconScale class="w-3.5 h-3.5 shrink-0 mt-0.5" :class="getTheme(idx).iconColor" />
             <span class="text-[11px] leading-relaxed">
               <strong :class="isDark ? 'text-neutral-200' : 'text-neutral-700'">Dasar Hukum:</strong> {{ term.dasar_hukum }}
             </span>

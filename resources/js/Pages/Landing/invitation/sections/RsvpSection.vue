@@ -84,13 +84,24 @@
           >
             Jumlah Tamu
           </label>
-          <select
-            id="rsvp-pax"
-            v-model.number="form.numberOfGuests"
-            class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200"
+          <Select
+            :model-value="String(form.numberOfGuests)"
+            @update:model-value="form.numberOfGuests = Number($event)"
           >
-            <option v-for="n in 10" :key="n" :value="n">{{ n }} orang</option>
-          </select>
+            <SelectTrigger id="rsvp-pax" class="w-full text-sm">
+              <SelectValue :placeholder="`${form.numberOfGuests} orang`" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="n in 10"
+                :key="n"
+                :value="String(n)"
+                class="text-sm font-medium cursor-pointer"
+              >
+                {{ n }} orang
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <!-- Submit -->
@@ -110,6 +121,13 @@
 <script setup>
 import { computed } from "vue";
 import { useRsvpForm } from "../composables/useRsvpForm.js";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/Components/UI";
 
 const props = defineProps({
   themeColors: {

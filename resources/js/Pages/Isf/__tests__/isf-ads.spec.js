@@ -42,9 +42,13 @@ import { useIsfPopupQueue, POPUP_QUEUE_STORAGE_KEY } from '@/Composables/useIsfP
 async function renderComponent(component, props = {}) {
     const root = document.createElement('div');
     document.body.appendChild(root);
+    let compInstance = null;
     const app = createApp({
         render() {
-            return h(component, props);
+            return h(component, {
+                ...props,
+                ref: (el) => { compInstance = el; },
+            });
         },
     });
     // Stub Head component from inertia if used
@@ -56,6 +60,7 @@ async function renderComponent(component, props = {}) {
         app,
         root,
         vm,
+        compInstance,
         unmount: () => {
             app.unmount();
             root.remove();
@@ -454,21 +459,21 @@ describe('ISF Ads Unit Tests (Issue #38)', () => {
         it('merender CmsIklanForm dengan kategori penempatan, tab Gambar vs Video, status, jadwal jam, jam tayang harian, tanpa bobot', async () => {
             vi.spyOn(cmsResources.iklan, 'list').mockResolvedValue([]);
 
-            const { root } = await renderComponent(CmsIklanForm, { id: null });
+            const { root, compInstance } = await renderComponent(CmsIklanForm, { id: null });
             await new Promise((r) => setTimeout(r, 50));
 
             expect(root.textContent).toContain('Tambah Iklan Baru');
             expect(root.textContent).toContain('Kategori Penempatan Iklan');
 
-            const select = root.querySelector('select#placement');
-            expect(select.value).toBe('');
-            const options = Array.from(select.querySelectorAll('option')).map((o) => o.value);
-            expect(options).toEqual(['', 'spanduk', 'popup']);
+            const select = root.querySelector('#placement');
+            expect(select).not.toBeNull();
+            expect(compInstance.form.placement).toBe('');
 
             // Status: Aktif / Dijeda / Kedaluwarsa (default Aktif)
-            const status = root.querySelector('select#status');
-            expect(status.value).toBe('active');
-            expect(Array.from(status.querySelectorAll('option')).map((o) => o.textContent.trim())).toEqual(['Aktif', 'Dijeda', 'Kedaluwarsa']);
+            const status = root.querySelector('#status');
+            expect(status).not.toBeNull();
+            expect(compInstance.form.status).toBe('active');
+            expect(compInstance.statusOptions.map((o) => o.label)).toEqual(['Aktif', 'Dijeda', 'Kedaluwarsa']);
 
             // Jadwal tanggal + jam & jam tayang harian
             expect(root.textContent).toContain('Rentang Penayangan');
@@ -479,8 +484,7 @@ describe('ISF Ads Unit Tests (Issue #38)', () => {
             expect(root.querySelector('input#active_hours_end')).not.toBeNull();
 
             // Popup → tab media & waktu tampil popup
-            select.value = 'popup';
-            select.dispatchEvent(new Event('change'));
+            await compInstance.handlePlacementChange('popup');
             await nextTick();
             expect(root.textContent).toContain('Gambar / Banner');
             expect(root.textContent).toContain('Video (Durasi)');
@@ -489,8 +493,7 @@ describe('ISF Ads Unit Tests (Issue #38)', () => {
             expect(root.textContent).toContain('Tampil lagi setelah');
 
             // Spanduk → tanpa waktu tampil popup & tanpa bobot rotasi
-            select.value = 'spanduk';
-            select.dispatchEvent(new Event('change'));
+            await compInstance.handlePlacementChange('spanduk');
             await nextTick();
             expect(root.textContent).not.toContain('Bobot Rotasi');
             expect(root.querySelector('input#weight')).toBeNull();
@@ -502,12 +505,10 @@ describe('ISF Ads Unit Tests (Issue #38)', () => {
             vi.spyOn(cmsResources.iklan, 'list').mockResolvedValue([]);
             const createSpy = vi.spyOn(cmsResources.iklan, 'create').mockResolvedValue({ id: 9 });
 
-            const { root } = await renderComponent(CmsIklanForm, { id: null });
+            const { root, compInstance } = await renderComponent(CmsIklanForm, { id: null });
             await new Promise((r) => setTimeout(r, 50));
 
-            const select = root.querySelector('select#placement');
-            select.value = 'spanduk';
-            select.dispatchEvent(new Event('change'));
+            await compInstance.handlePlacementChange('spanduk');
             await nextTick();
 
             const setInput = (sel, value) => {

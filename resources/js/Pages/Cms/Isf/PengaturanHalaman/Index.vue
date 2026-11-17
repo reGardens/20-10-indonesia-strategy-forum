@@ -25,7 +25,12 @@ import {
   TableHead,
   TableCell,
   Badge,
-  DatePicker
+  DatePicker,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -685,22 +690,16 @@ onMounted(loadSettings)
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="space-y-1.5">
               <Label for="media-cat" class="text-xs font-medium">Platform / Kategori</Label>
-              <div class="relative">
-                <select
-                  id="media-cat"
-                  v-model="mediaForm.category"
-                  class="w-full h-9 rounded-md border border-input bg-background pl-3 pr-9 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring appearance-none"
-                >
-                  <option value="YouTube">YouTube</option>
-                  <option value="Instagram">Instagram</option>
-                  <option value="TikTok">TikTok</option>
-                </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground">
-                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
+              <Select v-model="mediaForm.category">
+                <SelectTrigger id="media-cat" class="h-9 text-xs font-medium bg-background border-input">
+                  <SelectValue placeholder="Pilih Platform..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="YouTube" class="text-xs font-medium cursor-pointer">YouTube</SelectItem>
+                  <SelectItem value="Instagram" class="text-xs font-medium cursor-pointer">Instagram</SelectItem>
+                  <SelectItem value="TikTok" class="text-xs font-medium cursor-pointer">TikTok</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div class="space-y-1.5">

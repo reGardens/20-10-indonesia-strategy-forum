@@ -100,25 +100,19 @@ function onPageChange(page) {
   }
 }
 
-// Reset dan reload saat subkategori berganti
+// Reset dan reload saat subkategori berganti (tanpa click-to-scroll sesuai instruksi)
 watch(
   () => route.params?.subkategori,
   () => {
     currentPage.value = 1
     load()
-    if (route.params?.subkategori === 'glosarium') {
-      setTimeout(() => {
-        const el = document.getElementById('isf-glosarium-hukum-section')
-        if (el) el.scrollIntoView({ behavior: 'smooth' })
-      }, 300)
-    }
   },
   { immediate: true }
 )
 </script>
 
 <template>
-  <div class="isf-content-layer min-h-screen bg-[#FBF9F4] text-neutral-900 pb-20">
+  <div class="isf-content-layer min-h-screen bg-white text-neutral-900 pb-20">
     <!-- ═══ 1. HEADER HERO RUBRIK (NAVY EDITORIAL) ═══════════════════════════ -->
     <header class="bg-isf-navy text-white border-b border-neutral-800 pt-8 sm:pt-12 pb-6 sm:pb-8">
       <div class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12">
@@ -141,31 +135,29 @@ watch(
           </template>
         </nav>
 
-        <!-- Rubrik Title & Quick Pill Tabs (di bawah Deskripsi, tanpa divider ganda/gap kosong) -->
-        <div class="space-y-4">
-          <div>
-            <div class="flex items-center gap-2 text-xs font-mono font-bold tracking-widest text-isf-red uppercase mb-1.5">
-              <span class="inline-block w-2.5 h-2.5 bg-isf-red rounded-xs"></span>
-              <span>RUBRIK KAJIAN YURIDIS & REGULASI</span>
-            </div>
-            <h1 class="font-headline text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-none text-white">
-              HUKUM
-            </h1>
-            <p class="text-xs sm:text-sm md:text-base text-neutral-300 mt-2 max-w-3xl leading-relaxed">
-              {{ rubrik.description }}
-            </p>
+        <!-- Rubrik Title & Deskripsi + Filter Pills -->
+        <div>
+          <div class="flex items-center gap-2 text-xs font-mono font-bold tracking-widest text-isf-red uppercase mb-1.5">
+            <span class="inline-block w-2.5 h-2.5 bg-isf-red rounded-xs"></span>
+            <span>RUBRIK KAJIAN YURIDIS & REGULASI</span>
           </div>
+          <h1 class="font-headline text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-none text-white">
+            HUKUM
+          </h1>
+          <p class="text-xs sm:text-sm md:text-base text-neutral-300 mt-2 max-w-3xl leading-relaxed">
+            {{ rubrik.description }}
+          </p>
 
-          <!-- Quick Navigation Pill Tabs di Bawah Deskripsi -->
-          <div class="flex items-center gap-1.5 overflow-x-auto isf-no-scrollbar -mx-1 px-1 py-1" role="tablist" aria-label="Filter Subkategori Hukum">
+          <!-- Filter Pills Kategori Hukum (Di dalam hero header navy di bawah deskripsi) -->
+          <div class="mt-6 flex items-center gap-2 overflow-x-auto isf-no-scrollbar -mx-1 px-1 py-1" role="tablist" aria-label="Filter Subkategori Hukum">
             <button
               type="button"
               @click="navigateSubkategori(null)"
               :class="[
-                'px-3.5 py-1.5 rounded-full text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer',
+                'px-4 py-2 rounded text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer',
                 !currentSubkategori
-                  ? 'bg-isf-red text-white shadow-xs'
-                  : 'bg-white/10 text-neutral-300 hover:bg-white/20 hover:text-white'
+                  ? 'bg-isf-red text-white'
+                  : 'bg-[#1a2333] text-neutral-300 hover:bg-[#253247] hover:text-white border border-neutral-700/60'
               ]"
             >
               Semua Artikel
@@ -176,10 +168,10 @@ watch(
               type="button"
               @click="navigateSubkategori(sub.slug)"
               :class="[
-                'px-3.5 py-1.5 rounded-full text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer',
+                'px-4 py-2 rounded text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer',
                 currentSubkategori === sub.slug
-                  ? 'bg-isf-red text-white shadow-xs'
-                  : 'bg-white/10 text-neutral-300 hover:bg-white/20 hover:text-white'
+                  ? 'bg-isf-red text-white'
+                  : 'bg-[#1a2333] text-neutral-300 hover:bg-[#253247] hover:text-white border border-neutral-700/60'
               ]"
             >
               {{ sub.name }}
@@ -188,10 +180,10 @@ watch(
               type="button"
               @click="navigateSubkategori('glosarium')"
               :class="[
-                'px-3.5 py-1.5 rounded-full text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer border border-amber-400/40',
+                'px-4 py-2 rounded text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer border',
                 currentSubkategori === 'glosarium'
-                  ? 'bg-amber-500 text-neutral-900 shadow-xs'
-                  : 'bg-amber-400/10 text-amber-300 hover:bg-amber-400/20'
+                  ? 'bg-amber-500 text-neutral-900 border-amber-600 shadow-xs'
+                  : 'bg-[#1a2333] text-amber-300/90 hover:bg-[#253247] hover:text-amber-200 border border-amber-500/40'
               ]"
             >
               Glosarium A–Z
@@ -242,9 +234,9 @@ watch(
         </div>
       </div>
 
-      <!-- Section 3 Skeleton: Opini Pakar Cream -->
-      <div class="bg-[#FBF9F4] rounded-lg border border-neutral-300 shadow-xs overflow-hidden">
-        <div class="border-b border-neutral-300 p-4">
+      <!-- Section 3 Skeleton: Opini Pakar -->
+      <div class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden">
+        <div class="border-b border-neutral-200 p-4">
           <div class="h-4 w-44 bg-neutral-300 rounded"></div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4">
@@ -289,7 +281,7 @@ watch(
     <main v-else class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12 mt-8 sm:mt-12 space-y-8 sm:space-y-12">
       <!-- ═══ SECTION 1: SOROTAN UTAMA (HEADLINE) ═════════════════════════ -->
       <section
-        v-if="headline"
+        v-if="headline && (!currentSubkategori || ['regulasi', 'putusan'].includes(currentSubkategori))"
         aria-labelledby="headline-hukum"
         class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden"
       >
@@ -348,7 +340,7 @@ watch(
 
       <!-- ═══ SECTION 2: WIDGET TIMELINE KASUS HUKUM BESAR (NAVY) ═══════════ -->
       <section
-        v-if="timelineKasus && timelineKasus.length > 0"
+        v-if="timelineKasus && timelineKasus.length > 0 && (!currentSubkategori || currentSubkategori === 'kasus')"
         aria-labelledby="timeline-kasus-title"
         class="bg-isf-navy text-white rounded-lg border border-neutral-800 shadow-sm overflow-hidden"
       >
@@ -373,13 +365,13 @@ watch(
         </div>
       </section>
 
-      <!-- ═══ SECTION 3: WIDGET OPINI PAKAR HUKUM (CREAM) ═══════════════════ -->
+      <!-- ═══ SECTION 3: WIDGET OPINI PAKAR HUKUM ═══════════════════ -->
       <section
-        v-if="opiniPakar && opiniPakar.length > 0"
+        v-if="opiniPakar && opiniPakar.length > 0 && !currentSubkategori"
         aria-labelledby="opini-pakar-title"
-        class="bg-[#FBF9F4] rounded-lg border border-neutral-300 shadow-xs overflow-hidden"
+        class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden"
       >
-        <div class="border-b border-neutral-300 bg-white/60">
+        <div class="border-b border-neutral-200">
           <SectionHeading
             id="opini-pakar-title"
             title="Opini & Analisis Pakar Hukum"
@@ -448,33 +440,9 @@ watch(
         </div>
       </section>
 
-      <!-- ═══ SECTION 4: GLOSARIUM HUKUM INTERAKTIF (WHITE) ═════════════════ -->
+      <!-- ═══ SECTION 4: ARTIKEL TERBARU + PAGINATION ═ -->
       <section
-        id="isf-glosarium-hukum-section"
-        aria-labelledby="glosarium-title"
-        class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden"
-      >
-        <div class="border-b border-neutral-200">
-          <SectionHeading
-            id="glosarium-title"
-            title="Glosarium Hukum"
-            size="lg"
-            :class="sectionPad"
-          >
-            <template #eyebrow>Kamus Istilah & Terminologi A–Z</template>
-          </SectionHeading>
-        </div>
-
-        <div :class="[sectionPad, 'py-4 sm:py-6']">
-          <GlosariumHukum
-            :terms="glosarium"
-            :is-dark="false"
-          />
-        </div>
-      </section>
-
-      <!-- ═══ SECTION 5: ARTIKEL TERBARU + PAGINATION (Tampil di Semua Filter) ═ -->
-      <section
+        v-if="!currentSubkategori || ['regulasi', 'putusan'].includes(currentSubkategori)"
         aria-labelledby="daftar-artikel-hukum"
         class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden"
       >
@@ -542,6 +510,32 @@ watch(
             :current-page="meta.currentPage"
             :total-pages="meta.lastPage"
             @update:current-page="onPageChange"
+          />
+        </div>
+      </section>
+
+      <!-- ═══ SECTION 5: GLOSARIUM HUKUM INTERAKTIF (DI SECTION AKHIR DI BAWAH ARTIKEL TERBARU) ═══ -->
+      <section
+        id="isf-glosarium-hukum-section"
+        v-if="!currentSubkategori || currentSubkategori === 'glosarium'"
+        aria-labelledby="glosarium-title"
+        class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden"
+      >
+        <div class="border-b border-neutral-200">
+          <SectionHeading
+            id="glosarium-title"
+            title="Glosarium Hukum"
+            size="lg"
+            :class="sectionPad"
+          >
+            <template #eyebrow>Kamus Istilah & Terminologi A–Z</template>
+          </SectionHeading>
+        </div>
+
+        <div :class="[sectionPad, 'py-4 sm:py-6']">
+          <GlosariumHukum
+            :terms="glosarium"
+            :is-dark="false"
           />
         </div>
       </section>

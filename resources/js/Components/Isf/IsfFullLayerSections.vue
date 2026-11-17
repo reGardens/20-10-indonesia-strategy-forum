@@ -49,6 +49,13 @@ function formatDate(dateStr) {
     }
 }
 
+function getAuthorName(item) {
+    if (!item) return "Redaksi ISF";
+    if (typeof item.author === "string") return item.author;
+    if (item.author && typeof item.author === "object") return item.author.name || "Redaksi ISF";
+    return item.penulis || item.author_name || "Redaksi ISF";
+}
+
 // ─── Data Selectors with Robust Fallbacks ────────────────────────────────────
 const politikData = computed(() => {
     const sec = props.sections?.politik || {};
@@ -354,12 +361,15 @@ const videoData = computed(() => {
                     >
                         {{ item.title }}
                     </h3>
-                    <time
-                        :datetime="item.publishedAt"
-                        class="isf-byline mt-2 block"
-                        >{{ formatDate(item.publishedAt) }}</time
-                    ></IsfLink
-                >
+                    <div class="isf-byline mt-2 flex items-center justify-between text-[11px] sm:text-xs text-neutral-500">
+                        <span class="truncate font-medium text-neutral-700 max-w-[55%]">
+                            {{ getAuthorName(item) }}
+                        </span>
+                        <time :datetime="item.publishedAt" class="shrink-0">
+                            {{ formatDate(item.publishedAt) }}
+                        </time>
+                    </div>
+                </IsfLink>
             </div>
         </section>
 

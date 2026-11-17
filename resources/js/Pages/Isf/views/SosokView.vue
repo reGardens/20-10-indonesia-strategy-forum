@@ -228,7 +228,7 @@ watch(
 </script>
 
 <template>
-  <div class="isf-theme font-space-grotesk min-h-screen bg-[#FBF9F4] text-neutral-900 antialiased pb-20">
+  <div class="isf-theme font-space-grotesk min-h-screen bg-white text-neutral-900 antialiased pb-20">
     <!-- ═══ 1. HEADER HERO RUBRIK SOSOK (Gaya Editorial Navy identik dengan Politik) ═══ -->
     <header class="bg-isf-navy text-white border-b border-neutral-800 pt-8 sm:pt-12 pb-8">
       <div class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12">
@@ -253,51 +253,54 @@ watch(
           </template>
         </nav>
 
-        <!-- Rubrik Title & Quick Navigation Pill Tabs (di bawah Deskripsi) -->
-        <div class="space-y-4 border-b border-neutral-800/80 pb-6">
-          <div>
-            <div class="flex items-center gap-2 text-xs font-mono font-bold tracking-widest text-isf-red uppercase mb-1.5">
-              <span class="inline-block w-2.5 h-2.5 bg-isf-red rounded-xs"></span>
-              <span>DIREKTORI TOKOH & AKTOR STRATEGIS</span>
-            </div>
-            <h1 class="font-headline text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-none text-white">
-              SOSOK
-            </h1>
-            <p class="text-xs sm:text-sm md:text-base text-neutral-300 mt-2 max-w-3xl leading-relaxed">
-              {{ rubrik.description }}
-            </p>
+        <!-- Rubrik Title & Deskripsi -->
+        <div>
+          <div class="flex items-center gap-2 text-xs font-mono font-bold tracking-widest text-isf-red uppercase mb-1.5">
+            <span class="inline-block w-2.5 h-2.5 bg-isf-red rounded-xs"></span>
+            <span>DIREKTORI TOKOH & AKTOR STRATEGIS</span>
           </div>
+          <h1 class="font-headline text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-none text-white">
+            SOSOK
+          </h1>
+          <p class="text-xs sm:text-sm md:text-base text-neutral-300 mt-2 max-w-3xl leading-relaxed">
+            {{ rubrik.description }}
+          </p>
 
-          <!-- Quick Navigation Pill Tabs (Kategori) di Bawah Deskripsi -->
-          <div class="flex items-center gap-1.5 overflow-x-auto isf-no-scrollbar -mx-1 px-1 py-1" role="tablist" aria-label="Filter Kategori Sosok">
+          <!-- FILTER KATEGORI TOKOH (GAMBAR 5: TETAP DI BAWAH DESKRIPSI JUDUL DI TEMPAT SEBELUMNYA) -->
+          <div class="mt-6 flex items-center gap-2 overflow-x-auto isf-no-scrollbar -mx-1 px-1 py-1" role="tablist" aria-label="Filter Kategori Sosok">
             <button
               v-for="cat in rubrik.kategoriOptions"
               :key="cat.slug"
               type="button"
               @click="selectKategori(cat.slug)"
               :class="[
-                'px-3.5 py-1.5 rounded-full text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer',
+                'px-4 py-2 rounded text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer',
                 currentKategori === cat.slug
-                  ? 'bg-isf-red text-white shadow-xs'
-                  : 'bg-white/10 text-neutral-300 hover:bg-white/20 hover:text-white'
+                  ? 'bg-isf-red text-white'
+                  : 'bg-[#1a2333] text-neutral-300 hover:bg-[#253247] hover:text-white border border-neutral-700/60'
               ]"
             >
               {{ cat.name }}
             </button>
           </div>
         </div>
+      </div>
+    </header>
 
-        <!-- Filter Bar: Dropdown Isu & Abjad (Kiri) + Search Input (Kanan) -->
-        <div class="pt-4 sm:pt-5 flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 text-xs">
+    <!-- ═══ FILTER BAR (SEARCH, ISU, ABJAD) ═══ -->
+    <div class="bg-white border-b border-neutral-200/90 shadow-2xs py-3.5 sm:py-4">
+      <div class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12">
+        <!-- Row: Dropdown Isu & Abjad (Kiri) + Search Input (Kanan) -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 text-xs">
           <!-- Left: Dropdown Filter Isu + Indeks Abjad + Reset Button -->
           <div class="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
             <!-- Filter Isu Dropdown (FilterSelect) -->
-            <div class="flex items-center gap-1.5 text-xs text-neutral-300">
-              <span class="text-neutral-400 font-medium whitespace-nowrap">Isu:</span>
+            <div class="flex items-center gap-1.5 text-xs text-neutral-600">
+              <span class="text-neutral-500 font-medium whitespace-nowrap">Isu:</span>
               <FilterSelect
                 :model-value="currentIsu"
                 :options="isuSelectOptions"
-                is-dark
+                :is-dark="false"
                 size="sm"
                 aria-label="Filter Fokus Isu"
                 @update:model-value="selectIsu"
@@ -305,12 +308,12 @@ watch(
             </div>
 
             <!-- Filter Abjad A-Z Dropdown (FilterSelect) -->
-            <div class="flex items-center gap-1.5 text-xs text-neutral-300">
-              <span class="text-neutral-400 font-medium whitespace-nowrap">Abjad:</span>
+            <div class="flex items-center gap-1.5 text-xs text-neutral-600">
+              <span class="text-neutral-500 font-medium whitespace-nowrap">Abjad:</span>
               <FilterSelect
                 :model-value="currentAbjad"
                 :options="abjadSelectOptions"
-                is-dark
+                :is-dark="false"
                 size="sm"
                 aria-label="Filter Indeks Abjad A-Z"
                 @update:model-value="selectAbjad"
@@ -322,7 +325,7 @@ watch(
               v-if="hasActiveFilter"
               type="button"
               @click="resetAllFilters"
-              class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium text-neutral-300 hover:text-white bg-white/10 hover:bg-white/20 border border-neutral-700 transition-colors cursor-pointer"
+              class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium text-isf-red bg-red-50 hover:bg-red-100 border border-red-200 transition-colors cursor-pointer"
               title="Reset semua filter pencarian"
             >
               <IconX class="w-3.5 h-3.5" />
@@ -337,14 +340,14 @@ watch(
               type="text"
               :value="currentSearch"
               placeholder="Cari nama tokoh, jabatan, atau rekam jejak..."
-              class="w-full h-9 pl-9 pr-8 rounded-md bg-neutral-900/90 border border-neutral-700 text-xs text-white placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-isf-red focus:border-isf-red transition-all"
+              class="w-full h-9 pl-9 pr-8 rounded-lg bg-neutral-50 border border-neutral-300 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:bg-white focus:ring-1 focus:ring-isf-red focus:border-isf-red transition-all"
               @input="onSearchInput"
             />
             <button
               v-if="currentSearch"
               type="button"
               @click="clearSearch"
-              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white text-xs px-1 cursor-pointer"
+              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 text-xs px-1 cursor-pointer"
               aria-label="Hapus pencarian"
             >
               ✕
@@ -352,7 +355,7 @@ watch(
           </div>
         </div>
       </div>
-    </header>
+    </div>
 
     <!-- ═══ 2. SKELETON LOADER (Presisi mencerminkan struktur konten di Desktop & Mobile) ═══ -->
     <main

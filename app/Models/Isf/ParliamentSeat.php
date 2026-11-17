@@ -21,6 +21,7 @@ class ParliamentSeat extends Model
         'singkatan',
         'jumlah_kursi',
         'warna_partai',
+        'logo',
         'urutan',
         'status',
     ];

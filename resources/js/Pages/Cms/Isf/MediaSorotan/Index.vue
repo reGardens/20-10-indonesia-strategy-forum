@@ -27,15 +27,23 @@ const loadError = ref('')
 const search = ref('')
 const statusFilter = ref('')
 const reordering = ref(false)
+const currentPage = ref(1)
+const perPage = ref(10)
 let searchTimeout = null
 
 const isFiltered = computed(() => Boolean(search.value || statusFilter.value))
+
+const paginatedItems = computed(() => {
+  const start = (currentPage.value - 1) * perPage.value
+  return items.value.slice(start, start + perPage.value)
+})
 
 async function loadData() {
   loading.value = true
   loadError.value = ''
   try {
     const res = await cmsResources.mediaSorotan.list({
+      per_page: 500,
       q: search.value || undefined,
       status: statusFilter.value || undefined
     })
@@ -51,12 +59,14 @@ async function loadData() {
 function onSearchInput() {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
+    currentPage.value = 1
     loadData()
   }, 350)
 }
 
 function onStatusChange(status) {
   statusFilter.value = status
+  currentPage.value = 1
   loadData()
 }
 
@@ -202,9 +212,15 @@ onMounted(loadData)
 
     <!-- Table -->
     <div v-else class="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
-      <Table>
-        <TableHeader class="bg-muted/40">
-          <TableRow>
+      <Table
+        :current-page="currentPage"
+        :per-page="perPage"
+        :total="items.length"
+        @update:current-page="currentPage = $event"
+        @update:per-page="perPage = $event; currentPage = 1"
+      >
+        <TableHeader>
+          <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
             <TableHead class="w-12 text-center text-xs">#</TableHead>
             <TableHead class="w-20 text-xs">Thumbnail</TableHead>
             <TableHead class="text-xs">Judul & Tautan Media</TableHead>
@@ -216,7 +232,7 @@ onMounted(loadData)
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow v-if="items.length === 0">
+          <TableRow v-if="paginatedItems.length === 0">
             <TableCell colspan="8" class="text-center py-12 text-xs text-muted-foreground">
               <div class="flex flex-col items-center justify-center gap-2">
                 <IconComponent name="Video" :size="32" class="text-muted-foreground/40" />
@@ -234,12 +250,12 @@ onMounted(loadData)
             </TableCell>
           </TableRow>
           <TableRow
-            v-for="(item, idx) in items"
+            v-for="(item, idx) in paginatedItems"
             :key="item.id || idx"
             class="hover:bg-muted/30 transition border-b border-border/50"
           >
             <TableCell class="text-center text-xs font-mono text-muted-foreground">
-              {{ idx + 1 }}
+              {{ idx + 1 + (currentPage - 1) * perPage }}
             </TableCell>
             <TableCell>
               <div class="w-14 h-9 rounded bg-muted/60 overflow-hidden border border-border flex items-center justify-center">
@@ -304,18 +320,18 @@ onMounted(loadData)
                   <button
                     type="button"
                     :title="isFiltered ? 'Reset filter untuk mengubah urutan' : 'Pindah Urutan Naik'"
-                    :disabled="idx === 0 || reordering || isFiltered"
-                    @click="moveOrder(idx, -1)"
-                    class="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-25 disabled:cursor-not-allowed transition"
+                    :disabled="(idx === 0 && currentPage === 1) || reordering || isFiltered"
+                    @click="moveOrder((currentPage - 1) * perPage + idx, -1)"
+                    class="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-25 disabled:cursor-not-allowed transition cursor-pointer"
                   >
                     <IconComponent name="ChevronUp" :size="13" />
                   </button>
                   <button
                     type="button"
                     :title="isFiltered ? 'Reset filter untuk mengubah urutan' : 'Pindah Urutan Turun'"
-                    :disabled="idx === items.length - 1 || reordering || isFiltered"
-                    @click="moveOrder(idx, 1)"
-                    class="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-25 disabled:cursor-not-allowed transition"
+                    :disabled="((currentPage - 1) * perPage + idx) === items.length - 1 || reordering || isFiltered"
+                    @click="moveOrder((currentPage - 1) * perPage + idx, 1)"
+                    class="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-25 disabled:cursor-not-allowed transition cursor-pointer"
                   >
                     <IconComponent name="ChevronDown" :size="13" />
                   </button>

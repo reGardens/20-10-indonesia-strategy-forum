@@ -127,7 +127,7 @@ afterEach(() => {
 });
 
 describe("PolicyBriefCard.vue", () => {
-    it("renders policy brief title, sector, author, pdf size badge, and recommendations", async () => {
+    it("renders policy brief title, sector, author, and between: source and cta download", async () => {
         root = document.createElement("div");
         document.body.appendChild(root);
 
@@ -148,24 +148,16 @@ describe("PolicyBriefCard.vue", () => {
         expect(root.textContent).toContain("Pusat Studi Energi & Iklim");
         expect(root.textContent).toContain("Indonesia Strategy Forum");
 
-        // 2. Should display PDF size badge
-        expect(root.textContent).toContain("2.4 MB PDF");
+        // 2. Gambar 3 (kicker sektor & ukuran berkas) telah di-takeout sesuai instruksi
+        expect(root.textContent).not.toContain("2.4 MB PDF");
 
-        // 3. Click expand to display key recommendations
-        const toggleBtn = Array.from(root.querySelectorAll("button")).find(
-            (b) => b.textContent.includes("Baca Ringkasan Eksekutif")
-        );
-        expect(toggleBtn).toBeTruthy();
-        toggleBtn.click();
-        await nextTick();
-
-        expect(root.textContent).toContain("Revisi skema tarif royalti PLTS atap");
-        expect(root.textContent).toContain("Integrasi insentif fiskal hijau");
+        // 3. Should display publication date
+        expect(root.textContent).toContain("16 November 2026");
 
         // 4. Download link
-        const downloadLink = root.querySelector("a[download]");
+        const downloadLink = root.querySelector("a[href*='sample-ebt.pdf']");
         expect(downloadLink).toBeTruthy();
-        expect(downloadLink.getAttribute("href")).toBe("/storage/policy-briefs/sample-ebt.pdf");
+        expect(downloadLink.textContent).toContain("Unduh PDF");
     });
 });
 
@@ -246,7 +238,7 @@ describe("KebijakanPublikView.vue", () => {
         expect(root.textContent).toContain("Uji Headline Sorotan Kebijakan Publik");
         expect(root.textContent).toContain("Policy Brief & Rekomendasi Kebijakan");
         expect(root.textContent).toContain("Data & Statistik Kebijakan Strategis");
-        expect(root.textContent).toContain("Monitoring Kebijakan Publik");
+        expect(root.textContent).toContain("Database Peraturan & Rekomendasi Kebijakan");
         expect(root.textContent).toContain("Uji Artikel Transformasi Kesehatan Nasional");
     });
 });

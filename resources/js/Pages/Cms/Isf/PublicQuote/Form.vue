@@ -10,6 +10,16 @@ import {
   Button,
   Input,
   Label,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -53,10 +63,10 @@ async function fetchTokohs() {
   }
 }
 
-function onTokohSelect(e) {
-  const selectedId = e.target.value
-  if (!selectedId) return
-  const found = tokohList.value.find(t => String(t.id) === String(selectedId))
+function onTokohChange(val) {
+  form.value.tokoh_id = val === '__NONE__' ? '' : val
+  if (!form.value.tokoh_id) return
+  const found = tokohList.value.find(t => String(t.id) === String(form.value.tokoh_id))
   if (found) {
     if (!form.value.tokoh_nama) form.value.tokoh_nama = found.nama || ''
     if (!form.value.tokoh_jabatan) form.value.tokoh_jabatan = found.jabatan || found.profesi || ''
@@ -137,23 +147,43 @@ onMounted(() => {
 <template>
   <Head :title="isEdit ? 'Edit Kutipan Publik · CMS ISF' : 'Tambah Kutipan Publik · CMS ISF'" />
 
-  <div class="p-6 space-y-6 max-w-4xl mx-auto w-full">
-    <!-- Header -->
-    <div class="flex items-center justify-between gap-4 pb-4 border-b border-border">
-      <div>
-        <h1 class="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-          {{ isEdit ? 'Edit Kutipan Publik' : 'Tambah Kutipan Publik' }}
-        </h1>
-        <p class="text-sm text-muted-foreground mt-0.5">
-          Kutipan tajam bernas dari tokoh bangsa atau warga warganet terkait isu strategis nasional.
-        </p>
+  <div class="p-6 space-y-6 w-full">
+    <!-- Header with Back Button -->
+    <div class="flex items-center justify-between pb-4 border-b border-border">
+      <div class="flex items-center gap-3">
+        <Link href="/cms/kutipan-publik">
+          <Button variant="outline" size="sm" class="h-8 w-8 p-0">
+            <IconComponent name="ChevronLeft" :size="16" />
+          </Button>
+        </Link>
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight text-foreground">
+            {{ isEdit ? 'Edit Kutipan Publik' : 'Tambah Kutipan Publik' }}
+          </h1>
+          <p class="text-xs text-muted-foreground mt-0.5">
+            Kutipan tajam bernas dari tokoh bangsa atau warga warganet terkait isu strategis nasional.
+          </p>
+        </div>
       </div>
-      <Link href="/cms/kutipan-publik">
-        <Button variant="outline" size="sm" class="inline-flex items-center gap-1.5">
-          <IconComponent name="ArrowLeft" :size="14" />
-          <span>Kembali</span>
+
+      <!-- Action buttons -->
+      <div class="flex items-center gap-2">
+        <Link href="/cms/kutipan-publik">
+          <Button variant="outline" size="sm" class="h-9 text-xs">
+            Batal
+          </Button>
+        </Link>
+        <Button
+          type="button"
+          @click="handleSubmit"
+          :disabled="saving"
+          class="h-9 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-4 shadow-sm inline-flex items-center gap-1.5"
+        >
+          <IconComponent v-if="saving" name="Refresh" :size="14" class="animate-spin" />
+          <IconComponent v-else name="Check" :size="14" />
+          {{ saving ? 'Menyimpan...' : (isEdit ? 'Simpan Perubahan' : 'Tambah Kutipan') }}
         </Button>
-      </Link>
+      </div>
     </div>
 
     <LoadingIndicator v-if="loading" text="Memuat data kutipan..." />
@@ -166,7 +196,14 @@ onMounted(() => {
 
     <!-- Form -->
     <form v-if="!loading && !loadError" @submit.prevent="handleSubmit" class="space-y-6">
-      <div class="bg-card rounded-lg border border-border p-6 space-y-5">
+      <Card class="bg-card border-border shadow-sm">
+        <CardHeader class="pb-4">
+          <CardTitle class="text-base font-semibold text-foreground">Detail Pernyataan & Sumber Kutipan</CardTitle>
+          <CardDescription class="text-xs text-muted-foreground">
+            Teks ucapan, profil tokoh atau warganet, tautan sumber verifikasi, dan status publikasi.
+          </CardDescription>
+        </CardHeader>
+        <CardContent class="space-y-5">
         <!-- Quote Text -->
         <div>
           <Label for="kutipan">Isi Kutipan *</Label>
@@ -188,34 +225,45 @@ onMounted(() => {
           <!-- Tipe Tokoh -->
           <div>
             <Label for="tokoh_tipe">Kategori Penutur *</Label>
-            <select
-              id="tokoh_tipe"
-              v-model="form.tokoh_tipe"
-              class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="tokoh">Tokoh Publik / Pejabat / Pakar</option>
-              <option value="netizen">Warganet / Suara Netizen / Publik</option>
-            </select>
+            <Select v-model="form.tokoh_tipe">
+              <SelectTrigger id="tokoh_tipe" class="h-10 text-sm font-medium bg-background border-input">
+                <SelectValue placeholder="Pilih Kategori Penutur..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="tokoh" class="text-sm font-medium cursor-pointer">
+                  Tokoh Publik / Pejabat / Pakar
+                </SelectItem>
+                <SelectItem value="netizen" class="text-sm font-medium cursor-pointer">
+                  Warganet / Suara Netizen / Publik
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <!-- Relasi Profil Tokoh ISF -->
           <div>
             <Label for="tokoh_id">Tautkan ke Profil Tokoh ISF (Opsional)</Label>
-            <select
-              id="tokoh_id"
-              v-model="form.tokoh_id"
-              @change="onTokohSelect"
-              class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            <Select
+              :model-value="form.tokoh_id ? String(form.tokoh_id) : '__NONE__'"
+              @update:model-value="onTokohChange"
             >
-              <option value="">-- Tidak Ditautkan / Tokoh Baru --</option>
-              <option
-                v-for="t in tokohList"
-                :key="t.id"
-                :value="String(t.id)"
-              >
-                {{ t.nama }} ({{ t.jabatan || 'Tokoh' }})
-              </option>
-            </select>
+              <SelectTrigger id="tokoh_id" class="h-10 text-sm font-medium bg-background border-input">
+                <SelectValue placeholder="-- Tidak Ditautkan / Tokoh Baru --" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__NONE__" class="text-sm font-medium cursor-pointer">
+                  -- Tidak Ditautkan / Tokoh Baru --
+                </SelectItem>
+                <SelectItem
+                  v-for="t in tokohList"
+                  :key="t.id"
+                  :value="String(t.id)"
+                  class="text-sm font-medium cursor-pointer"
+                >
+                  {{ t.nama }} ({{ t.jabatan || 'Tokoh' }})
+                </SelectItem>
+              </SelectContent>
+            </Select>
             <p class="text-[11px] text-muted-foreground mt-1">
               Jika dipilih, nama penutur akan otomatis terhubung ke halaman profil tokoh di ISF.
             </p>
@@ -321,17 +369,23 @@ onMounted(() => {
 
           <div>
             <Label for="status">Status Publikasi</Label>
-            <select
-              id="status"
-              v-model="form.status"
-              class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="aktif">Aktif (Tampil di Landing Page)</option>
-              <option value="arsip">Arsip (Disembunyikan)</option>
-            </select>
+            <Select v-model="form.status">
+              <SelectTrigger id="status" class="h-10 text-sm font-medium bg-background border-input">
+                <SelectValue placeholder="Pilih Status..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="aktif" class="text-sm font-medium cursor-pointer">
+                  Aktif (Tampil di Landing Page)
+                </SelectItem>
+                <SelectItem value="arsip" class="text-sm font-medium cursor-pointer">
+                  Arsip (Disembunyikan)
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
-      </div>
+      </CardContent>
+    </Card>
 
       <!-- Action Buttons -->
       <div class="flex items-center justify-end gap-3 pt-4 border-t border-border">

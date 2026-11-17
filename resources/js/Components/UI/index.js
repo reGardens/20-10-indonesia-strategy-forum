@@ -21,6 +21,7 @@ export { default as TableRow } from './TableRow.vue';
 export { default as TableHead } from './TableHead.vue';
 export { default as TableCell } from './TableCell.vue';
 export { default as Pagination } from './Pagination.vue';
+export { default as TablePagination } from './TablePagination.vue';
 export { default as Select } from './Select.vue';
 export { default as SelectTrigger } from './SelectTrigger.vue';
 export { default as SelectContent } from './SelectContent.vue';

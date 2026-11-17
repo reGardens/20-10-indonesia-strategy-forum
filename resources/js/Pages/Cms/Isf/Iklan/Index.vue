@@ -42,12 +42,19 @@ function initialTab() {
     return TABS.includes(tab) ? tab : "body";
 }
 const activeTab = ref(initialTab()); // 'body' | 'popup'
+const currentPage = ref(1);
+const perPage = ref(10);
+
 watch(activeTab, (tab) => {
+    currentPage.value = 1;
     const url = new URL(window.location.href);
     if (tab === "body") url.searchParams.delete("tab");
     else url.searchParams.set("tab", tab);
     // Pertahankan history.state milik Inertia.
     window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+});
+watch([search, statusFilter], () => {
+    currentPage.value = 1;
 });
 const reordering = ref(false);
 
@@ -144,6 +151,11 @@ const visibleItems = computed(() =>
         isPopupTab.value ? allPopupItems.value : allBodyItems.value,
     ),
 );
+
+const paginatedVisibleItems = computed(() => {
+    const start = (currentPage.value - 1) * perPage.value;
+    return visibleItems.value.slice(start, start + perPage.value);
+});
 
 const columnCount = computed(() => (isPopupTab.value ? 8 : 7));
 
@@ -434,9 +446,15 @@ onMounted(loadData);
             v-else
             class="rounded-xl border border-border bg-card overflow-hidden shadow-xs"
         >
-            <Table>
-                <TableHeader class="bg-muted/40">
-                    <TableRow>
+            <Table
+                :current-page="currentPage"
+                :per-page="perPage"
+                :total="visibleItems.length"
+                @update:current-page="currentPage = $event"
+                @update:per-page="perPage = $event; currentPage = 1"
+            >
+                <TableHeader>
+                    <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
                         <TableHead
                             :class="[
                                 'text-center text-xs',
@@ -487,9 +505,9 @@ onMounted(loadData);
                     </TableRow>
 
                     <TableRow
-                        v-for="(item, idx) in visibleItems"
+                        v-for="(item, idx) in paginatedVisibleItems"
                         :key="item.id"
-                        class="hover:bg-muted/20 transition-colors"
+                        class="hover:bg-muted/30 transition border-b border-border/50"
                         data-testid="iklan-row"
                     >
                         <!-- Spanduk: nomor biasa (rotasi acak, urutan tidak dipakai) -->
@@ -498,7 +516,7 @@ onMounted(loadData);
                             class="text-center text-xs font-mono text-muted-foreground"
                             data-testid="iklan-no"
                         >
-                            {{ idx + 1 }}
+                            {{ idx + 1 + (currentPage - 1) * perPage }}
                         </TableCell>
 
                         <!-- Popup: urutan antrean + pindah naik/turun -->
@@ -510,7 +528,7 @@ onMounted(loadData);
                                     class="font-mono font-bold text-foreground text-xs min-w-[1.25rem] text-center"
                                     data-testid="iklan-urutan"
                                 >
-                                    {{ popupPosition[item.id] ?? idx + 1 }}
+                                    {{ popupPosition[item.id] ?? ((currentPage - 1) * perPage + idx + 1) }}
                                 </span>
                                 <div class="inline-flex flex-col gap-0.5">
                                     <button
@@ -521,11 +539,11 @@ onMounted(loadData);
                                                 : 'Pindah Urutan Naik'
                                         "
                                         :disabled="
-                                            idx === 0 ||
+                                            (currentPage - 1) * perPage + idx === 0 ||
                                             reordering ||
                                             isFiltered
                                         "
-                                        @click="moveOrder(idx, -1)"
+                                        @click="moveOrder((currentPage - 1) * perPage + idx, -1)"
                                         class="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-25 disabled:cursor-not-allowed transition cursor-pointer"
                                     >
                                         <IconComponent
@@ -541,11 +559,11 @@ onMounted(loadData);
                                                 : 'Pindah Urutan Turun'
                                         "
                                         :disabled="
-                                            idx === visibleItems.length - 1 ||
+                                            (currentPage - 1) * perPage + idx === visibleItems.length - 1 ||
                                             reordering ||
                                             isFiltered
                                         "
-                                        @click="moveOrder(idx, 1)"
+                                        @click="moveOrder((currentPage - 1) * perPage + idx, 1)"
                                         class="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-25 disabled:cursor-not-allowed transition cursor-pointer"
                                     >
                                         <IconComponent

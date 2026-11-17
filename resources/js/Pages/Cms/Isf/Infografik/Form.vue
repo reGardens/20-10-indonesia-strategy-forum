@@ -18,7 +18,12 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-  DatePicker
+  DatePicker,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -155,22 +160,21 @@ onMounted(loadCategories)
 
             <div class="space-y-1.5">
               <Label for="category" class="text-xs font-medium">Kategori <span class="text-red-500">*</span></Label>
-              <div class="relative">
-                <select
-                  id="category"
-                  v-model="form.category"
-                  class="w-full h-9 rounded-md border border-input bg-background pl-3 pr-9 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring appearance-none"
-                >
-                  <option v-for="cat in CATEGORIES" :key="cat.value" :value="cat.value">
+              <Select v-model="form.category">
+                <SelectTrigger id="category" class="h-9 text-xs font-medium bg-background border-input">
+                  <SelectValue placeholder="Pilih Kategori..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="cat in CATEGORIES"
+                    :key="cat.value"
+                    :value="cat.value"
+                    class="text-xs font-medium cursor-pointer"
+                  >
                     {{ cat.label }}
-                  </option>
-                </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground">
-                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
               <p v-if="err('category')" class="text-xs text-red-500 font-medium">{{ err('category') }}</p>
             </div>
           </div>

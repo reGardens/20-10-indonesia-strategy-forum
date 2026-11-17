@@ -4,7 +4,6 @@ import { Head, Link } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
 import { cmsResources } from '@/api/services/isfCmsService'
 import { useCmsForm } from '@/Composables/useCmsForm'
-import { activeCategories as CATEGORIES, loadCategories } from '@/Pages/Cms/Isf/options'
 import LoadingIndicator from '@/Pages/Cms/components/shared/LoadingIndicator.vue'
 import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
 import StatusSelectWithBadge from '@/Components/Cms/StatusSelectWithBadge.vue'
@@ -16,10 +15,14 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardContent
+  CardContent,
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
-import { onMounted } from 'vue'
 
 defineOptions({ layout: CmsLayout })
 
@@ -41,11 +44,14 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
   }
 })
 
-onMounted(loadCategories)
+const defaultBadgeOptions = ['Sorotan', 'Politik', 'Kebijakan Publik', 'Hukum', 'Pengumuman', 'Agenda', 'Opini Publik', 'Survei', 'Informasi']
 
-const badgePresets = computed(() => {
-  const cats = CATEGORIES.value.map(c => c.label || c.name)
-  return Array.from(new Set(['Sorotan', ...cats, 'Pengumuman', 'Agenda']))
+const badgeOptions = computed(() => {
+  const list = [...defaultBadgeOptions]
+  if (form.badge && !list.includes(form.badge)) {
+    list.unshift(form.badge)
+  }
+  return list.map(item => ({ value: item, label: item }))
 })
 </script>
 
@@ -106,26 +112,22 @@ const badgePresets = computed(() => {
         <CardContent class="space-y-4">
           <!-- Badge -->
           <div class="space-y-1.5">
-            <div class="flex items-center justify-between">
-              <Label for="badge" class="text-xs font-medium text-foreground">Badge / Label Kategori</Label>
-              <div class="flex gap-1 overflow-x-auto">
-                <button
-                  v-for="b in badgePresets"
-                  :key="b"
-                  type="button"
-                  @click="form.badge = b"
-                  class="text-[10px] px-1.5 py-0.5 rounded border border-border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition"
+            <Label for="badge" class="text-xs font-medium text-foreground">Badge / Label Kategori</Label>
+            <Select v-model="form.badge">
+              <SelectTrigger id="badge" class="h-9 text-xs font-medium">
+                <SelectValue placeholder="Pilih Badge / Label Kategori..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="opt in badgeOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                  class="text-xs font-medium"
                 >
-                  {{ b }}
-                </button>
-              </div>
-            </div>
-            <Input
-              id="badge"
-              v-model="form.badge"
-              placeholder="Contoh: Sorotan, Regulasi, Kebijakan..."
-              class="h-9 text-xs font-medium"
-            />
+                  {{ opt.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
             <p v-if="err('badge')" class="text-xs text-red-400 mt-1">{{ err('badge') }}</p>
           </div>
 

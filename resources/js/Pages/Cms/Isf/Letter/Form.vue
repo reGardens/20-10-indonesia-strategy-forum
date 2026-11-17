@@ -10,6 +10,16 @@ import {
   Button,
   Input,
   Label,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -125,16 +135,23 @@ onMounted(() => {
 <template>
   <Head :title="isEdit ? 'Moderasi Surat Pembaca · CMS ISF' : 'Tambah Surat Manual · CMS ISF'" />
 
-  <div class="p-6 space-y-6 max-w-4xl mx-auto w-full">
+  <div class="p-6 space-y-6 w-full">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
-      <div>
-        <h1 class="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-          {{ isEdit ? 'Moderasi Surat Pembaca' : 'Tambah Surat Pembaca' }}
-        </h1>
-        <p class="text-sm text-muted-foreground mt-0.5">
-          Review isi naskah, lakukan penyuntingan editorial bila perlu, dan tentukan status tayang.
-        </p>
+    <div class="flex items-center justify-between pb-4 border-b border-border">
+      <div class="flex items-center gap-3">
+        <Link href="/cms/surat-pembaca">
+          <Button variant="outline" size="sm" class="h-8 w-8 p-0">
+            <IconComponent name="ChevronLeft" :size="16" />
+          </Button>
+        </Link>
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight text-foreground">
+            {{ isEdit ? 'Moderasi Surat Pembaca' : 'Tambah Surat Pembaca' }}
+          </h1>
+          <p class="text-xs text-muted-foreground mt-0.5">
+            Review isi naskah, lakukan penyuntingan editorial bila perlu, dan tentukan status tayang.
+          </p>
+        </div>
       </div>
 
       <div class="flex items-center gap-2">
@@ -143,7 +160,7 @@ onMounted(() => {
             type="button"
             variant="outline"
             size="sm"
-            class="border-emerald-600 text-emerald-600 hover:bg-emerald-50 text-xs inline-flex items-center gap-1.5"
+            class="h-9 border-emerald-600 text-emerald-600 hover:bg-emerald-50 text-xs inline-flex items-center gap-1.5"
             :disabled="saving || form.status === 'disetujui'"
             @click="handleSetStatus('disetujui')"
           >
@@ -154,7 +171,7 @@ onMounted(() => {
             type="button"
             variant="outline"
             size="sm"
-            class="border-amber-600 text-amber-600 hover:bg-amber-50 text-xs inline-flex items-center gap-1.5"
+            class="h-9 border-amber-600 text-amber-600 hover:bg-amber-50 text-xs inline-flex items-center gap-1.5"
             :disabled="saving || form.status === 'ditolak'"
             @click="handleSetStatus('ditolak')"
           >
@@ -163,11 +180,20 @@ onMounted(() => {
           </Button>
         </template>
         <Link href="/cms/surat-pembaca">
-          <Button variant="outline" size="sm" class="inline-flex items-center gap-1.5">
-            <IconComponent name="ArrowLeft" :size="14" />
-            <span>Kembali</span>
+          <Button variant="outline" size="sm" class="h-9 text-xs">
+            Batal
           </Button>
         </Link>
+        <Button
+          type="button"
+          @click="handleSubmit"
+          :disabled="saving"
+          class="h-9 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-4 shadow-sm inline-flex items-center gap-1.5"
+        >
+          <IconComponent v-if="saving" name="Refresh" :size="14" class="animate-spin" />
+          <IconComponent v-else name="Check" :size="14" />
+          {{ saving ? 'Menyimpan...' : (isEdit ? 'Simpan Moderasi' : 'Tambah Surat') }}
+        </Button>
       </div>
     </div>
 
@@ -204,7 +230,14 @@ onMounted(() => {
 
     <!-- Form -->
     <form v-if="!loading && !loadError" @submit.prevent="handleSubmit" class="space-y-6">
-      <div class="bg-card rounded-lg border border-border p-6 space-y-5">
+      <Card class="bg-card border-border shadow-sm">
+        <CardHeader class="pb-4">
+          <CardTitle class="text-base font-semibold text-foreground">Konten & Moderasi Naskah Surat</CardTitle>
+          <CardDescription class="text-xs text-muted-foreground">
+            Data pengirim surat warga, naskah gagasan/kritik, dan status keputusan redaksi.
+          </CardDescription>
+        </CardHeader>
+        <CardContent class="space-y-5">
         <!-- Submitter Details -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
@@ -288,15 +321,22 @@ onMounted(() => {
           <!-- Status -->
           <div>
             <Label for="status">Status Moderasi *</Label>
-            <select
-              id="status"
-              v-model="form.status"
-              class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="pending">Pending (Menunggu Review)</option>
-              <option value="disetujui">Disetujui (Tayang di Portal Publik)</option>
-              <option value="ditolak">Ditolak (Tidak Layak Tayang)</option>
-            </select>
+            <Select v-model="form.status">
+              <SelectTrigger id="status" class="h-10 text-sm font-medium bg-background border-input">
+                <SelectValue placeholder="Pilih Status..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending" class="text-sm font-medium cursor-pointer">
+                  Pending (Menunggu Review)
+                </SelectItem>
+                <SelectItem value="disetujui" class="text-sm font-medium cursor-pointer">
+                  Disetujui (Tayang di Portal Publik)
+                </SelectItem>
+                <SelectItem value="ditolak" class="text-sm font-medium cursor-pointer">
+                  Ditolak (Tidak Layak Tayang)
+                </SelectItem>
+              </SelectContent>
+            </Select>
             <p class="text-[11px] text-muted-foreground mt-1">
               Hanya status "Disetujui" yang akan ditampilkan kepada publik di rubrik Opini Publik.
             </p>
@@ -314,7 +354,8 @@ onMounted(() => {
             ></textarea>
           </div>
         </div>
-      </div>
+      </CardContent>
+    </Card>
 
       <!-- Action Buttons -->
       <div class="flex items-center justify-end gap-3 pt-4 border-t border-border">

@@ -147,28 +147,12 @@ function onSuratSubmitted() {
   load()
 }
 
-// Reset dan reload saat subkategori berganti
+// Reset dan reload saat subkategori berganti (tanpa click-to-scroll sesuai instruksi)
 watch(
   () => route.params?.subkategori,
   () => {
     currentPage.value = 1
     load()
-    if (route.params?.subkategori === 'polling') {
-      setTimeout(() => {
-        const el = document.getElementById('isf-reader-poll-section')
-        if (el) el.scrollIntoView({ behavior: 'smooth' })
-      }, 300)
-    } else if (route.params?.subkategori === 'kutipan') {
-      setTimeout(() => {
-        const el = document.getElementById('isf-kutipan-publik-section')
-        if (el) el.scrollIntoView({ behavior: 'smooth' })
-      }, 300)
-    } else if (route.params?.subkategori === 'surat-pembaca') {
-      setTimeout(() => {
-        const el = document.getElementById('isf-surat-pembaca-section')
-        if (el) el.scrollIntoView({ behavior: 'smooth' })
-      }, 300)
-    }
   },
   { immediate: true }
 )
@@ -189,7 +173,7 @@ watch(
 </script>
 
 <template>
-  <div class="isf-theme font-space-grotesk min-h-screen bg-[#FBF9F4] text-neutral-900 antialiased pb-20">
+  <div class="isf-theme font-space-grotesk min-h-screen bg-white text-neutral-900 antialiased pb-20">
     <!-- ═══ 1. HEADER HERO RUBRIK OPINI PUBLIK (Gaya Editorial Navy identik dengan Politik & Hukum) ═══ -->
     <header class="bg-isf-navy text-white border-b border-neutral-800 pt-8 sm:pt-12 pb-6 sm:pb-8">
       <div class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12">
@@ -212,32 +196,30 @@ watch(
           </template>
         </nav>
 
-        <!-- Rubrik Title & Quick Pill Tabs (di bawah Deskripsi, tanpa divider ganda/gap kosong) -->
-        <div class="space-y-4">
-          <div>
-            <div class="flex items-center gap-2 text-xs font-mono font-bold tracking-widest text-isf-red uppercase mb-1.5">
-              <span class="inline-block w-2.5 h-2.5 bg-isf-red rounded-xs"></span>
-              <span>RUBRIK DISKURSUS, OPINI & SUARA PUBLIK</span>
-            </div>
-            <h1 class="font-headline text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-none text-white">
-              OPINI PUBLIK
-            </h1>
-            <p class="text-xs sm:text-sm md:text-base text-neutral-300 mt-2 max-w-3xl leading-relaxed">
-              {{ rubrik.description }}
-            </p>
+        <!-- Rubrik Title & Deskripsi + Filter Pills -->
+        <div>
+          <div class="flex items-center gap-2 text-xs font-mono font-bold tracking-widest text-isf-red uppercase mb-1.5">
+            <span class="inline-block w-2.5 h-2.5 bg-isf-red rounded-xs"></span>
+            <span>RUBRIK DISKURSUS, OPINI & SUARA PUBLIK</span>
           </div>
+          <h1 class="font-headline text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-none text-white">
+            OPINI PUBLIK
+          </h1>
+          <p class="text-xs sm:text-sm md:text-base text-neutral-300 mt-2 max-w-3xl leading-relaxed">
+            {{ rubrik.description }}
+          </p>
 
-          <!-- Quick Navigation Pill Tabs & CTA Button di Bawah Deskripsi -->
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <div class="flex items-center gap-1.5 overflow-x-auto isf-no-scrollbar -mx-1 px-1 py-1" role="tablist" aria-label="Filter Subkategori Opini Publik">
+          <!-- Filter Pills Kategori Opini Publik & CTA Kirim Surat (Di dalam hero header navy di bawah deskripsi) -->
+          <div class="mt-6 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2 overflow-x-auto isf-no-scrollbar -mx-1 px-1 py-1" role="tablist" aria-label="Filter Subkategori Opini Publik">
               <button
                 type="button"
                 @click="navigateSubkategori(null)"
                 :class="[
-                  'px-3.5 py-1.5 rounded-full text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer',
+                  'px-4 py-2 rounded text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer',
                   !currentSubkategori
-                    ? 'bg-isf-red text-white shadow-xs'
-                    : 'bg-white/10 text-neutral-300 hover:bg-white/20 hover:text-white'
+                    ? 'bg-isf-red text-white'
+                    : 'bg-[#1a2333] text-neutral-300 hover:bg-[#253247] hover:text-white border border-neutral-700/60'
                 ]"
               >
                 Semua Artikel
@@ -248,10 +230,10 @@ watch(
                 type="button"
                 @click="navigateSubkategori(sub.slug)"
                 :class="[
-                  'px-3.5 py-1.5 rounded-full text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer',
+                  'px-4 py-2 rounded text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer',
                   currentSubkategori === sub.slug
-                    ? 'bg-isf-red text-white shadow-xs'
-                    : 'bg-white/10 text-neutral-300 hover:bg-white/20 hover:text-white'
+                    ? 'bg-isf-red text-white'
+                    : 'bg-[#1a2333] text-neutral-300 hover:bg-[#253247] hover:text-white border border-neutral-700/60'
                 ]"
               >
                 {{ sub.name }}
@@ -260,35 +242,35 @@ watch(
                 type="button"
                 @click="navigateSubkategori('polling')"
                 :class="[
-                  'px-3.5 py-1.5 rounded-full text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5',
+                  'px-4 py-2 rounded text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 border',
                   currentSubkategori === 'polling'
-                    ? 'bg-isf-red text-white shadow-xs'
-                    : 'bg-white/10 text-neutral-300 hover:bg-white/20 hover:text-white'
+                    ? 'bg-isf-red text-white border-isf-red'
+                    : 'bg-[#1a2333] text-neutral-300 hover:bg-[#253247] hover:text-white border border-neutral-700/60'
                 ]"
               >
-                <IconFlame class="w-3 h-3 text-amber-400" />
+                <IconFlame class="w-3.5 h-3.5 text-amber-500" />
                 <span>Jajak Pendapat</span>
               </button>
               <button
                 type="button"
                 @click="navigateSubkategori('kutipan')"
                 :class="[
-                  'px-3.5 py-1.5 rounded-full text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5',
+                  'px-4 py-2 rounded text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 border',
                   currentSubkategori === 'kutipan'
-                    ? 'bg-isf-red text-white shadow-xs'
-                    : 'bg-white/10 text-neutral-300 hover:bg-white/20 hover:text-white'
+                    ? 'bg-isf-red text-white border-isf-red'
+                    : 'bg-[#1a2333] text-neutral-300 hover:bg-[#253247] hover:text-white border border-neutral-700/60'
                 ]"
               >
-                <IconQuote class="w-3 h-3 text-sky-400" />
+                <IconQuote class="w-3.5 h-3.5 text-sky-400" />
                 <span>Kutipan Publik</span>
               </button>
             </div>
 
-            <!-- CTA Kirim Surat Pembaca -->
+            <!-- CTA Kirim Surat Pembaca (Di kanan header navy) -->
             <button
               type="button"
               @click="showSuratModal = true"
-              class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-space-grotesk font-bold bg-isf-red hover:bg-red-700 text-white transition-all shrink-0 shadow-xs cursor-pointer"
+              class="inline-flex items-center gap-1.5 px-4 py-2 rounded text-xs font-space-grotesk font-bold bg-isf-red hover:bg-red-700 text-white transition-all shrink-0 shadow-xs cursor-pointer"
             >
               <IconMail class="w-3.5 h-3.5" />
               <span>Kirim Surat</span>
@@ -334,8 +316,8 @@ watch(
         <div class="max-w-3xl mx-auto h-48 bg-neutral-900 rounded-xl border border-neutral-800"></div>
       </div>
 
-      <!-- Section 3 Skeleton: Kutipan Publik Cream -->
-      <div class="bg-[#FBF9F4] rounded-lg border border-neutral-300 shadow-xs overflow-hidden p-4 sm:p-6 space-y-6">
+      <!-- Section 3 Skeleton: Kutipan Publik -->
+      <div class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden p-4 sm:p-6 space-y-6">
         <div class="border-b border-neutral-300 pb-4 flex items-center justify-between">
           <div class="h-4 w-44 bg-neutral-300 rounded"></div>
           <div class="h-7 w-32 bg-neutral-300 rounded-lg"></div>
@@ -388,7 +370,7 @@ watch(
     <main v-else class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12 mt-8 sm:mt-12 space-y-8 sm:space-y-12">
       <!-- ═══ SECTION 1: SOROTAN UTAMA (HEADLINE) ═════════════════════════ -->
       <section
-        v-if="headline && currentPage === 1"
+        v-if="headline && currentPage === 1 && (!currentSubkategori || ['op-ed', 'editorial'].includes(currentSubkategori))"
         aria-labelledby="headline-opini"
         class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden"
       >
@@ -490,7 +472,7 @@ watch(
 
       <!-- ═══ SECTION 2: FITUR KHUSUS: JAJAK PENDAPAT PEMBACA (NAVY FRAME) ════════════ -->
       <section
-        v-if="selectedPoll"
+        v-if="selectedPoll && (!currentSubkategori || currentSubkategori === 'polling')"
         id="isf-reader-poll-section"
         aria-labelledby="jajak-pendapat-heading"
         class="bg-isf-navy text-white rounded-lg border border-neutral-800 shadow-sm overflow-hidden p-6 lg:p-8 scroll-mt-20 isf-full-layer-section--navy"
@@ -527,12 +509,12 @@ watch(
         <ReaderPollCard :poll="selectedPoll" :embedded="true" :is-dark="true" />
       </section>
 
-      <!-- ═══ SECTION 3: FITUR KHUSUS: KUTIPAN PUBLIK (CREAM FRAME) ═════════ -->
+      <!-- ═══ SECTION 3: FITUR KHUSUS: KUTIPAN PUBLIK ═════════ -->
       <section
-        v-if="kutipanPublik && kutipanPublik.length > 0"
+        v-if="kutipanPublik && kutipanPublik.length > 0 && (!currentSubkategori || currentSubkategori === 'kutipan')"
         id="isf-kutipan-publik-section"
         aria-labelledby="kutipan-publik-heading"
-        class="bg-[#FBF9F4] rounded-lg border border-neutral-300 shadow-xs overflow-hidden p-4 sm:p-6 lg:p-8 scroll-mt-20"
+        class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden p-4 sm:p-6 lg:p-8 scroll-mt-20"
       >
         <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-neutral-300 pb-4 mb-6">
           <SectionHeading
@@ -591,6 +573,7 @@ watch(
 
       <!-- ═══ SECTION 4: FITUR KHUSUS: SURAT PEMBACA TERKURASI ═════════════ -->
       <section
+        v-if="!currentSubkategori || currentSubkategori === 'surat-pembaca'"
         id="isf-surat-pembaca-section"
         aria-labelledby="surat-pembaca-heading"
         class="bg-white rounded-lg border border-neutral-300 p-4 sm:p-6 lg:p-8 shadow-xs scroll-mt-20"
@@ -623,7 +606,7 @@ watch(
           <article
             v-for="letter in suratPembacaList"
             :key="letter.id"
-            class="border border-neutral-200 rounded-xl p-5 hover:border-neutral-400 transition-colors bg-[#FBF9F4]/40"
+            class="border border-neutral-200 rounded-xl p-5 hover:border-neutral-400 transition-colors bg-neutral-50/60"
           >
             <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-2">
               <div>
@@ -692,6 +675,7 @@ watch(
 
       <!-- ═══ SECTION 5: DAFTAR ARTIKEL TERBARU + PAGINATION (Format Identik dengan Politik) ═══ -->
       <section
+        v-if="!currentSubkategori || ['op-ed', 'editorial'].includes(currentSubkategori)"
         aria-labelledby="daftar-artikel-opini"
         class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden"
       >

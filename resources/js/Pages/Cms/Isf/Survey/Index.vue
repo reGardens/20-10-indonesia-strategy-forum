@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Head, Link } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
 import { cmsResources, errorMessage } from '@/api/services/isfCmsService'
@@ -30,7 +30,14 @@ const search = ref('')
 const topicFilter = ref('')
 const regionFilter = ref('')
 const statusFilter = ref('')
+const currentPage = ref(1)
+const perPage = ref(10)
 let searchTimeout = null
+
+const paginatedItems = computed(() => {
+  const start = (currentPage.value - 1) * perPage.value
+  return items.value.slice(start, start + perPage.value)
+})
 
 const topicOptions = [
   { value: '', label: 'Semua Isu' },
@@ -72,20 +79,24 @@ async function loadData() {
 function onSearchInput() {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
+    currentPage.value = 1
     loadData()
   }, 350)
 }
 
 function onTopicChange() {
+  currentPage.value = 1
   loadData()
 }
 
 function onRegionChange() {
+  currentPage.value = 1
   loadData()
 }
 
 function onStatusChange(status) {
   statusFilter.value = status
+  currentPage.value = 1
   loadData()
 }
 
@@ -239,7 +250,13 @@ onMounted(() => {
     />
 
     <div v-else class="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
-      <Table>
+      <Table
+        :current-page="currentPage"
+        :per-page="perPage"
+        :total="items.length"
+        @update:current-page="currentPage = $event"
+        @update:per-page="perPage = $event; currentPage = 1"
+      >
         <TableHeader>
           <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
             <TableHead class="w-12 text-center text-xs">#</TableHead>
@@ -259,12 +276,12 @@ onMounted(() => {
             </TableCell>
           </TableRow>
           <TableRow
-            v-for="(item, idx) in items"
+            v-for="(item, idx) in paginatedItems"
             :key="item.id"
             class="hover:bg-muted/30 transition border-b border-border/50"
           >
             <TableCell class="text-center font-mono text-xs text-muted-foreground">
-              {{ idx + 1 }}
+              {{ idx + 1 + (currentPage - 1) * perPage }}
             </TableCell>
 
             <TableCell class="py-3">

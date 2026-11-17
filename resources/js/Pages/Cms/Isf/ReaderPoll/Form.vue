@@ -10,6 +10,16 @@ import {
   Button,
   Input,
   Label,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -164,23 +174,43 @@ onMounted(() => {
 <template>
   <Head :title="isEdit ? 'Edit Reader Poll · CMS ISF' : 'Tambah Reader Poll · CMS ISF'" />
 
-  <div class="p-6 space-y-6 max-w-4xl mx-auto w-full">
-    <!-- Header -->
-    <div class="flex items-center justify-between gap-4 pb-4 border-b border-border">
-      <div>
-        <h1 class="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-          {{ isEdit ? 'Edit Reader Poll' : 'Tambah Reader Poll' }}
-        </h1>
-        <p class="text-sm text-muted-foreground mt-0.5">
-          Jajak pendapat publik interaktif dengan label ketat non-ilmiah.
-        </p>
+  <div class="p-6 space-y-6 w-full">
+    <!-- Header with Back Button -->
+    <div class="flex items-center justify-between pb-4 border-b border-border">
+      <div class="flex items-center gap-3">
+        <Link href="/cms/reader-poll">
+          <Button variant="outline" size="sm" class="h-8 w-8 p-0">
+            <IconComponent name="ChevronLeft" :size="16" />
+          </Button>
+        </Link>
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight text-foreground">
+            {{ isEdit ? 'Edit Reader Poll' : 'Tambah Reader Poll' }}
+          </h1>
+          <p class="text-xs text-muted-foreground mt-0.5">
+            Jajak pendapat publik interaktif dengan penegasan metodologis non-ilmiah.
+          </p>
+        </div>
       </div>
-      <Link href="/cms/reader-poll">
-        <Button variant="outline" size="sm" class="inline-flex items-center gap-1.5">
-          <IconComponent name="ArrowLeft" :size="14" />
-          <span>Kembali</span>
+
+      <!-- Action buttons -->
+      <div class="flex items-center gap-2">
+        <Link href="/cms/reader-poll">
+          <Button variant="outline" size="sm" class="h-9 text-xs">
+            Batal
+          </Button>
+        </Link>
+        <Button
+          type="button"
+          @click="handleSubmit"
+          :disabled="saving"
+          class="h-9 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-4 shadow-sm inline-flex items-center gap-1.5"
+        >
+          <IconComponent v-if="saving" name="Refresh" :size="14" class="animate-spin" />
+          <IconComponent v-else name="Check" :size="14" />
+          {{ saving ? 'Menyimpan...' : (isEdit ? 'Simpan Perubahan' : 'Buat Polling') }}
         </Button>
-      </Link>
+      </div>
     </div>
 
     <LoadingIndicator v-if="loading" text="Memuat data polling..." />
@@ -229,7 +259,14 @@ onMounted(() => {
 
     <!-- Form -->
     <form v-if="!loading && !loadError" @submit.prevent="handleSubmit" class="space-y-6">
-      <div class="bg-card rounded-lg border border-border p-6 space-y-5">
+      <Card class="bg-card border-border shadow-sm">
+        <CardHeader class="pb-4">
+          <CardTitle class="text-base font-semibold text-foreground">Konfigurasi Pertanyaan & Opsi Polling</CardTitle>
+          <CardDescription class="text-xs text-muted-foreground">
+            Formulasi pertanyaan jajak pendapat publik, opsi jawaban, jadwal tayang, dan status.
+          </CardDescription>
+        </CardHeader>
+        <CardContent class="space-y-5">
         <!-- Question -->
         <div>
           <Label for="question">Pertanyaan Polling *</Label>
@@ -341,15 +378,22 @@ onMounted(() => {
           <!-- Status -->
           <div>
             <Label for="status">Status Publikasi</Label>
-            <select
-              id="status"
-              v-model="form.status"
-              class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="aktif">Aktif (Bisa Divote)</option>
-              <option value="selesai">Selesai (Hanya Hasil)</option>
-              <option value="draf">Draf (Tersimpan)</option>
-            </select>
+            <Select v-model="form.status">
+              <SelectTrigger id="status" class="h-10 text-sm font-medium bg-background border-input">
+                <SelectValue placeholder="Pilih Status..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="aktif" class="text-sm font-medium cursor-pointer">
+                  Aktif (Bisa Divote)
+                </SelectItem>
+                <SelectItem value="selesai" class="text-sm font-medium cursor-pointer">
+                  Selesai (Hanya Hasil)
+                </SelectItem>
+                <SelectItem value="draf" class="text-sm font-medium cursor-pointer">
+                  Draf (Tersimpan)
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -365,7 +409,8 @@ onMounted(() => {
             Tampilkan sebagai Polling Utama (Featured) di Landing Page
           </Label>
         </div>
-      </div>
+        </CardContent>
+      </Card>
 
       <!-- Action Buttons -->
       <div class="flex items-center justify-end gap-3 pt-4 border-t border-border">

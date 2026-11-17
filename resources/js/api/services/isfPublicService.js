@@ -68,11 +68,13 @@ export function getKategori(kategori, offset = 0, limit = 7) {
   return get('/isf/kategori/' + encodeURIComponent(kategori) + '?offset=' + Number(offset) + '&limit=' + Number(limit))
 }
 
-export function getPolitik(subkategori = null, page = 1, limit = 9) {
+export function getPolitik(subkategori = null, page = 1, limit = 9, params = {}) {
   const qs = new URLSearchParams()
   if (subkategori) qs.set('subkategori', subkategori)
   if (page) qs.set('page', String(page))
   if (limit) qs.set('limit', String(limit))
+  if (params.q) qs.set('q', params.q)
+  if (params.date) qs.set('date', params.date)
   const queryString = qs.toString()
   return get('/isf/politik' + (queryString ? `?${queryString}` : ''))
 }

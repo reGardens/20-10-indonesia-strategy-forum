@@ -16,7 +16,7 @@ class ParliamentSeatController extends CmsResourceController
 
     protected array $listColumns = [
         'id', 'periode', 'lembaga', 'partai', 'singkatan',
-        'jumlah_kursi', 'warna_partai', 'urutan', 'status', 'updated_at',
+        'jumlah_kursi', 'warna_partai', 'logo', 'urutan', 'status', 'updated_at',
     ];
 
     protected array $searchColumns = ['partai', 'singkatan', 'periode'];
@@ -24,6 +24,23 @@ class ParliamentSeatController extends CmsResourceController
     protected array $filterColumns = ['lembaga', 'periode', 'status'];
 
     protected array $order = ['urutan' => 'asc', 'jumlah_kursi' => 'desc', 'id' => 'asc'];
+
+    public function reorder(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'items' => 'required|array',
+            'items.*.id' => 'required|integer',
+            'items.*.urutan' => 'required|integer',
+        ]);
+
+        foreach ($validated['items'] as $item) {
+            ParliamentSeat::where('id', $item['id'])->update(['urutan' => $item['urutan']]);
+        }
+
+        \App\Services\Isf\IsfCacheService::clearAll();
+
+        return response()->json(['message' => 'Urutan kursi parlemen berhasil diperbarui.']);
+    }
 
     public function show(ParliamentSeat $parliamentSeat): JsonResponse
     {

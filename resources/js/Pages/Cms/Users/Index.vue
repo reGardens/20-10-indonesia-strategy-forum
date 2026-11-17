@@ -21,6 +21,22 @@ const props = defineProps({
     users: { type: Object, required: true },
 });
 
+function handlePageChange(page) {
+    router.get(
+        '/cms/users',
+        { page, per_page: props.users.per_page },
+        { preserveState: true, preserveScroll: true }
+    );
+}
+
+function handlePerPageChange(perPage) {
+    router.get(
+        '/cms/users',
+        { page: 1, per_page: perPage },
+        { preserveState: true, preserveScroll: true }
+    );
+}
+
 async function handleDelete(user) {
     const confirmed = await confirmDelete(user.name);
     if (!confirmed) return;
@@ -54,10 +70,17 @@ function formatDate(dateString) {
             </Link>
         </div>
 
-        <div class="rounded-xl border border-border overflow-hidden">
-            <Table>
+        <div class="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
+            <Table
+                :current-page="users.current_page || 1"
+                :per-page="users.per_page || 10"
+                :total="users.total || 0"
+                :total-pages="users.last_page || 1"
+                @update:current-page="handlePageChange"
+                @update:per-page="handlePerPageChange"
+            >
                 <TableHeader>
-                    <TableRow>
+                    <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
                         <TableHead class="w-12 text-center text-xs">#</TableHead>
                         <TableHead>{{ t("users.name") }}</TableHead>
                         <TableHead>{{ t("users.email") }}</TableHead>
@@ -70,9 +93,13 @@ function formatDate(dateString) {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    <TableRow v-for="(user, idx) in users.data" :key="user.id">
+                    <TableRow
+                        v-for="(user, idx) in users.data"
+                        :key="user.id"
+                        class="hover:bg-muted/30 transition border-b border-border/50"
+                    >
                         <TableCell class="text-center text-xs font-mono text-muted-foreground">
-                            {{ ((users.current_page || 1) - 1) * (users.per_page || users.data.length) + idx + 1 }}
+                            {{ ((users.current_page || 1) - 1) * (users.per_page || 10) + idx + 1 }}
                         </TableCell>
                         <TableCell class="font-medium">
                             <div class="line-clamp-2">{{ user.name }}</div>
@@ -158,28 +185,6 @@ function formatDate(dateString) {
                     </TableRow>
                 </TableBody>
             </Table>
-        </div>
-
-        <!-- Pagination -->
-        <div
-            v-if="users.last_page > 1"
-            class="flex items-center justify-center gap-2"
-        >
-            <template v-for="link in users.links" :key="link.label">
-                <Link
-                    v-if="link.url"
-                    :href="link.url"
-                    :class="[
-                        'inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 transition-colors',
-                        link.active
-                            ? 'border border-input bg-background'
-                            : 'hover:bg-accent',
-                    ]"
-                    preserve-scroll
-                >
-                    <span v-html="link.label" />
-                </Link>
-            </template>
         </div>
     </div>
 </template>

@@ -18,7 +18,12 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardContent
+  CardContent,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -179,6 +184,12 @@ onMounted(async () => {
     // Fallback
   }
 })
+
+defineExpose({
+  form,
+  handlePlacementChange,
+  statusOptions
+})
 </script>
 
 <template>
@@ -283,18 +294,25 @@ onMounted(async () => {
             <Label for="placement" class="text-xs font-semibold text-foreground">
               Kategori Penempatan Iklan *
             </Label>
-            <div class="relative">
-              <select
-                id="placement"
-                :value="form.placement"
-                @change="handlePlacementChange($event.target.value)"
-                class="w-full h-9 px-3 rounded-md border border-border bg-background text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors cursor-pointer"
-              >
-                <option value="" disabled>-- Pilih Kategori Penempatan Iklan --</option>
-                <option value="spanduk">Spanduk Beranda (Slot banner di kolom kiri Beranda)</option>
-                <option value="popup">Modal Popup (Popup promosi saat akses website)</option>
-              </select>
-            </div>
+            <Select
+              :model-value="form.placement || '__NONE__'"
+              @update:model-value="(val) => handlePlacementChange(val === '__NONE__' ? '' : val)"
+            >
+              <SelectTrigger id="placement" class="h-9 text-xs font-medium bg-background border-border">
+                <SelectValue placeholder="-- Pilih Kategori Penempatan Iklan --" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__NONE__" disabled class="text-xs font-medium">
+                  -- Pilih Kategori Penempatan Iklan --
+                </SelectItem>
+                <SelectItem value="spanduk" class="text-xs font-medium cursor-pointer">
+                  Spanduk Beranda (Slot banner di kolom kiri Beranda)
+                </SelectItem>
+                <SelectItem value="popup" class="text-xs font-medium cursor-pointer">
+                  Modal Popup (Popup promosi saat akses website)
+                </SelectItem>
+              </SelectContent>
+            </Select>
             <p v-if="err('placement')" class="text-xs text-red-400 mt-1">{{ err('placement') }}</p>
           </div>
 
@@ -509,13 +527,21 @@ onMounted(async () => {
             <div class="space-y-5">
               <div class="space-y-1.5">
                 <Label for="status" class="text-xs font-medium text-foreground">Status Iklan</Label>
-                <select
-                  id="status"
-                  v-model="form.status"
-                  class="w-full h-9 px-3 rounded-md border border-border bg-background text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors cursor-pointer"
-                >
-                  <option v-for="opt in statusOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                </select>
+                <Select v-model="form.status">
+                  <SelectTrigger id="status" class="h-9 text-xs font-medium bg-background border-border">
+                    <SelectValue placeholder="Pilih Status..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem
+                      v-for="opt in statusOptions"
+                      :key="opt.value"
+                      :value="opt.value"
+                      class="text-xs font-medium cursor-pointer"
+                    >
+                      {{ opt.label }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
                 <p v-if="err('status')" class="text-xs text-red-400 mt-1">{{ err('status') }}</p>
               </div>
 

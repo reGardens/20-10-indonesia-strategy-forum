@@ -30,27 +30,38 @@
       >
         Font Keluarga
       </label>
-      <select
-        id="font-family"
-        :value="fontFamily"
-        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-        @change="$emit('update:fontFamily', $event.target.value)"
+      <Select
+        :model-value="fontFamily"
+        @update:model-value="$emit('update:fontFamily', $event)"
       >
-        <option
-          v-for="font in fontOptions"
-          :key="font.value"
-          :value="font.value"
-          :style="{ fontFamily: font.value }"
-        >
-          {{ font.label }}
-        </option>
-      </select>
+        <SelectTrigger id="font-family" class="w-full text-sm">
+          <SelectValue placeholder="Pilih Font..." />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem
+            v-for="font in fontOptions"
+            :key="font.value"
+            :value="font.value"
+            :style="{ fontFamily: font.value }"
+            class="text-sm font-medium cursor-pointer"
+          >
+            {{ font.label }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
     </div>
   </div>
 </template>
 
 <script setup>
 import ColorPicker from "@/Pages/Cms/components/shared/ColorPicker.vue";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem
+} from "@/Components/UI";
 
 const props = defineProps({
   themeColors: {

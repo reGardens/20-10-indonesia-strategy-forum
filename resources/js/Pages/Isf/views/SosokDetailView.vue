@@ -104,6 +104,8 @@ const tokoh = computed(() => data.value?.tokoh || null)
 const tabsData = computed(() => data.value?.tabs || {})
 const calendarData = computed(() => data.value?.calendar || null)
 const relatedTokoh = computed(() => data.value?.relatedTokoh || [])
+const tokohEksekutif = computed(() => data.value?.tokohEksekutif || data.value?.relatedTokoh || [])
+const tokohLegislatif = computed(() => data.value?.tokohLegislatif || data.value?.relatedTokoh || [])
 
 // Non-functional local follow toggle
 const isFollowing = ref(false)
@@ -392,7 +394,7 @@ watch(
 </script>
 
 <template>
-  <div class="isf-theme font-space-grotesk min-h-screen bg-[#FBF9F4] text-neutral-900 antialiased pb-20">
+  <div class="isf-theme font-space-grotesk min-h-screen bg-white text-neutral-900 antialiased pb-20">
     <!-- ═══ 1. HEADER HERO RUBRIK SOSOK (GAYA EDITORIAL NAVY KONSISTEN) ═════ -->
     <header class="bg-isf-navy text-white border-b border-neutral-800 pt-8 sm:pt-10 pb-0">
       <div class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12">
@@ -743,53 +745,7 @@ watch(
 
       <!-- ── TAB 2: ANALISIS ISF & RATING (#41) ────────────────────────── -->
       <div v-else-if="activeTab === 'analisis'" class="space-y-8 sm:space-y-12">
-        <!-- 2.1 Skor Sorotan ISF: BORDER-T-4 ISF-RED -->
-        <section
-          aria-labelledby="skor-sorotan-title"
-          class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden"
-        >
-          <div class="border-b border-neutral-200">
-            <SectionHeading
-              id="skor-sorotan-title"
-              title="Skor Sorotan & Indeks Pengaruh Kebijakan"
-              size="lg"
-              :class="sectionPad"
-            >
-              <template #eyebrow>Metrik Kuantitatif ISF</template>
-            </SectionHeading>
-          </div>
-
-          <div :class="[sectionPad, 'py-5 sm:py-6 lg:py-8']">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div class="max-w-2xl">
-                <span class="text-xs font-mono font-bold tracking-widest text-isf-red uppercase block mb-1">
-                  Periode Perhitungan: {{ tabsData.analisis?.skorSorotan?.period ?? tokoh.skor_period ?? '2026' }}
-                </span>
-                <h3 class="font-headline text-2xl sm:text-3xl font-bold text-neutral-950 mb-2">
-                  Skor Sorotan: {{ tabsData.analisis?.skorSorotan?.value ?? tokoh.skor_value ?? 0 }}/100
-                </h3>
-                <p class="text-xs sm:text-sm text-neutral-700 font-serif leading-relaxed">
-                  {{ tabsData.analisis?.skorSorotan?.explanation ?? tokoh.skor_explanation ?? 'Skor dihitung berdasarkan bobot kebijakan, rekam jejak, dan stabilitas peran institusional tokoh.' }}
-                </p>
-              </div>
-
-              <!-- Figure Callout Box -->
-              <div class="bg-isf-navy text-white rounded-xl p-5 sm:p-6 text-center shrink-0 min-w-[180px] border border-neutral-800 shadow-sm">
-                <span class="text-[11px] font-mono text-neutral-400 block mb-1 uppercase tracking-wider">
-                  Skor Pengaruh
-                </span>
-                <div class="font-headline font-black text-5xl text-amber-400 tracking-tight leading-none my-1">
-                  {{ tabsData.analisis?.skorSorotan?.value ?? tokoh.skor_value ?? 0 }}
-                </div>
-                <span class="text-[11px] text-neutral-400 font-mono block mt-1">
-                  Skala Maksimal 100
-                </span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- 2.2 INDEKS TOKOH: RATING & ULASAN PUBLIK (#41): BORDER-T-4 ISF-RED -->
+        <!-- 2.1 INDEKS TOKOH: RATING & ULASAN PUBLIK (#41): BORDER-T-4 ISF-RED -->
         <section
           aria-labelledby="indeks-tokoh-heading"
           class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden"
@@ -1253,7 +1209,7 @@ watch(
               <div
                 v-for="(q, idx) in tabsData.kontroversi.quotes"
                 :key="idx"
-                class="p-5 rounded-xl border border-neutral-200 bg-[#FBF9F4] relative"
+                class="p-5 rounded-xl border border-neutral-200 bg-white relative"
               >
                 <p class="text-xs sm:text-sm font-serif italic text-neutral-800 leading-relaxed mb-3">
                   "{{ q.text }}"
@@ -1308,32 +1264,31 @@ watch(
         </section>
       </div>
 
-      <!-- ═══ 4. RELATED TOKOHS (TOKOH TERKAIT: PERSIS SEPERTI SEKSI 3 POLITIK) ══ -->
+      <!-- ═══ 4.1 TOKOH EKSEKUTIF ═══════════════════════════════════════════ -->
       <section
-        v-if="relatedTokoh.length"
-        aria-labelledby="tokoh-terkait-title"
-        class="bg-[#FBF9F4] rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden"
+        v-if="tokohEksekutif.length"
+        aria-labelledby="tokoh-eksekutif-title"
+        class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden"
       >
-        <div class="border-b border-neutral-300 bg-white/60">
+        <div class="border-b border-neutral-200">
           <SectionHeading
-            id="tokoh-terkait-title"
-            :title="`Tokoh Terkait di Rumpun ${tokoh.role_category_label || tokoh.role_category || 'Strategis'}`"
+            id="tokoh-eksekutif-title"
+            title="Tokoh Eksekutif"
             size="lg"
             :class="sectionPad"
           >
-            <template #eyebrow>Aktor & Pembuat Kebijakan Serumpun</template>
+            <template #eyebrow>Aktor & Pembuat Kebijakan Eksekutif</template>
           </SectionHeading>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-neutral-200">
           <router-link
-            v-for="rel in relatedTokoh"
+            v-for="rel in tokohEksekutif"
             :key="rel.id"
             :to="rel.to || ('/sosok/' + rel.slug)"
             class="group p-3 sm:p-5 flex flex-col justify-between hover:bg-neutral-50/80 transition-colors block cursor-pointer"
           >
             <div>
-              <!-- Responsive Avatar layout persis PolitikView -->
               <div class="flex items-start gap-3 sm:block mb-2 sm:mb-3">
                 <div class="w-16 h-16 sm:w-full sm:h-auto sm:aspect-square rounded-md overflow-hidden bg-neutral-200 shrink-0 border border-neutral-200 shadow-2xs group-hover:shadow-md transition-shadow">
                   <img
@@ -1350,7 +1305,74 @@ watch(
 
                 <div class="min-w-0 flex-1 sm:mt-2">
                   <span class="text-[10px] font-space-grotesk font-bold uppercase tracking-wider text-isf-red block">
-                    {{ rel.role_category_label || rel.role_category || 'Tokoh' }}
+                    Eksekutif
+                  </span>
+                  <h3 class="font-space-grotesk font-bold text-sm sm:text-base text-neutral-900 mt-0.5 line-clamp-1 group-hover:text-isf-red transition-colors">
+                    {{ rel.name }}
+                  </h3>
+                  <p class="text-xs text-neutral-500 font-medium line-clamp-1 mt-0.5">
+                    {{ rel.position }}
+                  </p>
+                </div>
+              </div>
+
+              <p v-if="rel.summary_analysis || rel.teaser || rel.bio" class="text-xs font-serif text-neutral-600 line-clamp-2 sm:line-clamp-3 leading-relaxed">
+                {{ rel.summary_analysis || rel.teaser || rel.bio }}
+              </p>
+            </div>
+
+            <div class="mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-neutral-200">
+              <div class="inline-flex items-center gap-1.5 text-xs font-space-grotesk font-bold text-isf-red group-hover:text-isf-red-dark transition-colors">
+                <span>Lihat Profil Sosok</span>
+                <IconArrowRight class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            </div>
+          </router-link>
+        </div>
+      </section>
+
+      <!-- ═══ 4.2 TOKOH LEGISLATIF ════════════════════════════════════════════ -->
+      <section
+        v-if="tokohLegislatif.length"
+        aria-labelledby="tokoh-legislatif-title"
+        class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-navy shadow-xs overflow-hidden"
+      >
+        <div class="border-b border-neutral-200">
+          <SectionHeading
+            id="tokoh-legislatif-title"
+            title="Tokoh Legislatif"
+            size="lg"
+            :class="sectionPad"
+          >
+            <template #eyebrow>Aktor & Pembuat Kebijakan Legislatif</template>
+          </SectionHeading>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-neutral-200">
+          <router-link
+            v-for="rel in tokohLegislatif"
+            :key="rel.id"
+            :to="rel.to || ('/sosok/' + rel.slug)"
+            class="group p-3 sm:p-5 flex flex-col justify-between hover:bg-neutral-50/80 transition-colors block cursor-pointer"
+          >
+            <div>
+              <div class="flex items-start gap-3 sm:block mb-2 sm:mb-3">
+                <div class="w-16 h-16 sm:w-full sm:h-auto sm:aspect-square rounded-md overflow-hidden bg-neutral-200 shrink-0 border border-neutral-200 shadow-2xs group-hover:shadow-md transition-shadow">
+                  <img
+                    v-if="rel.photo_url || rel.photoUrl"
+                    :src="rel.photo_url || rel.photoUrl"
+                    :alt="rel.photo_alt || rel.name"
+                    class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                  />
+                  <div v-else class="w-full h-full flex items-center justify-center bg-neutral-100 text-neutral-400">
+                    <IconUser class="w-8 h-8 sm:w-12 sm:h-12" />
+                  </div>
+                </div>
+
+                <div class="min-w-0 flex-1 sm:mt-2">
+                  <span class="text-[10px] font-space-grotesk font-bold uppercase tracking-wider text-isf-red block">
+                    Legislatif
                   </span>
                   <h3 class="font-space-grotesk font-bold text-sm sm:text-base text-neutral-900 mt-0.5 line-clamp-1 group-hover:text-isf-red transition-colors">
                     {{ rel.name }}

@@ -15,6 +15,20 @@ class ParliamentSeatRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $merge = [];
+        if (!$this->has('warna_partai') || empty($this->warna_partai)) {
+            $merge['warna_partai'] = '#E10600';
+        }
+        if (!$this->has('status') || empty($this->status)) {
+            $merge['status'] = 'terbit';
+        }
+        if ($merge) {
+            $this->merge($merge);
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -23,9 +37,10 @@ class ParliamentSeatRequest extends FormRequest
             'partai' => $this->textRules(true, 100),
             'singkatan' => $this->textRules(false, 50),
             'jumlah_kursi' => ['required', 'integer', 'min:0', 'max:10000'],
-            'warna_partai' => ['required', 'string', 'max:50'],
-            'urutan' => ['nullable', 'integer', 'min:0', 'max:999'],
-            'status' => $this->statusRules(),
+            'warna_partai' => ['nullable', 'string', 'max:50'],
+            'logo' => ['nullable', 'string', 'max:500'],
+            'urutan' => ['nullable', 'integer', 'min:0', 'max:9999'],
+            'status' => ['nullable', 'string', Rule::in(['terbit', 'draf'])],
         ];
     }
 }

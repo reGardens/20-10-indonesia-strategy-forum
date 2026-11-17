@@ -130,6 +130,12 @@ const menuGroups = computed(() => [
                 visible: hasFeature("glosarium_hukum"),
             },
             {
+                label: "Istilah",
+                href: "/cms/istilah-hukum",
+                icon: "Bookmark",
+                visible: hasFeature("glosarium_hukum"),
+            },
+            {
                 label: "Timeline Kasus",
                 href: "/cms/timeline-kasus",
                 icon: "Clock",
@@ -150,10 +156,22 @@ const menuGroups = computed(() => [
                 visible: hasFeature("policy_brief"),
             },
             {
+                label: "Kategori Sektor",
+                href: "/cms/kategori-sektor",
+                icon: "Category",
+                visible: hasFeature("policy_brief"),
+            },
+            {
+                label: "Database Peraturan",
+                href: "/cms/database-peraturan",
+                icon: "BuildingBank",
+                visible: hasFeature("policy_brief"),
+            },
+            {
                 label: "Monitoring Kebijakan",
                 href: "/cms/monitoring-kebijakan",
                 icon: "Checklist",
-                visible: hasFeature("monitoring_kebijakan"),
+                visible: false, // Hidden sementara per instruksi backlog re-aktivasi
             },
         ],
     },
