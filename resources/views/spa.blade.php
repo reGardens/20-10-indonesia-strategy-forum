@@ -23,11 +23,16 @@
         window.__ISF_SESSION__ = @json($isfSessionPayload);
         (function() {
             try {
-                var layout = localStorage.getItem('isf_header_layout') || 'two-rows';
-                document.documentElement.setAttribute('data-isf-layout', layout);
+                var font = localStorage.getItem('isf_header_font') || 'montserrat';
+                document.documentElement.setAttribute('data-isf-font', font);
+                document.documentElement.setAttribute('data-isf-layout', 'row-3');
             } catch(e) {}
         })();
     </script>
+    <!-- Google Fonts for Typography Emulator (Roboto) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <!-- Preload Critical Fonts (Local Self-Hosted) -->
     <link rel="preload" as="font" type="font/woff2" crossorigin
         href="{{ asset('fonts/montserrat-latin.woff2') }}">

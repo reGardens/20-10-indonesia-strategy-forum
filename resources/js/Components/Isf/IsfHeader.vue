@@ -25,6 +25,7 @@ import {
 } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useIsfHeaderLayout } from "@/Composables/useIsfHeaderLayout";
+import { useIsfHeaderFont } from "@/Composables/useIsfHeaderFont";
 import { logout } from "@/api/services/isfSessionService";
 import { useIsfSession } from "@/Composables/useIsfSession";
 import IsfProfileMenu from "@/Components/Isf/IsfProfileMenu.vue";
@@ -110,45 +111,33 @@ const currentDateStr = computed(() => {
 const isScrolled = ref(false);
 let scrollTicking = false;
 
-// Layout-aware hysteresis thresholds:
-// For tall Row 2 (~250px): collapse at 110px, expand at 30px
-// For single-row Row 1 & Row 3 (~130-145px): collapse at 65px, expand at 20px
-const collapseThreshold = computed(() => {
-    return layout.value === "two-rows" ? 110 : 65;
-});
-const expandThreshold = computed(() => {
-    return layout.value === "two-rows" ? 30 : 20;
-});
+// Fixed Row 3 hysteresis thresholds (~130px): collapse at 65px, expand at 20px
+const collapseThreshold = 65;
+const expandThreshold = 20;
 
 function handleScroll() {
     if (typeof window === "undefined" || scrollTicking) return;
     scrollTicking = true;
     window.requestAnimationFrame(() => {
         const y = window.scrollY;
-        if (!isScrolled.value && y > collapseThreshold.value) {
+        if (!isScrolled.value && y > collapseThreshold) {
             isScrolled.value = true;
             menuOpen.value = false;
             searchOpen.value = false;
-        } else if (isScrolled.value && y <= expandThreshold.value) {
+        } else if (isScrolled.value && y <= expandThreshold) {
             isScrolled.value = false;
         }
         scrollTicking = false;
     });
 }
 
-// ─── Layout ──────────────────────────────────────────────────────────────────
+// ─── Layout (Permanently locked to Row 3) & Font Emulator ─────────────────────
 const { layout, setLayout } = useIsfHeaderLayout();
+const { currentFont, setFont, fontOptions } = useIsfHeaderFont();
 
 // ─── Header ref & dynamic spacer height ──────────────────────────────────────
 const headerRef = ref(null);
-
-function getInitialSpacerHeight(l) {
-    if (l === "two-rows") return 255;
-    if (l === "row-3") return 130;
-    return 145; // single-row
-}
-
-const spacerHeight = ref(getInitialSpacerHeight(layout.value));
+const spacerHeight = ref(130);
 
 function updateSpacerHeight() {
     // Only update when headerRef is present and NOT scrolled
@@ -270,21 +259,20 @@ onBeforeUnmount(() => {
     window.removeEventListener("resize", updateSpacerHeight);
 });
 
-watch(
-    () => layout.value,
-    (newLayout) => {
-        spacerHeight.value = getInitialSpacerHeight(newLayout);
-        if (!isScrolled.value) {
-            nextTick(updateSpacerHeight);
-        }
-    },
-);
-
 watch(() => route?.fullPath, () => {
     menuOpen.value = false;
 });
 
-defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
+defineExpose({
+    layout,
+    setLayout,
+    currentFont,
+    setFont,
+    fontOptions,
+    toggleSearch,
+    toggleMenu,
+    closeMenu,
+});
 </script>
 
 <template>
@@ -310,14 +298,16 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
     -->
     <header
         ref="headerRef"
-        class="isf-header fixed top-0 left-0 right-0 z-50 w-full bg-isf-navy text-white"
-        :class="{ 'isf-header--scrolled': isScrolled }"
+        :class="[
+            'isf-header fixed top-0 left-0 right-0 z-50 w-full bg-isf-navy text-white',
+            'isf-font-' + currentFont,
+            { 'isf-header--scrolled': isScrolled },
+        ]"
         style="overflow-anchor: none;"
     >
         <!-- ═══ MASTHEAD ════════════════════════════════════════════════════ -->
         <div
-            class="isf-masthead w-full flex items-center justify-between px-4 sm:px-6 md:px-8 xl:px-12"
-            :class="{ 'isf-masthead--row2': layout === 'two-rows', 'isf-masthead--row3': layout === 'row-3' }"
+            class="isf-masthead isf-masthead--row3 w-full flex items-center justify-between px-4 sm:px-6 md:px-8 xl:px-12"
         >
 
             <!-- Sisi Kiri -->
@@ -351,33 +341,11 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
 
                 <!--
                     NORMAL title (shown when not scrolled):
-                    Changes content based on layout prop — but no DOM swap on scroll
+                    Permanently locked to Row 3 layout: ISF | Indonesia Strategy Forum
                     opacity-1 → 0 when isScrolled via CSS class on <header>
                 -->
                 <div v-else class="isf-title isf-title--normal flex items-center justify-center select-none">
-                    <!-- Row 1: ISF (large) | Indonesia Strategy Forum (smaller, multiline) -->
                     <div
-                        v-if="layout === 'single-row'"
-                        class="inline-flex items-center justify-center gap-x-3.5 sm:gap-x-4 py-1"
-                    >
-                        <span class="text-[2.4rem] sm:text-[3rem] font-bold text-isf-red font-space-grotesk leading-none whitespace-nowrap shrink-0">ISF</span>
-                        <span aria-hidden="true" class="h-8 sm:h-9 w-px bg-white/20 shrink-0"></span>
-                        {{ " " }}
-                        <div class="flex flex-col items-start justify-center">
-                            <span
-                                class="text-left text-[17px] leading-[19px] tracking-[2px] font-bold text-white font-space-grotesk select-none shrink-0"
-                                style="width:156px; letter-spacing:2px"
-                            >Indonesia Strategy Forum</span>
-                            <span
-                                v-if="isMemberRoute"
-                                class="text-[9px] font-bold uppercase tracking-[0.16em] text-neutral-400 font-space-grotesk mt-0.5 select-none"
-                            >Portal Anggota</span>
-                        </div>
-                    </div>
-
-                    <!-- Row 3: ISF | Indonesia Strategy Forum — inline, same size (pada mobile sama persis dengan scrolled compact title) -->
-                    <div
-                        v-else-if="layout === 'row-3'"
                         class="inline-flex items-center justify-center gap-x-2.5 sm:gap-x-3 md:gap-x-3.5 xl:gap-x-4 py-0.5 sm:py-1 max-w-full select-none whitespace-nowrap"
                     >
                         <span class="text-[1.3rem] sm:text-[1.65rem] md:text-[2.1rem] xl:text-[2.6rem] font-bold text-isf-red font-space-grotesk leading-none shrink-0">ISF</span>
@@ -387,23 +355,6 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
                             class="text-[11px] sm:text-[1.65rem] md:text-[2.1rem] xl:text-[2.6rem] font-bold text-white font-space-grotesk leading-none uppercase sm:normal-case tracking-[1.5px] sm:tracking-[1px] md:tracking-[1.5px] xl:tracking-[2px] shrink-0"
                             style="letter-spacing:1.5px"
                         >Indonesia Strategy Forum</span>
-                    </div>
-
-                    <!-- Row 2 (default): ISF besar di atas, Indonesia Strategy Forum di bawah -->
-                    <div
-                        v-else
-                        class="flex flex-col items-center justify-center text-center py-1 sm:py-2"
-                    >
-                        <span class="text-[4.5rem] sm:text-[6rem] md:text-[8rem] font-anton text-isf-red uppercase leading-none whitespace-nowrap">ISF</span>
-                        {{ " " }}
-                        <span
-                            class="text-[14px] capitalize text-white font-space-grotesk font-medium text-center whitespace-nowrap -mt-1.5 tracking-[2px] leading-[27px]"
-                            style="letter-spacing:2px; line-height:27px"
-                        >Indonesia Strategy Forum</span>
-                        <span
-                            v-if="isMemberRoute"
-                            class="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400 font-space-grotesk mt-0.5 select-none"
-                        >Portal Anggota</span>
                     </div>
                 </div>
             </router-link>
@@ -506,7 +457,7 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
                         <a
                             href="/login"
                             :class="['hidden whitespace-nowrap font-space-grotesk text-[11px] md:text-[12px] font-bold uppercase tracking-[0.1em] rounded-md border border-white/30 px-2.5 py-1 text-white transition-all hover:border-isf-red hover:bg-isf-red hover:text-white sm:inline shadow-2xs', focusRing]"
-                        >Login</a>
+                        >Masuk</a>
                     </template>
 
                     <button
@@ -571,7 +522,7 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
                         <template v-else>
                             <router-link to="/anggota" :class="['font-space-grotesk text-[11px] font-bold uppercase tracking-[0.12em] hover:text-isf-red transition-colors', focusRing]">Portal Anggota</router-link>
                             <span class="text-neutral-500">|</span>
-                            <a href="/login" :class="['font-space-grotesk text-[11px] font-bold uppercase tracking-[0.12em] hover:text-isf-red transition-colors', focusRing]">Login</a>
+                            <a href="/login" :class="['font-space-grotesk text-[11px] font-bold uppercase tracking-[0.12em] hover:text-isf-red transition-colors', focusRing]">Masuk</a>
                         </template>
                     </div>
                 </div>
@@ -643,6 +594,22 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
 </template>
 
 <style scoped>
+/* ── Typography Emulator Variants ────────────────────────────────────────── */
+.isf-header.isf-font-montserrat,
+.isf-header.isf-font-montserrat :where(.font-space-grotesk, span, a, button, nav, p, input) {
+    font-family: 'Montserrat', sans-serif !important;
+}
+
+.isf-header.isf-font-arial,
+.isf-header.isf-font-arial :where(.font-space-grotesk, span, a, button, nav, p, input) {
+    font-family: Arial, 'Arial Rounded MT Bold', sans-serif !important;
+}
+
+.isf-header.isf-font-roboto,
+.isf-header.isf-font-roboto :where(.font-space-grotesk, span, a, button, nav, p, input) {
+    font-family: 'Roboto', sans-serif !important;
+}
+
 /* ── Masthead: padding collapses when scrolled ───────────────────────────── */
 .isf-masthead {
     transition: padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -650,14 +617,8 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
     padding-bottom: 0.875rem;
 }
 
-.isf-masthead--row2 {
-    padding-top: 1.5rem;
-    padding-bottom: 0.75rem;
-}
-
 /* When scrolled: minimal padding so the whole masthead collapses to ~40px */
-.isf-header--scrolled .isf-masthead,
-.isf-header--scrolled .isf-masthead--row2 {
+.isf-header--scrolled .isf-masthead {
     padding-top: 0.35rem;
     padding-bottom: 0.35rem;
 }
@@ -706,11 +667,6 @@ defineExpose({ layout, setLayout, toggleSearch, toggleMenu, closeMenu });
     overflow: hidden;
     transform: scale(1);
     transition: opacity 0.2s ease, max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s ease;
-}
-
-/* Row 2 needs larger max-height for the 8rem Anton font */
-.isf-masthead--row2 .isf-title--normal {
-    max-height: 180px;
 }
 
 /* Compact title: hidden by default */

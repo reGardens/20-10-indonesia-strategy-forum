@@ -3,6 +3,7 @@ import { createApp, h, nextTick } from "vue";
 import { createMemoryHistory, createRouter } from "vue-router";
 import IsfHeader from "../IsfHeader.vue";
 import { useIsfHeaderLayout } from "@/Composables/useIsfHeaderLayout";
+import { useIsfHeaderFont } from "@/Composables/useIsfHeaderFont";
 import appRouter from "@/router/index.js";
 
 let app;
@@ -39,13 +40,16 @@ afterEach(() => {
 });
 
 describe("IsfHeader", () => {
-    it("merender Row 2 secara default dengan Anton 8rem dan background dark navy", async () => {
+    it("merender format Row 3 secara permanen dengan wordmark inline dan background dark navy", async () => {
         const { root } = await renderHeader();
         const wordmark = root.querySelector(".isf-wordmark");
         expect(wordmark).not.toBeNull();
         expect(wordmark.textContent.replace(/\s+/g, " ").trim()).toBe(
             "ISF Indonesia Strategy Forum",
         );
+        expect(root.querySelector(".isf-masthead--row3")).not.toBeNull();
+        // Memastikan varian Row 2 (font Anton 8rem) sudah di-takeout
+        expect(root.querySelector(".font-anton")).toBeNull();
         expect(root.querySelector("header").classList.contains("w-full")).toBe(
             true,
         );
@@ -54,29 +58,65 @@ describe("IsfHeader", () => {
         );
     });
 
-    it("tidak memiliki switcher di dalam header, dan sinkron secara reaktif dengan useIsfHeaderLayout", async () => {
-        const { root } = await renderHeader();
-        // Switcher dipindahkan ke bawah sorotan di Beranda, tidak ada tombol switcher di header
-        const btnRow1 = root.querySelector('button[title*="Row 1"]');
-        expect(btnRow1).toBeNull();
+    it("mengunci layout secara permanen ke row-3 pada useIsfHeaderLayout", async () => {
+        await renderHeader();
+        const { layout, setLayout } = useIsfHeaderLayout();
 
-        const { setLayout } = useIsfHeaderLayout();
+        expect(layout.value).toBe("row-3");
+        expect(localStorage.getItem("isf_header_layout")).toBe("row-3");
 
-        // Switch to Row 1
+        // Memanggil setLayout varian lama tidak mengubah format (tetap terkunci row-3)
         setLayout("single-row");
         await nextTick();
-        expect(localStorage.getItem("isf_header_layout")).toBe("single-row");
-        expect(
-            root.querySelector(".isf-wordmark").textContent.replace(/\s+/g, " ").trim(),
-        ).toBe("ISF Indonesia Strategy Forum");
+        expect(layout.value).toBe("row-3");
+        expect(localStorage.getItem("isf_header_layout")).toBe("row-3");
 
-        // Switch to Row 2
         setLayout("two-rows");
         await nextTick();
-        expect(localStorage.getItem("isf_header_layout")).toBe("two-rows");
-        expect(
-            root.querySelector(".isf-wordmark").textContent.replace(/\s+/g, " ").trim(),
-        ).toBe("ISF Indonesia Strategy Forum");
+        expect(layout.value).toBe("row-3");
+        expect(localStorage.getItem("isf_header_layout")).toBe("row-3");
+    });
+
+    it("menggunakan teks wording bahasa Indonesia yang baku (Masuk, bukan Login)", async () => {
+        const { root } = await renderHeader();
+        const loginLinks = root.querySelectorAll('a[href="/login"]');
+        expect(loginLinks.length).toBeGreaterThan(0);
+        loginLinks.forEach((link) => {
+            expect(link.textContent.trim()).toBe("Masuk");
+        });
+    });
+
+    it("tidak memiliki tombol switcher/emulator di dalam header (editorial bersih)", async () => {
+        const { root } = await renderHeader();
+        expect(root.querySelector('[data-testid="header-font-selector"]')).toBeNull();
+        expect(root.querySelector('[data-testid="header-layout-switcher"]')).toBeNull();
+    });
+
+    it("header sinkron secara reaktif dengan useIsfHeaderFont (Montserrat, Arial, Roboto)", async () => {
+        const { root } = await renderHeader();
+        const headerEl = root.querySelector("header");
+        const { setFont } = useIsfHeaderFont();
+
+        // Default font: montserrat
+        expect(headerEl.classList.contains("isf-font-montserrat")).toBe(true);
+
+        // Switch ke Arial via composable
+        setFont("arial");
+        await nextTick();
+        expect(headerEl.classList.contains("isf-font-arial")).toBe(true);
+        expect(localStorage.getItem("isf_header_font")).toBe("arial");
+
+        // Switch ke Roboto via composable
+        setFont("roboto");
+        await nextTick();
+        expect(headerEl.classList.contains("isf-font-roboto")).toBe(true);
+        expect(localStorage.getItem("isf_header_font")).toBe("roboto");
+
+        // Switch kembali ke Montserrat
+        setFont("montserrat");
+        await nextTick();
+        expect(headerEl.classList.contains("isf-font-montserrat")).toBe(true);
+        expect(localStorage.getItem("isf_header_font")).toBe("montserrat");
     });
 
     it("memiliki kontrol aksesibilitas pencarian dan menu hamburger", async () => {

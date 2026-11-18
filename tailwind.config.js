@@ -31,6 +31,8 @@ export default {
                     "sans-serif",
                 ],
                 montserrat: ["Montserrat", "sans-serif"],
+                arial: ["Arial", "'Arial Rounded MT Bold'", "sans-serif"],
+                roboto: ["Roboto", "sans-serif"],
                 "space-grotesk": ["'Space Grotesk'", "sans-serif"],
                 anton: ["Anton", "sans-serif"],
                 // Tipografi editorial ISF (Gaya Monocle / Antiqua):
