@@ -1027,6 +1027,64 @@
                         </aside>
                     </div>
                 </main>
+            @elseif(request()->is('media-kit') || request()->is('advertise'))
+                @include('partials.isf-masthead')
+                {{-- Hero Header Media Kit (Navy) --}}
+                <div style="background-color: #0B1220; border-bottom: 1px solid #262626; padding: 2.5rem 1rem 3rem; color: #fff;">
+                    <div style="max-width: 1440px; margin: 0 auto; padding: 0 1rem;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 1.5rem;">
+                            <div class="isf-skel-el" style="width: 60px; height: 12px; background: rgba(255,255,255,0.15);"></div>
+                            <span style="color: rgba(255,255,255,0.3); font-size: 11px;">/</span>
+                            <div class="isf-skel-el" style="width: 110px; height: 12px; background: rgba(255,255,255,0.25);"></div>
+                        </div>
+                        <div style="max-width: 800px; display: flex; flex-direction: column; gap: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <span style="display: inline-block; width: 10px; height: 10px; background-color: #E10600; border-radius: 2px;"></span>
+                                <span style="font-family: monospace; font-size: 11px; font-weight: bold; color: #E10600; text-transform: uppercase; letter-spacing: 0.1em;">PANDUAN KEMITRAAN & MEDIA KIT ISF</span>
+                            </div>
+                            <div class="isf-skel-el" style="width: min(720px, 95%); height: 48px; background: rgba(255,255,255,0.2);"></div>
+                            <div class="isf-skel-el" style="width: min(580px, 85%); height: 20px; background: rgba(255,255,255,0.15);"></div>
+                            <div style="display: flex; gap: 12px; margin-top: 1rem;">
+                                <div class="isf-skel-el" style="width: 190px; height: 44px; background: #E10600;"></div>
+                                <div class="isf-skel-el" style="width: 150px; height: 44px; background: rgba(255,255,255,0.1);"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Content Skeleton --}}
+                <main class="isf-skel-article isf-skel-article--full isf-skel-pulse" aria-busy="true" aria-label="Memuat panduan kemitraan">
+                    <div class="isf-skel-stack">
+                        {{-- Section 1: Executive Metrics --}}
+                        <section class="isf-skel-frame isf-skel-frame--cream" style="padding: 24px;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                                @for ($i = 0; $i < 4; $i++)
+                                    <div style="border-left: 3px solid #E10600; padding-left: 16px;">
+                                        <div class="isf-skel-el" style="width: 90px; height: 36px; margin-bottom: 8px;"></div>
+                                        <div class="isf-skel-el" style="width: 120px; height: 16px; margin-bottom: 4px;"></div>
+                                        <div class="isf-skel-el" style="width: 80%; height: 12px;"></div>
+                                    </div>
+                                @endfor
+                            </div>
+                        </section>
+                        {{-- Section 2: Channels Grid --}}
+                        <section class="isf-skel-frame isf-skel-frame--accent">
+                            <div class="isf-skel-sechead"><div class="isf-skel-el" style="width: 220px; height: 24px;"></div></div>
+                            <div class="isf-skel-framebody" style="padding: 24px;">
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                                    @for ($i = 0; $i < 4; $i++)
+                                        <div style="border: 1px solid #e5e7eb; border-top: 3px solid #E10600; padding: 20px;">
+                                            <div class="isf-skel-el" style="width: 80px; height: 14px; margin-bottom: 12px;"></div>
+                                            <div class="isf-skel-el" style="width: 180px; height: 24px; margin-bottom: 12px;"></div>
+                                            <div class="isf-skel-el" style="height: 14px; margin-bottom: 6px;"></div>
+                                            <div class="isf-skel-el" style="width: 80%; height: 14px;"></div>
+                                        </div>
+                                    @endfor
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </main>
             @else
                 @include('partials.isf-masthead')
                 <main class="isf-skel-container isf-skel-container--full isf-skel-pulse" aria-busy="true" aria-label="Memuat beranda">

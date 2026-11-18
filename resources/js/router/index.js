@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { getBeranda, getAnggota, getInfografik, getTokoh, getMediaDetail, getArtikel, getInfografikDetail, getKategori, getPolitik, getSosok, getSosokDetail } from '@/api/services/isfPublicService'
+import { getBeranda, getAnggota, getInfografik, getTokoh, getMediaDetail, getArtikel, getInfografikDetail, getKategori, getPolitik, getSosok, getSosokDetail, getMediaKit } from '@/api/services/isfPublicService'
 
 const CmsLayout = () => import('../Pages/Cms/layouts/CmsLayout.vue')
 const InvitationLayout = () => import('../Pages/Landing/invitation/layouts/InvitationLayout.vue')
@@ -363,6 +363,22 @@ const routes = [
     ]
   },
   {
+    path: '/media-kit',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-media-kit',
+        component: () => import('../Pages/Isf/views/MediaKitView.vue'),
+        meta: { title: 'Iklan & Kemitraan Strategis · Media Kit · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
+    path: '/advertise',
+    redirect: '/media-kit'
+  },
+  {
     // Artikel per kategori: /artikel/{kategori} = daftar, /artikel/{kategori}/{slug} = detail.
     // Detail = child route, jadi menu navbar kategori tetap aktif (router-link-active).
     path: '/artikel/:kategori(politik|hukum|kebijakan|opini|opini-publik)',
@@ -521,6 +537,8 @@ router.beforeResolve((to) => {
       getSosok({ kategori: to.params.kategori })
     } else if ((to.name === 'isf-sosok-detail' || to.name === 'isf-sosok-detail-tab') && to.params.slug) {
       getSosokDetail(to.params.slug)
+    } else if (to.name === 'isf-media-kit' || to.path === '/media-kit' || to.path === '/advertise') {
+      getMediaKit()
     }
   } catch {}
 })

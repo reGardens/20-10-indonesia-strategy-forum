@@ -29,12 +29,17 @@ use App\Models\Isf\Letter;
 use App\Models\Isf\Survey;
 use App\Models\Isf\TokohReview;
 use App\Http\Requests\Isf\LetterSubmissionRequest;
+use App\Http\Requests\Isf\PartnershipProposalRequest;
+use App\Mail\PartnershipAutoReplyMail;
+use App\Models\Isf\PartnershipProposal;
 use App\Support\IsfRubrik;
 use App\Models\Isf\Setting;
 use App\Models\Isf\Tokoh;
 use App\Services\Isf\IsfCacheService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 /**
@@ -3277,6 +3282,209 @@ HTML;
             'tokohEksekutif' => $tokohEksekutif->map($cardMapper)->values()->all(),
             'tokohLegislatif' => $tokohLegislatif->map($cardMapper)->values()->all(),
         ]);
+    }
+
+    /**
+     * GET /api/isf/media-kit
+     *
+     * Halaman Publik Informasi Iklan & Kemitraan (Media Kit):
+     * - Pitch audiens (C-level, ASN, Akademisi, Praktisi Hukum)
+     * - Metrik & performa jangkauan
+     * - Format & kanal kemitraan (Display Banner, Advertorial, Event/Diskusi, Riset & Policy Brief)
+     * - FAQ kemitraan
+     * - Dukungan kustomisasi melalui Setting::get('media_kit')
+     */
+    public function mediaKit(?Request $request = null): JsonResponse
+    {
+        $cmsSettings = Setting::get('media_kit', []);
+
+        $pitch = $cmsSettings['pitch'] ?? [
+            'badge' => 'Informasi Iklan & Kemitraan',
+            'title' => 'Menghubungkan Gagasan, Kebijakan, dan Pengambil Keputusan Nasional',
+            'deck' => 'Indonesia Strategy Forum (ISF) adalah kanal referensi independen untuk para pembuat kebijakan, eksekutif puncak korporasi, akademisi, dan profesional hukum yang membentuk arah pembangunan Indonesia.',
+        ];
+
+        $audiens = $cmsSettings['audiens'] ?? [
+            'total_monthly_readers' => '150.000+',
+            'total_monthly_readers_label' => 'Pembaca Terverifikasi / Bulan',
+            'executive_share' => '45.000+',
+            'executive_share_label' => 'Eksekutif & C-Suite',
+            'retention_rate' => '85%',
+            'retention_rate_label' => 'Tingkat Retensi Pembaca',
+            'segments' => [
+                [
+                    'name' => 'C-Suite, Direksi & Pengambil Keputusan Bisnis',
+                    'percentage' => 34,
+                    'color' => '#E10600',
+                    'desc' => 'CEO, CFO, General Counsel, dan pimpinan korporasi swasta serta BUMN.',
+                ],
+                [
+                    'name' => 'ASN, Regulator & Pembuat Kebijakan Publik',
+                    'percentage' => 28,
+                    'color' => '#2563EB',
+                    'desc' => 'Pejabat kementerian, pimpinan komisi DPR/DPD, staf khusus, dan lembaga non-struktural.',
+                ],
+                [
+                    'name' => 'Akademisi, Peneliti & Analis Kebijakan',
+                    'percentage' => 22,
+                    'color' => '#059669',
+                    'desc' => 'Guru besar, peneliti think tank kebijakan, analis makroekonomi, dan pakar riset.',
+                ],
+                [
+                    'name' => 'Praktisi Hukum, Konsultan & Advokat',
+                    'percentage' => 16,
+                    'color' => '#D97706',
+                    'desc' => 'Managing partner law firm, konsultan kepatuhan regulasi, dan auditor independen.',
+                ],
+            ],
+        ];
+
+        $channels = $cmsSettings['channels'] ?? [
+            [
+                'id' => 'banner',
+                'title' => 'Display Banner & Slot Iklan Strategis',
+                'kicker' => 'VISIBILITAS TERTARGET',
+                'desc' => 'Penempatan visual terkurasi tanpa gangguan clutter: Banner Beranda, Billboard Rubrik Utama (Politik, Hukum, Kebijakan), dan In-Article Sidebar Banner.',
+                'highlights' => [
+                    '100% Brand-Safe Environment bebas sensasionalisme',
+                    'Slot terbatas untuk mempertahankan estetika editorial tinggi',
+                    'Pelaporan performa impresi dan interaksi berkala',
+                ],
+                'tag' => 'Display Banner',
+            ],
+            [
+                'id' => 'advertorial',
+                'title' => 'Advertorial & Analisis Kebijakan Khusus',
+                'kicker' => 'THOUGHT LEADERSHIP',
+                'desc' => 'Kajian komprehensif, wawancara kepemimpinan, dan laporan sektoral mendalam bertanda Transparansi Kemitraan dengan standar jurnalisme bermutu tinggi.',
+                'highlights' => [
+                    'Disusun bersama tim riset ISF dan pakar terkemuka',
+                    'Didistribusikan ke jejaring buletin eksekutif mingguan',
+                    'Kanalisasi opini di rubrik Opini Publik & Kebijakan',
+                ],
+                'tag' => 'Advertorial',
+            ],
+            [
+                'id' => 'event',
+                'title' => 'Event & Roundtable Diskusi Kebijakan',
+                'kicker' => 'DIALOG LANGSUNG',
+                'desc' => 'Penyelenggaraan roundtable tertutup (Chatham House Rule) atau seminar eksekutif yang mempertemukan regulator kementerian, pimpinan BUMN, dan asosiasi industri.',
+                'highlights' => [
+                    'Fasilitasi moderator Dewan Pakar ISF',
+                    'Peserta eksklusif setingkat pengambil keputusan',
+                    'Penyusunan naskah rekomendasi hasil diskusi',
+                ],
+                'tag' => 'Event & Forum',
+            ],
+            [
+                'id' => 'riset',
+                'title' => 'Sponsorship Riset & Policy Brief',
+                'kicker' => 'EVIDENCE-BASED POLICY',
+                'desc' => 'Kolaborasi penyusunan naskah ringkasan kebijakan (Policy Brief) dan visualisasi infografik data yang dapat diunduh oleh ribuan pembaca terdaftar.',
+                'highlights' => [
+                    'Penyematan identitas mitra resmi pada publikasi dokumen PDF',
+                    'Distribusi khusus ke jejaring lembaga negara dan universitas',
+                    'Hak diseminasi riset untuk pemangku kepentingan strategis',
+                ],
+                'tag' => 'Riset & Brief',
+            ],
+        ];
+
+        $workflow = [
+            [
+                'step' => '01',
+                'title' => 'Pengajuan Kemitraan (RFP)',
+                'desc' => 'Klien atau lembaga mengisi formulir Request for Proposal di bawah ini dengan melampirkan objektif dan jenis kemitraan yang diminati.',
+            ],
+            [
+                'step' => '02',
+                'title' => 'Konsultasi & Penyelarasan (1x24 Jam)',
+                'desc' => 'Tim Kemitraan ISF akan menghubungi PIC dalam 1x24 jam kerja untuk menyelaraskan kebutuhan, sudut pandang konten, dan target audiens.',
+            ],
+            [
+                'step' => '03',
+                'title' => 'Penyusunan Proposal Khusus',
+                'desc' => 'ISF menyusun proposal kerjasama yang disesuaikan secara terukur (tailor-made) mencakup jadwal publikasi, format materi, dan parameter keberhasilan.',
+            ],
+            [
+                'step' => '04',
+                'title' => 'Eksekusi & Laporan Dampak',
+                'desc' => 'Materi dipublikasikan atau event dijalankan sesuai standar editorial ISF, disertai laporan dampak distribusi kepada mitra.',
+            ],
+        ];
+
+        $faq = [
+            [
+                'q' => 'Mengapa ISF tidak menampilkan daftar harga (Rate Card) di website?',
+                'a' => 'ISF tidak menggunakan tarif baku satu harga karena setiap kolaborasi dirancang secara tailor-made berdasarkan format kampanye, kedalaman riset, dan tujuan strategis mitra. Pendekatan ini memastikan setiap investasi kemitraan memberikan dampak maksimal.',
+            ],
+            [
+                'q' => 'Berapa lama formulir RFP ditindaklanjuti?',
+                'a' => 'Tim Kemitraan ISF berkomitmen menghubungi Anda dalam kurun waktu 1x24 jam kerja setelah formulir dikirimkan.',
+            ],
+            [
+                'q' => 'Apakah instansi pemerintah, BUMN, dan asosiasi diperbolehkan bermitra?',
+                'a' => 'Ya, ISF bermitra aktif dengan kementerian, lembaga negara, BUMN, asosiasi industri, institusi akademik, dan korporasi swasta untuk diseminasi wawasan kebijakan yang bermanfaat bagi publik.',
+            ],
+            [
+                'q' => 'Bagaimana pedoman etika editorial untuk konten berbayar?',
+                'a' => 'ISF memegang teguh independensi editorial. Seluruh konten berbayar diberi penanda transparan seperti "Kemitraan Strategis" atau "Advertorial", dan wajib memenuhi standar akurasi serta bebas dari disinformasi.',
+            ],
+        ];
+
+        return response()->json([
+            'pitch' => $pitch,
+            'audiens' => $audiens,
+            'channels' => $channels,
+            'workflow' => $workflow,
+            'faq' => $faq,
+        ]);
+    }
+
+    /**
+     * POST /api/isf/media-kit/rfp
+     *
+     * Kirim formulir Request for Proposal (RFP) kemitraan publik:
+     * - Validasi field & visual captcha
+     * - Simpan ke isf_partnership_proposals
+     * - Kirim auto-reply email ke klien via queue
+     */
+    public function submitPartnershipProposal(PartnershipProposalRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+
+        $proposal = PartnershipProposal::create([
+            'institution_name' => $validated['institution_name'],
+            'pic_name' => $validated['pic_name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+            'partnership_type' => $validated['partnership_type'],
+            'message' => $validated['message'],
+            'status' => PartnershipProposal::STATUS_BARU,
+            'ip_address' => $request->ip(),
+            'user_agent' => mb_substr((string) $request->userAgent(), 0, 500),
+        ]);
+
+        // Kirim email auto-reply via queue (kegagalan email tidak menggagalkan response)
+        try {
+            Mail::to($proposal->email)->queue(new PartnershipAutoReplyMail($proposal));
+        } catch (\Throwable $e) {
+            Log::warning('Gagal mengantrekan email auto-reply kemitraan: ' . $e->getMessage());
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Permintaan kemitraan Anda berhasil dikirim. Tim Kemitraan ISF akan menghubungi Anda dalam kurun waktu 1x24 jam kerja.',
+            'data' => [
+                'id' => $proposal->id,
+                'institution_name' => $proposal->institution_name,
+                'pic_name' => $proposal->pic_name,
+                'partnership_type' => $proposal->partnership_type,
+                'partnership_type_label' => $proposal->partnership_type_label,
+                'status' => $proposal->status,
+                'created_at' => $proposal->created_at?->format('Y-m-d H:i:s'),
+            ],
+        ], 201);
     }
 
     private function notFound(string $message): JsonResponse

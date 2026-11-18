@@ -36,6 +36,8 @@ Route::get('/opini-publik', [SpaController::class, 'index'])->name('isf.opini-pu
 Route::get('/opini-publik/{subkategori}', [SpaController::class, 'index'])->whereIn('subkategori', ['op-ed', 'editorial', 'surat-pembaca', 'polling', 'kutipan'])->name('isf.opini-publik.subkategori');
 Route::get('/survei', [SpaController::class, 'index'])->name('isf.survei');
 Route::get('/survei/{slug}', [SpaController::class, 'index'])->name('isf.survei.show');
+Route::get('/media-kit', [SpaController::class, 'index'])->name('isf.media-kit');
+Route::redirect('/advertise', '/media-kit', 301);
 // Artikel per kategori: /artikel/{kategori} = daftar (mis. /artikel/ruu), /artikel/{kategori}/{slug} = detail.
 Route::get('/artikel/{kategori}', [SpaController::class, 'index'])->whereIn('kategori', IsfRubrik::keys())->name('isf.kategori');
 Route::get('/artikel/{kategori}/{slug}', [ArticlePageController::class, 'show'])->whereIn('kategori', IsfRubrik::keys())->name('isf.artikel.show');
@@ -119,6 +121,7 @@ Route::middleware('auth')->group(function () {
         'kutipan-publik' => 'kutipan_publik',
         'surat-pembaca' => 'surat_pembaca',
         'survei' => 'survei',
+        'kemitraan' => 'media_kit',
     ];
     foreach ($isfModules as $segment => $feature) {
         Route::middleware("feature:{$feature}")->prefix("cms/{$segment}")->group(function () use ($segment) {
@@ -127,6 +130,15 @@ Route::middleware('auth')->group(function () {
             Route::get('/{id}/edit', [IsfPageController::class, 'edit'])->defaults('module', $segment)->whereNumber('id')->name("cms.isf.{$segment}.edit");
         });
     }
+
+    Route::get('/cms/kemitraan/sections', [IsfPageController::class, 'kemitraanSections'])
+        ->middleware('feature:media_kit')->name('cms.isf.kemitraan.sections');
+    Route::get('/cms/kemitraan/sections/create', [IsfPageController::class, 'kemitraanSectionForm'])
+        ->middleware('feature:media_kit')->name('cms.isf.kemitraan.sections.create');
+    Route::get('/cms/kemitraan/sections/{id}/edit', [IsfPageController::class, 'kemitraanSectionForm'])
+        ->middleware('feature:media_kit')->name('cms.isf.kemitraan.sections.edit');
+    Route::get('/cms/kemitraan/sections/edit', [IsfPageController::class, 'kemitraanSectionForm'])
+        ->middleware('feature:media_kit')->name('cms.isf.kemitraan.sections.edit.generic');
 
     Route::get('/cms/email-briefing/{briefing}/preview', [BriefingPreviewController::class, 'cmsPreview'])
         ->middleware('feature:email_briefing')->whereNumber('briefing')->name('cms.isf.email-briefing.preview');

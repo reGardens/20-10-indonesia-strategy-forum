@@ -43,6 +43,13 @@ const currentYear = new Date().getFullYear();
                     </router-link>
                     <span class="text-neutral-700 select-none">|</span>
                     <router-link
+                        to="/media-kit"
+                        class="px-2 py-1 text-neutral-400 hover:text-white transition-colors"
+                    >
+                        Iklan &amp; Kemitraan
+                    </router-link>
+                    <span class="text-neutral-700 select-none">|</span>
+                    <router-link
                         to="/kontak"
                         class="px-2 py-1 text-neutral-400 hover:text-white transition-colors"
                     >
