@@ -15,23 +15,24 @@
         ->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->implode('') ?: 'A';
 @endphp
 <style>
-/* ── Initial SSR state synced with localStorage data-isf-layout ──────────── */
-#isf-ssr-row1, #isf-ssr-row3 { display: none !important; }
-#isf-ssr-row2 { display: flex !important; }
-#isf-ssr-spacer { height: 255px; }
-.isf-ssr-masthead { padding-top: 1.5rem; padding-bottom: 0.75rem; }
+/* ── Initial SSR state locked to Row 3 (Issue #70) ──────────── */
+#isf-ssr-row3 { display: inline-flex !important; }
+#isf-ssr-spacer { height: 130px; }
+.isf-ssr-masthead { padding-top: 0.875rem; padding-bottom: 0.875rem; }
 
-html[data-isf-layout="single-row"] #isf-ssr-row1 { display: inline-flex !important; }
-html[data-isf-layout="single-row"] #isf-ssr-row2 { display: none !important; }
-html[data-isf-layout="single-row"] #isf-ssr-row3 { display: none !important; }
-html[data-isf-layout="single-row"] #isf-ssr-spacer { height: 145px; }
-html[data-isf-layout="single-row"] .isf-ssr-masthead { padding-top: 0.875rem; padding-bottom: 0.875rem; }
-
-html[data-isf-layout="row-3"] #isf-ssr-row1 { display: none !important; }
-html[data-isf-layout="row-3"] #isf-ssr-row2 { display: none !important; }
-html[data-isf-layout="row-3"] #isf-ssr-row3 { display: inline-flex !important; }
-html[data-isf-layout="row-3"] #isf-ssr-spacer { height: 130px; }
-html[data-isf-layout="row-3"] .isf-ssr-masthead { padding-top: 0.875rem; padding-bottom: 0.875rem; }
+/* ── Typography Emulator SSR initial styles ─────────── */
+html[data-isf-font="montserrat"] .isf-initial-shell header,
+html[data-isf-font="montserrat"] .isf-initial-shell header * {
+    font-family: 'Montserrat', sans-serif !important;
+}
+html[data-isf-font="arial"] .isf-initial-shell header,
+html[data-isf-font="arial"] .isf-initial-shell header * {
+    font-family: Arial, 'Arial Rounded MT Bold', sans-serif !important;
+}
+html[data-isf-font="roboto"] .isf-initial-shell header,
+html[data-isf-font="roboto"] .isf-initial-shell header * {
+    font-family: 'Roboto', sans-serif !important;
+}
 
 /*
  * ── Satu sumber style header shell ─────────────────────────────────────────
@@ -96,34 +97,13 @@ html[data-isf-layout="row-3"] .isf-ssr-masthead { padding-top: 0.875rem; padding
                 </span>
             </div>
 
-            <!-- Tengah: Centered brand wordmark -->
+            <!-- Tengah: Centered brand wordmark (Row 3 Permanen) -->
             <a href="/beranda" class="isf-wordmark group mx-auto flex items-center justify-center min-w-0 text-center leading-none no-underline" style="display: flex; align-items: center; justify-content: center; text-decoration: none; line-height: 1;">
-                <!-- Opsi A: Row 1 (ISF di samping Indonesia Strategy Forum dengan garis divider halus) -->
-                <div id="isf-ssr-row1" class="inline-flex items-center justify-center gap-x-3.5 sm:gap-x-4 py-1" style="align-items: center; justify-content: center;">
-                    <span class="text-[2.4rem] sm:text-[3rem] font-bold text-isf-red font-space-grotesk leading-none whitespace-nowrap shrink-0" style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: #E10600; line-height: 1; user-select: none;">ISF</span>
-                    <span aria-hidden="true" class="h-8 sm:h-9 w-px bg-white/20 shrink-0" style="height: 34px; width: 1px; background-color: rgba(255, 255, 255, 0.2); flex-shrink: 0;"></span>
-                    <div class="flex flex-col items-start justify-center">
-                        <span class="text-left text-[17px] leading-[19px] tracking-[2px] font-bold text-white font-space-grotesk select-none shrink-0" style="font-family: 'Space Grotesk', sans-serif; font-size: 17px; line-height: 19px; letter-spacing: 2px; font-weight: 700; color: #ffffff; width: 156px; text-align: left; user-select: none;">Indonesia Strategy Forum</span>
-                        @if ($isfMember)
-                            <span class="text-[9px] font-bold uppercase tracking-[0.16em] text-neutral-400 font-space-grotesk mt-0.5 select-none">Portal Anggota</span>
-                        @endif
-                    </div>
-                </div>
-
-                <!-- Opsi C: Row 3 (ISF di samping Indonesia Strategy Forum inline seukuran ISF) -->
+                <!-- Row 3: ISF di samping Indonesia Strategy Forum inline seukuran ISF -->
                 <div id="isf-ssr-row3" class="inline-flex items-center justify-center gap-x-2.5 sm:gap-x-3 md:gap-x-3.5 xl:gap-x-4 py-0.5 sm:py-1 max-w-full select-none whitespace-nowrap" style="align-items: center; justify-content: center;">
                     <span class="text-[1.3rem] sm:text-[1.65rem] md:text-[2.1rem] xl:text-[2.6rem] font-bold text-isf-red font-space-grotesk leading-none shrink-0" style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: #E10600; line-height: 1; user-select: none;">ISF</span>
                     <span aria-hidden="true" class="h-3.5 sm:h-7 md:h-8 xl:h-9 w-px bg-white/25 sm:bg-white/20 shrink-0" style="width: 1px; background-color: rgba(255, 255, 255, 0.25); flex-shrink: 0;"></span>
                     <span class="text-[11px] sm:text-[1.65rem] md:text-[2.1rem] xl:text-[2.6rem] font-bold text-white font-space-grotesk leading-none uppercase sm:normal-case tracking-[1.5px] sm:tracking-[1px] md:tracking-[1.5px] xl:tracking-[2px] shrink-0" style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: #ffffff; line-height: 1; letter-spacing: 1.5px; white-space: nowrap; user-select: none;">Indonesia Strategy Forum</span>
-                </div>
-
-                <!-- Opsi B: Row 2 (ISF Anton 8rem di atas, Indonesia Strategy Forum di bawah) -->
-                <div id="isf-ssr-row2" class="flex flex-col items-center justify-center text-center py-1 sm:py-2" style="flex-direction: column; align-items: center; justify-content: center;">
-                    <span class="text-[4.5rem] sm:text-[6rem] md:text-[8rem] font-anton text-isf-red uppercase leading-none whitespace-nowrap" style="font-family: 'Anton', sans-serif; line-height: 1; color: #E10600; text-transform: uppercase; user-select: none;">ISF</span>
-                    <span class="text-[14px] capitalize text-white font-space-grotesk font-medium text-center whitespace-nowrap -mt-1.5 tracking-[2px] leading-[27px]" style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; text-transform: capitalize; color: #ffffff; font-weight: 500; margin-top: -6px; letter-spacing: 2px; line-height: 27px; white-space: nowrap; user-select: none;">Indonesia Strategy Forum</span>
-                    @if ($isfMember)
-                        <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400 font-space-grotesk mt-0.5 select-none">Portal Anggota</span>
-                    @endif
                 </div>
             </a>
 
@@ -199,7 +179,7 @@ html[data-isf-layout="row-3"] .isf-ssr-masthead { padding-top: 0.875rem; padding
                 {{-- = pemicu IsfProfileMenu (menu nama + Keluar dibuka oleh Vue) --}}
                 <button type="button" aria-haspopup="menu" aria-expanded="false" aria-label="Menu akun {{ $isfMemberName }}" title="{{ $isfMemberName }}" class="inline-flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xs bg-isf-red text-[11px] sm:text-xs font-bold text-white tracking-wider shadow-xs">{{ $isfMemberInitials }}</button>
                 @else
-                <a href="/login" class="isf-ssr-login whitespace-nowrap font-space-grotesk text-[11px] md:text-[12px] font-bold uppercase tracking-[0.1em] rounded-md border border-white/30 px-2.5 py-1 text-white sm:inline shadow-2xs" style="font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.3); padding: 4px 10px; color: #ffffff; text-decoration: none;">Login</a>
+                <a href="/login" class="isf-ssr-login whitespace-nowrap font-space-grotesk text-[11px] md:text-[12px] font-bold uppercase tracking-[0.1em] rounded-md border border-white/30 px-2.5 py-1 text-white sm:inline shadow-2xs" style="font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.3); padding: 4px 10px; color: #ffffff; text-decoration: none;">Masuk</a>
                 @endif
                 <button type="button" aria-label="Buka pencarian" class="inline-flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-md border border-white/10 text-white" style="display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.1); background: transparent; color: #ffffff; cursor: pointer;">
                     <svg class="h-4 w-4 sm:h-5 sm:w-5 shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true" focusable="false">
