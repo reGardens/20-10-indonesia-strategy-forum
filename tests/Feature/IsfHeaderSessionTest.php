@@ -47,7 +47,7 @@ class IsfHeaderSessionTest extends TestCase
     {
         $html = $this->get('/sosok/budi-santoso')->assertOk()->getContent();
 
-        $this->assertStringContainsString('>Login</a>', $html);
+        $this->assertStringContainsString('>Masuk</a>', $html);
         $this->assertStringNotContainsString('aria-label="Keluar"', $html);
     }
 
@@ -55,7 +55,7 @@ class IsfHeaderSessionTest extends TestCase
     {
         $html = $this->actingAs($this->makeUser())->get('/sosok/budi-santoso')->assertOk()->getContent();
 
-        $this->assertStringNotContainsString('>Login</a>', $html);
+        $this->assertStringNotContainsString('>Masuk</a>', $html);
         // Shell = pemicu menu profil (ikon avatar saja), nama & Keluar ada di dalam menu (Vue).
         $this->assertMatchesRegularExpression('#<button type="button" aria-haspopup="menu" aria-expanded="false" aria-label="Menu akun Rina Kartika"[^>]*>RK</button>#', $html);
         // Status login dikirim ke Vue sejak awal (tanpa menunggu /api/isf/me).
