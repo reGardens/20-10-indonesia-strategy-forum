@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\Isf\Cms\PolicySectorController;
 use App\Http\Controllers\Api\Isf\Cms\ReaderPollController;
 use App\Http\Controllers\Api\Isf\Cms\PublicQuoteController;
 use App\Http\Controllers\Api\Isf\Cms\LetterController;
+use App\Http\Controllers\Api\Isf\Cms\PartnershipProposalController;
 use App\Http\Controllers\Api\Isf\Cms\SurveyController;
 use App\Http\Controllers\Api\Isf\Cms\SettingController;
 use App\Http\Controllers\Api\Isf\Cms\TokohController;
@@ -82,6 +83,10 @@ Route::middleware(['web'])->prefix('isf')->group(function () {
     Route::post('/surat-pembaca', [PublicContentController::class, 'submitSuratPembaca'])->middleware('throttle:6,1')->name('api.isf.surat-pembaca.submit');
     Route::get('/survei', [PublicContentController::class, 'survei'])->name('api.isf.survei');
     Route::get('/survei/{slug}', [PublicContentController::class, 'surveiDetail'])->name('api.isf.survei.show');
+    Route::get('/media-kit', [PublicContentController::class, 'mediaKit'])->name('api.isf.media-kit');
+    Route::post('/media-kit/rfp', [PublicContentController::class, 'submitPartnershipProposal'])
+        ->middleware('throttle:6,1')
+        ->name('api.isf.media-kit.rfp');
     Route::get('/kategori/{kategori}', [PublicContentController::class, 'kategori'])->name('api.isf.kategori');
     Route::get('/infografik', [PublicContentController::class, 'infografik'])->name('api.isf.infografik');
     Route::get('/infografik/{slug}', [PublicContentController::class, 'infografikDetail'])->name('api.isf.infografik.show');
@@ -147,6 +152,18 @@ Route::middleware(['web', 'auth'])->prefix('cms')->name('api.cms.')->group(funct
         ->middleware('feature:surat_pembaca')->name('api.cms.surat-pembaca.reject');
     Route::apiResource('survei', SurveyController::class)
         ->parameters(['survei' => 'survei'])->middleware('feature:survei');
+    Route::get('/kemitraan/export', [PartnershipProposalController::class, 'export'])
+        ->middleware('feature:media_kit')->name('api.cms.kemitraan.export');
+    Route::get('/kemitraan-sections', [PartnershipProposalController::class, 'getSections'])
+        ->middleware('feature:media_kit')->name('api.cms.kemitraan.sections.get');
+    Route::put('/kemitraan-sections', [PartnershipProposalController::class, 'updateSections'])
+        ->middleware('feature:media_kit')->name('api.cms.kemitraan.sections.update');
+    Route::post('/kemitraan/{partnershipProposal}/contacted', [PartnershipProposalController::class, 'markContacted'])
+        ->middleware('feature:media_kit')->name('api.cms.kemitraan.contacted');
+    Route::post('/kemitraan/{partnershipProposal}/status', [PartnershipProposalController::class, 'updateStatus'])
+        ->middleware('feature:media_kit')->name('api.cms.kemitraan.status');
+    Route::apiResource('kemitraan', PartnershipProposalController::class)
+        ->parameters(['kemitraan' => 'partnershipProposal'])->middleware('feature:media_kit');
 
     Route::get('/pengaturan-halaman', [SettingController::class, 'show'])
         ->middleware('feature:pengaturan_halaman')->name('pengaturan-halaman.show');

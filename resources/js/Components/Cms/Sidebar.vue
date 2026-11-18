@@ -16,8 +16,28 @@ function hasRole(role) {
 
 function isActive(path) {
     if (!path) return false;
+    // Jika target menu memiliki query param khusus (mis. ?tab=pitch)
+    if (path.includes("?")) {
+        const [targetPath, targetQuery] = path.split("?");
+        const [currentPath, currentQuery] = page.url.split("?");
+        if (currentPath === targetPath || currentPath.startsWith(targetPath + "/")) {
+            const targetParams = new URLSearchParams(targetQuery);
+            const currentParams = new URLSearchParams(currentQuery || "");
+            const targetTab = targetParams.get("tab");
+            const currentTab = currentParams.get("tab") || "pitch";
+            return targetTab === currentTab;
+        }
+        return false;
+    }
     // Abaikan query/hash (mis. /cms/iklan?tab=popup) agar menu tetap aktif.
     const url = page.url.split(/[?#]/)[0];
+    if (path === "/cms/kemitraan") {
+        return (
+            url === "/cms/kemitraan" ||
+            url.startsWith("/cms/kemitraan/create") ||
+            /^\/cms\/kemitraan\/\d+/.test(url)
+        );
+    }
     return url === path || url.startsWith(path + "/");
 }
 
@@ -230,6 +250,44 @@ const menuGroups = computed(() => [
         ],
     },
     {
+        key: "kemitraan",
+        label: locale.value === "id" ? "Kemitraan" : "Partnership",
+        icon: "FileText",
+        collapsible: true,
+        items: [
+            {
+                label: "Permintaan Kemitraan (RFP)",
+                href: "/cms/kemitraan",
+                icon: "FileText",
+                visible: hasFeature("media_kit"),
+            },
+            {
+                label: "Pitch & Profil Audiens",
+                href: "/cms/kemitraan/sections?tab=pitch",
+                icon: "Article",
+                visible: hasFeature("media_kit"),
+            },
+            {
+                label: "Saluran Kemitraan",
+                href: "/cms/kemitraan/sections?tab=channels",
+                icon: "Slideshow",
+                visible: hasFeature("media_kit"),
+            },
+            {
+                label: "Alur Kerjasama",
+                href: "/cms/kemitraan/sections?tab=workflow",
+                icon: "ListNumbers",
+                visible: hasFeature("media_kit"),
+            },
+            {
+                label: "Tanya Jawab (FAQ)",
+                href: "/cms/kemitraan/sections?tab=faq",
+                icon: "Help",
+                visible: hasFeature("media_kit"),
+            },
+        ],
+    },
+    {
         key: "portal-anggota",
         label: locale.value === "id" ? "Portal Anggota" : "Member Portal",
         icon: "AlertTriangle",
@@ -253,7 +311,7 @@ const menuGroups = computed(() => [
         key: "akses-pengguna",
         label: locale.value === "id" ? "Akses & Pengguna" : "Access & Users",
         icon: "Shield",
-        collapsible: true,
+        collapsible: false,
         items: [
             {
                 label: locale.value === "id" ? "Kelola Peran" : "Manage Roles",

@@ -259,9 +259,17 @@ export function trackAdClick(id) {
   sendAdEvent(id, 'click')
 }
 
+export function getMediaKit() {
+  return get('/isf/media-kit')
+}
+
+export function submitPartnershipRfp(payload) {
+  return http.post('/isf/media-kit/rfp', payload).then((r) => r.data)
+}
+
 /** True when the error is an API "not found" (missing or unpublished content). */
 export function isNotFound(error) {
   return error?.response?.status === 404
 }
 
-export default { getBeranda, getTokoh, getAnggota, getInfografik, getMediaDetail, getArtikel, getInfografikDetail, getKategori, getPolitik, getPetaKursi, getHukum, getGlosariumHukum, getTimelineKasus, getKebijakanPublik, getPolicyBriefs, getMonitoringKebijakan, getOpiniPublik, getReaderPoll, voteReaderPoll, getKutipanPublik, getSuratPembaca, submitSuratPembaca, getSurvei, getSurveiDetail, getSosok, getSosokDetail, searchContent, getAds, trackAdImpression, trackAdClick, isNotFound }
+export default { getBeranda, getTokoh, getAnggota, getInfografik, getMediaDetail, getArtikel, getInfografikDetail, getKategori, getPolitik, getPetaKursi, getHukum, getGlosariumHukum, getTimelineKasus, getKebijakanPublik, getPolicyBriefs, getMonitoringKebijakan, getOpiniPublik, getReaderPoll, voteReaderPoll, getKutipanPublik, getSuratPembaca, submitSuratPembaca, getSurvei, getSurveiDetail, getSosok, getSosokDetail, searchContent, getAds, trackAdImpression, trackAdClick, getMediaKit, submitPartnershipRfp, isNotFound }

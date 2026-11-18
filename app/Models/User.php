@@ -35,6 +35,7 @@ class User extends Authenticatable
         'kutipan_publik',
         'surat_pembaca',
         'survei',
+        'media_kit',
     ];
 
     /**

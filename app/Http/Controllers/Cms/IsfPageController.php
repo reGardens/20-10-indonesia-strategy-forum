@@ -42,6 +42,7 @@ class IsfPageController extends Controller
         'kutipan-publik' => 'PublicQuote',
         'surat-pembaca' => 'Letter',
         'survei' => 'Survey',
+        'kemitraan' => 'PartnershipRfp',
     ];
 
     public function index(Request $request): Response
@@ -74,6 +75,16 @@ class IsfPageController extends Controller
     public function mediaSorotan(): Response
     {
         return Inertia::render('Cms/Isf/MediaSorotan/Index');
+    }
+
+    public function kemitraanSections(): Response
+    {
+        return Inertia::render('Cms/Isf/PartnershipRfp/Sections');
+    }
+
+    public function kemitraanSectionForm(Request $request): Response
+    {
+        return Inertia::render('Cms/Isf/PartnershipRfp/SectionForm');
     }
 
     /**
