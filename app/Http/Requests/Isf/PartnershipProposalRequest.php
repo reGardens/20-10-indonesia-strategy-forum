@@ -19,7 +19,9 @@ class PartnershipProposalRequest extends FormRequest
             'pic_name' => trim((string) ($this->input('pic_name') ?? $this->input('nama_pic') ?? $this->input('kontak'))),
             'email' => strtolower(trim((string) ($this->input('email') ?? $this->input('email_pic')))),
             'phone' => trim((string) ($this->input('phone') ?? $this->input('telepon') ?? $this->input('whatsapp'))),
-            'partnership_type' => strtolower(trim((string) ($this->input('partnership_type') ?? $this->input('jenis_kemitraan') ?? 'banner'))),
+            'partnership_type' => ($this->filled('partnership_type') || $this->filled('jenis_kemitraan'))
+                ? strtolower(trim((string) ($this->input('partnership_type') ?? $this->input('jenis_kemitraan'))))
+                : null,
             'message' => trim((string) ($this->input('message') ?? $this->input('pesan'))),
         ]);
     }

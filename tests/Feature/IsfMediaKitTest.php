@@ -6,6 +6,7 @@ use App\Mail\PartnershipAutoReplyMail;
 use App\Models\Isf\PartnershipProposal;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
@@ -80,7 +81,9 @@ class IsfMediaKitTest extends TestCase
         $captchaKey = $captchaRes->json('key');
 
         // Ambil plain code dari cache session / cache store
-        $cacheAnswer = cache()->get('isf_captcha_' . $captchaKey);
+        $cacheAnswer = Cache::get('captcha:' . $captchaKey)
+            ?? Cache::store('file')->get('captcha:' . $captchaKey)
+            ?? session('captcha:' . $captchaKey);
         $this->assertNotEmpty($cacheAnswer, 'Captcha answer must be cached.');
 
         $payload = [
