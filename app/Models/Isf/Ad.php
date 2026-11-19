@@ -45,6 +45,8 @@ class Ad extends Model
         'sort_order',
         'first_delay_seconds',
         'interval_minutes',
+        'is_skippable',
+        'skip_delay_seconds',
     ];
 
     protected $attributes = [
@@ -53,6 +55,8 @@ class Ad extends Model
         'sort_order' => 0,
         'impressions' => 0,
         'clicks' => 0,
+        'is_skippable' => true,
+        'skip_delay_seconds' => 10,
     ];
 
     protected function casts(): array
@@ -64,6 +68,8 @@ class Ad extends Model
             'sort_order' => 'integer',
             'first_delay_seconds' => 'integer',
             'interval_minutes' => 'integer',
+            'is_skippable' => 'boolean',
+            'skip_delay_seconds' => 'integer',
             'impressions' => 'integer',
             'clicks' => 'integer',
         ];
@@ -194,6 +200,8 @@ class Ad extends Model
             'targetUrl' => $this->target_url ?? '',
             'intervalMinutes' => $this->interval_minutes,
             'firstDelaySeconds' => $this->first_delay_seconds,
+            'isSkippable' => (bool) ($this->is_skippable ?? true),
+            'skipDelaySeconds' => $this->skip_delay_seconds !== null ? (int) $this->skip_delay_seconds : 10,
             'isActive' => true,
         ];
     }
@@ -228,6 +236,8 @@ class Ad extends Model
             'order' => (int) $this->sort_order,
             'first_delay_seconds' => $this->first_delay_seconds,
             'interval_minutes' => $this->interval_minutes,
+            'is_skippable' => (bool) ($this->is_skippable ?? true),
+            'skip_delay_seconds' => $this->skip_delay_seconds !== null ? (int) $this->skip_delay_seconds : 10,
             'impressions' => $impressions,
             'clicks' => $clicks,
             'ctr' => $impressions > 0 ? round($clicks / $impressions * 100, 2) : 0,

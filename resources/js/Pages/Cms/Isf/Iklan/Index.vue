@@ -657,6 +657,37 @@ onMounted(loadData);
                                     }}
                                 </Badge>
                                 <Badge
+                                    v-if="isVideo(item)"
+                                    variant="outline"
+                                    :class="[
+                                        'text-[10px] font-medium px-2 py-0.5 rounded-full inline-flex items-center gap-1',
+                                        item.is_skippable !== false
+                                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/30'
+                                            : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                                    ]"
+                                >
+                                    <IconComponent
+                                        :name="item.is_skippable !== false ? 'ArrowRight' : 'Lock'"
+                                        :size="10"
+                                        class="shrink-0"
+                                    />
+                                    <span>
+                                        {{ item.is_skippable !== false ? `Skip: ${item.skip_delay_seconds ?? 10}s` : 'Non-skippable' }}
+                                    </span>
+                                </Badge>
+                                <Badge
+                                    v-else-if="item.skip_delay_seconds > 0"
+                                    variant="outline"
+                                    class="text-[10px] font-medium px-2 py-0.5 rounded-full inline-flex items-center gap-1 bg-blue-500/10 text-blue-400 border-blue-500/30"
+                                >
+                                    <IconComponent
+                                        name="Clock"
+                                        :size="10"
+                                        class="shrink-0"
+                                    />
+                                    <span>Tutup: {{ item.skip_delay_seconds }}s</span>
+                                </Badge>
+                                <Badge
                                     variant="outline"
                                     :class="[
                                         'text-[10px] font-medium px-2 py-0.5 rounded-full inline-flex items-center gap-1 whitespace-normal text-left',

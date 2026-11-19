@@ -174,13 +174,15 @@ describe('ISF Ads Unit Tests (Issue #38)', () => {
             expect(closeBtn.textContent).not.toContain('Tutup Iklan');
         });
 
-        it('Kategori Popup Video dengan Durasi: merender countdown timer, video player, dan mengunci tombol tutup sebelum durasi video selesai', async () => {
+        it('Kategori Popup Video: merender video player, tombol hitung mundur skip YouTube-style, dan tidak auto-close', async () => {
             await renderComponent(IsfAdPopupModal, {
                 ad: {
                     type: 'video',
                     title: 'Video Teaser ISF Summit',
                     videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-                    videoDuration: 30,
+                    videoDuration: 60,
+                    isSkippable: true,
+                    skipDelaySeconds: 15,
                     status: 'terbit',
                     isActive: true,
                 },
@@ -196,14 +198,69 @@ describe('ISF Ads Unit Tests (Issue #38)', () => {
             const iframe = document.body.querySelector('[data-testid="ad-popup-youtube-video"]');
             expect(iframe).not.toBeNull();
 
-            // Terdapat countdown text yang menunjukkan durasi tersisa
-            const countdown = document.body.querySelector('[data-testid="video-countdown-text"]');
-            expect(countdown).not.toBeNull();
-            expect(countdown.textContent).toContain('30s');
+            // Hitung mundur skip YouTube-style muncul di pojok kanan bawah
+            const skipCountdown = document.body.querySelector('[data-testid="ad-popup-skip-countdown"]');
+            expect(skipCountdown).not.toBeNull();
+            expect(skipCountdown.textContent).toContain('Lewati iklan dalam');
+            expect(skipCountdown.textContent).toContain('15s');
 
-            // Selama video berjalan (durasi belum habis), tombol tutup manual tidak tersedia (mengunci perhatian pengunjung)
-            const manualClose = document.body.querySelector('[data-testid="ad-popup-manual-close"]');
-            expect(manualClose).toBeNull();
+            // Tombol skip aktif belum muncul selama countdown berjalan
+            expect(document.body.querySelector('[data-testid="ad-popup-skip-button"]')).toBeNull();
+
+            // Auto-close text lama ("Menutup otomatis dalam") dan progress bar sudah di-takeout
+            expect(document.body.querySelector('[data-testid="video-countdown-text"]')).toBeNull();
+        });
+
+        it('Kategori Popup Video: tombol Lewati Iklan muncul jika jeda skip 0 detik dan dapat ditutup', async () => {
+            let closed = false;
+            await renderComponent(IsfAdPopupModal, {
+                ad: {
+                    type: 'video',
+                    title: 'Webinar Kebijakan Publik',
+                    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                    videoDuration: 3600,
+                    isSkippable: true,
+                    skipDelaySeconds: 0,
+                    status: 'terbit',
+                    isActive: true,
+                },
+                forcePreview: true,
+                onClose: () => {
+                    closed = true;
+                },
+            });
+
+            // Tombol skip langsung aktif
+            const skipBtn = document.body.querySelector('[data-testid="ad-popup-skip-button"]');
+            expect(skipBtn).not.toBeNull();
+            expect(skipBtn.textContent).toContain('Lewati Iklan');
+
+            // Klik tombol skip menutup modal dan emit close
+            skipBtn.click();
+            expect(closed).toBe(true);
+        });
+
+        it('Kategori Popup Video Non-skippable: menampilkan badge non-skippable dan tidak menampilkan tombol skip', async () => {
+            await renderComponent(IsfAdPopupModal, {
+                ad: {
+                    type: 'video',
+                    title: 'Iklan Wajib Ditonton',
+                    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                    videoDuration: 30,
+                    isSkippable: false,
+                    status: 'terbit',
+                    isActive: true,
+                },
+                forcePreview: true,
+            });
+
+            const badge = document.body.querySelector('[data-testid="ad-popup-non-skippable-badge"]');
+            expect(badge).not.toBeNull();
+            expect(badge.textContent).toContain('Iklan tidak dapat dilewati');
+
+            // Tidak ada countdown skip maupun tombol skip
+            expect(document.body.querySelector('[data-testid="ad-popup-skip-countdown"]')).toBeNull();
+            expect(document.body.querySelector('[data-testid="ad-popup-skip-button"]')).toBeNull();
         });
 
         it('menyimpan flag sessionStorage setelah popup ditutup sehingga tidak muncul berulang', async () => {
@@ -228,6 +285,33 @@ describe('ISF Ads Unit Tests (Issue #38)', () => {
             closeBtn.click();
 
             expect(sessionStorage.getItem('isf_popup_ad_seen')).toBe('true');
+        });
+
+        it('Kategori Popup Banner: menampilkan hitung mundur jeda tutup sebelum tombol X aktif', async () => {
+            let closed = false;
+            await renderComponent(IsfAdPopupModal, {
+                ad: {
+                    type: 'banner',
+                    title: 'Banner Sponsor Berdurasi',
+                    imageUrl: 'https://example.com/banner.jpg',
+                    skipDelaySeconds: 5,
+                    status: 'terbit',
+                    isActive: true,
+                },
+                forcePreview: true,
+                onClose: () => {
+                    closed = true;
+                },
+            });
+
+            // Countdown jeda tutup muncul
+            const countdownEl = document.body.querySelector('[data-testid="ad-popup-banner-countdown"]');
+            expect(countdownEl).not.toBeNull();
+            expect(countdownEl.textContent).toContain('Dapat ditutup dalam');
+            expect(countdownEl.textContent).toContain('5s');
+
+            // Tombol X belum muncul
+            expect(document.body.querySelector('[data-testid="ad-popup-close-button-bottom"]')).toBeNull();
         });
     });
 
@@ -546,6 +630,46 @@ describe('ISF Ads Unit Tests (Issue #38)', () => {
                 active_hours_end: '02:00',
                 status: 'active',
             }));
+        });
+
+        it('Kategori Popup Video: menampilkan jeda skip saat skippable, dan memindahkan durasi video ke bawah saat non-skippable', async () => {
+            vi.spyOn(cmsResources.iklan, 'list').mockResolvedValue([]);
+            const { root, compInstance } = await renderComponent(CmsIklanForm, { id: null });
+            await new Promise((r) => setTimeout(r, 50));
+
+            await compInstance.handlePlacementChange('popup');
+            compInstance.form.type = 'video';
+            await nextTick();
+
+            // Default: skippable = true
+            expect(compInstance.form.is_skippable).toBe(true);
+            expect(root.querySelector('input#skip_delay_seconds')).not.toBeNull();
+            expect(root.querySelector('input#video_duration')).toBeNull();
+
+            // Ubah opsi menjadi non-skippable (Wajib ditonton)
+            const nonSkippableBtn = Array.from(root.querySelectorAll('button')).find((b) => b.textContent.includes('Wajib ditonton'));
+            expect(nonSkippableBtn).not.toBeNull();
+            nonSkippableBtn.click();
+            await nextTick();
+
+            expect(compInstance.form.is_skippable).toBe(false);
+            expect(root.querySelector('input#skip_delay_seconds')).toBeNull();
+            expect(root.querySelector('input#video_duration')).not.toBeNull();
+        });
+
+        it('Kategori Popup Banner: menampilkan input waktu jeda tombol tutup', async () => {
+            vi.spyOn(cmsResources.iklan, 'list').mockResolvedValue([]);
+            const { root, compInstance } = await renderComponent(CmsIklanForm, { id: null });
+            await new Promise((r) => setTimeout(r, 50));
+
+            await compInstance.handlePlacementChange('popup');
+            compInstance.setMediaType('banner');
+            await nextTick();
+
+            expect(compInstance.form.type).toBe('banner');
+            const bannerDelayInput = root.querySelector('input#banner_skip_delay');
+            expect(bannerDelayInput).not.toBeNull();
+            expect(compInstance.form.skip_delay_seconds).toBe(10);
         });
     });
 
