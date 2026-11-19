@@ -3,7 +3,10 @@
  * IsfAdPopupModal — Modal Popup Iklan Saat Akses Pertama.
  * Mendukung:
  * - Tipe A (Banner Statis): Gambar iklan dengan tombol close (X) di bagian bawah popup.
- * - Tipe B (Cuplikan Video 30 Detik): Video pendek yang otomatis tertutup (auto-close) saat durasi habis, disertai kontrol manual.
+ * - Tipe B (Cuplikan Video): Video (pendek maupun panjang/webinar) dengan tombol Skip gaya YouTube.
+ *   - Menghapus auto-close timer agar webinar/video panjang tidak tertutup mendadak.
+ *   - Tombol skip interaktif di pojok kanan bawah area video (countdown -> tombol "Lewati Iklan →").
+ *   - Opsi skippable vs non-skippable.
  * Mode mandiri (default): sessionStorage agar popup tidak muncul berulang di setiap refresh halaman.
  * Mode `controlled`: dibuka saat di-mount dan menutup dengan emit('close'); jadwal muncul ulang
  * diatur pemanggil (useIsfPopupQueue), tanpa flag "sudah dilihat".
@@ -34,8 +37,9 @@ const props = defineProps({
 const emit = defineEmits(['close', 'ad-click']);
 
 const isVisible = ref(false);
-const timeLeft = ref(30);
-let timerInterval = null;
+const skipTimeLeft = ref(30);
+let skipTimerInterval = null;
+let nonSkippableTimer = null;
 
 const adType = computed(() => props.ad?.type || 'banner'); // 'banner' (Tipe A) | 'video' (Tipe B)
 const title = computed(() => props.ad?.title || 'Pengumuman Mitra');
@@ -43,6 +47,25 @@ const imageUrl = computed(() => props.ad?.imageUrl || props.ad?.image_url || '')
 const videoUrl = computed(() => props.ad?.videoUrl || props.ad?.video_url || '');
 const targetUrl = computed(() => props.ad?.targetUrl || props.ad?.target_url || '');
 const isExternal = computed(() => /^https?:\/\//i.test(targetUrl.value));
+
+// Skip settings (Issue #72)
+const isSkippable = computed(() => {
+    const val = props.ad?.isSkippable ?? props.ad?.is_skippable;
+    return val !== undefined && val !== null ? Boolean(val) : true;
+});
+
+const skipDelaySeconds = computed(() => {
+    const raw = props.ad?.skipDelaySeconds ?? props.ad?.skip_delay_seconds;
+    if (raw === undefined || raw === null) {
+        return adType.value === 'video' ? 10 : 0;
+    }
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : (adType.value === 'video' ? 10 : 0);
+});
+
+const canSkip = computed(() => {
+    return isSkippable.value && skipTimeLeft.value <= 0;
+});
 
 const effectiveStorageKey = computed(() => {
     if (props.storageKey) return props.storageKey;
@@ -52,13 +75,6 @@ const effectiveStorageKey = computed(() => {
 const videoDuration = computed(() => {
     const d = Number(props.ad?.videoDuration ?? props.ad?.video_duration);
     return Number.isFinite(d) && d > 0 ? d : 30;
-});
-
-const progressPercent = computed(() => {
-    const total = videoDuration.value;
-    const remaining = timeLeft.value;
-    const elapsed = Math.max(0, total - remaining);
-    return Math.min(100, Math.round((elapsed / total) * 100));
 });
 
 // Ekstraksi ID video YouTube
@@ -94,27 +110,52 @@ const isDirectVideo = computed(() => {
 function openModal() {
     isVisible.value = true;
     if (adType.value === 'video') {
-        startVideoCountdown();
+        if (isSkippable.value) {
+            startSkipCountdown();
+        } else {
+            startNonSkippableTimer();
+        }
+    } else {
+        if (skipDelaySeconds.value > 0) {
+            startSkipCountdown();
+        } else {
+            skipTimeLeft.value = 0;
+        }
     }
 }
 
-function startVideoCountdown() {
-    clearInterval(timerInterval);
-    timeLeft.value = videoDuration.value;
-    timerInterval = setInterval(() => {
-        if (timeLeft.value > 1) {
-            timeLeft.value -= 1;
+function startSkipCountdown() {
+    clearInterval(skipTimerInterval);
+    skipTimeLeft.value = skipDelaySeconds.value;
+    if (skipTimeLeft.value <= 0) return;
+
+    skipTimerInterval = setInterval(() => {
+        if (skipTimeLeft.value > 1) {
+            skipTimeLeft.value -= 1;
         } else {
-            timeLeft.value = 0;
-            clearInterval(timerInterval);
-            closeModal();
+            skipTimeLeft.value = 0;
+            clearInterval(skipTimerInterval);
+            // CATATAN ISSUE #72: Tidak auto-close! Video tetap dapat ditonton sampai selesai,
+            // tombol berubah menjadi tombol aktif "Lewati Iklan →".
         }
     }, 1000);
 }
 
+function startNonSkippableTimer() {
+    clearTimeout(nonSkippableTimer);
+    if (videoDuration.value <= 0) {
+        closeModal();
+        return;
+    }
+    nonSkippableTimer = setTimeout(() => {
+        closeModal();
+    }, videoDuration.value * 1000);
+}
+
 function closeModal() {
     isVisible.value = false;
-    clearInterval(timerInterval);
+    clearInterval(skipTimerInterval);
+    clearTimeout(nonSkippableTimer);
     if (!props.forcePreview && !props.controlled) {
         try {
             sessionStorage.setItem(effectiveStorageKey.value, 'true');
@@ -131,8 +172,16 @@ function closeModal() {
 
 function handleBackdropClick(e) {
     if (e.target === e.currentTarget) {
-        // Iklan video baru hilang setelah durasi selesai (timeLeft <= 0)
-        if (adType.value === 'video' && timeLeft.value > 0 && !props.forcePreview) {
+        if (props.forcePreview) {
+            closeModal();
+            return;
+        }
+        // Jika video non-skippable, tidak bisa ditutup via backdrop
+        if (adType.value === 'video' && !isSkippable.value) {
+            return;
+        }
+        // Jika timer skip/tutup belum selesai, tidak bisa ditutup via backdrop
+        if (!canSkip.value) {
             return;
         }
         closeModal();
@@ -141,7 +190,14 @@ function handleBackdropClick(e) {
 
 function handleKeydown(e) {
     if (e.key === 'Escape' && isVisible.value) {
-        if (adType.value === 'video' && timeLeft.value > 0 && !props.forcePreview) {
+        if (props.forcePreview) {
+            closeModal();
+            return;
+        }
+        if (adType.value === 'video' && !isSkippable.value) {
+            return;
+        }
+        if (!canSkip.value) {
             return;
         }
         closeModal();
@@ -176,7 +232,8 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-    clearInterval(timerInterval);
+    clearInterval(skipTimerInterval);
+    clearTimeout(nonSkippableTimer);
     window.removeEventListener('keydown', handleKeydown);
 });
 
@@ -242,11 +299,24 @@ watch(() => props.forcePreview, (newVal) => {
                         </div>
                     </div>
 
-                    <!-- Tombol Close (X) di BAGIAN BAWAH popup tanpa wording, icon X lebih besar -->
+                    <!-- Tombol Close (X) di BAGIAN BAWAH popup dengan durasi jeda tutup -->
                     <div class="mt-4 flex justify-center">
+                        <!-- State A: Countdown berjalan (Belum bisa ditutup) -->
+                        <div
+                            v-if="!canSkip"
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900/90 border border-neutral-700/80 text-white/90 text-xs font-medium font-space-grotesk shadow-2xl backdrop-blur-md select-none animate-in fade-in duration-150"
+                            data-testid="ad-popup-banner-countdown"
+                        >
+                            <span class="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                            <span>Dapat ditutup dalam</span>
+                            <strong class="font-mono text-white font-bold">{{ skipTimeLeft }}s</strong>
+                        </div>
+
+                        <!-- State B: Tombol Tutup (✕) aktif setelah countdown habis -->
                         <button
+                            v-else
                             type="button"
-                            class="cursor-pointer group flex items-center justify-center w-11 h-11 rounded-full bg-neutral-900/90 hover:bg-neutral-800 text-white border border-neutral-600/80 shadow-2xl backdrop-blur-md transition-all hover:scale-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red"
+                            class="cursor-pointer group flex items-center justify-center w-11 h-11 rounded-full bg-neutral-900/90 hover:bg-neutral-800 text-white border border-neutral-600/80 shadow-2xl backdrop-blur-md transition-all hover:scale-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red animate-in fade-in zoom-in-95 duration-150"
                             data-testid="ad-popup-close-button-bottom"
                             aria-label="Tutup"
                             title="Tutup"
@@ -257,51 +327,27 @@ watch(() => props.forcePreview, (newVal) => {
                     </div>
                 </div>
 
-                <!-- TIPE B: CUPLIKAN VIDEO 30 DETIK -->
+                <!-- TIPE B: CUPLIKAN VIDEO DENGAN TOMBOL SKIP YOUTUBE-STYLE -->
                 <div
                     v-else
                     class="relative w-full max-w-2xl bg-neutral-900 rounded-xl border border-neutral-700/80 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
                     data-testid="ad-popup-video-content"
                 >
-                    <!-- Header dengan Countdown Timer & Durasi Video (Baru hilang saat durasi selesai) -->
+                    <!-- Header Modal Video -->
                     <div class="px-4 py-2.5 bg-neutral-950 border-b border-neutral-800 flex items-center justify-between text-xs text-neutral-300 font-space-grotesk">
                         <div class="flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-isf-red animate-ping" />
+                            <span class="w-2 h-2 rounded-full bg-isf-red animate-pulse" />
                             <span class="font-bold text-white uppercase tracking-wider text-[11px]">Iklan Video</span>
-                            <span class="text-neutral-500">•</span>
-                            <span class="text-neutral-400 text-[11px]" data-testid="video-countdown-text">
-                                Menutup otomatis dalam <strong class="text-white font-mono">{{ timeLeft }}s</strong>
-                            </span>
-                        </div>
-
-                        <!-- Status durasi: Baru hilang setelah durasi video selesai -->
-                        <div class="flex items-center gap-2">
-                            <span v-if="timeLeft > 0" class="text-[10px] text-neutral-400 bg-neutral-900 border border-neutral-800 px-2 py-0.5 rounded font-mono">
-                                Durasi {{ videoDuration }}s
-                            </span>
-                            <button
-                                v-else
-                                type="button"
-                                class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded bg-neutral-800 hover:bg-neutral-700 text-white text-[11px] font-bold transition-all border border-neutral-700"
-                                data-testid="ad-popup-manual-close"
-                                aria-label="Tutup iklan video"
-                                @click="closeModal"
-                            >
-                                <span>Tutup</span>
-                                <span class="text-neutral-400 font-normal">✕</span>
-                            </button>
+                            <template v-if="!isSkippable">
+                                <span class="text-neutral-500">•</span>
+                                <span class="text-amber-400 text-[11px] font-semibold" data-testid="video-non-skippable-info">
+                                    Wajib ditonton
+                                </span>
+                            </template>
                         </div>
                     </div>
 
-                    <!-- Progress Bar Countdown Timer -->
-                    <div class="w-full bg-neutral-800 h-1 overflow-hidden">
-                        <div
-                            class="bg-isf-red h-full transition-all duration-1000 ease-linear"
-                            :style="{ width: `${progressPercent}%` }"
-                        />
-                    </div>
-
-                    <!-- Video Container (16:9) -->
+                    <!-- Video Container (16:9) dengan YouTube-Style Skip Button -->
                     <div class="relative w-full aspect-video bg-black flex items-center justify-center overflow-hidden">
                         <!-- Direct Video (MP4 / WebM / File Upload) -->
                         <video
@@ -331,6 +377,48 @@ watch(() => props.forcePreview, (newVal) => {
                             <span class="text-3xl block mb-2">🎬</span>
                             <p class="text-sm font-space-grotesk">Cuplikan video sponsor belum disetel.</p>
                         </div>
+
+                        <!-- ═══ YOUTUBE-STYLE SKIP BUTTON OVERLAY (Pojok Kanan Bawah) ═══ -->
+                        <div
+                            v-if="isSkippable"
+                            class="absolute bottom-5 right-4 z-20 pointer-events-auto"
+                        >
+                            <!-- State A: Countdown (Belum bisa di-skip) -->
+                            <div
+                                v-if="!canSkip"
+                                class="select-none inline-flex items-center gap-2 px-3.5 py-1.5 rounded-sm bg-black/85 border border-white/20 text-white/95 text-xs font-medium font-space-grotesk shadow-xl backdrop-blur-md"
+                                data-testid="ad-popup-skip-countdown"
+                            >
+                                <span class="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                                <span>Lewati iklan dalam</span>
+                                <strong class="font-mono text-white font-bold">{{ skipTimeLeft }}s</strong>
+                            </div>
+
+                            <!-- State B: Tombol Aktif (Dapat di-skip) -->
+                            <button
+                                v-else
+                                type="button"
+                                class="cursor-pointer group inline-flex items-center gap-2 px-4 py-2 rounded-sm bg-neutral-900/95 hover:bg-black text-white text-xs font-bold font-space-grotesk border border-white/40 hover:border-white/80 shadow-2xl backdrop-blur-md transition-all active:scale-95"
+                                data-testid="ad-popup-skip-button"
+                                aria-label="Lewati Iklan"
+                                @click="closeModal"
+                            >
+                                <span>Lewati Iklan</span>
+                                <span class="text-sm font-bold text-isf-red group-hover:translate-x-0.5 transition-transform">→</span>
+                            </button>
+                        </div>
+
+                        <!-- Non-skippable Overlay Badge (Pojok Kanan Bawah) -->
+                        <div
+                            v-else
+                            class="absolute bottom-5 right-4 z-20 pointer-events-none select-none"
+                            data-testid="ad-popup-non-skippable-badge"
+                        >
+                            <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-black/85 border border-white/15 text-neutral-300 text-xs font-space-grotesk shadow-lg backdrop-blur-md">
+                                <span class="h-1.5 w-1.5 rounded-full bg-isf-red" />
+                                <span class="text-[11px] font-medium">Iklan tidak dapat dilewati</span>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Footer Info & Tautan Sponsor -->
@@ -356,14 +444,6 @@ watch(() => props.forcePreview, (newVal) => {
                                 <span>Kunjungi Sponsor</span>
                                 <span>&rarr;</span>
                             </a>
-                            <button
-                                v-if="timeLeft <= 0 || forcePreview"
-                                type="button"
-                                class="cursor-pointer px-3 py-1.5 rounded bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-semibold font-space-grotesk border border-neutral-700 transition-colors"
-                                @click="closeModal"
-                            >
-                                Tutup (✕)
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -371,4 +451,3 @@ watch(() => props.forcePreview, (newVal) => {
         </Transition>
     </Teleport>
 </template>
-

@@ -147,7 +147,7 @@ class AdController extends Controller
             'kicker' => ['nullable', 'string', 'max:100'],
             'image_url' => ['nullable', 'string', 'max:1000'],
             'video_url' => ['nullable', 'string', 'max:1000'],
-            'video_duration' => ['nullable', 'integer', 'min:5', 'max:300'],
+            'video_duration' => ['nullable', 'integer', 'min:5', 'max:86400'],
             'target_url' => ['nullable', 'string', 'max:1000'],
             'start_at' => ['nullable', 'date_format:Y-m-d H:i'],
             'end_at' => ['nullable', 'date_format:Y-m-d H:i', Rule::when($request->filled('start_at'), ['after:start_at'])],
@@ -158,6 +158,8 @@ class AdController extends Controller
             // Popup: jeda tampil pertama (detik) & tampil lagi (menit). Kosong = default 5 detik / 30 menit.
             'first_delay_seconds' => ['nullable', 'integer', 'min:0', 'max:3600'],
             'interval_minutes' => ['nullable', 'integer', 'min:0', 'max:1440'],
+            'is_skippable' => ['nullable', 'boolean'],
+            'skip_delay_seconds' => ['nullable', 'integer', 'min:0', 'max:3600'],
         ], [
             'end_at.after' => 'Waktu selesai harus setelah waktu mulai.',
             'active_hours_end.different' => 'Jam selesai tayang harus berbeda dengan jam mulai.',
@@ -183,6 +185,8 @@ class AdController extends Controller
             $status = Ad::STATUS_EXPIRED;
         }
 
+        $defaultSkipDelay = 10;
+
         $attributes = [
             'title' => $v['title'],
             'kicker' => ($v['kicker'] ?? null) ?: 'SPONSOR RESMI',
@@ -190,7 +194,7 @@ class AdController extends Controller
             'type' => $type,
             'image_url' => $isVideo ? null : ($v['image_url'] ?? null),
             'video_url' => $isVideo ? ($v['video_url'] ?? null) : null,
-            'video_duration' => $isVideo ? (int) ($v['video_duration'] ?? 30) : null,
+            'video_duration' => $isVideo ? (isset($v['video_duration']) && $v['video_duration'] !== '' && $v['video_duration'] !== null ? (int) $v['video_duration'] : null) : null,
             'target_url' => $v['target_url'] ?? '/register',
             'start_at' => $startAt,
             'end_at' => $endAt,
@@ -199,6 +203,8 @@ class AdController extends Controller
             'status' => $status,
             'first_delay_seconds' => $isPopup ? ($v['first_delay_seconds'] ?? null) : null,
             'interval_minutes' => $isPopup ? ($v['interval_minutes'] ?? null) : null,
+            'is_skippable' => $isPopup ? (isset($v['is_skippable']) ? (bool) $v['is_skippable'] : true) : true,
+            'skip_delay_seconds' => $isPopup ? (isset($v['skip_delay_seconds']) && $v['skip_delay_seconds'] !== null && $v['skip_delay_seconds'] !== '' ? (int) $v['skip_delay_seconds'] : $defaultSkipDelay) : $defaultSkipDelay,
         ];
 
         if (isset($v['order'])) {

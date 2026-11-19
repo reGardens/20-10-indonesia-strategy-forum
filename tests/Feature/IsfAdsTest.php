@@ -115,17 +115,21 @@ class IsfAdsTest extends TestCase
         $this->ad(['placement' => 'popup', 'title' => 'Dijeda', 'sort_order' => 0, 'status' => 'paused']);
         $video = $this->ad([
             'placement' => 'popup', 'type' => 'video', 'title' => 'Video', 'sort_order' => 3,
-            'image_url' => null, 'video_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'video_duration' => 20,
+            'image_url' => null, 'video_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'video_duration' => 3600,
+            'is_skippable' => false, 'skip_delay_seconds' => null,
         ]);
 
         $data = $this->getJson('/api/isf/ads?slot=popup')->assertOk()->json('data');
 
         $this->assertSame([$first->id, $second->id, $video->id], array_column($data, 'id'));
         $this->assertSame(3, $data[0]['firstDelaySeconds']);
+        $this->assertTrue($data[0]['isSkippable']);
+        $this->assertSame(10, $data[0]['skipDelaySeconds']);
         $this->assertNull($data[0]['intervalMinutes']);
         $this->assertSame(10, $data[1]['intervalMinutes']);
         $this->assertSame('video', $data[2]['type']);
-        $this->assertSame(20, $data[2]['videoDuration']);
+        $this->assertSame(3600, $data[2]['videoDuration']);
+        $this->assertFalse($data[2]['isSkippable']);
     }
 
     public function test_impression_and_click_are_counted_for_live_ads_only(): void
@@ -201,10 +205,13 @@ class IsfAdsTest extends TestCase
         $this->assertSame(1, $created['order']);
 
         $popup = $this->postJson('/api/cms/iklan', [
-            'title' => 'Popup', 'placement' => 'popup', 'type' => 'banner', 'image_url' => '/p.jpg', 'interval_minutes' => 15,
+            'title' => 'Popup Video', 'placement' => 'popup', 'type' => 'video', 'video_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'video_duration' => 1800, 'is_skippable' => true, 'skip_delay_seconds' => 10, 'interval_minutes' => 15,
         ])->assertCreated()->json('data');
         $this->assertSame(2, $popup['order']);
         $this->assertSame(15, $popup['interval_minutes']);
+        $this->assertTrue($popup['is_skippable']);
+        $this->assertSame(10, $popup['skip_delay_seconds']);
+        $this->assertSame(1800, $popup['video_duration']);
         $this->assertSame('live', $popup['display_state']);
 
         // Validasi jadwal & jam tayang
@@ -234,7 +241,7 @@ class IsfAdsTest extends TestCase
         $this->assertSame([$popup['id'], $created['id']], array_column($list, 'id'));
         $this->assertSame([1, 2], array_column($list, 'order'));
 
-        $this->getJson("/api/cms/iklan/{$popup['id']}")->assertOk()->assertJsonPath('data.title', 'Popup');
+        $this->getJson("/api/cms/iklan/{$popup['id']}")->assertOk()->assertJsonPath('data.title', 'Popup Video');
         $this->deleteJson("/api/cms/iklan/{$popup['id']}")->assertOk();
         $this->getJson("/api/cms/iklan/{$popup['id']}")->assertNotFound();
     }

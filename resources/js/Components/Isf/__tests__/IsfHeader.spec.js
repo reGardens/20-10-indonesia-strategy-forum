@@ -58,23 +58,24 @@ describe("IsfHeader", () => {
         );
     });
 
-    it("mengunci layout secara permanen ke row-3 pada useIsfHeaderLayout", async () => {
+    it("mengunci layout secara permanen ke row-3 pada useIsfHeaderLayout dan membersihkan isf_header_layout dari localStorage", async () => {
+        localStorage.setItem("isf_header_layout", "row-3");
         await renderHeader();
         const { layout, setLayout } = useIsfHeaderLayout();
 
         expect(layout.value).toBe("row-3");
-        expect(localStorage.getItem("isf_header_layout")).toBe("row-3");
+        expect(localStorage.getItem("isf_header_layout")).toBeNull();
 
-        // Memanggil setLayout varian lama tidak mengubah format (tetap terkunci row-3)
+        // Memanggil setLayout varian lama tidak mengubah format (tetap terkunci row-3) dan tidak menulis ke localStorage
         setLayout("single-row");
         await nextTick();
         expect(layout.value).toBe("row-3");
-        expect(localStorage.getItem("isf_header_layout")).toBe("row-3");
+        expect(localStorage.getItem("isf_header_layout")).toBeNull();
 
         setLayout("two-rows");
         await nextTick();
         expect(layout.value).toBe("row-3");
-        expect(localStorage.getItem("isf_header_layout")).toBe("row-3");
+        expect(localStorage.getItem("isf_header_layout")).toBeNull();
     });
 
     it("menggunakan teks wording bahasa Indonesia yang baku (Masuk, bukan Login)", async () => {
