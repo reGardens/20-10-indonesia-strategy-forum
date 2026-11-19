@@ -29,11 +29,11 @@
             } catch(e) {}
         })();
     </script>
-    <!-- Google Fonts for Typography Emulator (Roboto) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <!-- Preload Critical Fonts (Local Self-Hosted) -->
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="{{ asset('fonts/inter-latin.woff2') }}">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="{{ asset('fonts/newsreader-latin.woff2') }}">
     <link rel="preload" as="font" type="font/woff2" crossorigin
         href="{{ asset('fonts/montserrat-latin.woff2') }}">
     <link rel="preload" as="font" type="font/woff2" crossorigin
@@ -104,6 +104,14 @@
             src: url("{{ asset('fonts/newsreader-italic-latin.woff2') }}") format("woff2");
             font-weight: 200 800;
             font-style: italic;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: "Roboto";
+            src: url("{{ asset('fonts/roboto-latin.woff2') }}") format("woff2");
+            font-weight: 100 900;
+            font-style: normal;
             font-display: swap;
         }
 

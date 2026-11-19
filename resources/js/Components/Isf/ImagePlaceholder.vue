@@ -62,7 +62,7 @@ const ASPECTS = {
     portrait: "aspect-[3/4]",
     photo: "aspect-[3/2]",
     card: "aspect-[4/3]",
-    banner: "aspect-video lg:aspect-[21/9]",
+    banner: "aspect-[21/9]",
     reel: "aspect-[9/16]",
 };
 
