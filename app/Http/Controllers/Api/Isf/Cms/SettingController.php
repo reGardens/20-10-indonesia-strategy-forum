@@ -208,7 +208,27 @@ class SettingController extends Controller
             }));
         }
 
-        usort($items, fn ($a, $b) => ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0)));
+        $sort = (string) $request->input('sort', '');
+        if ($sort === 'latest' || $sort === 'published_at' || $sort === 'newest') {
+            usort($items, function ($a, $b) {
+                $timeA = strtotime($a['published_at'] ?? $a['publishedAt'] ?? '1970-01-01');
+                $timeB = strtotime($b['published_at'] ?? $b['publishedAt'] ?? '1970-01-01');
+                if ($timeA === $timeB) {
+                    return ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0));
+                }
+                return $timeB <=> $timeA;
+            });
+        } else {
+            usort($items, fn ($a, $b) => ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0)));
+        }
+
+        $items = array_map(function ($it) {
+            $pub = $it['publishedAt'] ?? ($it['published_at'] ?? date('Y-m-d'));
+            $it['publishedAt'] = $pub;
+            $it['published_at'] = $pub;
+            $it['to'] = '/media/' . ($it['id'] ?? 1);
+            return $it;
+        }, $items);
 
         return response()->json([
             'data' => $items,
@@ -228,6 +248,8 @@ class SettingController extends Controller
         if (!$item) {
             abort(404, 'Media sorotan tidak ditemukan.');
         }
+
+        $item['to'] = '/media/' . ($item['id'] ?? $id);
 
         return response()->json(['data' => $item]);
     }
@@ -277,6 +299,7 @@ class SettingController extends Controller
             'is_popular' => (bool) ($validated['is_popular'] ?? false),
             'duration' => $validated['duration'] ?? '',
             'label' => $validated['label'] ?? '',
+            'to' => '/media/' . $nextId,
         ];
 
         $mediaSorotan[] = $newItem;
@@ -331,6 +354,7 @@ class SettingController extends Controller
             // Field tidak dikirim → nilai lama dipertahankan; dikirim kosong → dikosongkan.
             'duration' => $request->has('duration') ? ($validated['duration'] ?? '') : ($mediaSorotan[$index]['duration'] ?? ''),
             'label' => $request->has('label') ? ($validated['label'] ?? '') : ($mediaSorotan[$index]['label'] ?? ''),
+            'to' => '/media/' . $id,
         ]);
 
         usort($mediaSorotan, fn ($a, $b) => ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0)));

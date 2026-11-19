@@ -132,4 +132,34 @@ class BerandaSectionsCmsTest extends TestCase
         $this->assertSame('Wawancara Eksklusif', $card['category']);
         $this->assertSame('1:02:30', $card['duration']);
     }
+
+    public function test_media_sorotan_latest_sorting_and_api(): void
+    {
+        $this->actingAs(User::create([
+            'name' => 'Admin Uji Berita', 'email' => 'uji-berita-' . uniqid() . '@example.test', 'password' => Hash::make('rahasia-123'),
+        ]));
+
+        $form = [
+            'imageUrl' => '', 'mediaUrl' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'category' => 'YouTube',
+            'publishedAt' => '2099-10-25', 'order' => 1, 'status' => 'terbit',
+            'author' => 'Tim Redaksi ISF', 'summary' => 'Deskripsi ulasan', 'content' => '', 'is_popular' => false,
+        ];
+
+        $created = $this->postJson('/api/cms/media-sorotan', $form + [
+            'title' => 'Sorotan Berita Terbaru 2099',
+        ])->assertCreated()->json('data');
+
+        $this->assertSame('Sorotan Berita Terbaru 2099', $created['title']);
+        $this->assertSame('/media/' . $created['id'], $created['to']);
+
+        // Check public API /api/isf/media-sorotan dan /api/isf/beranda
+        $publicMedia = $this->getJson('/api/isf/media-sorotan')->assertOk()->json('data');
+        $this->assertNotEmpty($publicMedia);
+        $first = $publicMedia[0];
+        $this->assertSame('Sorotan Berita Terbaru 2099', $first['title']);
+        $this->assertSame('/media/' . $created['id'], $first['to']);
+
+        $beranda = $this->getJson('/api/isf/beranda')->assertOk()->json();
+        $this->assertSame('/media/' . $created['id'], $beranda['mediaSorotan'][0]['to']);
+    }
 }

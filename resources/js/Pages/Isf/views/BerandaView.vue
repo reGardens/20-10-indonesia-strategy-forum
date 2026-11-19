@@ -142,9 +142,14 @@ const mediaSorotan = computed(() => {
 
     // LATEST: beberapa media terbaru (urut tanggal rilis), ditampilkan sebagai daftar kecil.
     return [...list]
-        .sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0))
+        .sort((a, b) => new Date(b.publishedAt || b.published_at || 0) - new Date(a.publishedAt || a.published_at || 0))
         .slice(0, 5);
 });
+
+function getMediaLink(item) {
+    if (!item) return '#';
+    return item.url || item.link || item.to || (item.id ? `/media/${item.id}` : '#');
+}
 
 function isVerticalMedia(category) {
     const cat = (category || "").toLowerCase();
@@ -359,14 +364,14 @@ const sectionPad = "px-3 lg:px-4 xl:px-[30px]";
                                 </p>
                                 <p
                                     v-if="
-                                        hero.author.name || hero.readingMinutes
+                                        hero.author?.name || hero.readingMinutes
                                     "
                                     class="isf-byline mt-3"
                                 >
-                                    <template v-if="hero.author.name"
+                                    <template v-if="hero.author?.name"
                                         >Oleh
                                         <strong>{{ hero.author.name }}</strong
-                                        ><template v-if="hero.author.role"
+                                        ><template v-if="hero.author?.role"
                                             >, {{ hero.author.role }}</template
                                         ></template
                                     ><template v-if="hero.readingMinutes">
@@ -455,9 +460,9 @@ const sectionPad = "px-3 lg:px-4 xl:px-[30px]";
                                         "
                                     >
                                         <!-- LATEST: baris kecil (= Daftar Putar Terkait di section Multimedia & Video) -->
-                                        <router-link
+                                        <IsfLink
                                             v-if="activeMediaTab === 'latest'"
-                                            :to="'/media/' + item.id"
+                                            :to="getMediaLink(item)"
                                             class="group flex items-start gap-3"
                                         >
                                             <div
@@ -481,7 +486,7 @@ const sectionPad = "px-3 lg:px-4 xl:px-[30px]";
                                                 <span
                                                     class="isf-kicker block text-isf-red"
                                                 >
-                                                    {{ item.category || (isVerticalMedia(item.category) ? 'TikTok' : 'YouTube') }}
+                                                    {{ item.badge || item.label || item.category || (isVerticalMedia(item.category) ? 'TikTok' : 'YouTube') }}
                                                 </span>
                                                 <h3
                                                     class="isf-headline mt-0.5 line-clamp-3 text-[15px] leading-[1.25] transition-colors group-hover:text-isf-red"
@@ -489,18 +494,18 @@ const sectionPad = "px-3 lg:px-4 xl:px-[30px]";
                                                     {{ item.title }}
                                                 </h3>
                                                 <time
-                                                    v-if="item.publishedAt"
-                                                    :datetime="item.publishedAt"
+                                                    v-if="item.publishedAt || item.published_at"
+                                                    :datetime="item.publishedAt || item.published_at"
                                                     class="isf-byline mt-1 block text-neutral-500"
                                                 >
-                                                    {{ formatDate(item.publishedAt) }}
+                                                    {{ formatDate(item.publishedAt || item.published_at) }}
                                                 </time>
                                             </div>
-                                        </router-link>
+                                        </IsfLink>
                                         <template v-else>
-                                        <!-- POPULAR: Thumbnail with Platform category badge & Link to Detail Embed Page (/media/:id) -->
-                                        <router-link
-                                            :to="'/media/' + item.id"
+                                        <!-- POPULAR: Thumbnail with Platform category badge & Link to Detail Embed Page (/media/:id) atau Custom URL -->
+                                        <IsfLink
+                                            :to="getMediaLink(item)"
                                             :class="[
                                                 // Vertikal & horizontal sama lebar (lebar kolom); vertikal tetap 9:16 agar thumbnail tampil utuh.
                                                 'group relative block w-full overflow-hidden rounded-xs',
@@ -524,28 +529,28 @@ const sectionPad = "px-3 lg:px-4 xl:px-[30px]";
                                             <span
                                                 class="absolute bottom-2 left-2 rounded bg-black/75 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-xs select-none pointer-events-none"
                                             >
-                                                {{ item.category || (isVerticalMedia(item.category) ? 'TikTok' : 'YouTube') }}
+                                                {{ item.badge || item.label || item.category || (isVerticalMedia(item.category) ? 'TikTok' : 'YouTube') }}
                                             </span>
-                                        </router-link>
+                                        </IsfLink>
 
                                         <div class="mt-2.5">
                                             <h3
                                                 class="isf-headline text-[17px] leading-[1.2] xl:text-[19px]"
                                             >
-                                                <router-link
-                                                    :to="'/media/' + item.id"
+                                                <IsfLink
+                                                    :to="getMediaLink(item)"
                                                     class="hover:text-isf-red transition-colors"
                                                 >
                                                     {{ item.title }}
-                                                </router-link>
+                                                </IsfLink>
                                             </h3>
                                             <time
-                                                v-if="item.publishedAt"
-                                                :datetime="item.publishedAt"
+                                                v-if="item.publishedAt || item.published_at"
+                                                :datetime="item.publishedAt || item.published_at"
                                                 class="isf-byline mt-1.5 block text-neutral-500"
                                             >
                                                 {{
-                                                    formatDate(item.publishedAt)
+                                                    formatDate(item.publishedAt || item.published_at)
                                                 }}
                                             </time>
                                         </div>

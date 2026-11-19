@@ -103,6 +103,7 @@ onMounted(async () => {
           v-if="isEdit && props.id"
           :href="`/media/${props.id}`"
           target="_blank"
+          rel="noopener noreferrer"
           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border border-border bg-card hover:bg-muted text-foreground transition shadow-2xs mr-1"
         >
           <IconComponent name="Eye" :size="14" />
