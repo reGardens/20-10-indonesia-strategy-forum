@@ -208,7 +208,27 @@ class SettingController extends Controller
             }));
         }
 
-        usort($items, fn ($a, $b) => ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0)));
+        $sort = (string) $request->input('sort', '');
+        if ($sort === 'latest' || $sort === 'published_at' || $sort === 'newest') {
+            usort($items, function ($a, $b) {
+                $timeA = strtotime($a['published_at'] ?? $a['publishedAt'] ?? '1970-01-01');
+                $timeB = strtotime($b['published_at'] ?? $b['publishedAt'] ?? '1970-01-01');
+                if ($timeA === $timeB) {
+                    return ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0));
+                }
+                return $timeB <=> $timeA;
+            });
+        } else {
+            usort($items, fn ($a, $b) => ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0)));
+        }
+
+        $items = array_map(function ($it) {
+            $pub = $it['publishedAt'] ?? ($it['published_at'] ?? date('Y-m-d'));
+            $it['publishedAt'] = $pub;
+            $it['published_at'] = $pub;
+            $it['to'] = '/media/' . ($it['id'] ?? 1);
+            return $it;
+        }, $items);
 
         return response()->json([
             'data' => $items,

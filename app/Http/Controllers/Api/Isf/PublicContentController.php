@@ -144,7 +144,21 @@ class PublicContentController extends Controller
             if (empty($activeMedia)) {
                 $activeMedia = $this->defaultMediaItems();
             }
-            usort($activeMedia, fn($a, $b) => ($a['order'] ?? 0) <=> ($b['order'] ?? 0));
+            usort($activeMedia, function ($a, $b) {
+                $timeA = strtotime($a['published_at'] ?? ($a['publishedAt'] ?? '1970-01-01'));
+                $timeB = strtotime($b['published_at'] ?? ($b['publishedAt'] ?? '1970-01-01'));
+                if ($timeA === $timeB) {
+                    return ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0));
+                }
+                return $timeB <=> $timeA;
+            });
+            $activeMedia = array_map(function ($it) {
+                $pub = $it['publishedAt'] ?? ($it['published_at'] ?? date('Y-m-d'));
+                $it['publishedAt'] = $pub;
+                $it['published_at'] = $pub;
+                $it['to'] = '/media/' . ($it['id'] ?? 1);
+                return $it;
+            }, $activeMedia);
 
             $hotNews = $settings['hotNews'] ?? null;
             $activeHotNews = is_array($hotNews)
@@ -430,6 +444,43 @@ class PublicContentController extends Controller
             'data' => $item,
             'related' => $related,
             'recentArticles' => $recentArticlesFormatted,
+        ]);
+    }
+
+    /**
+     * GET /api/isf/media-sorotan
+     * Menyajikan daftar item sorotan terurut berdasarkan berita terbaru (published_at desc) dengan status terbit.
+     */
+    public function mediaSorotan(Request $request): JsonResponse
+    {
+        $settings = Setting::get('beranda', []);
+        $mediaSorotan = $settings['mediaSorotan'] ?? [];
+        $activeMedia = array_values(array_filter($mediaSorotan, fn($item) => ($item['status'] ?? 'terbit') === 'terbit'));
+
+        if (empty($activeMedia)) {
+            $activeMedia = $this->defaultMediaItems();
+        }
+
+        usort($activeMedia, function ($a, $b) {
+            $timeA = strtotime($a['published_at'] ?? ($a['publishedAt'] ?? '1970-01-01'));
+            $timeB = strtotime($b['published_at'] ?? ($b['publishedAt'] ?? '1970-01-01'));
+            if ($timeA === $timeB) {
+                return ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0));
+            }
+            return $timeB <=> $timeA;
+        });
+
+        $activeMedia = array_map(function ($it) {
+            $pub = $it['publishedAt'] ?? ($it['published_at'] ?? date('Y-m-d'));
+            $it['publishedAt'] = $pub;
+            $it['published_at'] = $pub;
+            $it['to'] = '/media/' . ($it['id'] ?? 1);
+            return $it;
+        }, $activeMedia);
+
+        return response()->json([
+            'data' => $activeMedia,
+            'total' => count($activeMedia),
         ]);
     }
 

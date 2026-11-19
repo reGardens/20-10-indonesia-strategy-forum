@@ -168,4 +168,38 @@ describe("IsfFullLayerSections", () => {
         expect(root.textContent).toContain("Eksklusif: Wawancara Khusus Menkeu Terkait Reformasi Pajak");
         expect(root.textContent).toContain("25:30");
     });
+
+    it("renders mediaSorotan items with standard /media/:id links", async () => {
+        const customMedia = [
+            {
+                id: 10,
+                title: "Sorotan Headline Kustom",
+                summary: "Ulasan mendalam target link",
+                category: "YouTube",
+                duration: "15:00",
+                author: "Tim Riset",
+                publishedAt: "2026-11-18",
+                to: "/media/10",
+            },
+            {
+                id: 11,
+                title: "Video Kedua Eksternal",
+                category: "TikTok",
+                duration: "03:00",
+                author: "Tim Riset",
+                publishedAt: "2026-11-17",
+                to: "/media/11",
+            },
+        ];
+
+        const { root } = await renderSections({
+            sections: {},
+            mediaSorotan: customMedia,
+        });
+
+        const links = root.querySelectorAll(".isf-full-layer-section--video a");
+        const hrefs = Array.from(links).map((l) => l.getAttribute("href"));
+        expect(hrefs).toContain("/media/10");
+        expect(hrefs).toContain("/media/11");
+    });
 });

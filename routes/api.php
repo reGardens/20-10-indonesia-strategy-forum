@@ -66,6 +66,7 @@ Route::middleware(['web'])->prefix('isf')->group(function () {
         ->middleware(['auth', 'throttle:10,1'])
         ->name('api.isf.sosok.ulasan.store');
     Route::get('/media/{id}', [PublicContentController::class, 'mediaDetail'])->name('api.isf.media');
+    Route::get('/media-sorotan', [PublicContentController::class, 'mediaSorotan'])->name('api.isf.media-sorotan');
     Route::get('/artikel/{slug}', [PublicContentController::class, 'artikel'])->name('api.isf.artikel');
     Route::get('/politik', [PublicContentController::class, 'politik'])->name('api.isf.politik');
     Route::get('/peta-kursi', [PublicContentController::class, 'petaKursi'])->name('api.isf.peta-kursi');

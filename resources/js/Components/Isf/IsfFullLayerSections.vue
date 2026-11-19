@@ -228,16 +228,17 @@ const videoData = computed(() => {
                   summary:
                       props.mediaSorotan[0].summary ||
                       "Kajian mendalam pakar regulator dan praktisi terkait kepatuhan tata kelola.",
-                  category: props.mediaSorotan[0].category || "Diskusi Panel",
-                  duration: "18:45",
+                  category: props.mediaSorotan[0].badge || props.mediaSorotan[0].label || props.mediaSorotan[0].category || "Diskusi Panel",
+                  duration: props.mediaSorotan[0].duration || "18:45",
                   author: props.mediaSorotan[0].author || "Dewan Pakar ISF",
                   publishedAt:
                       props.mediaSorotan[0].publishedAt ||
+                      props.mediaSorotan[0].published_at ||
                       new Date().toISOString(),
                   imageUrl:
                       props.mediaSorotan[0].imageUrl ||
                       "https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=1200&auto=format&fit=crop",
-                  to: `/media/${props.mediaSorotan[0].id}`,
+                  to: props.mediaSorotan[0].url || props.mediaSorotan[0].link || props.mediaSorotan[0].to || `/media/${props.mediaSorotan[0].id}`,
               }
             : {
                   id: 1,
@@ -259,14 +260,14 @@ const videoData = computed(() => {
           ? props.mediaSorotan.slice(1, 4).map((m, idx) => ({
                 id: m.id,
                 title: m.title,
-                category: m.category || "Video Analisis",
-                duration: idx === 0 ? "08:20" : idx === 1 ? "12:15" : "05:40",
+                category: m.badge || m.label || m.category || "Video Analisis",
+                duration: m.duration || (idx === 0 ? "08:20" : idx === 1 ? "12:15" : "05:40"),
                 author: m.author || "Redaksi ISF",
-                publishedAt: m.publishedAt || new Date().toISOString(),
+                publishedAt: m.publishedAt || m.published_at || new Date().toISOString(),
                 imageUrl:
                     m.imageUrl ||
                     "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=600&auto=format&fit=crop",
-                to: `/media/${m.id}`,
+                to: m.url || m.link || m.to || `/media/${m.id}`,
             }))
           : [
                 {
