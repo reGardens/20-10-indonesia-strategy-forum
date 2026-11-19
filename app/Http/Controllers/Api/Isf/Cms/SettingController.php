@@ -249,6 +249,8 @@ class SettingController extends Controller
             abort(404, 'Media sorotan tidak ditemukan.');
         }
 
+        $item['to'] = '/media/' . ($item['id'] ?? $id);
+
         return response()->json(['data' => $item]);
     }
 
@@ -297,6 +299,7 @@ class SettingController extends Controller
             'is_popular' => (bool) ($validated['is_popular'] ?? false),
             'duration' => $validated['duration'] ?? '',
             'label' => $validated['label'] ?? '',
+            'to' => '/media/' . $nextId,
         ];
 
         $mediaSorotan[] = $newItem;
@@ -351,6 +354,7 @@ class SettingController extends Controller
             // Field tidak dikirim → nilai lama dipertahankan; dikirim kosong → dikosongkan.
             'duration' => $request->has('duration') ? ($validated['duration'] ?? '') : ($mediaSorotan[$index]['duration'] ?? ''),
             'label' => $request->has('label') ? ($validated['label'] ?? '') : ($mediaSorotan[$index]['label'] ?? ''),
+            'to' => '/media/' . $id,
         ]);
 
         usort($mediaSorotan, fn ($a, $b) => ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0)));
