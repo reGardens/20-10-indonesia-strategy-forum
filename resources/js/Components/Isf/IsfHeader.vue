@@ -404,9 +404,9 @@ defineExpose({
                     </button>
                 </div>
 
-                <!-- Nav links (tengah) -->
-                <nav aria-label="Navigasi utama" class="isf-no-scrollbar min-w-0 flex-1 overflow-x-auto overflow-y-hidden px-2 lg:overflow-visible flex items-center justify-center">
-                    <ul class="flex items-center gap-x-4 sm:gap-x-5 xl:gap-x-6 py-1 font-space-grotesk text-[12px] sm:text-[13px] font-semibold xl:text-[14px] whitespace-nowrap">
+                <!-- Nav links (tengah) - Scrollable start-aligned di mobile agar lengkap, terpusat di desktop -->
+                <nav aria-label="Navigasi utama" class="isf-no-scrollbar min-w-0 flex-1 overflow-x-auto overflow-y-hidden px-1 sm:px-2 flex items-center justify-start lg:justify-center scroll-smooth overscroll-x-contain">
+                    <ul class="flex items-center gap-x-3 sm:gap-x-5 xl:gap-x-6 py-1 font-space-grotesk text-[12px] sm:text-[13px] font-semibold xl:text-[14px] whitespace-nowrap">
                         <template v-for="(group, groupIndex) in NAV_GROUPS" :key="groupIndex">
                             <li v-if="groupIndex > 0 && group.length > 0" aria-hidden="true" class="mx-1 h-3.5 w-px bg-neutral-700 shrink-0"></li>
                             <li v-for="link in group" :key="link.label" class="shrink-0">

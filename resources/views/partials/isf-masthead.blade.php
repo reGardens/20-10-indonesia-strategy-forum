@@ -140,9 +140,9 @@ html[data-isf-font="roboto"] .isf-initial-shell header * {
                 </button>
             </div>
 
-            <!-- Kelompok 2: Nav Menu Links (tengah terpusat, dengan jarak natural) -->
-            <nav aria-label="Navigasi utama" class="isf-no-scrollbar min-w-0 flex-1 overflow-x-auto overflow-y-hidden px-2 lg:overflow-visible flex items-center justify-center" style="display: flex; align-items: center; justify-content: center; flex: 1 1 0%; min-width: 0; padding: 0 0.5rem;">
-                <ul class="flex items-center gap-x-4 sm:gap-x-5 xl:gap-x-6 py-1 font-space-grotesk text-[12px] sm:text-[13px] font-semibold xl:text-[14px] whitespace-nowrap" style="display: flex; align-items: center; padding: 0.25rem 0; margin: 0; list-style: none; font-family: 'Space Grotesk', sans-serif; font-weight: 600; white-space: nowrap; color: #d4d4d4;">
+            <!-- Kelompok 2: Nav Menu Links (scrollable start di mobile, terpusat di desktop) -->
+            <nav aria-label="Navigasi utama" class="isf-no-scrollbar min-w-0 flex-1 overflow-x-auto overflow-y-hidden px-1 sm:px-2 flex items-center justify-start lg:justify-center" style="display: flex; align-items: center; justify-content: flex-start; flex: 1 1 0%; min-width: 0; padding: 0 0.25rem;">
+                <ul class="flex items-center gap-x-3 sm:gap-x-5 xl:gap-x-6 py-1 font-space-grotesk text-[12px] sm:text-[13px] font-semibold xl:text-[14px] whitespace-nowrap" style="display: flex; align-items: center; padding: 0.25rem 0; margin: 0; list-style: none; font-family: 'Space Grotesk', sans-serif; font-weight: 600; white-space: nowrap; color: #d4d4d4;">
                     {{-- = NAV_LINKS di IsfHeader.vue; link aktif mengikuti path (rute Vue datar, jadi cocok persis = router-link-active). --}}
                     @php
                         $isfPath = '/' . trim(request()->path(), '/');
