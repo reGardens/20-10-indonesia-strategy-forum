@@ -11,26 +11,9 @@
     <link rel="apple-touch-icon" href="{{ asset('images/isf/logo-isf.jpeg') }}">
     <meta name="theme-color" content="#0B1220">
 
-    <!-- Preload Critical Fonts (Local) -->
+    <!-- Preload font lokal; @font-face & semua style CMS ada di resources/css/app.css -->
     <link rel="preload" as="font" type="font/woff2" crossorigin
         href="{{ asset('fonts/montserrat-latin.woff2') }}">
-    <style>
-        @font-face {
-            font-family: "Montserrat";
-            src: url("{{ asset('fonts/montserrat-latin.woff2') }}") format("woff2");
-            font-weight: 100 900;
-            font-style: normal;
-            font-display: swap;
-        }
-        @font-face {
-            font-family: "Montserrat";
-            src: url("{{ asset('fonts/montserrat-italic-latin.woff2') }}") format("woff2");
-            font-weight: 100 900;
-            font-style: italic;
-            font-display: swap;
-        }
-    </style>
-
     <!-- Dark Mode Preference Pre-init to avoid theme flash -->
     <script>
         (function () {
@@ -57,13 +40,6 @@
         <div
             style="width: 50px; height: 50px; border: 4px solid #E10600; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;">
         </div>
-        <style>
-            @keyframes spin {
-                to {
-                    transform: rotate(360deg);
-                }
-            }
-        </style>
     </div>
 
     <script>

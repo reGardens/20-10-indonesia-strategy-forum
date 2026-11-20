@@ -4,8 +4,8 @@ import router from './router'
 import i18n from './spa-i18n'
 import { VueQueryPlugin } from '@tanstack/vue-query'
 import { getBeranda, getAnggota, getInfografik, getTokoh } from './api/services/isfPublicService'
-import './assets/main.css'
-import './assets/isf-theme.css'
+// Satu-satunya file style landing page (font, skeleton, Tailwind, tema ISF, header loading).
+import '../css/isf.css'
 
 // Prefetch initial page data immediately in parallel with chunk downloading
 if (typeof window !== 'undefined') {
