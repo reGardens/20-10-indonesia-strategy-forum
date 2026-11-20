@@ -1,12 +1,11 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
-import store from './store'
 import i18n from './spa-i18n'
 import { VueQueryPlugin } from '@tanstack/vue-query'
 import { getBeranda, getAnggota, getInfografik, getTokoh } from './api/services/isfPublicService'
-import './assets/main.css'
-import './assets/isf-theme.css'
+// Satu-satunya file style landing page (font, skeleton, Tailwind, tema ISF, header loading).
+import '../css/isf.css'
 
 // Prefetch initial page data immediately in parallel with chunk downloading
 if (typeof window !== 'undefined') {
@@ -26,7 +25,6 @@ if (typeof window !== 'undefined') {
 const app = createApp(App)
 
 app.use(router)
-app.use(store)
 app.use(i18n)
 app.use(VueQueryPlugin)
 

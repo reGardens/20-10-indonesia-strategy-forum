@@ -1,10 +1,15 @@
-/* Local Self-Hosted Fonts */
+/*
+ * Style CMS (Inertia) — SATU-SATUNYA file style CMS. Dimuat dari resources/views/app.blade.php.
+ * Style landing page ada di resources/css/isf.css.
+ */
+
+/* ── Font lokal (@font-face, satu definisi per font; preload ada di app.blade.php) ── */
 @font-face {
     font-family: "Montserrat";
     src: url("/fonts/montserrat-latin.woff2") format("woff2");
     font-weight: 100 900;
     font-style: normal;
-    font-display: swap;
+    font-display: block;
 }
 
 @font-face {
@@ -12,7 +17,7 @@
     src: url("/fonts/montserrat-italic-latin.woff2") format("woff2");
     font-weight: 100 900;
     font-style: italic;
-    font-display: swap;
+    font-display: block;
 }
 
 @font-face {
@@ -29,6 +34,13 @@
     font-weight: 400;
     font-style: normal;
     font-display: block;
+}
+
+/* ── Animasi spinner layar loading (#splash-screen di app.blade.php) ── */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 @tailwind base;

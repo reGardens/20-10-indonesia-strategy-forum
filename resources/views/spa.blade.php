@@ -25,11 +25,21 @@
             try {
                 var font = localStorage.getItem('isf_header_font') || 'montserrat';
                 document.documentElement.setAttribute('data-isf-font', font);
+                // Font header Roboto (pilihan pengguna) ikut di-preload agar tidak tampil sebagai font sistem dulu.
+                if (font === 'roboto') {
+                    var preload = document.createElement('link');
+                    preload.rel = 'preload';
+                    preload.as = 'font';
+                    preload.type = 'font/woff2';
+                    preload.crossOrigin = 'anonymous';
+                    preload.href = "{{ asset('fonts/roboto-latin.woff2') }}";
+                    document.head.appendChild(preload);
+                }
                 document.documentElement.setAttribute('data-isf-layout', 'row-3');
             } catch(e) {}
         })();
     </script>
-    <!-- Preload Critical Fonts (Local Self-Hosted) -->
+    <!-- Preload font lokal; @font-face & semua style landing ada di resources/css/isf.css -->
     <link rel="preload" as="font" type="font/woff2" crossorigin
         href="{{ asset('fonts/inter-latin.woff2') }}">
     <link rel="preload" as="font" type="font/woff2" crossorigin
@@ -42,359 +52,19 @@
         href="{{ asset('fonts/anton-latin.woff2') }}">
     <link rel="preload" as="font" type="font/woff2" crossorigin
         href="{{ asset('fonts/pinyon-script-400.woff2') }}">
-    <style>
-        @font-face {
-            font-family: "Montserrat";
-            src: url("{{ asset('fonts/montserrat-latin.woff2') }}") format("woff2");
-            font-weight: 100 900;
-            font-style: normal;
-            font-display: swap;
-        }
-
-        @font-face {
-            font-family: "Montserrat";
-            src: url("{{ asset('fonts/montserrat-italic-latin.woff2') }}") format("woff2");
-            font-weight: 100 900;
-            font-style: italic;
-            font-display: swap;
-        }
-
-        @font-face {
-            font-family: "Space Grotesk";
-            src: url("{{ asset('fonts/space-grotesk-latin.woff2') }}") format("woff2");
-            font-weight: 300 700;
-            font-style: normal;
-            font-display: block;
-        }
-
-        @font-face {
-            font-family: "Anton";
-            src: url("{{ asset('fonts/anton-latin.woff2') }}") format("woff2");
-            font-weight: 400;
-            font-style: normal;
-            font-display: swap;
-        }
-
-        @font-face {
-            font-family: "Pinyon Script";
-            src: url("{{ asset('fonts/pinyon-script-400.woff2') }}") format("woff2");
-            font-weight: 400;
-            font-style: normal;
-            font-display: block;
-        }
-
-        @font-face {
-            font-family: "Inter";
-            src: url("{{ asset('fonts/inter-latin.woff2') }}") format("woff2");
-            font-weight: 100 900;
-            font-style: normal;
-            font-display: swap;
-        }
-
-        @font-face {
-            font-family: "Newsreader";
-            src: url("{{ asset('fonts/newsreader-latin.woff2') }}") format("woff2");
-            font-weight: 200 800;
-            font-style: normal;
-            font-display: swap;
-        }
-
-        @font-face {
-            font-family: "Newsreader";
-            src: url("{{ asset('fonts/newsreader-italic-latin.woff2') }}") format("woff2");
-            font-weight: 200 800;
-            font-style: italic;
-            font-display: swap;
-        }
-
-        @font-face {
-            font-family: "Roboto";
-            src: url("{{ asset('fonts/roboto-latin.woff2') }}") format("woff2");
-            font-weight: 100 900;
-            font-style: normal;
-            font-display: swap;
-        }
-
-        html {
-            scrollbar-gutter: stable;
-        }
-
-        html,
-        body {
-            margin: 0;
-        }
-
-        .isf-initial-shell {
-            min-height: 100vh;
-            width: 100%;
-            background-color: #fff;
-            color: #171717;
-            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
-        }
-
-        .isf-initial-shell,
-        .isf-initial-shell *,
-        .isf-initial-shell *::before,
-        .isf-initial-shell *::after {
-            box-sizing: border-box;
-        }
-
-        .isf-initial-shell a {
-            color: inherit;
-            text-decoration: none;
-        }
-
-        .isf-initial-shell .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border: 0;
-        }
-
-        .isf-initial-shell .hidden {
-            display: none !important;
-        }
-
-        @media (min-width: 640px) {
-            .isf-initial-shell .sm\:hidden {
-                display: none !important;
-            }
-            .isf-initial-shell .sm\:flex {
-                display: flex !important;
-            }
-            .isf-initial-shell .sm\:block {
-                display: block !important;
-            }
-            .isf-initial-shell .sm\:inline {
-                display: inline !important;
-            }
-            .isf-initial-shell .sm\:inline-block {
-                display: inline-block !important;
-            }
-            .isf-initial-shell .sm\:grid {
-                display: grid !important;
-            }
-        }
-
-        .isf-initial-shell svg:not([width]) {
-            width: 1.25rem;
-            height: 1.25rem;
-            flex: none;
-        }
-
-        .isf-skel-el {
-            background-color: #e5e7eb;
-            border-radius: 4px;
-        }
-
-        /* Subgrid skeleton: ikut satu kolom di mobile, sama seperti tampilan Vue (<640px). */
-        .isf-skel-subgrid {
-            display: grid;
-            gap: 16px;
-            grid-template-columns: var(--isf-skel-cols, repeat(3, 1fr));
-        }
-
-        .isf-skel-identity {
-            grid-template-columns: 160px minmax(0, 1fr);
-            gap: 24px;
-        }
-
-        .isf-skel-member-toolbar {
-            grid-template-columns: minmax(0, 1fr) 14rem;
-            gap: 16px;
-        }
-
-        /* Tokoh: = .isf-full-layer-section (accent / cream) + SectionHeading size="lg"; jarak antar section 48px. */
-        .isf-skel-tokoh { gap: 48px; align-items: start; }
-        .isf-skel-stack { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 48px; }
-        .isf-skel-frame { border: 1px solid #d4d4d4; background: #fff; }
-        .isf-skel-frame--accent { border-top: 3px solid #e10600; }
-        .isf-skel-frame--cream { background: #fbf9f4; }
-        .isf-skel-sechead { display: flex; align-items: center; min-height: 3.75rem; border-bottom: 1px solid #d4d4d4; padding: 0 0.75rem; }
-        .isf-skel-framebody { padding: 20px 0.75rem; }
-        @media (min-width: 1024px) {
-            .isf-skel-sechead, .isf-skel-framebody { padding-left: 1rem; padding-right: 1rem; }
-        }
-        @media (min-width: 1280px) {
-            .isf-skel-sechead, .isf-skel-framebody { padding-left: 30px; padding-right: 30px; }
-        }
-
-        .isf-skel-stat3 {
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-        }
-
-        @media (max-width: 639px) {
-
-            .isf-skel-subgrid,
-            .isf-skel-identity,
-            .isf-skel-member-toolbar {
-                grid-template-columns: minmax(0, 1fr);
-            }
-        }
-
-        /* .isf-skel-subgrid di atas jadi 1 kolom di mobile; statistik tetap 3 kolom seperti di Vue. */
-        .isf-skel-subgrid.isf-skel-stat3 {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-
-        .isf-skel-pulse {
-            animation: isfPulse 1.6s ease-in-out infinite;
-        }
-
-        @keyframes isfPulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: .45;
-            }
-        }
-
-        .isf-skel-container {
-            max-width: 100%;
-            margin: 0 auto;
-            padding: 2rem 1rem;
-        }
-
-        .isf-skel-article {
-            max-width: 1152px;
-            margin: 0 auto;
-            padding: 2rem 1rem;
-        }
-        .isf-initial-shell.isf-theme > .isf-skel-container { width: 100%; max-width: 1400px; }
-        .isf-initial-shell.isf-theme > .isf-skel-article { width: 100%; max-width: 1152px; }
-
-        .isf-skel-grid {
-            display: grid;
-            grid-template-columns: minmax(0, 23fr) minmax(0, 54fr) minmax(0, 23fr);
-        }
-
-        .isf-skel-beranda-hero {
-            order: 1;
-        }
-
-        .isf-skel-beranda-media {
-            order: 2;
-        }
-
-        .isf-skel-beranda-insight {
-            order: 3;
-        }
-
-        .isf-skel-article-grid,
-        .isf-skel-member-grid {
-            display: grid;
-            grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
-            gap: 2rem;
-        }
-
-        .isf-skel-member-layout {
-            display: flex;
-            gap: 1.5rem;
-            max-width: 100%;
-            margin: 0 auto;
-            padding: 1.5rem 1rem;
-        }
-
-        .isf-skel-member-nav {
-            width: 14rem;
-            flex-shrink: 0;
-            border-right: 1px solid #d1d5db;
-            padding-right: 1rem;
-        }
-
-        .isf-skel-rule {
-            border: 1px solid #d1d5db;
-        }
-
-        .isf-skel-card {
-            border: 1px solid #d1d5db;
-            padding: 1rem;
-        }
-
-        .isf-skel-lines>*+* {
-            margin-top: .6rem;
-        }
-
-        @media (min-width: 640px) {
-            .isf-skel-article { padding-top: 2.5rem; padding-bottom: 2.5rem; }
-        }
-        @media (min-width: 1024px) {
-            .isf-skel-container { padding-right: 1.5rem; padding-left: 1.5rem; }
-            .isf-skel-member-layout { padding-right: 1.5rem; padding-left: 1.5rem; }
-            .isf-skel-beranda-insight { order: 1; }
-            .isf-skel-beranda-hero { order: 2; }
-            .isf-skel-beranda-media { order: 3; }
-        }
-        @media (max-width: 1023px) {
-
-            .isf-skel-grid,
-            .isf-skel-article-grid,
-            .isf-skel-member-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .isf-skel-member-layout {
-                flex-direction: column;
-            }
-
-            .isf-skel-member-nav {
-                width: auto;
-                border-right: 0;
-                border-bottom: 1px solid #d1d5db;
-                padding: 0 0 1rem;
-                display: flex;
-                gap: .5rem;
-                overflow: hidden;
-            }
-
-            .isf-skel-member-nav>div {
-                min-width: 6rem;
-            }
-        }
-
-        @media (max-width: 640px) {
-
-            .isf-skel-container,
-            .isf-skel-article,
-            .isf-skel-member-layout {
-                padding-left: 1rem;
-                padding-right: 1rem;
-            }
-        }
-        /* Skeleton Beranda, Sosok, Anggota: 100% lebar dengan padding sama seperti header. */
-        .isf-initial-shell.isf-theme > .isf-skel-container.isf-skel-container--full,
-        .isf-initial-shell.isf-theme > .isf-skel-article.isf-skel-article--full,
-        .isf-initial-shell.isf-theme > .isf-skel-member-layout.isf-skel-member-layout--full {
-            max-width: none;
-            padding-left: 1rem;
-            padding-right: 1rem;
-        }
-        @media (min-width: 640px) {
-            .isf-initial-shell.isf-theme > .isf-skel-container.isf-skel-container--full,
-            .isf-initial-shell.isf-theme > .isf-skel-article.isf-skel-article--full,
-            .isf-initial-shell.isf-theme > .isf-skel-member-layout.isf-skel-member-layout--full { padding-left: 1.5rem; padding-right: 1.5rem; }
-        }
-        @media (min-width: 768px) {
-            .isf-initial-shell.isf-theme > .isf-skel-container.isf-skel-container--full,
-            .isf-initial-shell.isf-theme > .isf-skel-article.isf-skel-article--full,
-            .isf-initial-shell.isf-theme > .isf-skel-member-layout.isf-skel-member-layout--full { padding-left: 2rem; padding-right: 2rem; }
-        }
-        @media (min-width: 1280px) {
-            .isf-initial-shell.isf-theme > .isf-skel-container.isf-skel-container--full,
-            .isf-initial-shell.isf-theme > .isf-skel-article.isf-skel-article--full,
-            .isf-initial-shell.isf-theme > .isf-skel-member-layout.isf-skel-member-layout--full { padding-left: 3rem; padding-right: 3rem; }
-        }
-    </style>
+    @if (\Illuminate\Support\Facades\Vite::isRunningHot())
+        {{-- Hanya saat npm run dev: CSS dari Vite baru masuk lewat JavaScript, jadi bagian font, skeleton,
+             dan header loading dari resources/css/isf.css disisipkan di sini agar layout tidak bergeser saat refresh.
+             Staging/production memakai file CSS hasil build di <head> (sudah termuat sebelum halaman tampil). --}}
+        @php
+            $isfCss = (string) @file_get_contents(resource_path('css/isf.css'));
+            $isfPart3 = strpos($isfCss, '/* ── 3. ');
+            $isfPart5 = strpos($isfCss, '/* ── 5. ');
+        @endphp
+        @if ($isfPart3 !== false && $isfPart5 !== false)
+            <style>{!! substr($isfCss, 0, $isfPart3) . substr($isfCss, $isfPart5) !!}</style>
+        @endif
+    @endif
     @vite(['resources/js/spa.js'])
 </head>
 
