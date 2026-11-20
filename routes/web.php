@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\Route;
 Route::redirect('/', '/beranda');
 Route::get('/beranda', [SpaController::class, 'index'])->name('isf.beranda');
 Route::get('/register', [SpaController::class, 'index'])->name('isf.register');
+Route::get('/verifikasi-email/{id}/{hash}', [\App\Http\Controllers\Auth\IsfEmailVerificationController::class, 'verify'])
+    ->name('isf.verification.verify');
 Route::get('/infografik', [SpaController::class, 'index'])->name('isf.infografik');
 Route::get('/infografik/{slug}', [SpaController::class, 'index'])->name('isf.infografik.show');
 Route::redirect('/tokoh/{slug}', '/sosok/{slug}', 301);

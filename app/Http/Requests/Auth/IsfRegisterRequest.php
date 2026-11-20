@@ -56,18 +56,76 @@ class IsfRegisterRequest extends FormRequest
                 $validator->errors()->add('whatsapp', 'Gunakan nomor seluler Indonesia aktif, contoh 0812xxxxxxxx.');
             }
 
-            // Allow testing bypass with 'TEST_CAPTCHA'
-            if (app()->environment('testing') && $this->input('captcha_answer') === 'TEST_CAPTCHA') {
+            // Allow testing bypass with 'TEST_CAPTCHA' or 'TEST_PUZZLE'
+            if (app()->environment('testing') && in_array($this->input('captcha_answer'), ['TEST_CAPTCHA', 'TEST_PUZZLE'], true)) {
                 return;
             }
 
-            $key = $this->input('captcha_key');
-            $answer = strtolower(trim((string) $this->input('captcha_answer')));
+            $key = (string) $this->input('captcha_key');
+            $rawAnswer = trim((string) $this->input('captcha_answer'));
 
             if (! $key) {
                 return;
             }
 
+            // 1. Check if this key is for Slide Puzzle Captcha (Issue #74)
+            $puzzleTarget = null;
+            try {
+                $puzzleTarget = Cache::get('puzzle:' . $key);
+            } catch (\Throwable $e) {}
+            if ($puzzleTarget === null) {
+                try {
+                    $puzzleTarget = Cache::store('file')->get('puzzle:' . $key);
+                } catch (\Throwable $e) {}
+            }
+            if ($puzzleTarget === null) {
+                $puzzleTarget = session('puzzle:' . $key);
+            }
+
+            if ($puzzleTarget !== null) {
+                $verifiedOffset = null;
+                try {
+                    $verifiedOffset = Cache::get('puzzle_verified:' . $key);
+                } catch (\Throwable $e) {}
+                if ($verifiedOffset === null) {
+                    try {
+                        $verifiedOffset = Cache::store('file')->get('puzzle_verified:' . $key);
+                    } catch (\Throwable $e) {}
+                }
+                if ($verifiedOffset === null) {
+                    $verifiedOffset = session('puzzle_verified:' . $key);
+                }
+
+                $isValidPuzzle = false;
+                $tolerance = 6.0;
+
+                // Check verification from verify endpoint or submitted numeric offset
+                if ($verifiedOffset !== null && abs((float) $verifiedOffset - (float) $puzzleTarget) <= $tolerance) {
+                    $isValidPuzzle = true;
+                } elseif (is_numeric($rawAnswer) && abs((float) $rawAnswer - (float) $puzzleTarget) <= $tolerance) {
+                    $isValidPuzzle = true;
+                }
+
+                // Sekali pakai: berhasil atau gagal, key langsung hangus (cegah tebak berulang).
+                try { Cache::forget('puzzle:' . $key); } catch (\Throwable $e) {}
+                try { Cache::forget('puzzle_verified:' . $key); } catch (\Throwable $e) {}
+                try { Cache::store('file')->forget('puzzle:' . $key); } catch (\Throwable $e) {}
+                try { Cache::store('file')->forget('puzzle_verified:' . $key); } catch (\Throwable $e) {}
+                session()->forget('puzzle:' . $key);
+                session()->forget('puzzle_verified:' . $key);
+                try { Cache::forget('puzzle_attempts:' . $key); } catch (\Throwable $e) {}
+                try { Cache::store('file')->forget('puzzle_attempts:' . $key); } catch (\Throwable $e) {}
+                session()->forget('puzzle_attempts:' . $key);
+
+                if (! $isValidPuzzle) {
+                    $validator->errors()->add('captcha_answer', 'Posisi kepingan puzzle tidak tepat atau sudah kedaluwarsa.');
+                }
+
+                return;
+            }
+
+            // 2. Fallback to classic text/code CAPTCHA
+            $answer = strtolower($rawAnswer);
             $expected = null;
             try {
                 $expected = Cache::get('captcha:' . $key);

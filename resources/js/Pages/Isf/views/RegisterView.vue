@@ -5,6 +5,7 @@ import { currentRedirect, withRedirect } from "@/Utils/authRedirect";
 import http from "@/api/http";
 import { alertSuccess, alertError } from "@/Composables/useAlert";
 import { Button, Input, Label } from "@/Components/UI";
+import { IsfSlidePuzzleCaptcha } from "@/Components/Isf";
 
 const router = useRouter();
 
@@ -30,10 +31,11 @@ const loading = ref(false);
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
 const registrationSuccess = ref(false);
+const registeredEmail = ref("");
+const resendLoading = ref(false);
 
 const captchaKey = ref("");
-const captchaImage = ref("");
-const captchaLoading = ref(false);
+const puzzleRef = ref(null);
 
 const passwordStrength = computed(() => {
     const pwd = form.password;
@@ -69,23 +71,31 @@ function clearError(field) {
     }
 }
 
-async function fetchCaptcha() {
-    captchaLoading.value = true;
-    form.captcha_answer = "";
-    try {
-        const response = await http.get("/isf/captcha");
-        captchaKey.value = response.data?.key || "";
-        captchaImage.value = response.data?.image || "";
-    } catch (err) {
-        console.error("Gagal memuat captcha:", err);
-    } finally {
-        captchaLoading.value = false;
-    }
+function onPuzzleVerified({ key, answer }) {
+    captchaKey.value = key;
+    form.captcha_answer = answer;
+    clearError("captcha_answer");
 }
 
-onMounted(() => {
-    fetchCaptcha();
-});
+function onPuzzleReset() {
+    captchaKey.value = "";
+    form.captcha_answer = "";
+}
+
+async function handleResendVerification() {
+    if (!registeredEmail.value || resendLoading.value) return;
+    resendLoading.value = true;
+    try {
+        const response = await http.post("/isf/email/resend-verification", {
+            email: registeredEmail.value,
+        });
+        alertSuccess(response.data?.message || "Tautan verifikasi baru telah dikirim.");
+    } catch (err) {
+        alertError(err.response?.data?.message || "Gagal mengirim ulang email verifikasi.");
+    } finally {
+        resendLoading.value = false;
+    }
+}
 
 async function handleSubmit() {
     errors.value = {};
@@ -111,8 +121,8 @@ async function handleSubmit() {
     } else if (form.password !== form.password_confirmation) {
         newErrors.password_confirmation = ["Verifikasi kata sandi tidak cocok dengan kata sandi."];
     }
-    if (!form.captcha_answer.trim()) {
-        newErrors.captcha_answer = ["Kode captcha wajib diisi."];
+    if (!form.captcha_answer.trim() || !puzzleRef.value?.isValid) {
+        newErrors.captcha_answer = ["Silakan selesaikan verifikasi puzzle terlebih dahulu."];
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -130,20 +140,16 @@ async function handleSubmit() {
             email: form.email.trim().toLowerCase(),
             password: form.password,
             password_confirmation: form.password_confirmation,
-            captcha_key: captchaKey.value,
+            captcha_key: captchaKey.value || puzzleRef.value?.getKey(),
             captcha_answer: form.captcha_answer.trim(),
         });
 
+        registeredEmail.value = form.email.trim().toLowerCase();
         registrationSuccess.value = true;
         alertSuccess(response.data?.message || "Pendaftaran akun anggota berhasil!");
-
-        // Redirect to login page after short delay
-        setTimeout(() => {
-            window.location.href = loginRegisteredHref;
-        }, 2000);
     } catch (err) {
-        // Refresh captcha on failed attempt
-        fetchCaptcha();
+        // Refresh puzzle on failed attempt
+        puzzleRef.value?.refresh();
 
         if (err.response?.status === 422 && err.response?.data?.errors) {
             errors.value = err.response.data.errors;
@@ -186,36 +192,59 @@ async function handleSubmit() {
                     </div>
                 </header>
 
-                <!-- Success Banner -->
+                <!-- Success Banner (Issue #74: Konfirmasi Verifikasi Email) -->
                 <div
                     v-if="registrationSuccess"
-                    class="mt-6 rounded-xl bg-emerald-50 border border-emerald-200 p-6 sm:p-8 text-center"
+                    class="mt-6 rounded-xl bg-white border border-emerald-200 p-6 sm:p-8 text-center shadow-xs"
                     role="alert"
                 >
-                    <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 mb-4">
-                        <svg class="h-8 w-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 mb-4 ring-8 ring-emerald-50">
+                        <svg class="h-9 w-9 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
                     </div>
                     <h2 class="text-xl sm:text-2xl font-bold text-neutral-900 font-editorial">
-                        Pendaftaran Berhasil!
+                        Pendaftaran Berhasil! Cek Email Anda
                     </h2>
-                    <p class="mt-2 text-sm text-neutral-600 max-w-md mx-auto">
-                        Akun anggota Anda telah berhasil didaftarkan. Selamat datang di Indonesia Strategy Forum.
+                    <p class="mt-2 text-sm text-neutral-600 max-w-lg mx-auto leading-relaxed">
+                        Kami telah mengirimkan tautan verifikasi ke <strong class="text-neutral-900 font-semibold">{{ registeredEmail }}</strong>. Silakan periksa kotak masuk (inbox) atau folder spam email Anda, lalu klik tautan aktivasi untuk mengaktifkan akun Portal Anggota ISF Anda.
                     </p>
-                    <p class="mt-3 text-xs text-emerald-700 font-medium">
-                        Mengarahkan Anda ke halaman login dalam beberapa detik...
-                    </p>
+
+                    <div class="mt-4 p-3.5 bg-neutral-50 rounded-lg border border-neutral-200 max-w-md mx-auto text-xs text-neutral-600 leading-normal text-left">
+                        <div class="font-semibold text-neutral-800 mb-1 flex items-center gap-1.5">
+                            <span class="text-emerald-600 font-bold">✓</span>
+                            <span>Langkah Selanjutnya:</span>
+                        </div>
+                        <ol class="list-decimal list-inside space-y-1 text-neutral-600">
+                            <li>Buka email verifikasi dari <strong>Indonesia Strategy Forum</strong>.</li>
+                            <li>Klik tombol <strong>"Verifikasi Email Saya"</strong>.</li>
+                            <li>Anda akan langsung diarahkan ke Portal Anggota dalam status aktif.</li>
+                        </ol>
+                    </div>
+
+                    <!-- Resend option -->
+                    <div class="mt-4 text-xs text-neutral-500">
+                        Tidak menerima email?
+                        <button
+                            type="button"
+                            :disabled="resendLoading"
+                            class="font-semibold text-isf-red hover:underline ml-1 cursor-pointer disabled:opacity-50"
+                            @click="handleResendVerification"
+                        >
+                            {{ resendLoading ? 'Mengirim ulang...' : 'Kirim Ulang Tautan Verifikasi' }}
+                        </button>
+                    </div>
+
                     <div class="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
                         <a
                             :href="loginRegisteredHref"
-                            class="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-neutral-900 text-white text-xs font-semibold tracking-wide uppercase hover:bg-neutral-800 transition-colors shadow-xs"
+                            class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-2.5 rounded-lg bg-neutral-900 text-white text-xs font-semibold tracking-wide uppercase hover:bg-neutral-800 transition-colors shadow-xs"
                         >
-                            Masuk Sekarang
+                            Ke Halaman Masuk
                         </a>
                         <button
                             type="button"
-                            class="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-lg border border-neutral-300 bg-white text-neutral-700 text-xs font-semibold tracking-wide uppercase hover:bg-neutral-50 transition-colors"
+                            class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-2.5 rounded-lg border border-neutral-300 bg-white text-neutral-700 text-xs font-semibold tracking-wide uppercase hover:bg-neutral-50 transition-colors"
                             @click="router.push('/beranda')"
                         >
                             Kembali ke Beranda
@@ -466,76 +495,21 @@ async function handleSubmit() {
                         </div>
 
                         <!-- ============================================================= -->
-                        <!-- SECURITY VERIFICATION: CAPTCHA                                -->
+                        <!-- SECURITY VERIFICATION: SLIDE PUZZLE CAPTCHA (Issue #74)       -->
                         <!-- ============================================================= -->
                         <div class="space-y-2 pt-2 border-t border-neutral-200">
-                            <Label for="registerCaptcha" class="text-neutral-800 text-xs sm:text-sm font-semibold">
-                                Verifikasi Keamanan (Captcha) <span class="text-isf-red font-bold" aria-hidden="true">*</span>
+                            <Label class="text-neutral-800 text-xs sm:text-sm font-semibold">
+                                Verifikasi Keamanan <span class="text-isf-red font-bold" aria-hidden="true">*</span>
                                 <span class="sr-only">(Required)</span>
                             </Label>
-                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                                <!-- Captcha Image & Reload Button -->
-                                <div class="flex items-center gap-2">
-                                    <div
-                                        class="h-[46px] w-[180px] rounded-md border border-neutral-300 bg-neutral-100 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs"
-                                    >
-                                        <img
-                                            v-if="captchaImage && !captchaLoading"
-                                            :src="captchaImage"
-                                            alt="Kode Captcha"
-                                            class="h-full w-full object-cover select-none"
-                                            width="180"
-                                            height="46"
-                                        />
-                                        <span v-else-if="captchaLoading" class="text-xs text-neutral-400">Memuat kode...</span>
-                                        <button
-                                            v-else
-                                            type="button"
-                                            class="text-[11px] font-medium text-isf-red hover:underline px-2 text-center"
-                                            @click="fetchCaptcha"
-                                        >
-                                            Gagal memuat. Klik coba lagi
-                                        </button>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        title="Muat ulang kode captcha"
-                                        aria-label="Muat ulang kode captcha"
-                                        :disabled="captchaLoading"
-                                        class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-neutral-300 bg-white text-neutral-600 hover:text-isf-red hover:bg-neutral-50 transition-colors"
-                                        @click="fetchCaptcha"
-                                    >
-                                        <svg
-                                            :class="['h-4 w-4', captchaLoading ? 'animate-spin' : '']"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                            />
-                                        </svg>
-                                    </button>
-                                </div>
-                                <!-- Captcha Answer Input -->
-                                <div class="flex-1">
-                                    <Input
-                                        id="registerCaptcha"
-                                        v-model="form.captcha_answer"
-                                        type="text"
-                                        placeholder="Ketik 5 karakter captcha"
-                                        maxlength="6"
-                                        autocomplete="off"
-                                        :disabled="loading"
-                                        :class="errors.captcha_answer ? 'border-red-500 focus-visible:ring-red-500' : ''"
-                                        @input="clearError('captcha_answer')"
-                                    />
-                                </div>
-                            </div>
-                            <p v-if="errors.captcha_answer" class="text-xs text-red-600 font-medium">
+                            <IsfSlidePuzzleCaptcha
+                                ref="puzzleRef"
+                                v-model="form.captcha_answer"
+                                :disabled="loading"
+                                @verified="onPuzzleVerified"
+                                @reset="onPuzzleReset"
+                            />
+                            <p v-if="errors.captcha_answer" class="text-xs text-red-600 font-medium pt-1">
                                 {{ errors.captcha_answer[0] }}
                             </p>
                         </div>

@@ -39,6 +39,7 @@ export { default as SurveiCard } from './SurveiCard.vue';
 export { default as SurveiChart } from './SurveiChart.vue';
 export { default as SosokCard } from './SosokCard.vue';
 export { default as SosokNetworkGraph } from './SosokNetworkGraph.vue';
+export { default as IsfSlidePuzzleCaptcha } from './IsfSlidePuzzleCaptcha.vue';
 export { default as FilterSelect } from '../UI/FilterSelect.vue';
 
 
