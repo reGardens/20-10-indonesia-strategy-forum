@@ -94,6 +94,13 @@ Route::middleware(['web'])->prefix('isf')->group(function () {
     Route::get('/anggota', [PublicContentController::class, 'anggota'])->name('api.isf.anggota');
     Route::get('/cache-heal', [PublicContentController::class, 'cacheHeal'])->name('api.isf.cache-heal');
     Route::get('/captcha', [IsfCaptchaController::class, 'generate'])->name('api.isf.captcha');
+    Route::get('/captcha/puzzle', [IsfCaptchaController::class, 'generatePuzzle'])->name('api.isf.captcha.puzzle');
+    Route::post('/captcha/puzzle/verify', [IsfCaptchaController::class, 'verifyPuzzle'])
+        ->middleware('throttle:30,1')
+        ->name('api.isf.captcha.puzzle.verify');
+    Route::post('/email/resend-verification', [\App\Http\Controllers\Auth\IsfEmailVerificationController::class, 'resend'])
+        ->middleware('throttle:6,1')
+        ->name('api.isf.email.resend');
     Route::post('/register', [IsfRegisterController::class, 'store'])
         ->middleware('throttle:6,1')
         ->name('api.isf.register');

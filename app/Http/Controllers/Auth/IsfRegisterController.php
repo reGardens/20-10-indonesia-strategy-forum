@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\IsfRegisterRequest;
+use App\Mail\MemberEmailVerificationMail;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use Throwable;
@@ -19,6 +22,7 @@ class IsfRegisterController extends Controller
      * Handle an incoming registration request from the public landing page.
      *
      * Saves user to database with default role 'member' (Issue #42).
+     * Sends cryptographic email verification link to user's inbox (Issue #74).
      * Nomor WhatsApp disimpan belum terverifikasi; verifikasi OTP dilakukan setelah login.
      */
     public function store(IsfRegisterRequest $request): JsonResponse
@@ -51,13 +55,33 @@ class IsfRegisterController extends Controller
                 return $newUser;
             });
 
+            // Issue #74: Kirim email verifikasi aktivasi akun bertanda tangan kriptografis (signed URL 24 jam)
+            try {
+                $verificationUrl = URL::temporarySignedRoute(
+                    'isf.verification.verify',
+                    now()->addHours(24),
+                    [
+                        'id' => $user->id,
+                        'hash' => sha1($user->getEmailForVerification()),
+                    ]
+                );
+
+                Mail::to($user->email)->send(new MemberEmailVerificationMail($user, $verificationUrl));
+            } catch (Throwable $mailErr) {
+                Log::error('Registration verification email failure: ' . $mailErr->getMessage(), [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                ]);
+            }
+
             return response()->json([
                 'success' => true,
-                'message' => 'Pendaftaran anggota berhasil! Selamat datang di Indonesia Strategy Forum.',
+                'message' => 'Pendaftaran anggota berhasil! Tautan verifikasi telah dikirimkan ke email Anda. Silakan buka kotak masuk atau spam email Anda untuk mengaktifkan akun.',
                 'user' => [
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
+                    'email_verified' => false,
                 ],
             ], 201);
         } catch (Throwable $e) {

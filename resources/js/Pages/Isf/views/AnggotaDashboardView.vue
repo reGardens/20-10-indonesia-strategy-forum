@@ -105,6 +105,41 @@ const initials = computed(() =>
 
 const linkClass =
     "rounded-sm font-semibold text-isf-red-dark underline underline-offset-2 hover:text-isf-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red focus-visible:ring-offset-2";
+
+// Status verifikasi email dari query param ?verified=success|already|invalid (Issue #74)
+const showVerificationBanner = ref(true);
+const verificationStatus = computed(() => {
+    const val = route.query.verified;
+    if (val === "success" || val === "1") {
+        return {
+            type: "success",
+            title: "Alamat Email Berhasil Diverifikasi!",
+            message: "Selamat datang di Portal Anggota Indonesia Strategy Forum. Akun Anda kini aktif sepenuhnya.",
+        };
+    }
+    if (val === "already") {
+        return {
+            type: "info",
+            title: "Email Sudah Terverifikasi",
+            message: "Alamat email Anda telah diverifikasi sebelumnya. Akun Portal Anggota Anda aktif.",
+        };
+    }
+    if (val === "invalid" || val === "not_found") {
+        return {
+            type: "error",
+            title: "Tautan Verifikasi Tidak Valid atau Kedaluwarsa",
+            message: "Tautan verifikasi yang Anda buka tidak valid atau masa berlakunya telah habis. Silakan minta tautan baru.",
+        };
+    }
+    return null;
+});
+
+function dismissVerificationBanner() {
+    showVerificationBanner.value = false;
+    const newQuery = { ...route.query };
+    delete newQuery.verified;
+    router.replace({ path: "/anggota", query: newQuery });
+}
 </script>
 
 <template>
@@ -129,6 +164,59 @@ const linkClass =
                     Dasbor Umpan Peringatan
                 </h1>
             </header>
+
+            <!-- Notification Banner: Email Verification Status (Issue #74) -->
+            <div
+                v-if="verificationStatus && showVerificationBanner"
+                class="rounded-xl p-4 sm:p-5 border transition-all duration-200 shadow-xs"
+                :class="{
+                    'bg-emerald-50 border-emerald-200 text-emerald-950': verificationStatus.type === 'success',
+                    'bg-blue-50 border-blue-200 text-blue-950': verificationStatus.type === 'info',
+                    'bg-red-50 border-red-200 text-red-950': verificationStatus.type === 'error',
+                }"
+                role="alert"
+            >
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-start gap-3">
+                        <div
+                            class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+                            :class="{
+                                'bg-emerald-100 text-emerald-600': verificationStatus.type === 'success',
+                                'bg-blue-100 text-blue-600': verificationStatus.type === 'info',
+                                'bg-red-100 text-red-600': verificationStatus.type === 'error',
+                            }"
+                        >
+                            <svg v-if="verificationStatus.type === 'success'" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <svg v-else-if="verificationStatus.type === 'info'" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <svg v-else class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold sm:text-base leading-snug">
+                                {{ verificationStatus.title }}
+                            </h3>
+                            <p class="mt-1 text-xs sm:text-sm text-neutral-600 leading-relaxed">
+                                {{ verificationStatus.message }}
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        aria-label="Tutup notifikasi"
+                        class="shrink-0 p-1 rounded-md text-neutral-400 hover:text-neutral-600 hover:bg-black/5 transition-colors cursor-pointer"
+                        @click="dismissVerificationBanner"
+                    >
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
 
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
             <section
