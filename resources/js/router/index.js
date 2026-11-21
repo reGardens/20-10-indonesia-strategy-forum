@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { getBeranda, getAnggota, getInfografik, getTokoh, getMediaDetail, getArtikel, getInfografikDetail, getKategori, getPolitik, getSosok, getSosokDetail, getMediaKit } from '@/api/services/isfPublicService'
+import { getBeranda, getAnggota, getInfografik, getTokoh, getMediaDetail, getArtikel, getInfografikDetail, getKategori, getPolitik, getSosok, getSosokDetail, getMediaKit, getPenulisDetail } from '@/api/services/isfPublicService'
 
 const IsfPublicLayout = () => import('../Layouts/IsfPublicLayout.vue')
 const IsfMemberLayout = () => import('../Layouts/IsfMemberLayout.vue')
@@ -71,7 +71,7 @@ const routes = [
         meta: { title: 'Sosok & Tokoh Strategis · Indonesia Strategy Forum' }
       },
       {
-        path: ':kategori(eksekutif|legislatif|yudikatif|pakar|militer|pengusaha)',
+        path: ':kategori(eksekutif|legislatif|pakar)',
         name: 'isf-sosok-kategori',
         component: () => import('../Pages/Isf/views/SosokView.vue'),
         meta: { title: 'Sosok & Tokoh Strategis · Indonesia Strategy Forum' }
@@ -241,6 +241,22 @@ const routes = [
     redirect: '/media-kit'
   },
   {
+    path: '/penulis',
+    redirect: '/opini-publik'
+  },
+  {
+    path: '/penulis/:slug',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-penulis-detail',
+        component: () => import('../Pages/Isf/views/PenulisDetailView.vue'),
+        meta: { title: 'Profil Penulis · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
     // Artikel per kategori: /artikel/{kategori} = daftar, /artikel/{kategori}/{slug} = detail.
     // Detail = child route, jadi menu navbar kategori tetap aktif (router-link-active).
     path: '/artikel/:kategori(politik|hukum|kebijakan|opini|opini-publik)',
@@ -354,6 +370,8 @@ router.beforeResolve((to) => {
       getSosokDetail(to.params.slug)
     } else if (to.name === 'isf-media-kit' || to.path === '/media-kit' || to.path === '/advertise') {
       getMediaKit()
+    } else if (to.name === 'isf-penulis-detail' && to.params.slug) {
+      getPenulisDetail(to.params.slug)
     }
   } catch {}
 })

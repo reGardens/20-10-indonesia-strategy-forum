@@ -1,11 +1,11 @@
 <script setup>
+import { useCmsPagination } from '@/Composables/useCmsPagination'
 import { ref, onMounted } from 'vue'
 import { Head, Link } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
 import { cmsResources } from '@/api/services/isfCmsService'
 import { confirmDelete, alertSuccess, alertError } from '@/Composables/useAlert'
 import StatusBadge from '@/Pages/Cms/components/shared/StatusBadge.vue'
-import LiveBadge from '@/Pages/Cms/components/shared/LiveBadge.vue'
 import LoadingIndicator from '@/Pages/Cms/components/shared/LoadingIndicator.vue'
 import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
 import {
@@ -28,24 +28,39 @@ const items = ref([])
 const perPage = ref(10)
 const meta = ref({ current_page: 1, last_page: 1, total: 0, per_page: 10 })
 const liveId = ref(null)
+const featuredId = ref(null)
+const politikCount = ref(0)
+const settingFeaturedId = ref(null)
+const togglingPolitikId = ref(null)
 const loading = ref(true)
 const errorMsg = ref('')
 
 const search = ref('')
 const statusFilter = ref('')
 const kategoriFilter = ref('')
-const page = ref(1)
+const page = useCmsPagination()
 let searchTimeout = null
 
-const ROLE_CATEGORIES = [
-  { value: '', label: 'Semua Peran' },
-  { value: 'eksekutif', label: 'Eksekutif' },
+const DEFAULT_LEMBAGA_OPTIONS = [
+  { value: '', label: 'Semua Lembaga' },
   { value: 'legislatif', label: 'Legislatif' },
-  { value: 'yudikatif', label: 'Yudikatif' },
-  { value: 'pakar', label: 'Pakar & Akademisi' },
-  { value: 'militer', label: 'Militer & Hankam' },
-  { value: 'pengusaha', label: 'Pengusaha' }
+  { value: 'eksekutif', label: 'Eksekutif' },
+  { value: 'pakar', label: 'Pakar & Akademisi' }
 ]
+const lembagaOptions = ref([...DEFAULT_LEMBAGA_OPTIONS])
+
+async function loadLembagaOptions() {
+  try {
+    const res = await cmsResources.kategoriLembaga.list({ per_page: 100, status: 'terbit' })
+    const data = Array.isArray(res) ? res : (res?.data || [])
+    if (data.length > 0) {
+      lembagaOptions.value = [
+        { value: '', label: 'Semua Lembaga' },
+        ...data.map((item) => ({ value: item.slug, label: item.nama }))
+      ]
+    }
+  } catch (e) {}
+}
 
 function getCategoryColor(cat) {
   switch (cat) {
@@ -85,10 +100,43 @@ async function loadData() {
       per_page: res.per_page || perPage.value
     }
     liveId.value = res.live_id || null
+    featuredId.value = res.featured_id || null
+    politikCount.value = res.politik_count ?? 0
   } catch (err) {
-    errorMsg.value = err?.response?.data?.message || 'Gagal memuat daftar tokoh.'
+    errorMsg.value = err?.response?.data?.message || 'Gagal memuat daftar sosok.'
   } finally {
     loading.value = false
+  }
+}
+
+async function handleSetFeatured(item) {
+  if (item.is_featured) return
+  settingFeaturedId.value = item.id
+  try {
+    const res = await cmsResources.tokoh.setFeatured(item.id)
+    await loadData()
+    alertSuccess('"' + item.name + '" berhasil ditetapkan sebagai Sosok Pekan Ini.')
+  } catch (err) {
+    alertError(err?.response?.data?.message || 'Gagal mengubah Sosok Pekan Ini.')
+  } finally {
+    settingFeaturedId.value = null
+  }
+}
+
+async function handleTogglePolitik(item) {
+  if (!item.show_in_politik && politikCount.value >= 4) {
+    alertError('Harap nonaktifkan salah satu yang dipilih terlebih dahulu.')
+    return
+  }
+  togglingPolitikId.value = item.id
+  try {
+    const res = await cmsResources.tokoh.togglePolitik(item.id)
+    await loadData()
+    alertSuccess(res.message || 'Status Profil Tokoh Politik berhasil diperbarui.')
+  } catch (err) {
+    alertError(err?.response?.data?.message || 'Gagal mengubah status widget politik.')
+  } finally {
+    togglingPolitikId.value = null
   }
 }
 
@@ -128,39 +176,40 @@ async function handleDelete(item) {
   if (!confirmed) return
   try {
     await cmsResources.tokoh.remove(item.id)
-    alertSuccess('Tokoh berhasil dihapus.')
+    alertSuccess('Sosok berhasil dihapus.')
     loadData()
   } catch (err) {
-    alertError(err?.response?.data?.message || 'Gagal menghapus tokoh.')
+    alertError(err?.response?.data?.message || 'Gagal menghapus sosok.')
   }
 }
 
 onMounted(() => {
+  loadLembagaOptions()
   loadData()
 })
 </script>
 
 <template>
-  <Head title="Kelola Tokoh — Indonesia Strategy Forum" />
+  <Head title="Direktori Sosok — Indonesia Strategy Forum" />
 
   <div class="p-6 space-y-6 w-full">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
       <div>
         <h1 class="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-          <span>Kelola Tokoh</span>
+          <span>Direktori Sosok</span>
           <Badge class="bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 text-xs">
             {{ meta.total }} Total
           </Badge>
         </h1>
         <p class="text-sm text-muted-foreground mt-1">
-          Kelola profil figur pengambil kebijakan, skor sorotan, policy matrix, dan tokoh pekan ini.
+          Kelola profil figur pengambil kebijakan, skor sorotan, policy matrix, sosok pekan ini, dan widget politik.
         </p>
       </div>
       <Link href="/cms/tokoh/create">
         <Button class="bg-red-600 hover:bg-red-700 text-white font-medium text-sm shadow-sm inline-flex items-center gap-1.5">
           <IconComponent name="Plus" :size="16" />
-          <span>Tambah Tokoh</span>
+          <span>Tambah Sosok</span>
         </Button>
       </Link>
     </div>
@@ -171,7 +220,7 @@ onMounted(() => {
         <Input
           v-model="search"
           @input="onSearchInput"
-          placeholder="Cari nama atau jabatan tokoh..."
+          placeholder="Cari nama atau jabatan sosok..."
           class="pl-9 h-9 text-xs"
         />
         <IconComponent
@@ -183,12 +232,12 @@ onMounted(() => {
 
       <div class="flex flex-wrap items-center gap-x-4 gap-y-2 w-full sm:w-auto justify-start py-0.5">
         <div class="flex items-center gap-2">
-          <label for="filter-peran" class="text-xs text-muted-foreground whitespace-nowrap">Peran:</label>
+          <label for="filter-lembaga" class="text-xs text-muted-foreground whitespace-nowrap">Lembaga:</label>
           <FilterSelect
-            id="filter-peran"
+            id="filter-lembaga"
             v-model="kategoriFilter"
-            placeholder="Semua Peran"
-            :options="ROLE_CATEGORIES"
+            placeholder="Semua Lembaga"
+            :options="lembagaOptions"
             @change="onKategoriChange"
           />
         </div>
@@ -238,7 +287,7 @@ onMounted(() => {
     </div>
 
     <!-- Loading & Error -->
-    <LoadingIndicator v-if="loading && items.length === 0" text="Memuat daftar tokoh..." />
+    <LoadingIndicator v-if="loading && items.length === 0" text="Memuat daftar sosok..." />
     <ErrorMessage v-else-if="errorMsg" :message="errorMsg" @retry="loadData" />
 
     <!-- Table -->
@@ -254,18 +303,22 @@ onMounted(() => {
         <TableHeader>
           <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
             <TableHead class="w-12 text-center text-xs">#</TableHead>
-            <TableHead class="min-w-[200px] w-[26%]">Tokoh & Profil</TableHead>
-            <TableHead class="w-36">Peran & Skor</TableHead>
-            <TableHead class="min-w-[160px] w-[22%]">Jabatan / Posisi</TableHead>
-            <TableHead class="w-24 text-center">Status</TableHead>
-            <TableHead class="w-48 min-w-[180px]">Sorotan</TableHead>
-            <TableHead class="w-36 text-right">Aksi</TableHead>
+            <TableHead class="w-16 text-center text-xs">Foto</TableHead>
+            <TableHead class="min-w-[190px] w-[24%]">Sosok & Profil</TableHead>
+            <TableHead class="w-32">Lembaga & Skor</TableHead>
+            <TableHead class="min-w-[150px] w-[18%]">Jabatan / Posisi</TableHead>
+            <TableHead class="w-20 text-center">Status</TableHead>
+            <TableHead class="w-36 text-center">Sosok Pekan Ini</TableHead>
+            <TableHead class="w-40 text-center">
+              Widget Politik ({{ politikCount }}/4)
+            </TableHead>
+            <TableHead class="w-32 text-right">Aksi</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow v-if="items.length === 0">
-            <TableCell colspan="7" class="text-center py-10 text-muted-foreground text-sm">
-              Tidak ada data tokoh ditemukan.
+            <TableCell colspan="9" class="text-center py-10 text-muted-foreground text-sm">
+              Tidak ada data sosok ditemukan.
             </TableCell>
           </TableRow>
           <TableRow
@@ -275,6 +328,20 @@ onMounted(() => {
           >
             <TableCell class="text-center text-xs font-mono text-muted-foreground">
               {{ (meta.current_page - 1) * meta.per_page + idx + 1 }}
+            </TableCell>
+            <TableCell class="py-2.5 px-2 text-center">
+              <div class="w-10 h-10 rounded-full overflow-hidden border border-border bg-muted/60 mx-auto flex items-center justify-center shrink-0 shadow-2xs">
+                <img
+                  v-if="item.photo_url"
+                  :src="item.photo_url"
+                  :alt="item.name"
+                  class="w-full h-full object-cover object-top"
+                  loading="lazy"
+                />
+                <div v-else class="w-full h-full flex items-center justify-center text-muted-foreground/40 bg-muted/30">
+                  <IconComponent name="User" :size="18" />
+                </div>
+              </div>
             </TableCell>
             <TableCell class="py-3">
               <div class="font-semibold text-foreground text-sm leading-snug line-clamp-2">
@@ -300,31 +367,63 @@ onMounted(() => {
             <TableCell class="text-xs text-foreground font-medium">
               <div class="line-clamp-2">{{ item.position }}</div>
             </TableCell>
-            <TableCell>
+            <TableCell class="text-center">
               <StatusBadge :status="item.status" />
             </TableCell>
-            <TableCell class="whitespace-nowrap">
-              <div class="flex flex-col items-start gap-1">
-                <span
-                  v-if="item.is_influential_weekly"
-                  class="text-[10px] px-2 py-0.5 rounded bg-red-600 text-white font-bold whitespace-nowrap inline-flex items-center"
+            <!-- Sosok Pekan Ini CTA (1/1) -->
+            <TableCell class="text-center py-2.5">
+              <div class="inline-flex flex-col items-center gap-1">
+                <Button
+                  v-if="item.is_featured"
+                  size="sm"
+                  variant="outline"
+                  :disabled="settingFeaturedId === item.id"
+                  class="h-7 px-2.5 text-[11px] bg-red-600 text-white font-bold hover:bg-red-700 border-red-600 shadow-xs inline-flex items-center"
+                  @click="handleSetFeatured(item)"
                 >
-                  ★ Tokoh Minggu Ini
-                </span>
-                <LiveBadge v-if="item.id === liveId" label="Pekan Ini Tayang" class="whitespace-nowrap" />
-                <span
-                  v-else-if="item.is_featured"
-                  class="text-[10px] px-2 py-0.5 rounded bg-muted text-muted-foreground font-medium whitespace-nowrap inline-flex items-center"
+                  <IconComponent v-if="settingFeaturedId === item.id" name="Refresh" :size="12" class="mr-1 animate-spin" />
+                  <span v-else>✓ Aktif Pekan Ini</span>
+                </Button>
+                <Button
+                  v-else
+                  size="sm"
+                  variant="outline"
+                  :disabled="settingFeaturedId === item.id"
+                  class="h-7 px-2.5 text-[11px] border-dashed border-red-600/60 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 inline-flex items-center font-medium"
+                  @click="handleSetFeatured(item)"
                 >
-                  Flag Featured
-                </span>
-                <span
+                  <IconComponent v-if="settingFeaturedId === item.id" name="Refresh" :size="12" class="mr-1 animate-spin" />
+                  <span v-else>Pilih Pekan Ini</span>
+                </Button>
+              </div>
+            </TableCell>
+            <!-- Profil Tokoh Politik CTA (4/4) -->
+            <TableCell class="text-center py-2.5">
+              <div class="inline-flex flex-col items-center gap-1">
+                <Button
                   v-if="item.show_in_politik"
-                  class="text-[10px] px-2 py-0.5 rounded bg-red-500/10 text-red-600 font-semibold border border-red-500/20 whitespace-nowrap inline-flex items-center"
+                  size="sm"
+                  variant="outline"
+                  :disabled="togglingPolitikId === item.id"
+                  class="h-7 px-2.5 text-[11px] bg-emerald-600 text-white font-bold hover:bg-emerald-700 border-emerald-600 shadow-xs inline-flex items-center"
+                  @click="handleTogglePolitik(item)"
+                  title="Klik untuk melepas dari Profil Tokoh Politik"
                 >
-                  Profil Politik
-                </span>
-                <span v-if="!item.is_featured && !item.show_in_politik && item.id !== liveId && !item.is_influential_weekly" class="text-xs text-muted-foreground">-</span>
+                  <IconComponent v-if="togglingPolitikId === item.id" name="Refresh" :size="12" class="mr-1 animate-spin" />
+                  <span v-else>✓ Aktif Politik</span>
+                </Button>
+                <Button
+                  v-else
+                  size="sm"
+                  variant="outline"
+                  :disabled="togglingPolitikId === item.id"
+                  class="h-7 px-2.5 text-[11px] border-dashed border-emerald-600/60 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 inline-flex items-center font-medium"
+                  @click="handleTogglePolitik(item)"
+                  title="Pilih untuk Profil Tokoh Politik"
+                >
+                  <IconComponent v-if="togglingPolitikId === item.id" name="Refresh" :size="12" class="mr-1 animate-spin" />
+                  <span v-else>Pilih Politik</span>
+                </Button>
               </div>
             </TableCell>
             <TableCell class="text-right">

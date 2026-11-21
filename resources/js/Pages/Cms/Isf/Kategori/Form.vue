@@ -52,6 +52,13 @@ async function loadParentCategories() {
   try {
     const res = await cmsResources.kategori.list({ per_page: 100 })
     allCategories.value = Array.isArray(res) ? res : (res?.data || [])
+    if (!props.id && typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      if (urlParams.has('parent_id')) {
+        const pId = Number(urlParams.get('parent_id'))
+        if (!isNaN(pId)) form.parent_id = pId
+      }
+    }
   } catch {}
 }
 
@@ -182,33 +189,6 @@ function onSlugInput() {
               </p>
               <p v-if="err('slug')" class="text-xs text-red-400 mt-1">{{ err('slug') }}</p>
             </div>
-          </div>
-
-          <!-- Kategori Induk (Parent) -->
-          <div class="space-y-1.5">
-            <Label for="parent_id" class="text-xs font-medium text-foreground">Kategori Induk (Opsional)</Label>
-            <Select v-model="parentIdValue">
-              <SelectTrigger id="parent_id" class="h-9 text-xs font-medium bg-background border-input">
-                <SelectValue placeholder="-- Kategori Utama (Tanpa Induk) --" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__NONE__" class="text-xs font-medium cursor-pointer">
-                  -- Kategori Utama (Tanpa Induk) --
-                </SelectItem>
-                <SelectItem
-                  v-for="parent in availableParents"
-                  :key="parent.id"
-                  :value="String(parent.id)"
-                  class="text-xs font-medium cursor-pointer"
-                >
-                  {{ parent.name }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            <p class="text-[11px] text-muted-foreground">
-              Pilih kategori induk jika kategori ini merupakan sub-kategori (misal: sub-kategori dari Politik). Kosongkan jika merupakan kategori utama.
-            </p>
-            <p v-if="err('parent_id')" class="text-xs text-red-400 mt-1">{{ err('parent_id') }}</p>
           </div>
 
           <!-- Deskripsi -->

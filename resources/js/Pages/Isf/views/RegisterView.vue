@@ -142,6 +142,7 @@ async function handleSubmit() {
             password_confirmation: form.password_confirmation,
             captcha_key: captchaKey.value || puzzleRef.value?.getKey(),
             captcha_answer: form.captcha_answer.trim(),
+            redirect: redirectTo || undefined,
         });
 
         registeredEmail.value = form.email.trim().toLowerCase();

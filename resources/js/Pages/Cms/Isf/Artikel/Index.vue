@@ -5,6 +5,7 @@ import CmsLayout from '@/Layouts/CmsLayout.vue'
 import { cmsResources } from '@/api/services/isfCmsService'
 import { activeCategories as CATEGORIES, loadCategories } from '@/Pages/Cms/Isf/options'
 import { confirmDelete, alertSuccess, alertError } from '@/Composables/useAlert'
+import { useCmsPagination } from '@/Composables/useCmsPagination'
 import StatusBadge from '@/Pages/Cms/components/shared/StatusBadge.vue'
 import LiveBadge from '@/Pages/Cms/components/shared/LiveBadge.vue'
 import LoadingIndicator from '@/Pages/Cms/components/shared/LoadingIndicator.vue'
@@ -34,8 +35,9 @@ const errorMsg = ref('')
 
 const search = ref('')
 const statusFilter = ref('')
+const byMemberFilter = ref(false)
 const categoryFilter = ref('')
-const page = ref(1)
+const page = useCmsPagination('/cms/artikel')
 
 let searchTimeout = null
 
@@ -48,8 +50,13 @@ async function loadData() {
       per_page: perPage.value,
       q: search.value || undefined,
       status: statusFilter.value || undefined,
+      is_by_member: byMemberFilter.value ? 1 : undefined,
       category: categoryFilter.value || undefined
     })
+    if (res.last_page && page.value > res.last_page && res.last_page > 0) {
+      page.value = res.last_page
+      return loadData()
+    }
     items.value = res.data || []
     meta.value = {
       current_page: res.current_page || 1,
@@ -75,6 +82,12 @@ function onSearchInput() {
 
 function onStatusChange(val) {
   statusFilter.value = val
+  page.value = 1
+  loadData()
+}
+
+function onByMemberToggle() {
+  byMemberFilter.value = !byMemberFilter.value
   page.value = 1
   loadData()
 }
@@ -185,7 +198,7 @@ onMounted(() => {
         <FilterSelect
           id="filter-kategori"
           v-model="categoryFilter"
-          placeholder="Semua"
+          placeholder="Select Kategori"
           :options="CATEGORIES"
           @change="onCategoryChange"
         />
@@ -230,6 +243,19 @@ onMounted(() => {
           >
             Draf
           </button>
+          <button
+            type="button"
+            @click="onByMemberToggle"
+            :class="[
+              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors flex items-center gap-1.5',
+              byMemberFilter
+                ? 'bg-red-600 text-white shadow-xs'
+                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+            ]"
+          >
+            <span v-if="byMemberFilter" class="w-1.5 h-1.5 rounded-full bg-white"></span>
+            By Member
+          </button>
         </div>
       </div>
       </div>
@@ -252,17 +278,56 @@ onMounted(() => {
         <TableHeader>
           <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
             <TableHead class="w-12 text-center text-xs">#</TableHead>
-            <TableHead class="w-[40%]">Judul & Slug</TableHead>
-            <TableHead>Kategori</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Penempatan</TableHead>
-            <TableHead>Tanggal</TableHead>
-            <TableHead class="text-right">Aksi</TableHead>
+            <TableHead class="w-20 text-center text-xs">Gambar</TableHead>
+            <TableHead class="min-w-[280px]">Judul & Slug</TableHead>
+            <TableHead class="w-28">Kategori</TableHead>
+            <TableHead class="w-24">Status</TableHead>
+            <TableHead class="w-32">Penempatan</TableHead>
+            <TableHead class="w-28 whitespace-nowrap">Tanggal</TableHead>
+            <!-- Kolom Terpisah: Tayang Hero dengan Tooltip Visual -->
+            <TableHead class="text-center w-36 whitespace-nowrap">
+              <div class="inline-flex items-center justify-center gap-1.5 relative group cursor-pointer select-none">
+                <span>Tayang Hero</span>
+                <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-muted text-muted-foreground hover:text-foreground text-[10px] font-bold border border-border">?</span>
+                
+                <!-- Tooltip Popup with Beranda Layout Illustration -->
+                <div class="absolute right-0 top-full mt-2 w-72 p-3.5 bg-neutral-900 text-neutral-100 rounded-xl shadow-2xl border border-neutral-700/80 z-50 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 text-left whitespace-normal break-words normal-case">
+                  <div class="text-xs font-bold font-space-grotesk text-white flex items-center gap-1.5 pb-2 border-b border-neutral-800 whitespace-normal">
+                    <span class="w-2 h-2 rounded-xs bg-red-600"></span>
+                    <span>Posisi Tayang: Hero Utama Beranda</span>
+                  </div>
+                  <!-- Visual Layout Diagram -->
+                  <div class="my-2.5 p-2 rounded-lg bg-neutral-950 border border-neutral-800 space-y-1.5 font-mono text-[9px] whitespace-normal">
+                    <div class="h-4 bg-neutral-800 rounded flex items-center justify-center text-neutral-400">
+                      [Navbar / Header ISF]
+                    </div>
+                    <!-- Highlighted Hero Box -->
+                    <div class="p-2 rounded bg-red-950/80 border-2 border-dashed border-red-500 text-center text-red-200 font-bold whitespace-normal">
+                      ★ HERO UTAMA BERANDA ★
+                      <div class="text-[8px] font-sans font-normal text-red-300 whitespace-normal break-words">Headline paling atas & terbesar di Beranda</div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-1.5 pt-0.5">
+                      <div class="h-5 bg-neutral-800/80 rounded flex items-center justify-center text-neutral-400 text-[8px] whitespace-normal">
+                        Isu Terpopuler
+                      </div>
+                      <div class="h-5 bg-neutral-800/80 rounded flex items-center justify-center text-neutral-400 text-[8px] whitespace-normal">
+                        Berita Terkini
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-[11px] text-neutral-300 leading-relaxed font-sans whitespace-normal break-words">
+                    Artikel dengan status <strong class="text-emerald-400 font-semibold">Tayang</strong> otomatis ditampilkan sebagai sorotan utama di layar pertama pengunjung Beranda.
+                  </p>
+                </div>
+              </div>
+            </TableHead>
+            <!-- Kolom Aksi (Detail, Edit, Hapus) -->
+            <TableHead class="text-right min-w-[200px]">Aksi</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow v-if="items.length === 0">
-            <TableCell colspan="7" class="text-center py-10 text-muted-foreground text-sm">
+            <TableCell colspan="9" class="text-center py-10 text-muted-foreground text-sm">
               Tidak ada artikel ditemukan.
             </TableCell>
           </TableRow>
@@ -274,25 +339,47 @@ onMounted(() => {
             <TableCell class="text-center text-xs font-mono text-muted-foreground">
               {{ (meta.current_page - 1) * meta.per_page + idx + 1 }}
             </TableCell>
+            <!-- Kolom Gambar yang diupload -->
+            <TableCell class="py-2.5 px-2 text-center">
+              <div class="w-14 h-10 rounded-md overflow-hidden border border-border bg-muted/60 mx-auto flex items-center justify-center shrink-0">
+                <img
+                  v-if="item.image_url"
+                  :src="item.image_url"
+                  :alt="item.title"
+                  class="w-full h-full object-cover"
+                  loading="lazy"
+                />
+                <div v-else class="w-full h-full flex items-center justify-center text-muted-foreground/40 bg-muted/30">
+                  <IconComponent name="Image" :size="16" />
+                </div>
+              </div>
+            </TableCell>
             <TableCell class="py-3">
-              <div class="font-semibold text-foreground text-sm leading-snug line-clamp-2">
-                {{ item.title }}
+              <div class="font-semibold text-foreground text-sm leading-snug line-clamp-2 flex flex-wrap items-center gap-1.5">
+                <span>{{ item.title }}</span>
+                <!-- Badge kecil "by member" di samping value judul/slug jika artikel dibuat oleh member -->
+                <span
+                  v-if="item.is_by_member"
+                  class="inline-flex items-center px-1.5 py-0.2 rounded text-[9.5px] font-semibold bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 whitespace-nowrap"
+                >
+                  by member
+                </span>
               </div>
               <div class="text-xs text-muted-foreground font-mono mt-0.5 truncate">
                 /{{ item.slug }}
               </div>
             </TableCell>
-            <TableCell>
-              <div class="flex flex-col items-start gap-1">
+            <TableCell class="whitespace-nowrap">
+              <div class="flex items-center gap-1.5 whitespace-nowrap">
                 <Badge
                   variant="outline"
-                  class="pointer-events-none select-none bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-[9.5px] px-1.5 py-0.5 capitalize font-medium"
+                  class="pointer-events-none select-none bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-[9.5px] px-1.5 py-0.5 capitalize font-medium whitespace-nowrap"
                 >
                   {{ item.category }}
                 </Badge>
                 <span
                   v-if="item.subcategory"
-                  class="inline-block text-[9.5px] text-muted-foreground font-mono bg-muted/60 px-1 py-0.2 rounded"
+                  class="inline-block text-[9.5px] text-muted-foreground font-mono bg-muted/60 px-1 py-0.2 rounded whitespace-nowrap"
                 >
                   /{{ item.subcategory }}
                 </span>
@@ -301,56 +388,81 @@ onMounted(() => {
             <TableCell>
               <StatusBadge :status="item.status" />
             </TableCell>
-            <TableCell>
-              <div class="flex flex-wrap gap-1 items-center">
+            <TableCell class="whitespace-nowrap">
+              <div class="flex items-center gap-1 whitespace-nowrap">
                 <LiveBadge v-if="item.id === liveId" label="Hero Tayang" />
                 <span
                   v-else-if="item.is_hero"
-                  class="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium"
+                  class="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium whitespace-nowrap"
                 >
                   Flag Hero
                 </span>
                 <span
                   v-if="item.show_in_terkini"
-                  class="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium"
+                  class="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium whitespace-nowrap"
                 >
                   Terkini
                 </span>
                 <span
                   v-if="item.is_popular"
-                  class="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium"
+                  class="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium whitespace-nowrap"
                 >
                   Populer
                 </span>
+                <span
+                  v-if="item.id !== liveId && !item.is_hero && !item.show_in_terkini && !item.is_popular"
+                  class="text-[10px] text-muted-foreground"
+                >
+                  —
+                </span>
               </div>
             </TableCell>
-            <TableCell class="text-xs text-muted-foreground">
+
+            <!-- Tanggal: 1 line (whitespace-nowrap) -->
+            <TableCell class="text-xs text-muted-foreground whitespace-nowrap">
               {{ formatDate(item.published_at) }}
             </TableCell>
+
+            <!-- Dedicated Column: Tayang Hero -->
+            <TableCell class="text-center whitespace-nowrap">
+              <span
+                v-if="item.id === liveId"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+              >
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                Tayang
+              </span>
+              <Button
+                v-else
+                type="button"
+                variant="outline"
+                size="sm"
+                :disabled="settingHeroId === item.id"
+                class="h-8 px-2.5 text-xs font-medium text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-700 hover:border-emerald-500 transition-colors inline-flex items-center"
+                @click="handleSetHero(item)"
+                title="Tayangkan sebagai Hero Beranda"
+              >
+                <IconComponent v-if="settingHeroId === item.id" name="Refresh" :size="13" class="mr-1 animate-spin" />
+                <IconComponent v-else name="Check" :size="13" class="mr-1 text-emerald-600" />
+                Tayangkan
+              </Button>
+            </TableCell>
+
+            <!-- Dedicated Column: Aksi (CTA Detail, Edit, Hapus) -->
             <TableCell class="text-right">
               <div class="flex items-center justify-end gap-1.5">
-                <!-- Trigger Tayang Hero -->
-                <span
-                  v-if="item.id === liveId"
-                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
-                >
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Tayang
-                </span>
-                <Button
-                  v-else
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  :disabled="settingHeroId === item.id"
-                  class="h-8 px-2.5 text-xs font-medium text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-700 hover:border-emerald-500 transition-colors inline-flex items-center"
-                  @click="handleSetHero(item)"
-                  title="Tayangkan sebagai Hero Beranda"
-                >
-                  <IconComponent v-if="settingHeroId === item.id" name="Refresh" :size="13" class="mr-1 animate-spin" />
-                  <IconComponent v-else name="Check" :size="13" class="mr-1 text-emerald-600" />
-                  Tayangkan
-                </Button>
+                <!-- CTA Detail mengarah ke page detail artikel -->
+                <Link :href="`/cms/artikel/${item.id}`">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    class="h-8 px-2.5 text-xs font-medium text-foreground hover:bg-muted inline-flex items-center"
+                    title="Lihat Detail Artikel"
+                  >
+                    <IconComponent name="Eye" :size="13" class="mr-1" />
+                    Detail
+                  </Button>
+                </Link>
 
                 <!-- Edit -->
                 <Link :href="`/cms/artikel/${item.id}/edit`">

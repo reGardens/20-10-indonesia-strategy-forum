@@ -16,10 +16,23 @@ trait IsfRules
         return ['required', 'string', Rule::in(IsfOptions::STATUSES)];
     }
 
-    /** Content category (politik | ekonomi | kebijakan | hukum | ruu). */
+    /** Content category (IsfOptions::CATEGORIES atau slug yang terdaftar di isf_categories). */
     protected function categoryRules(): array
     {
-        return ['required', 'string', Rule::in(IsfOptions::CATEGORIES)];
+        return [
+            'required',
+            'string',
+            'max:100',
+            function ($attribute, $value, $fail) {
+                if (in_array($value, IsfOptions::CATEGORIES, true)) {
+                    return;
+                }
+                if (\App\Models\Isf\Category::where('slug', $value)->exists()) {
+                    return;
+                }
+                $fail("Kategori '{$value}' tidak valid.");
+            },
+        ];
     }
 
     /** Integer order for items sequence (0..9999). */

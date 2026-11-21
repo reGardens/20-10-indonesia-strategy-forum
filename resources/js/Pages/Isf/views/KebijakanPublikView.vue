@@ -61,13 +61,13 @@ const { data, status, load } = useIsfContent(() => {
 const rubrik = computed(() => data.value?.rubrik || {
   title: 'Kebijakan Publik',
   label: 'Kebijakan Publik',
-  description: 'Analisis sektoral & kajian strategis kebijakan pemerintah, evaluasi regulasi, data fiskal APBN, dan pelacakan program nasional.',
+  description: 'Kebijakan publik, ekonomi, fiskal, moneter, dan regulasi sektoral.',
   subkategori: [
     { slug: 'ekonomi', name: 'Ekonomi & Fiskal', description: 'Kebijakan fiskal, APBN, moneter, inflasi, dan stabilitas makroekonomi.' },
-    { slug: 'kesehatan', name: 'Kesehatan', description: 'Sistem kesehatan nasional, BPJS, ketahanan farmasi, dan layanan medis.' },
-    { slug: 'pendidikan', name: 'Pendidikan', description: 'Kurikulum, anggaran pendidikan 20%, riset teknologi, dan SDM.' },
-    { slug: 'pertahanan', name: 'Pertahanan', description: 'Modernisasi alutsista, ketahanan siber, diplomasi pertahanan, dan perbatasan.' },
-    { slug: 'lingkungan', name: 'Lingkungan', description: 'Transisi energi terbarukan, dekarbonisasi industri, kehutanan, dan tata kelola iklim.' },
+    { slug: 'kesehatan', name: 'Kesehatan Masyarakat', description: 'Sistem kesehatan nasional, BPJS, ketahanan farmasi, dan layanan medis.' },
+    { slug: 'pendidikan', name: 'Pendidikan & Riset', description: 'Kurikulum, alokasi anggaran pendidikan, riset teknologi, dan SDM.' },
+    { slug: 'pertahanan', name: 'Pertahanan & Keamanan', description: 'Modernisasi alutsista, ketahanan siber, diplomasi pertahanan, dan perbatasan.' },
+    { slug: 'lingkungan', name: 'Lingkungan & Energi', description: 'Transisi energi terbarukan, dekarbonisasi industri, kehutanan, dan tata kelola iklim.' },
   ]
 })
 

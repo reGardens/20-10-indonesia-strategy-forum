@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\Isf\Cms\LegalTermController;
 use App\Http\Controllers\Api\Isf\Cms\MediaUploadController;
 use App\Http\Controllers\Api\Isf\Cms\ParliamentSeatController;
 use App\Http\Controllers\Api\Isf\Cms\PolicyBriefController;
+use App\Http\Controllers\Api\Isf\Cms\KategoriLembagaController;
 use App\Http\Controllers\Api\Isf\Cms\PolicyMonitoringController;
 use App\Http\Controllers\Api\Isf\Cms\PolicySectorController;
 use App\Http\Controllers\Api\Isf\Cms\ReaderPollController;
@@ -77,6 +78,7 @@ Route::middleware(['web'])->prefix('isf')->group(function () {
     Route::get('/policy-brief', [PublicContentController::class, 'policyBrief'])->name('api.isf.policy-brief');
     Route::get('/monitoring-kebijakan', [PublicContentController::class, 'monitoringKebijakan'])->name('api.isf.monitoring-kebijakan');
     Route::get('/opini-publik', [PublicContentController::class, 'opiniPublik'])->name('api.isf.opini-publik');
+    Route::get('/penulis/{slug}', [PublicContentController::class, 'penulis'])->name('api.isf.penulis');
     Route::get('/reader-poll', [PublicContentController::class, 'readerPoll'])->name('api.isf.reader-poll');
     Route::post('/reader-poll/{id}/vote', [PublicContentController::class, 'voteReaderPoll'])->middleware('throttle:10,1')->name('api.isf.reader-poll.vote');
     Route::get('/kutipan-publik', [PublicContentController::class, 'kutipanPublik'])->name('api.isf.kutipan-publik');
@@ -104,6 +106,8 @@ Route::middleware(['web'])->prefix('isf')->group(function () {
     Route::post('/register', [IsfRegisterController::class, 'store'])
         ->middleware('throttle:6,1')
         ->name('api.isf.register');
+    Route::post('/media/upload', [\App\Http\Controllers\Api\Isf\Cms\MediaUploadController::class, 'upload'])
+        ->name('api.isf.media.upload');
 });
 
 // ISF CMS API (authenticated session + per-module feature access)
@@ -118,8 +122,14 @@ Route::middleware(['web', 'auth'])->prefix('cms')->name('api.cms.')->group(funct
         ->parameters(['artikel' => 'article'])->middleware('feature:artikel');
     Route::apiResource('infografik', InfographicController::class)
         ->parameters(['infografik' => 'infographic'])->middleware('feature:infografik');
+    Route::post('tokoh/{tokoh}/set-featured', [TokohController::class, 'setFeatured'])
+        ->middleware('feature:tokoh')->name('tokoh.set-featured');
+    Route::post('tokoh/{tokoh}/toggle-politik', [TokohController::class, 'togglePolitik'])
+        ->middleware('feature:tokoh')->name('tokoh.toggle-politik');
     Route::apiResource('tokoh', TokohController::class)
         ->parameters(['tokoh' => 'tokoh'])->middleware('feature:tokoh');
+    Route::apiResource('kategori-lembaga', KategoriLembagaController::class)
+        ->parameters(['kategori-lembaga' => 'kategoriLembaga'])->middleware('feature:tokoh');
     Route::post('data-grafik/reorder', [ChartController::class, 'reorder'])
         ->middleware('feature:data_grafik')->name('data-grafik.reorder');
     Route::apiResource('data-grafik', ChartController::class)

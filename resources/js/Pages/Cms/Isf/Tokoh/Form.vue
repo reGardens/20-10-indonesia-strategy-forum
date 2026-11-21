@@ -1,15 +1,15 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { Head, Link } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
-import { cmsResources } from '@/api/services/isfCmsService'
 import { useCmsForm } from '@/Composables/useCmsForm'
-import RepeatableRows from '@/Pages/Cms/components/shared/RepeatableRows.vue'
-import StringListEditor from '@/Pages/Cms/components/shared/StringListEditor.vue'
+import { cmsResources } from '@/api/services/isfCmsService'
 import LoadingIndicator from '@/Pages/Cms/components/shared/LoadingIndicator.vue'
 import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
-import ImageUploadTab from '@/Components/Cms/ImageUploadTab.vue'
 import StatusSelectWithBadge from '@/Components/Cms/StatusSelectWithBadge.vue'
+import ImageUploadTab from '@/Components/Cms/ImageUploadTab.vue'
+import RepeatableRows from '@/Pages/Cms/components/shared/RepeatableRows.vue'
+import StringListEditor from '@/Pages/Cms/components/shared/StringListEditor.vue'
 import {
   Button,
   Input,
@@ -30,45 +30,51 @@ import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 defineOptions({ layout: CmsLayout })
 
 const props = defineProps({
-  id: { type: Number, default: null }
+  id: {
+    type: [Number, String],
+    default: null
+  }
 })
 
 const isEdit = computed(() => Boolean(props.id))
 
-const ROLE_OPTIONS = [
-  { value: 'eksekutif', label: 'Eksekutif' },
+const DEFAULT_LEMBAGA_OPTIONS = [
   { value: 'legislatif', label: 'Legislatif' },
-  { value: 'yudikatif', label: 'Yudikatif' },
-  { value: 'pakar', label: 'Pakar & Akademisi' },
-  { value: 'militer', label: 'Militer & Hankam' },
-  { value: 'pengusaha', label: 'Pengusaha' },
+  { value: 'eksekutif', label: 'Eksekutif' },
+  { value: 'pakar', label: 'Pakar & Akademisi' }
 ]
+const lembagaOptions = ref([...DEFAULT_LEMBAGA_OPTIONS])
+
+async function loadLembagaOptions() {
+  try {
+    const res = await cmsResources.kategoriLembaga.list({ per_page: 100, status: 'terbit' })
+    const data = Array.isArray(res) ? res : (res?.data || [])
+    if (data.length > 0) {
+      lembagaOptions.value = data.map((item) => ({ value: item.slug, label: item.nama }))
+    }
+  } catch (e) {}
+}
 
 const AVAILABLE_ISSUES = [
   'politik', 'hukum', 'ekonomi', 'kebijakan', 'pertahanan', 'sosial', 'energi', 'pendidikan', 'keamanan', 'digital'
 ]
 
-const statFields = [
-  { key: 'label', label: 'Label Statistik', type: 'text', required: true, placeholder: 'e.g. Kebijakan Diinisiasi' },
-  { key: 'value', label: 'Nilai Angka / Persen', type: 'text', required: true, placeholder: 'e.g. 12 atau 85%' }
-]
-
 const careerFields = [
   { key: 'year', label: 'Tahun / Periode', type: 'text', required: true, placeholder: 'e.g. 2024 - Sekarang' },
-  { key: 'title', label: 'Posisi / Pencapaian', type: 'text', span: 'sm:col-span-2', required: true, placeholder: 'e.g. Ketua Komisi Hukum DPR RI' },
+  { key: 'title', label: 'Posisi / Peran Publik', type: 'text', span: 'sm:col-span-2', required: true, placeholder: 'e.g. Ketua Komisi Hukum DPR RI' },
   { key: 'description', label: 'Keterangan / Dampak Kebijakan', type: 'text', span: 'sm:col-span-3', placeholder: 'Keterangan peran...' }
-]
-
-const educationFields = [
-  { key: 'degree', label: 'Gelar / Tingkat', type: 'text', required: true, placeholder: 'e.g. Sarjana Hukum (S.H.)' },
-  { key: 'institution', label: 'Institusi / Universitas', type: 'text', span: 'sm:col-span-2', required: true, placeholder: 'e.g. Universitas Indonesia' },
-  { key: 'year', label: 'Tahun Lulus', type: 'text', placeholder: 'e.g. 1998' }
 ]
 
 const positionsFields = [
   { key: 'period', label: 'Periode Menjabat', type: 'text', required: true, placeholder: 'e.g. 2019 - 2024' },
   { key: 'position', label: 'Nama Jabatan', type: 'text', span: 'sm:col-span-2', required: true, placeholder: 'e.g. Anggota Komisi III DPR RI' },
   { key: 'institution', label: 'Lembaga / Organisasi', type: 'text', span: 'sm:col-span-3', placeholder: 'e.g. Dewan Perwakilan Rakyat' }
+]
+
+const educationFields = [
+  { key: 'degree', label: 'Gelar / Jenjang', type: 'text', required: true, placeholder: 'e.g. Sarjana Hukum (S.H.)' },
+  { key: 'institution', label: 'Institusi / Universitas', type: 'text', span: 'sm:col-span-2', required: true, placeholder: 'e.g. Universitas Indonesia' },
+  { key: 'year', label: 'Tahun Lulus', type: 'text', placeholder: 'e.g. 1998' }
 ]
 
 const affiliationFields = [
@@ -97,7 +103,7 @@ const quotesFields = [
 ]
 
 const controversiesFields = [
-  { key: 'title', label: 'Judul Kontroversi / Isu Hukum', type: 'text', span: 'sm:col-span-2', required: true, placeholder: 'e.g. Polemik Pasal Imunitas Diskresi' },
+  { key: 'title', label: 'Judul Kontroversi / Isu Kebijakan', type: 'text', span: 'sm:col-span-2', required: true, placeholder: 'e.g. Polemik Pasal Imunitas Diskresi' },
   { key: 'year', label: 'Tahun', type: 'text', placeholder: 'e.g. 2025' },
   { key: 'status', label: 'Status Penanganan', type: 'text', placeholder: 'e.g. Selesai Direvisi' },
   { key: 'description', label: 'Ringkasan Dinamika Isu', type: 'text', span: 'sm:col-span-3', placeholder: 'Uraian kasus dan implikasinya...' }
@@ -110,15 +116,11 @@ const relatedArticleFields = [
   { key: 'relativeLabel', label: 'Label Relatif (opsional, e.g. 2 hari lalu)', type: 'text' }
 ]
 
-const calendarEventFields = [
-  { key: 'date', label: 'Tanggal Agenda', type: 'date', required: true },
-  { key: 'title', label: 'Keterangan Agenda', type: 'text', span: 'sm:col-span-2', required: true, placeholder: 'Rapat Kerja Komisi VII DPR RI...' }
-]
-
-const { form, err, loading, loadError, saving, save, load } = useCmsForm({
+const { form, loading, saving, loadError, err, load, save } = useCmsForm({
   resource: cmsResources.tokoh,
   id: props.id,
-  indexHref: '/cms/tokoh',
+  listPath: '/cms/tokoh',
+  entityName: 'Sosok',
   defaults: {
     slug: '',
     name: '',
@@ -140,12 +142,7 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
     is_influential_weekly: false,
     photo_alt: '',
     photo_url: '',
-    stats: [
-      { label: 'Kebijakan Diinisiasi', value: '12' },
-      { label: 'Rapat Paripurna', value: '48' },
-      { label: 'Keterlibatan Publik', value: '85%' },
-      { label: 'Sorotan Regulasi', value: '34' }
-    ],
+    stats: [],
     skor_value: 82,
     skor_period: 'Pekan 41 / 2026',
     skor_explanation: '',
@@ -159,6 +156,13 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
     is_featured: false,
     show_in_politik: false,
     status: 'draf'
+  }
+})
+
+onMounted(() => {
+  loadLembagaOptions()
+  if (props.id) {
+    load()
   }
 })
 
@@ -241,7 +245,7 @@ function onMatrixColumnsChange(newColumns) {
 </script>
 
 <template>
-  <Head :title="(isEdit ? 'Edit Tokoh' : 'Tambah Tokoh') + ' — Indonesia Strategy Forum'" />
+  <Head :title="(isEdit ? 'Edit Sosok' : 'Tambah Sosok') + ' — Indonesia Strategy Forum'" />
 
   <div class="p-6 space-y-6 w-full">
     <!-- Header -->
@@ -254,7 +258,7 @@ function onMatrixColumnsChange(newColumns) {
         </Link>
         <div>
           <h1 class="text-2xl font-bold tracking-tight text-foreground">
-            {{ isEdit ? 'Edit Tokoh' : 'Tambah Tokoh Baru' }}
+            {{ isEdit ? 'Edit Sosok' : 'Tambah Sosok Baru' }}
           </h1>
           <p class="text-xs text-muted-foreground mt-0.5">
             {{ isEdit ? `Mengubah profil ${form.name || ''}` : 'Isi formulir berikut untuk menerbitkan figur pembuat kebijakan pada Rubrik Sosok.' }}
@@ -274,23 +278,23 @@ function onMatrixColumnsChange(newColumns) {
           class="h-9 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-4 shadow-sm"
         >
           <IconComponent v-if="saving" name="Refresh" :size="14" class="mr-1.5 animate-spin" />
-          <IconComponent v-else name="Check" :size="14" class="mr-1.5" />
-          {{ saving ? 'Menyimpan...' : 'Simpan Tokoh' }}
+          <IconComponent v-else name="Check" :size="14" />
+          {{ saving ? 'Menyimpan...' : 'Simpan Sosok' }}
         </Button>
       </div>
     </div>
 
     <!-- Loading / Error states -->
-    <LoadingIndicator v-if="loading" text="Memuat data tokoh..." />
+    <LoadingIndicator v-if="loading" text="Memuat data sosok..." />
     <ErrorMessage v-else-if="loadError" :message="loadError" @retry="load" />
 
     <!-- Form Content -->
     <form v-else @submit.prevent="save" class="space-y-6">
-      <!-- 1. Identitas Figur -->
+      <!-- 1. Identitas & Klasifikasi Sosok -->
       <Card class="border border-border/80 shadow-xs">
         <CardHeader class="pb-3">
-          <CardTitle class="text-base font-semibold">Identitas & Klasifikasi Figur</CardTitle>
-          <CardDescription class="text-xs">Nama lengkap, peran kategori lembaga, jabatan, foto profil, dan status publikasi.</CardDescription>
+          <CardTitle class="text-base font-semibold">Identitas & Klasifikasi Sosok</CardTitle>
+          <CardDescription class="text-xs">Nama lengkap, kategori lembaga, jabatan formal, foto profil, skor pengaruh, dan status publikasi.</CardDescription>
         </CardHeader>
         <CardContent class="space-y-4">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -322,14 +326,14 @@ function onMatrixColumnsChange(newColumns) {
 
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="space-y-1.5">
-              <Label for="role_category" class="text-xs font-medium">Kategori Peran <span class="text-red-500">*</span></Label>
+              <Label for="role_category" class="text-xs font-medium">Kategori Lembaga <span class="text-red-500">*</span></Label>
               <Select v-model="form.role_category">
                 <SelectTrigger id="role_category" class="h-9 text-xs font-medium bg-background border-input">
-                  <SelectValue placeholder="Pilih Kategori Peran..." />
+                  <SelectValue placeholder="Pilih Kategori Lembaga..." />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem
-                    v-for="opt in ROLE_OPTIONS"
+                    v-for="opt in lembagaOptions"
                     :key="opt.value"
                     :value="opt.value"
                     class="text-xs font-medium cursor-pointer"
@@ -367,6 +371,7 @@ function onMatrixColumnsChange(newColumns) {
                 v-model="form.photo_url"
                 aspect-class="aspect-square"
                 placeholder="https://..."
+                :show-hint="false"
               />
               <p v-if="err('photo_url')" class="text-xs text-red-500 font-medium">{{ err('photo_url') }}</p>
             </div>
@@ -384,19 +389,7 @@ function onMatrixColumnsChange(newColumns) {
           </div>
 
           <!-- Highlight Checkboxes -->
-          <div class="pt-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <label class="flex items-start gap-2.5 p-3 rounded-lg border border-border bg-card cursor-pointer hover:border-red-500/50 transition">
-              <input
-                type="checkbox"
-                v-model="form.is_influential_weekly"
-                class="mt-0.5 rounded border-input text-red-600 focus:ring-red-500 h-4 w-4"
-              />
-              <div>
-                <div class="text-xs font-semibold text-foreground">Tokoh Paling Berpengaruh Minggu Ini</div>
-                <div class="text-[11px] text-muted-foreground mt-0.5">Tampilkan sebagai banner Hero di halaman utama Indeks Sosok.</div>
-              </div>
-            </label>
-
+          <div class="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label class="flex items-start gap-2.5 p-3 rounded-lg border border-border bg-card cursor-pointer hover:border-red-500/50 transition">
               <input
                 type="checkbox"
@@ -404,27 +397,85 @@ function onMatrixColumnsChange(newColumns) {
                 class="mt-0.5 rounded border-input text-red-600 focus:ring-red-500 h-4 w-4"
               />
               <div>
-                <div class="text-xs font-semibold text-foreground">Tokoh Pekan Ini (Beranda)</div>
-                <div class="text-[11px] text-muted-foreground mt-0.5">Tampilkan profil tokoh ini di section "Pekan Ini" halaman depan Beranda.</div>
+                <div class="text-xs font-semibold text-foreground">Sosok Pekan Ini (Beranda)</div>
+                <div class="text-[11px] text-muted-foreground mt-0.5">Tampilkan sebagai 1 sosok utama di section "Pekan Ini" halaman depan Beranda (otomatis menggantikan sosok pekan sebelumnya).</div>
               </div>
             </label>
 
-            <label class="flex items-start gap-2.5 p-3 rounded-lg border border-border bg-card cursor-pointer hover:border-red-500/50 transition">
-              <input
-                type="checkbox"
-                v-model="form.show_in_politik"
-                class="mt-0.5 rounded border-input text-red-600 focus:ring-red-500 h-4 w-4"
-              />
-              <div>
-                <div class="text-xs font-semibold text-foreground">Profil Tokoh Politik (/politik)</div>
-                <div class="text-[11px] text-muted-foreground mt-0.5">Tampilkan di widget profil rubrik Politik.</div>
-              </div>
-            </label>
+            <div class="space-y-1">
+              <label class="flex items-start gap-2.5 p-3 rounded-lg border border-border bg-card cursor-pointer hover:border-red-500/50 transition">
+                <input
+                  type="checkbox"
+                  v-model="form.show_in_politik"
+                  class="mt-0.5 rounded border-input text-red-600 focus:ring-red-500 h-4 w-4"
+                />
+                <div>
+                  <div class="text-xs font-semibold text-foreground">Tampilkan di Widget Politik (/politik)</div>
+                  <div class="text-[11px] text-muted-foreground mt-0.5">Tampilkan kartu profil sosok ini pada section "Profil Tokoh Politik" di halaman publik /politik (maksimal 4 sosok aktif).</div>
+                </div>
+              </label>
+              <p v-if="err('show_in_politik')" class="text-xs text-red-500 font-medium px-1">{{ err('show_in_politik') }}</p>
+            </div>
           </div>
 
-          <!-- Summary Analysis 1 kalimat -->
-          <div class="space-y-1.5">
-            <Label for="summary_analysis" class="text-xs font-medium">Ringkasan Analisis ISF (1 Kalimat)</Label>
+          <!-- Skor Pengaruh, Skor Sorotan & Rasional Penjelasan (Dipindahkan dari Tab 2) -->
+          <div class="pt-3 border-t border-border space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div class="space-y-1.5">
+                <Label for="influence_score" class="text-xs font-medium">Skor Pengaruh ISF (0 - 100) <span class="text-red-500">*</span></Label>
+                <Input
+                  id="influence_score"
+                  type="number"
+                  v-model.number="form.influence_score"
+                  min="0"
+                  max="100"
+                  class="h-9 text-xs font-bold text-red-600"
+                />
+                <p class="text-[11px] text-muted-foreground">Skor agregat bobot pengaruh politik, regulasi, dan jejaring publik.</p>
+                <p v-if="err('influence_score')" class="text-xs text-red-500 font-medium">{{ err('influence_score') }}</p>
+              </div>
+
+              <div class="space-y-1.5">
+                <Label for="skor_value" class="text-xs font-medium">Skor Sorotan Pekan Ini (0 - 100) <span class="text-red-500">*</span></Label>
+                <Input
+                  id="skor_value"
+                  type="number"
+                  v-model.number="form.skor_value"
+                  min="0"
+                  max="100"
+                  class="h-9 text-xs"
+                />
+                <p v-if="err('skor_value')" class="text-xs text-red-500 font-medium">{{ err('skor_value') }}</p>
+              </div>
+
+              <div class="space-y-1.5">
+                <Label for="skor_period" class="text-xs font-medium">Periode Pengukuran <span class="text-red-500">*</span></Label>
+                <Input
+                  id="skor_period"
+                  v-model="form.skor_period"
+                  placeholder="30 hari terakhir"
+                  class="h-9 text-xs"
+                />
+                <p v-if="err('skor_period')" class="text-xs text-red-500 font-medium">{{ err('skor_period') }}</p>
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <Label for="skor_explanation" class="text-xs font-medium">Rasional / Penjelasan Skor <span class="text-red-500">*</span></Label>
+              <textarea
+                id="skor_explanation"
+                v-model="form.skor_explanation"
+                rows="3"
+                placeholder="Rasional penilaian skor aktivitas figur pekan ini..."
+                class="w-full rounded-md border border-input bg-background p-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              />
+              <p v-if="err('skor_explanation')" class="text-xs text-red-500 font-medium">{{ err('skor_explanation') }}</p>
+            </div>
+          </div>
+
+          <!-- Catatan Analisis ISF (Ringkasan) -->
+          <div class="space-y-1.5 pt-1">
+            <Label for="summary_analysis" class="text-xs font-medium">Catatan Analisis ISF (Ringkasan 1 Kalimat)</Label>
             <textarea
               id="summary_analysis"
               v-model="form.summary_analysis"
@@ -432,21 +483,8 @@ function onMatrixColumnsChange(newColumns) {
               placeholder="e.g. Tokoh kunci dalam percepatan pembahasan revisi perundang-undangan strategis dan penegakan hukum nasional."
               class="w-full rounded-md border border-input bg-background p-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
             />
-            <p class="text-[11px] text-muted-foreground">Ditampilkan pada card profil direktori dan ringkasan hero indeks sosok.</p>
+            <p class="text-[11px] text-muted-foreground">Ditampilkan sebagai catatan analisis editorial pada card profil direktori dan box analisis header sosok.</p>
             <p v-if="err('summary_analysis')" class="text-xs text-red-500 font-medium">{{ err('summary_analysis') }}</p>
-          </div>
-
-          <!-- Teaser Beranda -->
-          <div v-if="form.is_featured" class="space-y-1.5">
-            <Label for="teaser" class="text-xs font-medium">Teaser Singkat untuk Beranda</Label>
-            <textarea
-              id="teaser"
-              v-model="form.teaser"
-              rows="2"
-              placeholder="Teaser pengantar sorotan kebijakan figur ini..."
-              class="w-full rounded-md border border-input bg-background p-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-            />
-            <p v-if="err('teaser')" class="text-xs text-red-500 font-medium">{{ err('teaser') }}</p>
           </div>
 
           <!-- Isu / Tag Isu Terkait -->
@@ -468,32 +506,21 @@ function onMatrixColumnsChange(newColumns) {
                 #{{ iss }}
               </button>
             </div>
-            <p class="text-[11px] text-muted-foreground">Pilih isu kebijakan yang diasosiasikan dengan figur untuk filter dan rekomendasi.</p>
-          </div>
-
-          <!-- Aliases untuk pencocokan otomatis berita (Tab 4) -->
-          <div class="pt-2">
-            <StringListEditor
-              v-model="form.aliases"
-              label="Alias & Nama Alternatif (Matching Berita Otomatis)"
-              description="Kata kunci atau sebutan tokoh yang dipakai sistem untuk menarik artikel berita terkait otomatis ke Tab Berita & Aktivitas."
-              placeholder="e.g. Budi Santoso, Dr. Budi Santoso, Komisi III..."
-              addLabel="Tambah Alias"
-            />
+            <p class="text-[11px] text-muted-foreground">Pilih isu kebijakan yang diasosiasikan dengan sosok untuk filter dan rekomendasi.</p>
           </div>
         </CardContent>
       </Card>
 
-      <!-- 2. Tab Profil & Rekam Jejak (Tab 1) -->
+      <!-- 2. Tab 1 — Profil & Rekam Jejak -->
       <Card class="border border-border/80 shadow-xs">
         <CardHeader class="pb-3">
-          <CardTitle class="text-base font-semibold">Profil, Rekam Jejak & Pendidikan (Tab 1)</CardTitle>
-          <CardDescription class="text-xs">Biografi naratif mendalam, timeline kronologis karier, pendidikan, dan riwayat jabatan formal.</CardDescription>
+          <CardTitle class="text-base font-semibold">Tab 1 — Profil & Rekam Jejak</CardTitle>
+          <CardDescription class="text-xs">Biografi perjalanan kepemimpinan, linimasa jabatan, riwayat jabatan strategis, dan latar belakang pendidikan formal.</CardDescription>
         </CardHeader>
         <CardContent class="space-y-5">
-          <!-- Bio Naratif -->
+          <!-- Biografi & Perjalanan Karier -->
           <div class="space-y-1.5">
-            <Label for="bio" class="text-xs font-medium">Biografi Naratif Lengkap</Label>
+            <Label for="bio" class="text-xs font-medium">Biografi & Perjalanan Karier</Label>
             <textarea
               id="bio"
               v-model="form.bio"
@@ -504,121 +531,58 @@ function onMatrixColumnsChange(newColumns) {
             <p v-if="err('bio')" class="text-xs text-red-500 font-medium">{{ err('bio') }}</p>
           </div>
 
-          <!-- Timeline Karier -->
+          <!-- Linimasa Jabatan & Peran -->
           <RepeatableRows
             v-model="form.career_timeline"
             :fields="careerFields"
-            legend="Linimasa Karier & Pengalaman"
-            description="Perjalanan rekam jejak karier kronologis tokoh dari masa ke masa."
-            addLabel="Tambah Linimasa Karier"
+            legend="Linimasa Jabatan & Peran"
+            description="Kronologi perjalanan jabatan dan peran publik tokoh dari masa ke masa."
+            addLabel="Tambah Linimasa"
           />
 
-          <!-- Pendidikan -->
-          <RepeatableRows
-            v-model="form.education"
-            :fields="educationFields"
-            legend="Riwayat Pendidikan"
-            description="Jenjang pendidikan formal dan universitas tempat belajar."
-            addLabel="Tambah Pendidikan"
-          />
-
-          <!-- Riwayat Jabatan -->
+          <!-- Riwayat Jabatan Strategis -->
           <RepeatableRows
             v-model="form.positions_history"
             :fields="positionsFields"
-            legend="Riwayat Jabatan Formal"
-            description="Daftar portofolio jabatan publik atau struktural yang pernah diemban."
-            addLabel="Tambah Riwayat Jabatan"
+            legend="Riwayat Jabatan Strategis"
+            description="Portofolio jabatan struktural dan posisi publik formal yang pernah diemban."
+            addLabel="Tambah Jabatan"
+          />
+
+          <!-- Latar Belakang Pendidikan -->
+          <RepeatableRows
+            v-model="form.education"
+            :fields="educationFields"
+            legend="Latar Belakang Pendidikan"
+            description="Jenjang pendidikan formal dan universitas tempat belajar."
+            addLabel="Tambah Pendidikan"
           />
         </CardContent>
       </Card>
 
-      <!-- 3. Tab Analisis ISF: Skor Pengaruh & Policy Matrix (Tab 2) -->
+      <!-- 3. Tab 2 — Analisis ISF (Policy Matrix) -->
       <Card class="border border-border/80 shadow-xs">
         <CardHeader class="pb-3">
-          <CardTitle class="text-base font-semibold">Analisis ISF: Skor Pengaruh & Jejak Kebijakan (Tab 2)</CardTitle>
-          <CardDescription class="text-xs">Skor Pengaruh ISF, skor indeks sorotan berkala, matriks jejak kebijakan publik, dan 4 metrik performa.</CardDescription>
+          <CardTitle class="text-base font-semibold">Tab 2 — Analisis ISF (Policy Matrix)</CardTitle>
+          <CardDescription class="text-xs">Jejak regulasi kebijakan publik dan pemetaan tahapan perundang-undangan (Policy Matrix).</CardDescription>
         </CardHeader>
         <CardContent class="space-y-4">
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="space-y-1.5">
-              <Label for="influence_score" class="text-xs font-medium">Skor Pengaruh ISF (0 - 100) <span class="text-red-500">*</span></Label>
-              <Input
-                id="influence_score"
-                type="number"
-                v-model.number="form.influence_score"
-                min="0"
-                max="100"
-                class="h-9 text-xs font-bold text-red-600"
-              />
-              <p class="text-[11px] text-muted-foreground">Skor agregat bobot pengaruh politik, regulasi, dan jejaring publik.</p>
-              <p v-if="err('influence_score')" class="text-xs text-red-500 font-medium">{{ err('influence_score') }}</p>
-            </div>
-
-            <div class="space-y-1.5">
-              <Label for="skor_value" class="text-xs font-medium">Skor Sorotan Pekan Ini (0 - 100) <span class="text-red-500">*</span></Label>
-              <Input
-                id="skor_value"
-                type="number"
-                v-model.number="form.skor_value"
-                min="0"
-                max="100"
-                class="h-9 text-xs"
-              />
-              <p v-if="err('skor_value')" class="text-xs text-red-500 font-medium">{{ err('skor_value') }}</p>
-            </div>
-
-            <div class="space-y-1.5">
-              <Label for="skor_period" class="text-xs font-medium">Periode Pengukuran <span class="text-red-500">*</span></Label>
-              <Input
-                id="skor_period"
-                v-model="form.skor_period"
-                placeholder="Pekan 41 / 2026 (12 - 18 Oktober)"
-                class="h-9 text-xs"
-              />
-              <p v-if="err('skor_period')" class="text-xs text-red-500 font-medium">{{ err('skor_period') }}</p>
-            </div>
-          </div>
-
-          <div class="space-y-1.5">
-            <Label for="skor_explanation" class="text-xs font-medium">Rasional / Penjelasan Skor <span class="text-red-500">*</span></Label>
-            <textarea
-              id="skor_explanation"
-              v-model="form.skor_explanation"
-              rows="3"
-              placeholder="Rasional penilaian skor aktivitas figur pekan ini..."
-              class="w-full rounded-md border border-input bg-background p-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-            />
-            <p v-if="err('skor_explanation')" class="text-xs text-red-500 font-medium">{{ err('skor_explanation') }}</p>
-          </div>
-
-          <!-- 4 Stats Repeatable -->
-          <RepeatableRows
-            v-model="form.stats"
-            :fields="statFields"
-            legend="4 Metrik Statistik Kunci"
-            description="Tepat 4 metrik ringkas yang tampil di header profil dan tab analisis."
-            addLabel="Tambah Metrik"
-            :max="8"
-          />
-
-          <!-- Policy Matrix Section -->
-          <div class="pt-4 border-t border-border space-y-4">
-            <h3 class="text-sm font-semibold text-foreground">Jejak Kebijakan (Policy Matrix)</h3>
+          <!-- Jejak Kebijakan Publik (Policy Matrix) -->
+          <div class="space-y-4">
             <!-- Matrix Columns -->
             <StringListEditor
               :modelValue="form.matrix_columns"
               @update:modelValue="onMatrixColumnsChange"
-              label="Kolom Tahapan Kebijakan"
+              label="Kolom Tahapan Regulasi"
               description="Daftar kolom tahapan regulasi, e.g. Inisiasi, Pembahasan, Implementasi."
-              placeholder="Tambah nama kolom..."
+              placeholder="Tambah nama kolom tahapan..."
               addLabel="Tambah Kolom"
             />
 
             <!-- Matrix Rows -->
             <div class="space-y-3 pt-2">
               <div class="flex items-center justify-between">
-                <Label class="text-xs font-semibold text-foreground">Baris Kebijakan</Label>
+                <Label class="text-xs font-semibold text-foreground">Daftar Regulasi & Kebijakan</Label>
                 <Button
                   type="button"
                   size="sm"
@@ -627,12 +591,12 @@ function onMatrixColumnsChange(newColumns) {
                   class="border-dashed border-red-500/50 text-red-600 dark:text-red-400 text-xs"
                 >
                   <IconComponent name="Plus" :size="14" class="mr-1" />
-                  Tambah Kebijakan
+                  Tambah Regulasi
                 </Button>
               </div>
 
               <div v-if="form.matrix_rows.length === 0" class="text-xs text-muted-foreground py-4 text-center border border-dashed border-border rounded-lg">
-                Belum ada baris kebijakan. Klik "Tambah Kebijakan" di atas.
+                Belum ada baris regulasi. Klik "Tambah Regulasi" di atas.
               </div>
 
               <div
@@ -653,18 +617,18 @@ function onMatrixColumnsChange(newColumns) {
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div class="space-y-1">
-                    <Label class="text-[11px] text-muted-foreground">Nama Kebijakan</Label>
+                    <Label class="text-[11px] text-muted-foreground">Nama Regulasi / Kebijakan</Label>
                     <Input v-model="row.kebijakan" placeholder="e.g. RUU Perampasan Aset Tindak Pidana" class="h-8 text-xs" />
                   </div>
                   <div class="space-y-1">
-                    <Label class="text-[11px] text-muted-foreground">Keterangan Tahap</Label>
+                    <Label class="text-[11px] text-muted-foreground">Keterangan Tahap Pembahasan</Label>
                     <Input v-model="row.tahap" placeholder="e.g. Pembahasan Tingkat I" class="h-8 text-xs" />
                   </div>
                 </div>
 
                 <!-- Involvement checkboxes per column -->
                 <div class="space-y-1 pt-1">
-                  <div class="text-[11px] text-muted-foreground font-medium">Keterlibatan di Kolom:</div>
+                  <div class="text-[11px] text-muted-foreground font-medium">Keterlibatan di Kolom Tahapan:</div>
                   <div class="flex flex-wrap gap-4 pt-1">
                     <label
                       v-for="(col, cIdx) in form.matrix_columns"
@@ -686,32 +650,32 @@ function onMatrixColumnsChange(newColumns) {
         </CardContent>
       </Card>
 
-      <!-- 4. Tab Jejaring & Afiliasi (Tab 3) -->
+      <!-- 4. Tab 3 — Jejaring & Afiliasi -->
       <Card class="border border-border/80 shadow-xs">
         <CardHeader class="pb-3">
-          <CardTitle class="text-base font-semibold">Jejaring, Sekutu & Oposan (Tab 3)</CardTitle>
-          <CardDescription class="text-xs">Pemetaan relasi kelembagaan, partai, koalisi/sekutu, serta pengkritik atau poros oposisi.</CardDescription>
+          <CardTitle class="text-base font-semibold">Tab 3 — Jejaring & Afiliasi</CardTitle>
+          <CardDescription class="text-xs">Peta jejaring kekuasaan dan afiliasi strategis: konstelasi politik, relasi pengaruh, mitra koalisi, serta poros pengkritik.</CardDescription>
         </CardHeader>
         <CardContent class="space-y-5">
-          <!-- Afiliasi Formal -->
+          <!-- Afiliasi Lembaga & Organisasi -->
           <RepeatableRows
             v-model="form.affiliations"
             :fields="affiliationFields"
             legend="Afiliasi Lembaga, Partai & Organisasi"
-            description="Organisasi, partai politik, atau paguyuban resmi tempat figur bernaung."
+            description="Institusi, partai politik, atau paguyuban resmi tempat figur bernaung."
             addLabel="Tambah Afiliasi"
           />
 
-          <!-- Sekutu & Mitra -->
+          <!-- Sekutu & Mitra Strategis -->
           <RepeatableRows
             v-model="form.allies"
             :fields="alliesFields"
             legend="Sekutu & Mitra Strategis"
-            description="Tokoh atau institusi mitra koalisi dalam meloloskan atau mendorong agenda kebijakan."
+            description="Tokoh atau institusi mitra strategis dalam mendorong agenda kebijakan."
             addLabel="Tambah Sekutu"
           />
 
-          <!-- Oposan & Kritik -->
+          <!-- Oposan & Pengkritik Kebijakan -->
           <RepeatableRows
             v-model="form.critics"
             :fields="criticsFields"
@@ -722,78 +686,48 @@ function onMatrixColumnsChange(newColumns) {
         </CardContent>
       </Card>
 
-      <!-- 5. Tab Kutipan & Kontroversi (Tab 5) -->
+      <!-- 5. Tab 4 — Berita & Aktivitas -->
       <Card class="border border-border/80 shadow-xs">
         <CardHeader class="pb-3">
-          <CardTitle class="text-base font-semibold">Kutipan Kunci & Rekam Jejak Kontroversi (Tab 5)</CardTitle>
-          <CardDescription class="text-xs">Kutipan pernyataan publik yang berdampak luas dan timeline kasus atau kontroversi kebijakan.</CardDescription>
+          <CardTitle class="text-base font-semibold">Tab 4 — Berita & Aktivitas</CardTitle>
+          <CardDescription class="text-xs">
+            Feed berita dan liputan media terkait: kurasi artikel analisis yang disematkan langsung pada profil sosok ini.
+          </CardDescription>
         </CardHeader>
-        <CardContent class="space-y-5">
-          <!-- Kutipan -->
+        <CardContent class="space-y-4">
           <RepeatableRows
-            v-model="form.quotes"
-            :fields="quotesFields"
-            legend="Koleksi Kutipan Pernyataan Kunci"
-            description="Pernyataan resmi di parlemen, media, atau forum kebijakan."
-            addLabel="Tambah Kutipan"
-          />
-
-          <!-- Kontroversi -->
-          <RepeatableRows
-            v-model="form.controversies"
-            :fields="controversiesFields"
-            legend="Rekam Jejak Kontroversi & Kasus"
-            description="Dinamika kasus etika, hukum, atau friksi regulasi yang melibatkan tokoh."
-            addLabel="Tambah Kasus / Kontroversi"
+            v-model="form.related_articles"
+            :fields="relatedArticleFields"
+            legend="Feed Berita & Liputan Media Terkait"
+            description="Sematan artikel analisis yang terhubung langsung dengan sosok ini di Tab 4 Berita & Aktivitas."
+            addLabel="Tambah Artikel Terkait"
           />
         </CardContent>
       </Card>
 
-      <!-- 6. Artikel Terkait & Kalender Agenda -->
-      <RepeatableRows
-        v-model="form.related_articles"
-        :fields="relatedArticleFields"
-        legend="Artikel Terkait Kurasi Manual"
-        description="Analisis mendalam ISF yang secara khusus disematkan ke figur ini (di luar feed berita otomatis)."
-        addLabel="Tambah Artikel Terkait"
-      />
-
+      <!-- 6. Tab 5 — Kutipan & Kontroversi -->
       <Card class="border border-border/80 shadow-xs">
         <CardHeader class="pb-3">
-          <CardTitle class="text-base font-semibold">Kalender & Agenda Kerja</CardTitle>
-          <CardDescription class="text-xs">Agenda sidang, pertemuan regulasi, dan forum tokoh bulan ini.</CardDescription>
+          <CardTitle class="text-base font-semibold">Tab 5 — Kutipan & Kontroversi</CardTitle>
+          <CardDescription class="text-xs">Pernyataan kunci kutipan strategis dan dinamika kontroversi peristiwa kritis.</CardDescription>
         </CardHeader>
-        <CardContent class="space-y-4">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="space-y-1.5">
-              <Label for="calendar_year" class="text-xs font-medium">Tahun Kalender <span class="text-red-500">*</span></Label>
-              <Input
-                id="calendar_year"
-                type="number"
-                v-model.number="form.calendar_year"
-                min="2020"
-                max="2100"
-                class="h-9 text-xs"
-              />
-            </div>
-            <div class="space-y-1.5">
-              <Label for="calendar_month" class="text-xs font-medium">Bulan (1 - 12) <span class="text-red-500">*</span></Label>
-              <Input
-                id="calendar_month"
-                type="number"
-                v-model.number="form.calendar_month"
-                min="1"
-                max="12"
-                class="h-9 text-xs"
-              />
-            </div>
-          </div>
-
+        <CardContent class="space-y-5">
+          <!-- Pernyataan Kunci & Kutipan Strategis -->
           <RepeatableRows
-            v-model="form.calendar_events"
-            :fields="calendarEventFields"
-            legend="Daftar Agenda Spesifik"
-            addLabel="Tambah Agenda"
+            v-model="form.quotes"
+            :fields="quotesFields"
+            legend="Pernyataan Kunci & Kutipan Strategis"
+            description="Pernyataan resmi di parlemen, media massa, atau forum kebijakan."
+            addLabel="Tambah Kutipan"
+          />
+
+          <!-- Dinamika Kontroversi & Peristiwa Kritis -->
+          <RepeatableRows
+            v-model="form.controversies"
+            :fields="controversiesFields"
+            legend="Dinamika Kontroversi & Peristiwa Kritis"
+            description="Catatan peristiwa kontroversi, polemik kebijakan, atau dinamika hukum yang melibatkan sosok."
+            addLabel="Tambah Kasus / Kontroversi"
           />
         </CardContent>
       </Card>

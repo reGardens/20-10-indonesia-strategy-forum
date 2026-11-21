@@ -202,9 +202,15 @@ const menuGroups = computed(() => [
         collapsible: true,
         items: [
             {
-                label: "Direktori Tokoh",
+                label: "Direktori Sosok",
                 href: "/cms/tokoh",
                 icon: "UserStar",
+                visible: hasFeature("tokoh"),
+            },
+            {
+                label: "Kategori Lembaga",
+                href: "/cms/kategori-lembaga",
+                icon: "Category",
                 visible: hasFeature("tokoh"),
             },
         ],
@@ -216,7 +222,7 @@ const menuGroups = computed(() => [
         collapsible: true,
         items: [
             {
-                label: "Surat Pembaca",
+                label: "Artikel by Member",
                 href: "/cms/surat-pembaca",
                 icon: "Mail",
                 visible: hasFeature("surat_pembaca"),
@@ -380,6 +386,24 @@ function toggleGroup(key) {
     openGroups.value[key] = !openGroups.value[key];
 }
 
+const collapsibleGroups = computed(() => visibleGroups.value.filter(g => g.collapsible));
+const isAllExpanded = computed(() => {
+    return collapsibleGroups.value.length > 0 && collapsibleGroups.value.every(g => Boolean(openGroups.value[g.key]));
+});
+
+function toggleAllGroups() {
+    const targetState = !isAllExpanded.value;
+    collapsibleGroups.value.forEach(g => {
+        openGroups.value[g.key] = targetState;
+    });
+}
+
+function handleMenuClick() {
+    if (typeof sessionStorage !== "undefined") {
+        sessionStorage.removeItem("cms_last_active_menu");
+    }
+}
+
 // Buka otomatis grup yang memiliki menu yang sedang aktif
 function syncActiveGroup() {
     visibleGroups.value.forEach((group) => {
@@ -406,11 +430,27 @@ watch(
         <template v-for="group in visibleGroups" :key="group.key || group.label">
             <!-- Non-collapsible Group (e.g. Navigasi Utama, Situs Publik) -->
             <template v-if="!group.collapsible">
-                <p
-                    class="px-3 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70"
-                >
-                    {{ group.label }}
-                </p>
+                <div class="flex items-center justify-between px-3 pt-3 pb-1">
+                    <p
+                        class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70"
+                    >
+                        {{ group.label }}
+                    </p>
+                    <button
+                        v-if="group.key === 'navigasi-utama' || group.key === 'main'"
+                        type="button"
+                        @click="toggleAllGroups"
+                        class="h-6 w-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground dark:hover:text-white hover:bg-muted/60 transition-colors cursor-pointer select-none"
+                        :title="isAllExpanded ? 'Tutup semua sub menu' : 'Buka semua sub menu'"
+                        :aria-label="isAllExpanded ? 'Tutup semua sub menu' : 'Buka semua sub menu'"
+                    >
+                        <IconComponent
+                            :name="isAllExpanded ? 'Minus' : 'Plus'"
+                            :size="14"
+                            :stroke="2.2"
+                        />
+                    </button>
+                </div>
 
                 <template v-for="item in group.items" :key="item.href || item.key">
                     <!-- External link -->
@@ -435,6 +475,7 @@ watch(
                     <Link
                         v-else
                         :href="item.href"
+                        @click="handleMenuClick"
                         :class="[
                             'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all w-full text-left',
                             isActive(item.href)
@@ -501,6 +542,7 @@ watch(
                         v-for="item in group.items"
                         :key="item.href"
                         :href="item.href"
+                        @click="handleMenuClick"
                         :class="[
                             'flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all w-full text-left',
                             isActive(item.href)

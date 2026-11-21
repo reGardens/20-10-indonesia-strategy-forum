@@ -81,10 +81,7 @@ const rubrik = computed(() => data.value?.rubrik || {
     { slug: 'semua', name: 'Semua Tokoh' },
     { slug: 'eksekutif', name: 'Eksekutif' },
     { slug: 'legislatif', name: 'Legislatif' },
-    { slug: 'yudikatif', name: 'Yudikatif' },
     { slug: 'pakar', name: 'Pakar & Akademisi' },
-    { slug: 'militer', name: 'Militer & Hankam' },
-    { slug: 'pengusaha', name: 'Pengusaha' },
   ],
   isuOptions: [
     { slug: 'semua', name: 'Semua Isu' },
@@ -364,20 +361,6 @@ watch(
       aria-busy="true"
       aria-label="Memuat direktori tokoh"
     >
-      <!-- Hero Skeleton -->
-      <div class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden p-6 sm:p-8">
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-          <div class="md:col-span-3 aspect-[3/4] bg-neutral-200 rounded-lg"></div>
-          <div class="md:col-span-9 space-y-3">
-            <div class="h-3 w-32 bg-neutral-200 rounded"></div>
-            <div class="h-8 w-2/3 bg-neutral-300 rounded"></div>
-            <div class="h-4 w-1/2 bg-neutral-200 rounded"></div>
-            <div class="h-4 w-full bg-neutral-200 rounded mt-4"></div>
-            <div class="h-4 w-5/6 bg-neutral-200 rounded"></div>
-          </div>
-        </div>
-      </div>
-
       <!-- Grid Cards Skeleton -->
       <div class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden p-6">
         <div class="h-4 w-40 bg-neutral-300 rounded mb-6"></div>
@@ -399,93 +382,8 @@ watch(
 
     <!-- ═══ 3. LOADED CONTENT VIEW ═════════════════════════════════════════ -->
     <main v-else class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12 mt-8 sm:mt-12 space-y-8 sm:space-y-12">
-      <!-- ═══ SECTION 1: HERO TOKOH PALING BERPENGARUH (BORDER-T-4 ISF-RED) ══ -->
-      <section
-        v-if="hero && currentKategori === 'semua' && !currentSearch && currentAbjad === 'semua'"
-        aria-labelledby="hero-tokoh-title"
-        class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden"
-      >
-        <div class="border-b border-neutral-200">
-          <SectionHeading
-            id="hero-tokoh-title"
-            title="Sorotan Tokoh"
-            size="lg"
-            :class="sectionPad"
-          >
-            <template #eyebrow>Tokoh Paling Berpengaruh Minggu Ini</template>
-          </SectionHeading>
-        </div>
 
-        <div :class="[sectionPad, 'py-5 sm:py-6 lg:py-8']">
-          <div class="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 items-center">
-            <!-- Left: Tokoh Photo -->
-            <div class="md:col-span-4 lg:col-span-3">
-              <div class="relative aspect-[3/4] rounded-lg overflow-hidden border border-neutral-200 shadow-sm bg-neutral-100">
-                <img
-                  v-if="hero.photo_url"
-                  :src="hero.photo_url"
-                  :alt="hero.photo_alt || hero.name"
-                  class="w-full h-full object-cover object-top"
-                />
-                <div v-else class="w-full h-full flex items-center justify-center text-neutral-400">
-                  <IconUser class="w-16 h-16 opacity-40" />
-                </div>
-
-                <div class="absolute bottom-2.5 left-2.5 px-2.5 py-0.5 rounded text-[10px] font-mono font-bold bg-isf-red text-white uppercase tracking-wider shadow-xs">
-                  Sorotan Utama
-                </div>
-              </div>
-            </div>
-
-            <!-- Right: Profile highlights -->
-            <div class="md:col-span-8 lg:col-span-9 flex flex-col justify-between">
-              <div>
-                <div class="flex flex-wrap items-center gap-2 mb-2">
-                  <span class="px-2.5 py-0.5 rounded bg-neutral-100 text-neutral-700 text-xs font-mono font-bold uppercase tracking-wider border border-neutral-200">
-                    {{ hero.role_category_label || hero.role_category || 'Legislatif' }}
-                  </span>
-                  <span class="px-2.5 py-0.5 rounded bg-amber-500/10 text-amber-700 text-xs font-mono font-bold flex items-center gap-1 border border-amber-500/20">
-                    <IconAward class="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                    <span>Skor Pengaruh {{ hero.influence_score || hero.skor_value }}/100</span>
-                  </span>
-                </div>
-
-                <h2 class="font-headline text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-neutral-950 mb-1 hover:text-isf-red transition-colors">
-                  <RouterLink :to="hero.to || `/sosok/${hero.slug}`">
-                    {{ hero.name }}
-                  </RouterLink>
-                </h2>
-                <p class="text-xs sm:text-sm text-neutral-500 font-space-grotesk font-semibold mb-3">
-                  {{ hero.position }}
-                </p>
-
-                <p class="font-serif text-sm sm:text-base text-neutral-600 leading-relaxed line-clamp-3 sm:line-clamp-4 mb-6">
-                  "{{ hero.summary_analysis || hero.bio || hero.teaser }}"
-                </p>
-              </div>
-
-              <div class="flex flex-wrap items-center gap-3 pt-4 border-t border-neutral-200">
-                <RouterLink
-                  :to="hero.to || `/sosok/${hero.slug}`"
-                  class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-isf-red hover:bg-red-700 text-white font-bold text-xs sm:text-sm shadow-xs transition-all cursor-pointer"
-                >
-                  <span>Eksplorasi Profil & Rekam Jejak</span>
-                  <IconArrowRight class="w-4 h-4 shrink-0" />
-                </RouterLink>
-
-                <RouterLink
-                  :to="`/sosok/${hero.slug}/analisis`"
-                  class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-semibold text-xs sm:text-sm border border-neutral-300 transition-all cursor-pointer"
-                >
-                  <span>Tinjau Skor & Ulasan (#41)</span>
-                </RouterLink>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ═══ SECTION 2: DIREKTORI PROFIL TOKOH (GRID KARTU) ═════════════════ -->
+      <!-- ═══ DIREKTORI PROFIL TOKOH (GRID KARTU) ═════════════════ -->
       <section
         aria-labelledby="direktori-tokoh-title"
         class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden"

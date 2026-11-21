@@ -15,7 +15,7 @@
  * - Skeleton loader desktop dan mobile yang presisi mencerminkan struktur konten.
  * - Identitas visual: Navy #0B1220, Crimson Red #E10600, Cream #FBF9F4, serif editorial headline, Space Grotesk UI.
  */
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import {
   IconArrowLeft,
@@ -32,6 +32,7 @@ import {
   IconFlame,
   IconAward,
   IconShieldCheck,
+  IconPhoto,
   IconX,
 } from '@tabler/icons-vue'
 import {
@@ -47,9 +48,11 @@ import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
 import { formatDate } from '@/Utils/formatters'
 import { getOpiniPublik } from '@/api/services/isfPublicService'
 import { useIsfContent } from '@/Composables/useIsfContent'
+import { useIsfSession } from '@/Composables/useIsfSession'
 
 const route = useRoute()
 const router = useRouter()
+const { isLoggedIn, ensureLoaded } = useIsfSession()
 
 const sectionPad = 'px-3 lg:px-4 xl:px-[30px]'
 const linkClass =
@@ -76,11 +79,11 @@ const { data, status, load } = useIsfContent(() => {
 const rubrik = computed(() => data.value?.rubrik || {
   title: 'Opini Publik',
   label: 'Opini Publik',
-  description: 'Wadah dialektika pemikiran, analisis kritis akademisi, sikap resmi dewan redaksi, serta ruang aspirasi warga bagi kemajuan bangsa.',
+  description: 'Wadah pemikiran kritis, pandangan resmi redaksi, dan suara kontribusi publik.',
   subkategori: [
-    { slug: 'op-ed', name: 'Op-Ed & Pakar', description: 'Tulisan opini mendalam dari akademisi, analis, dan kontributor tamu independen.' },
-    { slug: 'editorial', name: 'Editorial ISF', description: 'Pandangan resmi dan sikap editorial dewan redaksi ISF atas isu strategis nasional.' },
-    { slug: 'surat-pembaca', name: 'Surat Pembaca', description: 'Aspirasi, kritik konstruktif, dan masukan masyarakat luas yang telah dikurasi redaksi.' },
+    { slug: 'op-ed', name: 'Op-Ed & Analisis Pakar', description: 'Tulisan gagasan dan analisis mendalam dari akademisi, intelektual, dan pakar independen.' },
+    { slug: 'editorial', name: 'Editorial ISF', description: 'Sikap, refleksi, dan pandangan resmi Dewan Redaksi Indonesia Strategy Forum terhadap isu strategis bangsa.' },
+    { slug: 'surat-pembaca', name: 'Surat Pembaca', description: 'Kontribusi pemikiran, catatan kritis, tanggapan, dan aspirasi masyarakat dari berbagai penjuru tanah air.' },
   ]
 })
 
@@ -111,6 +114,48 @@ const selectedPoll = computed(() => {
 const kutipanPublik = computed(() => data.value?.kutipanPublik || [])
 const suratPembacaList = computed(() => data.value?.suratPembaca || [])
 
+function generateAuthorSlug(name) {
+  if (!name) return 'member-isf'
+  return String(name)
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'member-isf'
+}
+
+// 4 Card Sorotan Opini Publik Berisi Artikel yang Baru Dibuat Member
+const sorotanMemberCards = computed(() => {
+  if (data.value?.sorotanMember && data.value.sorotanMember.length > 0) {
+    return data.value.sorotanMember.slice(0, 4)
+  }
+  const memberArts = (data.value?.articles || []).filter(a => a.is_by_member)
+  if (memberArts.length > 0) {
+    return memberArts.slice(0, 4)
+  }
+  const fromLetters = (data.value?.suratPembaca || []).slice(0, 4).map(l => ({
+    title: l.title,
+    slug: l.slug,
+    category: l.category || 'Opini',
+    subcategory: l.subcategory || 'Artikel Member',
+    summary: l.summary || (l.body ? l.body.slice(0, 130) : ''),
+    author: l.sender_name,
+    author_name: l.sender_name,
+    author_slug: generateAuthorSlug(l.sender_name),
+    author_affiliation: l.author_role || l.sender_city || 'Member Terverifikasi',
+    author_avatar: l.author_avatar,
+    imageUrl: l.image_url,
+    readingMinutes: l.reading_minutes || 5,
+    to: `/artikel/${l.slug}`,
+    publishedAt: l.published_at_formatted || l.published_at,
+    is_by_member: true,
+  }))
+  if (fromLetters.length > 0) {
+    return fromLetters
+  }
+  return (articles.value || []).slice(0, 4)
+})
+
 const filteredQuotes = computed(() => {
   const list = kutipanPublik.value || []
   if (kutipanFilter.value === 'tokoh') {
@@ -121,6 +166,77 @@ const filteredQuotes = computed(() => {
   }
   return list
 })
+
+// CTA 1 hingga 5 sesuai instruksi untuk menggantikan tab Op-Ed ke kanan (tetap ditampilkan, belum difungsikan)
+const ctaList = [
+  { label: 'CTA 1' },
+  { label: 'CTA 2' },
+  { label: 'CTA 3' },
+  { label: 'CTA 4' },
+  { label: 'CTA 5' },
+]
+
+const ctaBuatArtikelLabel = computed(() => {
+  return isLoggedIn.value ? 'Buat Artikel' : 'Daftar untuk Buat Artikel'
+})
+
+async function handleBuatArtikelClick() {
+  await ensureLoaded()
+  if (!isLoggedIn.value) {
+    // Belum login / belum terdaftar: arahkan ke registrasi dengan redirect kembali ke opini publik + modal terbuka
+    router.push({
+      path: '/register',
+      query: { redirect: '/opini-publik?buat_artikel=1' },
+    })
+    return
+  }
+  showSuratModal.value = true
+}
+
+// Lock background body scroll and persist open state in localStorage (auto reopen on refresh)
+watch(showSuratModal, (isOpen) => {
+  if (typeof localStorage !== 'undefined') {
+    if (isOpen) {
+      localStorage.setItem('isf_popup_buat_artikel_open', '1')
+    } else {
+      localStorage.removeItem('isf_popup_buat_artikel_open')
+    }
+  }
+  if (typeof document !== 'undefined') {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+  }
+})
+
+onBeforeUnmount(() => {
+  if (typeof document !== 'undefined') {
+    document.body.style.overflow = ''
+  }
+})
+
+onMounted(async () => {
+  await ensureLoaded()
+  // Buka modal otomatis bila kembali dari tautan verifikasi email, query param buat_artikel=1, atau tersimpan di localStorage (saat refresh)
+  if (
+    route.query.buat_artikel === '1' ||
+    route.query.open_modal === '1' ||
+    (typeof localStorage !== 'undefined' && localStorage.getItem('isf_popup_buat_artikel_open') === '1')
+  ) {
+    showSuratModal.value = true
+  }
+})
+
+watch(
+  () => route.query.buat_artikel,
+  (val) => {
+    if (val === '1') {
+      showSuratModal.value = true
+    }
+  }
+)
 
 function navigateSubkategori(slug) {
   currentPage.value = 1
@@ -144,6 +260,9 @@ function toggleLetter(id) {
 }
 
 function onSuratSubmitted() {
+  if (typeof localStorage !== 'undefined') {
+    localStorage.removeItem('isf_popup_buat_artikel_open')
+  }
   load()
 }
 
@@ -225,133 +344,260 @@ watch(
                 Semua Artikel
               </button>
               <button
-                v-for="sub in subkategoriList"
-                :key="sub.slug"
+                v-for="(cta, cIdx) in ctaList"
+                :key="cIdx"
                 type="button"
-                @click="navigateSubkategori(sub.slug)"
-                :class="[
-                  'px-4 py-2 rounded text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer',
-                  currentSubkategori === sub.slug
-                    ? 'bg-isf-red text-white'
-                    : 'bg-[#1a2333] text-neutral-300 hover:bg-[#253247] hover:text-white border border-neutral-700/60'
-                ]"
+                class="px-4 py-2 rounded text-xs font-space-grotesk font-bold transition-all shrink-0 bg-[#1a2333] text-neutral-300 border border-neutral-700/60 cursor-default opacity-85 select-none"
+                :title="cta.label"
               >
-                {{ sub.name }}
-              </button>
-              <button
-                type="button"
-                @click="navigateSubkategori('polling')"
-                :class="[
-                  'px-4 py-2 rounded text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 border',
-                  currentSubkategori === 'polling'
-                    ? 'bg-isf-red text-white border-isf-red'
-                    : 'bg-[#1a2333] text-neutral-300 hover:bg-[#253247] hover:text-white border border-neutral-700/60'
-                ]"
-              >
-                <IconFlame class="w-3.5 h-3.5 text-amber-500" />
-                <span>Jajak Pendapat</span>
-              </button>
-              <button
-                type="button"
-                @click="navigateSubkategori('kutipan')"
-                :class="[
-                  'px-4 py-2 rounded text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 border',
-                  currentSubkategori === 'kutipan'
-                    ? 'bg-isf-red text-white border-isf-red'
-                    : 'bg-[#1a2333] text-neutral-300 hover:bg-[#253247] hover:text-white border border-neutral-700/60'
-                ]"
-              >
-                <IconQuote class="w-3.5 h-3.5 text-sky-400" />
-                <span>Kutipan Publik</span>
+                <span>{{ cta.label }}</span>
               </button>
             </div>
 
-            <!-- CTA Kirim Surat Pembaca (Di kanan header navy) -->
+            <!-- CTA Buat Artikel (Di kanan header navy) -->
             <button
               type="button"
-              @click="showSuratModal = true"
+              @click="handleBuatArtikelClick"
               class="inline-flex items-center gap-1.5 px-4 py-2 rounded text-xs font-space-grotesk font-bold bg-isf-red hover:bg-red-700 text-white transition-all shrink-0 shadow-xs cursor-pointer"
             >
-              <IconMail class="w-3.5 h-3.5" />
-              <span>Kirim Surat</span>
+              <IconFileText class="w-3.5 h-3.5" />
+              <span>{{ ctaBuatArtikelLabel }}</span>
             </button>
           </div>
         </div>
       </div>
     </header>
 
-    <!-- ═══ 2. SKELETON LOADER (Presisi mencerminkan isi konten di Desktop & Mobile) ═══ -->
+    <!-- ═══ 2. SKELETON LOADER (Presisi 1:1 mencerminkan bentuk asli setiap section di Desktop & Mobile) ═══ -->
     <main v-if="status === 'loading' && !data" class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12 mt-8 sm:mt-12 space-y-8 sm:space-y-12 animate-pulse" aria-busy="true" aria-label="Memuat konten rubrik Opini Publik">
-      <!-- Section 1 Skeleton: Headline -->
+      <!-- Section 1 Skeleton: Sorotan Utama (4 Cards Grid Berisi Artikel Member) -->
       <div class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden">
         <div class="border-b border-neutral-200 px-4 py-3 sm:px-6 sm:py-4">
-          <div class="h-4 w-40 bg-neutral-200 rounded"></div>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 p-4 sm:p-6">
-          <div class="lg:col-span-7 aspect-[16/10] bg-neutral-200 rounded-md"></div>
-          <div class="lg:col-span-5 flex flex-col justify-between space-y-4">
-            <div class="space-y-3">
-              <div class="h-3 w-28 bg-neutral-200 rounded"></div>
-              <div class="h-7 w-full bg-neutral-300 rounded"></div>
-              <div class="h-7 w-4/5 bg-neutral-300 rounded"></div>
-              <div class="h-4 w-full bg-neutral-200 rounded mt-2"></div>
-              <div class="h-4 w-5/6 bg-neutral-200 rounded"></div>
+          <div class="space-y-1">
+            <div class="h-3 w-48 bg-neutral-200 rounded"></div>
+            <div class="flex items-center gap-2">
+              <div class="w-2.5 h-2.5 bg-isf-red rounded-xs"></div>
+              <div class="h-6 w-56 bg-neutral-300 rounded"></div>
             </div>
-            <div class="pt-3 border-t border-neutral-200 flex gap-3">
-              <div class="h-3 w-24 bg-neutral-200 rounded"></div>
-              <div class="h-3 w-20 bg-neutral-200 rounded"></div>
+          </div>
+        </div>
+
+        <div class="p-4 sm:p-6 xl:p-8">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div
+              v-for="i in 4"
+              :key="i"
+              class="flex flex-col justify-between bg-neutral-50 rounded-xl border border-neutral-200 overflow-hidden"
+            >
+              <!-- Image 16:10 with By Member badge -->
+              <div class="relative aspect-[16/10] bg-neutral-200">
+                <div class="absolute top-2.5 left-2.5 h-5 w-20 bg-neutral-300 rounded-full"></div>
+              </div>
+
+              <!-- Content -->
+              <div class="p-4 sm:p-4.5 flex-1 flex flex-col justify-between space-y-3">
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between">
+                    <div class="h-3 w-14 bg-neutral-200 rounded"></div>
+                    <div class="h-3 w-12 bg-neutral-200 rounded"></div>
+                  </div>
+                  <div class="h-4.5 w-full bg-neutral-300 rounded"></div>
+                  <div class="h-4.5 w-4/5 bg-neutral-300 rounded"></div>
+                  <div class="h-3 w-full bg-neutral-200 rounded mt-1"></div>
+                  <div class="h-3 w-3/4 bg-neutral-200 rounded"></div>
+                </div>
+
+                <!-- Author Row -->
+                <div class="pt-3 border-t border-neutral-200 flex items-center justify-between gap-2 mt-auto">
+                  <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-full bg-neutral-300 shrink-0"></div>
+                    <div class="space-y-1">
+                      <div class="h-3 w-20 bg-neutral-300 rounded"></div>
+                      <div class="h-2.5 w-14 bg-neutral-200 rounded"></div>
+                    </div>
+                  </div>
+                  <div class="w-7 h-7 rounded-full bg-neutral-200 shrink-0"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Section 2 Skeleton: Reader Poll Navy -->
-      <div class="bg-isf-navy rounded-lg border border-neutral-800 shadow-sm overflow-hidden p-4 sm:p-6 space-y-6">
-        <div class="border-b border-neutral-800 pb-4 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <div class="w-3 h-3 bg-isf-red rounded-xs"></div>
-            <div class="h-4 w-44 bg-neutral-700 rounded"></div>
+      <!-- Section 2 Skeleton: Jajak Pendapat Pembaca (Navy Frame) -->
+      <div class="bg-isf-navy text-white rounded-lg border border-neutral-800 shadow-sm overflow-hidden p-6 lg:p-8 space-y-6">
+        <div class="border-b border-neutral-800 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <div class="h-3 w-44 bg-neutral-700 rounded"></div>
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 bg-isf-red rounded-xs"></div>
+              <div class="h-6 w-60 bg-neutral-600 rounded"></div>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <div class="h-7 w-20 bg-neutral-800 rounded-full"></div>
+            <div class="h-7 w-20 bg-neutral-800 rounded-full"></div>
           </div>
         </div>
-        <div class="max-w-3xl mx-auto h-48 bg-neutral-900 rounded-xl border border-neutral-800"></div>
+
+        <!-- Poll Card Inside Navy Frame -->
+        <div class="max-w-3xl mx-auto bg-neutral-900/90 rounded-xl border border-neutral-800 p-5 sm:p-7 space-y-6">
+          <div class="space-y-2">
+            <div class="h-3 w-24 bg-neutral-700 rounded"></div>
+            <div class="h-6 w-full bg-neutral-600 rounded"></div>
+            <div class="h-6 w-3/4 bg-neutral-600 rounded"></div>
+            <div class="h-3.5 w-5/6 bg-neutral-700 rounded mt-1"></div>
+          </div>
+          <!-- Option Bars -->
+          <div class="space-y-3">
+            <div v-for="opt in 3" :key="opt" class="h-12 w-full bg-neutral-800/80 rounded-lg border border-neutral-700/60 flex items-center px-4 justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-4 h-4 rounded-full border border-neutral-600 bg-neutral-700"></div>
+                <div class="h-3.5 w-44 bg-neutral-700 rounded"></div>
+              </div>
+              <div class="h-3.5 w-10 bg-neutral-700 rounded"></div>
+            </div>
+          </div>
+          <!-- Vote Button & Disclaimer -->
+          <div class="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="h-9 w-32 bg-isf-red/70 rounded-lg"></div>
+            <div class="h-3 w-56 bg-neutral-700 rounded"></div>
+          </div>
+        </div>
       </div>
 
       <!-- Section 3 Skeleton: Kutipan Publik -->
-      <div class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden p-4 sm:p-6 space-y-6">
-        <div class="border-b border-neutral-300 pb-4 flex items-center justify-between">
-          <div class="h-4 w-44 bg-neutral-300 rounded"></div>
-          <div class="h-7 w-32 bg-neutral-300 rounded-lg"></div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          <div v-for="n in 3" :key="n" class="h-40 bg-neutral-200 rounded-xl"></div>
-        </div>
-      </div>
-
-      <!-- Section 4 Skeleton: Surat Pembaca White -->
-      <div class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden p-4 sm:p-6 space-y-4">
-        <div class="border-b border-neutral-200 pb-4 flex items-center justify-between">
-          <div class="h-4 w-44 bg-neutral-300 rounded"></div>
-          <div class="h-8 w-36 bg-neutral-200 rounded-lg"></div>
-        </div>
-        <div class="space-y-3">
-          <div v-for="n in 2" :key="n" class="h-28 bg-neutral-100 rounded-xl border border-neutral-200"></div>
-        </div>
-      </div>
-
-      <!-- Section 5 Skeleton: Artikel Terbaru Grid -->
-      <div class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden">
-        <div class="border-b border-neutral-200 px-4 py-3 sm:px-6 sm:py-4">
-          <div class="h-4 w-32 bg-neutral-300 rounded"></div>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-2">
-          <div v-for="n in 4" :key="n" class="grid grid-cols-[6rem_1fr] sm:grid-cols-[10rem_1fr] gap-3 sm:gap-4 p-4 border-b border-neutral-200">
-            <div class="aspect-[4/3] bg-neutral-200 rounded"></div>
-            <div class="space-y-2">
-              <div class="h-3 w-16 bg-neutral-200 rounded"></div>
-              <div class="h-4 w-full bg-neutral-300 rounded"></div>
-              <div class="h-3 w-4/5 bg-neutral-200 rounded"></div>
+      <div class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden p-4 sm:p-6 lg:p-8">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-neutral-300 pb-4 mb-6">
+          <div class="space-y-1">
+            <div class="h-3 w-44 bg-neutral-200 rounded"></div>
+            <div class="flex items-center gap-2">
+              <div class="w-2.5 h-2.5 bg-isf-red rounded-xs"></div>
+              <div class="h-6 w-52 bg-neutral-300 rounded"></div>
             </div>
           </div>
+          <div class="flex items-center gap-1.5 p-1 bg-white border border-neutral-200 rounded-lg">
+            <div class="h-6 w-20 bg-neutral-300 rounded"></div>
+            <div class="h-6 w-24 bg-neutral-200 rounded"></div>
+            <div class="h-6 w-24 bg-neutral-200 rounded"></div>
+          </div>
+        </div>
+
+        <!-- 3 Quote Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div
+            v-for="q in 3"
+            :key="q"
+            class="bg-[#FBF9F4] rounded-xl border border-neutral-300/80 p-5 sm:p-6 flex flex-col justify-between space-y-4"
+          >
+            <div class="space-y-3">
+              <div class="w-6 h-6 rounded bg-neutral-300"></div>
+              <div class="space-y-2">
+                <div class="h-4 w-full bg-neutral-300 rounded"></div>
+                <div class="h-4 w-full bg-neutral-300 rounded"></div>
+                <div class="h-4 w-3/5 bg-neutral-300 rounded"></div>
+              </div>
+              <div class="h-3 w-28 bg-neutral-200 rounded mt-2"></div>
+            </div>
+            <div class="pt-4 border-t border-neutral-200/80 flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full bg-neutral-300 shrink-0"></div>
+              <div class="space-y-1.5 flex-1">
+                <div class="h-3.5 w-24 bg-neutral-300 rounded"></div>
+                <div class="h-2.5 w-16 bg-neutral-200 rounded"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4 Skeleton: Artikel by Member Terkurasi -->
+      <div class="bg-white rounded-lg border border-neutral-300 p-4 sm:p-6 lg:p-8 shadow-xs">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-neutral-200 pb-4 mb-6">
+          <div class="space-y-1">
+            <div class="h-3 w-48 bg-neutral-200 rounded"></div>
+            <div class="h-6 w-64 bg-neutral-300 rounded"></div>
+            <div class="h-3.5 w-96 max-w-full bg-neutral-200 rounded mt-1"></div>
+          </div>
+          <div class="h-9 w-36 bg-neutral-900/80 rounded-lg shrink-0"></div>
+        </div>
+
+        <!-- 2 Letter Cards Stack -->
+        <div class="space-y-4">
+          <div
+            v-for="l in 2"
+            :key="l"
+            class="border border-neutral-200 rounded-xl p-5 bg-neutral-50/60 space-y-3"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-start gap-3 flex-1">
+                <div class="w-11 h-11 rounded-lg bg-neutral-300 shrink-0"></div>
+                <div class="space-y-2 flex-1">
+                  <div class="flex items-center gap-2">
+                    <div class="h-3 w-24 bg-neutral-300 rounded"></div>
+                    <div class="h-3 w-16 bg-neutral-200 rounded"></div>
+                    <div class="h-3 w-20 bg-neutral-200 rounded"></div>
+                  </div>
+                  <div class="h-5 w-4/5 bg-neutral-300 rounded"></div>
+                </div>
+              </div>
+              <div class="h-5 w-28 bg-emerald-500/15 rounded-full shrink-0"></div>
+            </div>
+            <div class="space-y-1.5 pt-1">
+              <div class="h-3.5 w-full bg-neutral-200 rounded"></div>
+              <div class="h-3.5 w-5/6 bg-neutral-200 rounded"></div>
+            </div>
+            <div class="pt-3 border-t border-neutral-200/80 flex items-center justify-between">
+              <div class="h-3 w-32 bg-neutral-300 rounded"></div>
+              <div class="h-3 w-24 bg-neutral-200 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 5 Skeleton: Artikel Terbaru + Pagination -->
+      <div class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden">
+        <div class="border-b border-neutral-200 px-4 py-3 sm:px-6 sm:py-4">
+          <div class="space-y-1">
+            <div class="h-3 w-32 bg-neutral-200 rounded"></div>
+            <div class="flex items-center gap-2">
+              <div class="w-2.5 h-2.5 bg-isf-red rounded-xs"></div>
+              <div class="h-6 w-44 bg-neutral-300 rounded"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2 Columns Grid of Articles with divider border -->
+        <div class="grid grid-cols-1 lg:grid-cols-2">
+          <div
+            v-for="n in 6"
+            :key="n"
+            class="grid grid-cols-[6rem_minmax(0,1fr)] sm:grid-cols-[12rem_minmax(0,1fr)] lg:grid-cols-[10rem_minmax(0,1fr)] xl:grid-cols-[14rem_minmax(0,1fr)] items-start gap-3 sm:gap-5 border-b border-neutral-200 px-3 py-3.5 sm:px-4 sm:py-5 xl:px-[30px] lg:[&:nth-child(odd)]:border-r"
+          >
+            <!-- Thumbnail -->
+            <div class="aspect-[4/3] bg-neutral-200 rounded-md"></div>
+            <!-- Text Content -->
+            <div class="space-y-2 min-w-0">
+              <div class="h-3 w-20 bg-neutral-200 rounded"></div>
+              <div class="h-4.5 w-full bg-neutral-300 rounded"></div>
+              <div class="h-4.5 w-4/5 bg-neutral-300 rounded"></div>
+              <div class="h-3 w-full bg-neutral-200 rounded mt-1"></div>
+              <div class="h-3 w-3/4 bg-neutral-200 rounded"></div>
+              <div class="flex items-center gap-2 pt-1">
+                <div class="h-2.5 w-16 bg-neutral-200 rounded"></div>
+                <div class="h-2.5 w-12 bg-neutral-200 rounded"></div>
+                <div class="h-2.5 w-24 bg-neutral-200 rounded"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pagination Skeleton -->
+        <div class="py-5 sm:py-6 flex justify-center border-t border-neutral-200 gap-1.5">
+          <div class="h-8 w-20 bg-neutral-200 rounded"></div>
+          <div class="h-8 w-8 bg-neutral-300 rounded"></div>
+          <div class="h-8 w-8 bg-neutral-200 rounded"></div>
+          <div class="h-8 w-8 bg-neutral-200 rounded"></div>
+          <div class="h-8 w-20 bg-neutral-200 rounded"></div>
         </div>
       </div>
     </main>
@@ -368,9 +614,9 @@ watch(
 
     <!-- ═══ 3. LOADED CONTENT VIEW ═════════════════════════════════════════ -->
     <main v-else class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12 mt-8 sm:mt-12 space-y-8 sm:space-y-12">
-      <!-- ═══ SECTION 1: SOROTAN UTAMA (HEADLINE) ═════════════════════════ -->
+      <!-- ═══ SECTION 1: SOROTAN UTAMA (4 CARDS ARTIKEL BY MEMBER) ═════════════════════════ -->
       <section
-        v-if="headline && currentPage === 1 && (!currentSubkategori || ['op-ed', 'editorial'].includes(currentSubkategori))"
+        v-if="currentPage === 1 && (!currentSubkategori || ['op-ed', 'editorial'].includes(currentSubkategori)) && sorotanMemberCards.length > 0"
         aria-labelledby="headline-opini"
         class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden"
       >
@@ -381,93 +627,108 @@ watch(
             size="lg"
             :class="sectionPad"
           >
-            <template #eyebrow>Laporan & Diskursus Utama</template>
+            <template #eyebrow>Artikel Kontribusi Member Terverifikasi</template>
           </SectionHeading>
         </div>
 
-        <IsfLink
-          :to="headline.to || `/artikel/${headline.slug}`"
-          :class="[
-            linkClass,
-            'group grid grid-cols-1 gap-4 py-4 sm:gap-6 sm:py-5 lg:grid-cols-12 lg:gap-8 lg:py-6',
-            sectionPad
-          ]"
-        >
-          <!-- Thumbnail Cover -->
-          <div class="lg:col-span-7 relative overflow-hidden rounded-md bg-neutral-900 aspect-[16/10]">
-            <img
-              v-if="headline.imageUrl || headline.thumbnail || headline.cover_image"
-              :src="headline.imageUrl || headline.thumbnail || headline.cover_image"
-              :alt="headline.imageAlt || headline.title"
-              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            />
-            <ImagePlaceholder v-else class="w-full h-full" />
-
-            <!-- Badges over image -->
-            <div class="absolute top-3 left-3 flex flex-wrap gap-2">
-              <span
-                v-if="headline.is_editorial || headline.subcategory === 'editorial'"
-                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-isf-red text-white shadow-md border border-red-500"
-              >
-                <IconAward class="w-3.5 h-3.5 shrink-0" />
-                Editorial Resmi ISF
-              </span>
-              <span
-                v-else
-                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-neutral-900/90 backdrop-blur-md text-amber-400 border border-amber-500/30"
-              >
-                <IconUser class="w-3.5 h-3.5 shrink-0" />
-                Op-Ed Pakar
-              </span>
-            </div>
-          </div>
-
-          <!-- Content Column -->
-          <div class="min-w-0 lg:col-span-5 flex flex-col justify-between">
-            <div>
-              <span class="isf-kicker text-isf-red font-bold text-[11px] sm:text-xs">
-                {{ headline.subcategory ? `OPINI · ${headline.subcategory.toUpperCase()}` : 'OPINI PUBLIK' }}
-              </span>
-              <h2 class="font-headline text-xl sm:text-2xl lg:text-3xl font-bold leading-tight text-neutral-950 group-hover:text-isf-red transition-colors mt-2 mb-3">
-                {{ headline.title }}
-              </h2>
-              <p class="font-newsreader italic text-neutral-700 text-sm sm:text-base leading-relaxed line-clamp-3 mb-4">
-                "{{ headline.summary || headline.excerpt || headline.title }}"
-              </p>
-            </div>
-
-            <!-- Author & Byline Details -->
-            <div class="pt-4 border-t border-neutral-200 flex items-center justify-between gap-4">
-              <div class="flex items-center gap-2.5 min-w-0">
+        <div :class="[sectionPad, 'py-5 sm:py-6']">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <article
+              v-for="(card, cIdx) in sorotanMemberCards"
+              :key="card.slug || cIdx"
+              class="group flex flex-col justify-between bg-neutral-50 hover:bg-neutral-100/90 rounded-xl border border-neutral-200/90 overflow-hidden transition-all duration-300 hover:shadow-md hover:border-isf-red/40"
+            >
+              <!-- Card Image / Thumbnail (Aspect 16:10, full-bleed without black bar) -->
+              <IsfLink :to="card.to || `/artikel/${card.slug}`" class="block relative aspect-[16/10] overflow-hidden bg-neutral-200">
+                <img
+                  v-if="card.imageUrl || card.thumbnail || card.cover_image"
+                  :src="card.imageUrl || card.thumbnail || card.cover_image"
+                  :alt="card.imageAlt || card.title"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <!-- Clean neutral placeholder filling 100% of container without black bars -->
                 <div
-                  :class="[
-                    'w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs font-space-grotesk border shrink-0',
-                    headline.is_editorial
-                      ? 'bg-isf-red/20 text-isf-red border-isf-red/40'
-                      : 'bg-amber-500/20 text-amber-600 border-amber-500/40'
-                  ]"
+                  v-else
+                  class="w-full h-full flex flex-col items-center justify-center bg-neutral-200 text-neutral-400 group-hover:bg-neutral-300/60 transition-colors select-none"
                 >
-                  {{ (headline.author || headline.author_name || (headline.is_editorial ? 'ISF' : 'OP')).substring(0, 2).toUpperCase() }}
+                  <IconPhoto class="w-10 h-10 stroke-[1.25] text-neutral-400 group-hover:text-neutral-500 transition-colors" />
                 </div>
-                <div class="min-w-0">
-                  <div class="text-xs sm:text-sm font-bold font-space-grotesk text-neutral-900 truncate">
-                    {{ headline.author || headline.author_name || (headline.is_editorial ? 'Dewan Redaksi ISF' : 'Penulis Op-Ed') }}
+
+                <!-- Badge By Member over Image -->
+                <div class="absolute top-2.5 left-2.5">
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-isf-red text-white shadow-sm">
+                    <IconAward class="w-3 h-3" />
+                    By Member
+                  </span>
+                </div>
+              </IsfLink>
+
+              <!-- Card Content -->
+              <div class="p-4 sm:p-4.5 flex-1 flex flex-col justify-between space-y-3">
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between text-[11px] text-neutral-500 font-mono">
+                    <span class="text-isf-red font-bold uppercase tracking-wide">
+                      {{ card.subcategory ? card.subcategory.toUpperCase() : 'OPINI' }}
+                    </span>
+                    <span class="flex items-center gap-1">
+                      <IconClock class="w-3 h-3" />
+                      {{ card.readingMinutes || 5 }} mnt
+                    </span>
                   </div>
-                  <div class="text-[11px] text-neutral-500 font-space-grotesk flex items-center gap-1.5 truncate">
-                    <time v-if="headline.publishedAt" :datetime="headline.publishedAt">{{ formatDate(headline.publishedAt) }}</time>
-                    <span v-if="headline.readingMinutes">• {{ headline.readingMinutes }} mnt baca</span>
-                  </div>
+
+                  <h3 class="font-headline font-bold text-sm sm:text-base leading-snug text-neutral-900 group-hover:text-isf-red transition-colors line-clamp-2">
+                    <IsfLink :to="card.to || `/artikel/${card.slug}`">
+                      {{ card.title }}
+                    </IsfLink>
+                  </h3>
+
+                  <p v-if="card.summary || card.excerpt" class="text-neutral-600 text-xs leading-relaxed line-clamp-2 font-serif">
+                    {{ card.summary || card.excerpt }}
+                  </p>
+                </div>
+
+                <!-- Author Profile Footer -->
+                <div class="pt-3 border-t border-neutral-200/80 flex items-center justify-between gap-2 mt-auto">
+                  <IsfLink
+                    :to="`/penulis/${card.author_slug || generateAuthorSlug(card.author || card.author_name)}`"
+                    class="group/author flex items-center gap-2 min-w-0 hover:opacity-85 transition-opacity"
+                    :title="`Kunjungi profil ${card.author || card.author_name || 'penulis'}`"
+                  >
+                    <div class="w-7 h-7 rounded-full overflow-hidden bg-neutral-200 shrink-0 border border-neutral-300">
+                      <img
+                        v-if="card.author_avatar"
+                        :src="card.author_avatar"
+                        :alt="card.author || card.author_name"
+                        class="w-full h-full object-cover"
+                      />
+                      <div v-else class="w-full h-full flex items-center justify-center bg-neutral-800 text-white font-bold text-[10px]">
+                        {{ (card.author || card.author_name || 'M')[0] }}
+                      </div>
+                    </div>
+                    <div class="min-w-0">
+                      <p class="text-xs font-semibold text-neutral-900 truncate font-space-grotesk group-hover/author:text-isf-red transition-colors">
+                        {{ card.author || card.author_name || 'Member ISF' }}
+                      </p>
+                      <p class="text-[10px] text-neutral-500 truncate">
+                        {{ card.author_affiliation || 'Member Terverifikasi' }}
+                      </p>
+                    </div>
+                  </IsfLink>
+
+                  <!-- Button Arrow di samping nama penulis -> mengarah ke detail profile penulis -->
+                  <IsfLink
+                    :to="`/penulis/${card.author_slug || generateAuthorSlug(card.author || card.author_name)}`"
+                    class="w-7 h-7 rounded-full flex items-center justify-center text-isf-red hover:bg-isf-red/10 transition-colors shrink-0"
+                    :title="`Kunjungi profil ${card.author || card.author_name || 'penulis'}`"
+                    :aria-label="`Kunjungi profil ${card.author || card.author_name || 'penulis'}`"
+                  >
+                    <IconArrowRight class="w-4 h-4" />
+                  </IsfLink>
                 </div>
               </div>
-
-              <!-- Read Link -->
-              <span class="inline-flex items-center gap-1 text-xs sm:text-sm font-bold font-space-grotesk text-isf-red group-hover:underline shrink-0">
-                <span>Baca</span>
-                <IconArrowRight class="w-4 h-4" />
-              </span>
-            </div>
+            </article>
           </div>
-        </IsfLink>
+        </div>
       </section>
 
       <!-- ═══ SECTION 2: FITUR KHUSUS: JAJAK PENDAPAT PEMBACA (NAVY FRAME) ════════════ -->
@@ -571,7 +832,7 @@ watch(
         </div>
       </section>
 
-      <!-- ═══ SECTION 4: FITUR KHUSUS: SURAT PEMBACA TERKURASI ═════════════ -->
+      <!-- ═══ SECTION 4: FITUR KHUSUS: ARTIKEL BY MEMBER TERKURASI ═════════════ -->
       <section
         v-if="!currentSubkategori || currentSubkategori === 'surat-pembaca'"
         id="isf-surat-pembaca-section"
@@ -581,23 +842,23 @@ watch(
         <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-neutral-200 pb-4 mb-6">
           <div>
             <div class="flex items-center gap-2 text-xs font-mono font-bold tracking-widest text-isf-red uppercase mb-1">
-              <span>Kontribusi Masyarakat</span>
+              <span>Kontribusi Anggota & Komunitas</span>
             </div>
             <h2 id="surat-pembaca-heading" class="font-headline text-2xl sm:text-3xl font-black text-neutral-950">
-              Surat Pembaca Terkurasi
+              Artikel by Member Terkurasi
             </h2>
             <p class="text-neutral-600 text-xs sm:text-sm mt-1">
-              Aspirasi dan refleksi pembaca yang telah melalui proses kurasi dan penyuntingan oleh Dewan Redaksi ISF.
+              Gagasan, analisis mendalam, dan refleksi pemikiran member yang telah melalui proses kurasi dan penyuntingan Dewan Redaksi ISF.
             </p>
           </div>
 
           <button
             type="button"
-            @click="showSuratModal = true"
+            @click="handleBuatArtikelClick"
             class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white text-xs sm:text-sm font-bold font-space-grotesk transition-colors shrink-0 shadow-xs cursor-pointer self-start sm:self-auto"
           >
-            <IconMail class="w-4 h-4 text-isf-red" />
-            <span>Tulis Surat Pembaca</span>
+            <IconFileText class="w-4 h-4 text-isf-red" />
+            <span>{{ ctaBuatArtikelLabel }}</span>
           </button>
         </div>
 
@@ -608,21 +869,28 @@ watch(
             :key="letter.id"
             class="border border-neutral-200 rounded-xl p-5 hover:border-neutral-400 transition-colors bg-neutral-50/60"
           >
-            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-2">
-              <div>
-                <div class="flex items-center gap-2 text-[11px] font-mono text-neutral-500 mb-1">
-                  <span class="font-bold text-neutral-800">{{ letter.sender_name }}</span>
-                  <span>•</span>
-                  <span class="flex items-center gap-1">
-                    <IconMapPin class="w-3 h-3 text-neutral-400" />
-                    {{ letter.sender_city }}
-                  </span>
-                  <span>•</span>
-                  <span>{{ formatDate(letter.published_at) }}</span>
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-2">
+              <div class="flex items-start gap-3">
+                <!-- 1:1 Author Avatar -->
+                <div v-if="letter.author_avatar" class="w-11 h-11 rounded-lg overflow-hidden border border-neutral-300 bg-neutral-200 shrink-0 mt-0.5">
+                  <img :src="letter.author_avatar" :alt="letter.sender_name" class="w-full h-full object-cover" />
                 </div>
-                <h3 class="font-headline text-lg sm:text-xl font-bold text-neutral-950 leading-snug">
-                  {{ letter.title }}
-                </h3>
+                <div>
+                  <div class="flex items-center gap-2 text-[11px] font-mono text-neutral-500 mb-1 flex-wrap">
+                    <span class="font-bold text-neutral-800">{{ letter.sender_name }}</span>
+                    <span v-if="letter.author_role" class="text-neutral-600">({{ letter.author_role }})</span>
+                    <span>•</span>
+                    <span v-if="letter.sender_city" class="flex items-center gap-1">
+                      <IconMapPin class="w-3 h-3 text-neutral-400" />
+                      {{ letter.sender_city }}
+                    </span>
+                    <span v-if="letter.sender_city">•</span>
+                    <span>{{ formatDate(letter.published_at) }}</span>
+                  </div>
+                  <h3 class="font-headline text-lg sm:text-xl font-bold text-neutral-950 leading-snug">
+                    {{ letter.title }}
+                  </h3>
+                </div>
               </div>
 
               <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-700 border border-emerald-500/30 shrink-0 self-start">
@@ -647,7 +915,7 @@ watch(
                 @click="toggleLetter(letter.id)"
                 class="text-xs font-bold font-space-grotesk text-isf-red hover:underline cursor-pointer"
               >
-                {{ expandedLetterId === letter.id ? 'Tutup Isi Lengkap' : 'Baca Surat Lengkap →' }}
+                {{ expandedLetterId === letter.id ? 'Tutup Isi Lengkap' : 'Baca Artikel Lengkap →' }}
               </button>
               <span class="text-[10px] font-mono text-neutral-400">
                 Status: Terverifikasi
@@ -658,17 +926,17 @@ watch(
 
         <!-- Empty Letters State -->
         <div v-else class="text-center py-10 bg-neutral-50 rounded-xl border border-dashed border-neutral-300">
-          <IconMail class="w-10 h-10 text-neutral-400 mx-auto mb-2" />
-          <h4 class="font-bold text-neutral-800 text-sm font-space-grotesk">Belum Ada Surat Pembaca yang Ditayangkan</h4>
+          <IconFileText class="w-10 h-10 text-neutral-400 mx-auto mb-2" />
+          <h4 class="font-bold text-neutral-800 text-sm font-space-grotesk">Belum Ada Artikel by Member yang Ditayangkan</h4>
           <p class="text-xs text-neutral-500 mt-1 max-w-sm mx-auto">
-            Jadilah yang pertama mengirimkan pandangan dan aspirasi Anda untuk kebijakan publik Indonesia.
+            Jadilah yang pertama mengirimkan analisis dan gagasan Anda untuk dipublikasikan di ISF.
           </p>
           <button
             type="button"
-            @click="showSuratModal = true"
+            @click="handleBuatArtikelClick"
             class="mt-4 px-4 py-2 rounded-lg bg-isf-red text-white text-xs font-bold font-space-grotesk hover:bg-red-700 transition-colors cursor-pointer"
           >
-            Kirim Surat Sekarang
+            {{ isLoggedIn ? 'Buat Artikel Sekarang' : 'Daftar untuk Buat Artikel' }}
           </button>
         </div>
       </section>
@@ -749,37 +1017,56 @@ watch(
       </section>
     </main>
 
-    <!-- ═══ MODAL KIRIM SURAT PEMBACA ═══════════════════════════════════════ -->
-    <div
-      v-if="showSuratModal"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs overflow-y-auto animate-fadeIn"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="modal-surat-title"
-    >
-      <div class="relative w-full max-w-2xl my-8">
-        <SuratPembacaForm
-          :is-modal="true"
-          @close="showSuratModal = false"
-          @submitted="onSuratSubmitted"
-        />
+    <!-- ═══ MODAL POPUP BUAT ARTIKEL BY MEMBER (Apple-Style Fluid Animation) ═════════ -->
+    <Transition name="apple-modal">
+      <div
+        v-if="showSuratModal"
+        class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/75 backdrop-blur-md overflow-hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-surat-title"
+        @click.self="showSuratModal = false"
+      >
+        <div class="apple-modal-content relative w-full max-w-4xl my-auto">
+          <SuratPembacaForm
+            :is-modal="true"
+            @close="showSuratModal = false"
+            @submitted="onSuratSubmitted"
+          />
+        </div>
       </div>
-    </div>
+    </Transition>
   </div>
 </template>
 
 <style scoped>
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+/* Apple-style fluid modal spring animation */
+.apple-modal-enter-active {
+  transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.animate-fadeIn {
-  animation: fadeIn 0.2s ease-out forwards;
+.apple-modal-leave-active {
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
+.apple-modal-enter-from,
+.apple-modal-leave-to {
+  opacity: 0;
+}
+
+.apple-modal-enter-active .apple-modal-content {
+  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.apple-modal-leave-active .apple-modal-content {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.apple-modal-enter-from .apple-modal-content {
+  opacity: 0;
+  transform: scale(0.95) translateY(14px);
+}
+.apple-modal-leave-to .apple-modal-content {
+  opacity: 0;
+  transform: scale(0.97) translateY(8px);
+}
+
 .isf-no-scrollbar::-webkit-scrollbar {
   display: none;
 }

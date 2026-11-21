@@ -1,4 +1,5 @@
 <script setup>
+import { useCmsPagination } from '@/Composables/useCmsPagination'
 import { ref, computed, onMounted, watch } from "vue";
 import { Head, Link } from "@inertiajs/vue3";
 import CmsLayout from "@/Layouts/CmsLayout.vue";
@@ -42,7 +43,7 @@ function initialTab() {
     return TABS.includes(tab) ? tab : "body";
 }
 const activeTab = ref(initialTab()); // 'body' | 'popup'
-const currentPage = ref(1);
+const currentPage = useCmsPagination()
 const perPage = ref(10);
 
 watch(activeTab, (tab) => {

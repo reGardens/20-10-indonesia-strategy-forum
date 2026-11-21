@@ -75,28 +75,26 @@ const categoryBadgeColor = computed(() => {
       </div>
 
       <div
-        v-if="tokoh.is_influential_weekly"
+        v-if="tokoh.is_featured || tokoh.is_influential_weekly"
         class="absolute bottom-2.5 left-2.5 px-2 py-0.5 rounded bg-isf-red text-white text-[10px] font-mono font-bold tracking-wider uppercase shadow-xs"
       >
-        Tokoh Sorotan Pekan Ini
+        Sosok Pekan Ini
       </div>
     </div>
 
     <!-- Content Area -->
     <div class="p-5 flex-1 flex flex-col justify-between">
       <div>
-        <h3 class="font-headline text-lg sm:text-xl font-bold text-neutral-950 dark:text-white group-hover:text-isf-red transition-colors line-clamp-1">
+        <h3 class="font-headline text-lg sm:text-xl font-bold text-neutral-950 dark:text-white group-hover:text-isf-red transition-colors line-clamp-2 leading-snug min-h-[3rem]">
           <router-link :to="targetUrl">
             {{ tokoh.name }}
           </router-link>
         </h3>
-        <p class="text-xs text-neutral-500 dark:text-neutral-400 font-space-grotesk font-medium mt-1 line-clamp-1">
-          {{ tokoh.position }}
-        </p>
-
-        <!-- Satu kalimat ringkasan analisis ISF -->
-        <p class="text-xs text-neutral-700 dark:text-neutral-300 font-space-grotesk mt-3 line-clamp-2 leading-relaxed">
-          {{ tokoh.summary_analysis || tokoh.teaser || 'Profil tokoh nasional beserta rekam jejak kebijakan publik dan jejaring pengaruh strategis.' }}
+        <!-- 1 baris deskripsi: Jabatan & Ringkasan Analisis ISF -->
+        <p class="text-xs text-neutral-600 dark:text-neutral-400 font-space-grotesk mt-1.5 line-clamp-2 leading-relaxed min-h-[2.5rem]">
+          <span v-if="tokoh.position" class="font-medium text-neutral-900 dark:text-neutral-200">{{ tokoh.position }}</span>
+          <span v-if="tokoh.position && (tokoh.summary_analysis || tokoh.teaser)" class="text-neutral-400 mx-1.5">•</span>
+          <span v-if="tokoh.summary_analysis || tokoh.teaser" class="text-neutral-500">{{ tokoh.summary_analysis || tokoh.teaser }}</span>
         </p>
 
         <!-- Issues Tags -->

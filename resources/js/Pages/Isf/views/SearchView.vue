@@ -24,6 +24,12 @@ const loading = ref(false);
 const searchPerformed = ref(false);
 
 const results = ref([]);
+const visibleCount = ref(15);
+const displayedResults = computed(() => results.value.slice(0, visibleCount.value));
+
+function loadMore() {
+    visibleCount.value += 10;
+}
 const counts = ref({
     semua: 0,
     artikel: 0,
@@ -116,6 +122,7 @@ async function fetchResults(q, type) {
         if (requestId !== latestRequest) return;
 
         results.value = res?.data || [];
+        visibleCount.value = 15;
         if (res?.counts) {
             counts.value = res.counts;
         }
@@ -375,10 +382,14 @@ watch(
                     </div>
 
                     <div
-                        v-if="searchPerformed && inputQuery"
+                        v-if="searchPerformed"
                         class="text-xs text-neutral-500 font-ui"
                     >
                         Menampilkan
+                        <strong class="text-neutral-900 font-bold">{{
+                            displayedResults.length
+                        }}</strong>
+                        dari
                         <strong class="text-neutral-900 font-bold">{{
                             results.length
                         }}</strong>
@@ -555,7 +566,7 @@ watch(
             <!-- Results List -->
             <div v-else class="space-y-4">
                 <article
-                    v-for="item in results"
+                    v-for="item in displayedResults"
                     :key="item.id + item.type"
                     class="group rounded-lg border border-neutral-200 bg-white p-5 shadow-xs hover:border-neutral-400 hover:shadow-sm transition-all"
                 >
@@ -665,6 +676,24 @@ watch(
                         </div>
                     </div>
                 </article>
+
+                <!-- Tombol Muat Lebih Banyak (Load More) -->
+                <div
+                    v-if="results.length > visibleCount"
+                    class="text-center pt-6 pb-2"
+                >
+                    <button
+                        type="button"
+                        @click="loadMore"
+                        class="inline-flex items-center justify-center gap-2 rounded-md border border-neutral-300 bg-white px-6 py-2.5 text-xs sm:text-sm font-bold font-space-grotesk text-neutral-800 shadow-xs hover:bg-neutral-50 hover:border-neutral-400 active:bg-neutral-100 transition-all cursor-pointer"
+                    >
+                        <span>Muat Lebih Banyak</span>
+                        <span class="text-xs text-neutral-400">({{ results.length - visibleCount }} tersisa)</span>
+                        <svg class="w-4 h-4 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                </div>
             </div>
         </main>
     </div>

@@ -81,6 +81,18 @@ function getOptionLabel(opt) {
   return opt.label !== undefined ? opt.label : (opt.name !== undefined ? opt.name : (opt.title !== undefined ? opt.title : ''))
 }
 
+const emptyLabel = computed(() => {
+  if (props.placeholder) return props.placeholder
+  const emptyOpt = (props.options || []).find((opt) => getOptionValue(opt) === EMPTY_VALUE)
+  return emptyOpt ? getOptionLabel(emptyOpt) : 'Select Kategori'
+})
+
+// Filter out any option that evaluates to EMPTY_VALUE so it is never duplicated
+const sanitizedOptions = computed(() => {
+  if (!Array.isArray(props.options)) return []
+  return props.options.filter((opt) => getOptionValue(opt) !== EMPTY_VALUE)
+})
+
 const triggerClass = computed(() => [
   'w-full font-medium transition-colors cursor-pointer',
   props.size === 'sm' ? 'h-8 text-xs' : (props.size === 'md' ? 'h-9 text-xs' : 'h-10 text-sm'),
@@ -104,18 +116,17 @@ function handleSelect(val) {
       @update:model-value="handleSelect"
     >
       <SelectTrigger :id="id" :class="triggerClass" :aria-label="ariaLabel">
-        <SelectValue :placeholder="placeholder || 'Pilih...'" />
+        <SelectValue :placeholder="emptyLabel" />
       </SelectTrigger>
       <SelectContent :class="isDark ? 'bg-neutral-900 border-neutral-700 text-neutral-100' : ''">
         <SelectItem
-          v-if="placeholder"
           :value="EMPTY_VALUE"
           class="text-xs font-medium cursor-pointer"
         >
-          {{ placeholder }}
+          {{ emptyLabel }}
         </SelectItem>
         <SelectItem
-          v-for="(opt, idx) in options"
+          v-for="(opt, idx) in sanitizedOptions"
           :key="idx"
           :value="getOptionValue(opt)"
           class="text-xs font-medium cursor-pointer"

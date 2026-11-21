@@ -1,4 +1,5 @@
 <script setup>
+import { useCmsPagination } from '@/Composables/useCmsPagination'
 import { ref, computed, onMounted } from 'vue'
 import { Head, Link } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
@@ -29,7 +30,7 @@ const loadError = ref('')
 const search = ref('')
 const kategoriFilter = ref('')
 const statusFilter = ref('')
-const currentPage = ref(1)
+const currentPage = useCmsPagination()
 const perPage = ref(10)
 let searchTimeout = null
 

@@ -4,7 +4,7 @@ import { Head, Link } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
 import { cmsResources } from '@/api/services/isfCmsService'
 import { useCmsForm } from '@/Composables/useCmsForm'
-import { activeCategories as CATEGORIES, loadCategories } from '@/Pages/Cms/Isf/options'
+import { activeCategories as CATEGORIES, loadCategories, getSubcategoriesFor } from '@/Pages/Cms/Isf/options'
 import RepeatableRows from '@/Pages/Cms/components/shared/RepeatableRows.vue'
 import LoadingIndicator from '@/Pages/Cms/components/shared/LoadingIndicator.vue'
 import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
@@ -61,6 +61,7 @@ const { form, errors, err, loading, loadError, saving, save, load } = useCmsForm
     body: '',
     author_name: '',
     author_role: '',
+    author_avatar: '',
     reading_minutes: 5,
     image_alt: '',
     image_url: '',
@@ -112,34 +113,7 @@ function onSlugInput() {
 
 onMounted(loadCategories)
 
-const availableSubcategories = computed(() => {
-  const currentCat = (CATEGORIES.value || []).find((c) => c.value === form.category)
-  if (currentCat?.id) {
-    const subs = (CATEGORIES.value || []).filter((c) => c.parent_id === currentCat.id)
-    if (subs.length > 0) {
-      return subs.map((c) => ({
-        value: c.value || c.slug,
-        label: c.label || c.name,
-      }))
-    }
-  }
-  if (form.category === 'politik') {
-    return [
-      { value: 'pemilu', label: 'Pemilu & Pilkada' },
-      { value: 'parlemen', label: 'DPR/DPD/MPR' },
-      { value: 'pemerintahan', label: 'Eksekutif' },
-      { value: 'partai', label: 'Dinamika Partai' },
-    ]
-  }
-  if (form.category === 'hukum') {
-    return [
-      { value: 'regulasi', label: 'Regulasi & Perundang-undangan' },
-      { value: 'putusan', label: 'Putusan Peradilan' },
-      { value: 'kasus', label: 'Kasus Hukum' },
-    ]
-  }
-  return []
-})
+const availableSubcategories = computed(() => getSubcategoriesFor(form.category))
 
 const subcategoryValue = computed({
   get: () => form.subcategory || '__NONE__',
@@ -258,7 +232,7 @@ watch(
               <Label for="category" class="text-xs font-medium">Kategori <span class="text-red-500">*</span></Label>
               <Select v-model="form.category">
                 <SelectTrigger id="category" class="h-9 text-xs font-medium bg-background border-input">
-                  <SelectValue placeholder="Pilih Kategori..." />
+                  <SelectValue placeholder="Select Kategori" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem
@@ -279,7 +253,7 @@ watch(
               <Label for="subcategory" class="text-xs font-medium">Sub-Kategori</Label>
               <Select v-model="subcategoryValue">
                 <SelectTrigger id="subcategory" class="h-9 text-xs font-medium bg-background border-input">
-                  <SelectValue placeholder="-- Tanpa Sub-Kategori (Utama) --" />
+                  <SelectValue placeholder="Select Sub-Kategori" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__NONE__" class="text-xs font-medium cursor-pointer">
@@ -375,6 +349,24 @@ watch(
               />
               <p v-if="err('reading_minutes')" class="text-xs text-red-500 font-medium">{{ err('reading_minutes') }}</p>
             </div>
+          </div>
+
+          <!-- Foto Penulis Kecil Ukuran 1:1 -->
+          <div class="space-y-1.5 p-3.5 rounded-lg border border-border bg-muted/20">
+            <Label class="text-xs font-semibold flex items-center gap-1.5">
+              <IconComponent name="User" :size="14" class="text-isf-red" />
+              <span>Foto Penulis (Ukuran 1:1 Kecil)</span>
+            </Label>
+            <p class="text-[11px] text-muted-foreground">
+              Unggah foto profil penulis dengan rasio aspek persegi 1:1 untuk identitas artikel.
+            </p>
+            <ImageUploadTab
+              v-model="form.author_avatar"
+              aspect-class="aspect-square w-24 h-24 max-h-24"
+              preview-label="Pratinjau Foto Penulis (1:1)"
+              placeholder="https://... (URL foto penulis 1:1)"
+            />
+            <p v-if="err('author_avatar')" class="text-xs text-red-500 font-medium">{{ err('author_avatar') }}</p>
           </div>
 
           <!-- Link URL -->

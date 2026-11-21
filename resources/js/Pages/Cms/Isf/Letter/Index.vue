@@ -1,9 +1,10 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { Head, Link } from '@inertiajs/vue3'
+import { Head, usePage } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
 import { cmsResources, errorMessage } from '@/api/services/isfCmsService'
-import { alertSuccess, alertError, confirmDelete } from '@/Composables/useAlert'
+import { alertSuccess, alertError } from '@/Composables/useAlert'
+import Swal from 'sweetalert2'
 import LoadingIndicator from '@/Pages/Cms/components/shared/LoadingIndicator.vue'
 import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
 import {
@@ -15,12 +16,17 @@ import {
   TableBody,
   TableRow,
   TableHead,
-  TableCell,
-  FilterSelect
+  TableCell
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
 defineOptions({ layout: CmsLayout })
+
+const page = usePage()
+const userRoles = computed(() => page.props.auth?.user?.roles || [])
+const canApprove = computed(() => {
+  return userRoles.value.includes('admin') || userRoles.value.includes('super-admin')
+})
 
 const items = ref([])
 const loading = ref(true)
@@ -36,13 +42,6 @@ const paginatedItems = computed(() => {
   return items.value.slice(start, start + perPage.value)
 })
 
-const statusOptions = [
-  { value: '', label: 'Semua Status' },
-  { value: 'pending', label: 'Pending (Menunggu Review)' },
-  { value: 'disetujui', label: 'Disetujui (Tayang)' },
-  { value: 'ditolak', label: 'Ditolak' },
-]
-
 async function loadData() {
   loading.value = true
   loadError.value = ''
@@ -53,7 +52,7 @@ async function loadData() {
     })
     items.value = res.data?.data || res.data || []
   } catch (err) {
-    loadError.value = errorMessage(err, 'Gagal memuat antrean surat pembaca.')
+    loadError.value = errorMessage(err, 'Gagal memuat antrean artikel by member.')
   } finally {
     loading.value = false
   }
@@ -67,46 +66,65 @@ function onSearchInput() {
   }, 350)
 }
 
-function onStatusChange() {
+function onStatusChange(status) {
+  statusFilter.value = status
   currentPage.value = 1
   loadData()
 }
 
 async function handleApprove(item) {
+  if (!canApprove.value) {
+    alertError('Hanya role Admin dan Super Admin yang memiliki wewenang untuk menyetujui artikel.')
+    return
+  }
+
   try {
     await cmsResources.suratPembaca.approve(item.id)
-    alertSuccess(`Surat "${item.judul_surat}" berhasil disetujui untuk tayang.`)
+    alertSuccess(`Artikel "${item.title || item.judul_surat}" berhasil disetujui untuk tayang.`)
     loadData()
   } catch (err) {
-    alertError(errorMessage(err, 'Gagal menyetujui surat.'))
+    alertError(errorMessage(err, 'Gagal menyetujui artikel.'))
   }
 }
 
 async function handleReject(item) {
-  const reason = prompt('Masukkan alasan penolakan (opsional):', '')
-  if (reason === null) return // Canceled
+  const result = await Swal.fire({
+    title: 'Tolak Naskah Artikel',
+    html: `
+      <div class="text-left text-xs text-muted-foreground space-y-1 mb-3">
+        <p>Tuliskan alasan penolakan atau catatan evaluasi redaksi untuk artikel <strong>"${item.title || item.judul_surat}"</strong>.</p>
+        <p class="text-red-500 font-medium">Catatan ini akan dikirimkan otomatis ke email penulis (${item.sender_email || item.email_pengirim || 'penulis'}). Artikel yang ditolak tidak dapat disetujui lagi.</p>
+      </div>
+    `,
+    input: 'textarea',
+    inputPlaceholder: 'Tuliskan alasan penolakan naskah (mis. topik belum sesuai fokus editorial, data rujukan kurang valid, dll)...',
+    inputAttributes: {
+      'aria-label': 'Alasan penolakan',
+      rows: '4',
+      class: 'swal2-textarea text-xs'
+    },
+    inputValidator: (value) => {
+      if (!value || !value.trim()) {
+        return 'Alasan penolakan wajib diisi sebagai catatan evaluasi bagi penulis!'
+      }
+    },
+    showCancelButton: true,
+    confirmButtonText: 'Tolak & Kirim Catatan',
+    cancelButtonText: 'Batal',
+    confirmButtonColor: '#dc2626',
+    cancelButtonColor: '#6b7280',
+    reverseButtons: true,
+  })
+
+  if (!result.isConfirmed) return
+  const reason = result.value
 
   try {
     await cmsResources.suratPembaca.reject(item.id, reason)
-    alertSuccess(`Surat "${item.judul_surat}" ditolak.`)
+    alertSuccess(`Artikel "${item.title || item.judul_surat}" telah ditolak dan catatan evaluasi telah dikirimkan ke email penulis.`)
     loadData()
   } catch (err) {
-    alertError(errorMessage(err, 'Gagal menolak surat.'))
-  }
-}
-
-async function handleDelete(item) {
-  const confirmed = await confirmDelete(
-    `Hapus surat pembaca dari "${item.nama_pengirim}"?`
-  )
-  if (!confirmed) return
-
-  try {
-    await cmsResources.suratPembaca.delete(item.id)
-    alertSuccess('Surat pembaca berhasil dihapus.')
-    loadData()
-  } catch (err) {
-    alertError(errorMessage(err, 'Gagal menghapus surat.'))
+    alertError(errorMessage(err, 'Gagal menolak artikel.'))
   }
 }
 
@@ -125,42 +143,53 @@ function formatDate(val) {
   }
 }
 
+function categoryBadgeClass(cat) {
+  const c = String(cat || '').toLowerCase()
+  if (c === 'politik') return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
+  if (c === 'hukum') return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+  return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+}
+
+function getInitials(name) {
+  if (!name) return 'M'
+  return name
+    .split(' ')
+    .slice(0, 2)
+    .map(w => w[0])
+    .join('')
+    .toUpperCase()
+}
+
 onMounted(() => {
   loadData()
 })
 </script>
 
 <template>
-  <Head title="Moderasi Surat Pembaca — Indonesia Strategy Forum" />
+  <Head title="Moderasi Artikel by Member — Indonesia Strategy Forum" />
 
   <div class="p-6 space-y-6 w-full">
-    <!-- Header -->
+    <!-- Header (No Manual Add Button per requirement) -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
       <div>
         <h1 class="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-          <span>Moderasi Surat Pembaca</span>
+          <span>Moderasi Artikel by Member</span>
           <Badge class="bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 text-xs">
             {{ items.length }} Total
           </Badge>
         </h1>
         <p class="text-sm text-muted-foreground mt-1">
-          Antrean aspirasi, kritik, dan gagasan masyarakat umum. Hanya surat berstatus disetujui yang tampil di portal publik.
+          Antrean artikel opini dari kontribusi member terverifikasi. Hanya artikel berstatus disetujui yang tampil di portal publik ISF.
         </p>
       </div>
-      <Link href="/cms/surat-pembaca/create">
-        <Button class="bg-red-600 hover:bg-red-700 text-white font-medium text-sm shadow-sm inline-flex items-center gap-1.5">
-          <IconComponent name="Plus" :size="16" />
-          <span>Tambah Surat Manual</span>
-        </Button>
-      </Link>
     </div>
 
-    <!-- Filters -->
+    <!-- Filters: Search + Status Pill Buttons (Consistent with other CMS pages) -->
     <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
       <div class="relative w-full sm:w-80">
         <Input
           v-model="search"
-          placeholder="Cari nama pengirim, kota, atau judul surat..."
+          placeholder="Cari nama penulis, kota, atau judul artikel..."
           @input="onSearchInput"
           class="pl-9 h-9 text-xs"
         />
@@ -171,22 +200,64 @@ onMounted(() => {
         />
       </div>
 
-      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 w-full sm:w-auto justify-start py-0.5">
-        <div class="flex items-center gap-2">
-          <label for="filter-status" class="text-xs text-muted-foreground whitespace-nowrap">Status:</label>
-          <FilterSelect
-            id="filter-status"
-            v-model="statusFilter"
-            placeholder="Semua Status"
-            :options="statusOptions"
-            @change="onStatusChange"
-          />
+      <!-- Pill Buttons for Status (Matches other CMS Index pages) -->
+      <div class="flex items-center gap-2 overflow-x-auto justify-start py-0.5">
+        <span class="text-xs text-muted-foreground whitespace-nowrap">Status:</span>
+        <div class="flex gap-1">
+          <button
+            type="button"
+            @click="onStatusChange('')"
+            :class="[
+              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+              statusFilter === ''
+                ? 'bg-red-600 text-white'
+                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+            ]"
+          >
+            Semua Status
+          </button>
+          <button
+            type="button"
+            @click="onStatusChange('pending')"
+            :class="[
+              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+              statusFilter === 'pending'
+                ? 'bg-amber-600 text-white'
+                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+            ]"
+          >
+            Pending
+          </button>
+          <button
+            type="button"
+            @click="onStatusChange('disetujui')"
+            :class="[
+              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+              statusFilter === 'disetujui'
+                ? 'bg-emerald-600 text-white'
+                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+            ]"
+          >
+            Disetujui
+          </button>
+          <button
+            type="button"
+            @click="onStatusChange('ditolak')"
+            :class="[
+              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+              statusFilter === 'ditolak'
+                ? 'bg-rose-600 text-white'
+                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+            ]"
+          >
+            Ditolak
+          </button>
         </div>
       </div>
     </div>
 
     <!-- Table Container -->
-    <LoadingIndicator v-if="loading && items.length === 0" text="Memuat antrean surat pembaca..." />
+    <LoadingIndicator v-if="loading && items.length === 0" text="Memuat antrean artikel by member..." />
     <ErrorMessage
       v-else-if="loadError"
       :message="loadError"
@@ -204,17 +275,17 @@ onMounted(() => {
         <TableHeader>
           <TableRow class="bg-muted/40 hover:bg-muted/40 border-b border-border">
             <TableHead class="w-12 text-center text-xs">#</TableHead>
-            <TableHead class="min-w-[180px]">Pengirim & Asal</TableHead>
-            <TableHead class="min-w-[320px]">Judul & Isi Surat</TableHead>
+            <TableHead class="w-60 max-w-[240px]">Penulis</TableHead>
+            <TableHead class="min-w-[340px]">Artikel & Kategori</TableHead>
             <TableHead class="w-36">Waktu Masuk</TableHead>
             <TableHead class="w-28 text-center">Status</TableHead>
-            <TableHead class="text-right">Aksi</TableHead>
+            <TableHead class="text-right min-w-[130px]">Aksi</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow v-if="items.length === 0">
             <TableCell colspan="6" class="text-center py-10 text-muted-foreground text-sm">
-              Tidak ada antrean surat pembaca ditemukan.
+              Tidak ada antrean artikel by member ditemukan.
             </TableCell>
           </TableRow>
           <TableRow
@@ -226,101 +297,181 @@ onMounted(() => {
               {{ idx + 1 + (currentPage - 1) * perPage }}
             </TableCell>
 
-            <TableCell class="py-3">
-              <div class="font-semibold text-foreground text-sm leading-snug">
-                {{ item.nama_pengirim }}
-              </div>
-              <div class="text-xs text-muted-foreground mt-0.5">
-                {{ item.kota_domisili || 'Indonesia' }}
-              </div>
-              <div class="text-[11px] text-muted-foreground font-mono truncate max-w-[170px] mt-0.5">
-                {{ item.email_pengirim }}
+            <!-- Penulis + Foto Penulis -->
+            <TableCell class="py-3 max-w-[240px]">
+              <div class="flex items-center gap-3">
+                <!-- Square Avatar with subtle rounded-lg -->
+                <div class="w-11 h-11 rounded-lg overflow-hidden border border-border bg-muted shrink-0 flex items-center justify-center">
+                  <img
+                    v-if="item.author_avatar"
+                    :src="item.author_avatar"
+                    :alt="item.sender_name || 'Penulis'"
+                    class="w-full h-full object-cover"
+                  />
+                  <div
+                    v-else
+                    class="w-full h-full flex items-center justify-center font-bold text-xs bg-red-600/10 text-red-600 font-space-grotesk"
+                  >
+                    {{ getInitials(item.sender_name || item.nama_pengirim) }}
+                  </div>
+                </div>
+
+                <div class="min-w-0 max-w-[170px]">
+                  <div class="font-semibold text-foreground text-sm leading-snug truncate max-w-[170px]" :title="item.sender_name || item.nama_pengirim">
+                    {{ item.sender_name || item.nama_pengirim }}
+                  </div>
+                  <div v-if="item.author_role" class="text-[11px] text-muted-foreground truncate max-w-[170px] font-medium" :title="item.author_role">
+                    {{ item.author_role }}
+                  </div>
+                  <div class="text-xs text-muted-foreground mt-0.5 truncate max-w-[170px]">
+                    {{ item.sender_city || item.kota_domisili || 'Indonesia' }}
+                  </div>
+                  <div class="text-[11px] text-muted-foreground font-mono truncate max-w-[170px]" :title="item.sender_email || item.email_pengirim">
+                    {{ item.sender_email || item.email_pengirim }}
+                  </div>
+                </div>
               </div>
             </TableCell>
 
+            <!-- Judul, Kategori & Cuplikan Konten -->
             <TableCell>
-              <div class="font-semibold text-foreground text-xs sm:text-sm leading-snug">
-                {{ item.judul_surat }}
-              </div>
-              <p class="text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
-                {{ item.isi_surat }}
-              </p>
-              <div v-if="item.catatan_redaksi" class="mt-1 text-[11px] text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 inline-block">
-                Catatan: {{ item.catatan_redaksi }}
+              <div class="flex items-start gap-3">
+                <div
+                  v-if="item.image_url"
+                  class="w-16 h-11 rounded-md overflow-hidden border border-border bg-neutral-900 shrink-0 mt-0.5 hidden sm:block"
+                >
+                  <img
+                    :src="item.image_url"
+                    :alt="item.image_alt || item.title || 'Sampul'"
+                    class="w-full h-full object-cover"
+                  />
+                </div>
+
+                <div class="space-y-1 min-w-0 flex-1">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span
+                      class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border"
+                      :class="categoryBadgeClass(item.category)"
+                    >
+                      {{ item.category || 'Kebijakan' }}
+                    </span>
+                    <span v-if="item.subcategory" class="text-[10px] text-muted-foreground font-mono">
+                      · {{ item.subcategory }}
+                    </span>
+                    <span v-if="item.reading_minutes" class="text-[10px] text-muted-foreground">
+                      · {{ item.reading_minutes }} mnt baca
+                    </span>
+                  </div>
+
+                  <div class="font-semibold text-foreground text-xs sm:text-sm leading-snug">
+                    {{ item.title || item.judul_surat }}
+                  </div>
+
+                  <p class="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                    {{ item.summary || item.body || item.isi_surat }}
+                  </p>
+
+                  <div
+                    v-if="item.moderation_notes || item.catatan_redaksi"
+                    class="mt-1 text-[11px] text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 inline-block"
+                  >
+                    Catatan: {{ item.moderation_notes || item.catatan_redaksi }}
+                  </div>
+                </div>
               </div>
             </TableCell>
 
+            <!-- Waktu Masuk -->
             <TableCell class="text-xs text-muted-foreground whitespace-nowrap">
               {{ formatDate(item.created_at) }}
             </TableCell>
 
+            <!-- Status Badge (No Animation per requirement) -->
             <TableCell class="text-center">
               <span
-                v-if="item.status === 'disetujui'"
-                class="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
+                v-if="item.moderation_status === 'disetujui' || item.status === 'disetujui'"
+                class="inline-block px-2.5 py-0.5 text-xs font-semibold rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
               >
                 Disetujui
               </span>
               <span
-                v-else-if="item.status === 'ditolak'"
-                class="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-rose-500/10 text-rose-600 border border-rose-500/20"
+                v-else-if="item.moderation_status === 'ditolak' || item.status === 'ditolak'"
+                class="inline-block px-2.5 py-0.5 text-xs font-semibold rounded bg-rose-500/10 text-rose-600 border border-rose-500/20"
               >
                 Ditolak
               </span>
               <span
                 v-else
-                class="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-amber-500/10 text-amber-600 border border-amber-500/20 animate-pulse"
+                class="inline-block px-2.5 py-0.5 text-xs font-semibold rounded bg-amber-500/10 text-amber-600 border border-amber-500/20"
               >
                 Pending
               </span>
             </TableCell>
 
+            <!-- Aksi: Lihat Detail, Setujui (Admin & Super Admin), Tolak -->
             <TableCell class="text-right">
-              <div class="flex items-center justify-end gap-1.5">
-                <!-- Quick Approve Button -->
+              <!-- Jika sudah ditolak: tidak ada aksi apapun -->
+              <div v-if="item.moderation_status === 'ditolak' || item.status === 'ditolak'" class="flex items-center justify-end text-xs text-muted-foreground italic">
+                <span class="mr-2">Naskah Ditolak</span>
+                <Link :href="`/cms/surat-pembaca/${item.id}`">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    class="h-8 px-2.5 text-xs font-medium text-foreground border-border hover:bg-muted inline-flex items-center"
+                    title="Lihat Detail Naskah"
+                  >
+                    <IconComponent name="Eye" :size="13" class="mr-1" />
+                    Lihat Detail
+                  </Button>
+                </Link>
+              </div>
+
+              <div v-else class="flex items-center justify-end gap-1.5">
+                <!-- Lihat Detail Link -->
+                <Link :href="`/cms/surat-pembaca/${item.id}`">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    class="h-8 px-2.5 text-xs font-medium text-foreground border-border hover:bg-muted inline-flex items-center"
+                    title="Lihat Detail Artikel"
+                  >
+                    <IconComponent name="Eye" :size="13" class="mr-1" />
+                    Lihat Detail
+                  </Button>
+                </Link>
+
+                <!-- Quick Approve Button (Requires Admin or Super Admin role) -->
                 <Button
-                  v-if="item.status !== 'disetujui'"
+                  v-if="canApprove && (item.moderation_status !== 'disetujui' && item.status !== 'disetujui')"
                   variant="outline"
                   size="sm"
-                  class="h-8 px-2 text-xs font-medium text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-700 hover:border-emerald-500 inline-flex items-center"
-                  title="Setujui Surat"
+                  class="h-8 px-2.5 text-xs font-medium text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-700 hover:border-emerald-500 inline-flex items-center"
+                  title="Setujui Artikel"
                   @click="handleApprove(item)"
                 >
                   <IconComponent name="Check" :size="13" class="mr-1" />
                   Setujui
                 </Button>
 
+                <!-- Status note if not admin/super-admin -->
+                <span
+                  v-else-if="!canApprove && (item.moderation_status !== 'disetujui' && item.status !== 'disetujui')"
+                  class="text-[10px] text-muted-foreground italic px-1"
+                  title="Persetujuan hanya dapat dilakukan oleh Admin dan Super Admin"
+                >
+                  Butuh Admin
+                </span>
+
                 <!-- Quick Reject Button -->
                 <Button
-                  v-if="item.status !== 'ditolak'"
                   variant="outline"
                   size="sm"
-                  class="h-8 px-2 text-xs font-medium text-amber-600 border-amber-500/30 hover:bg-amber-500/10 hover:text-amber-700 hover:border-amber-500 inline-flex items-center"
-                  title="Tolak Surat"
+                  class="h-8 px-2.5 text-xs font-medium text-amber-600 border-amber-500/30 hover:bg-amber-500/10 hover:text-amber-700 hover:border-amber-500 inline-flex items-center"
+                  title="Tolak Artikel"
                   @click="handleReject(item)"
                 >
                   <IconComponent name="X" :size="13" class="mr-1" />
                   Tolak
-                </Button>
-
-                <!-- Detail / Edit -->
-                <Link :href="`/cms/surat-pembaca/${item.id}/edit`">
-                  <Button variant="outline" size="sm" class="h-8 px-2.5 text-xs font-medium hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center">
-                    <IconComponent name="Edit" :size="14" class="mr-1" />
-                    Edit
-                  </Button>
-                </Link>
-
-                <!-- Delete -->
-                <Button
-                  variant="outline"
-                  size="sm"
-                  class="h-8 px-2.5 text-xs font-medium text-red-500 border-red-500/30 hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center"
-                  title="Hapus"
-                  @click="handleDelete(item)"
-                >
-                  <IconComponent name="Trash" :size="14" class="mr-1" />
-                  Hapus
                 </Button>
               </div>
             </TableCell>

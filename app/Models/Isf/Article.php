@@ -25,6 +25,7 @@ class Article extends Model
         'body',
         'author_name',
         'author_role',
+        'author_avatar',
         'reading_minutes',
         'image_alt',
         'image_url',
@@ -39,6 +40,7 @@ class Article extends Model
         'is_popular',
         'popular_rank',
         'status',
+        'is_by_member',
     ];
 
     protected function casts(): array
@@ -52,6 +54,7 @@ class Article extends Model
             'show_in_terkini' => 'boolean',
             'is_popular' => 'boolean',
             'popular_rank' => 'integer',
+            'is_by_member' => 'boolean',
         ];
     }
 

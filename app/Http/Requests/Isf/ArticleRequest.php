@@ -38,6 +38,7 @@ class ArticleRequest extends FormRequest
             'body' => ['nullable', 'string', 'max:100000'],
             'author_name' => $this->textRules(false),
             'author_role' => $this->textRules(false),
+            'author_avatar' => ['nullable', 'string', 'max:1000'],
             'reading_minutes' => ['nullable', 'integer', 'min:1', 'max:600'],
             'image_alt' => [...$this->textRules(false), 'required_with:image_url'],
             'image_url' => $this->urlRules(),

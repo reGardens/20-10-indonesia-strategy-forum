@@ -36,6 +36,7 @@ Route::get('/sosok/{slug}', [SpaController::class, 'index'])->name('isf.sosok.sh
 Route::get('/sosok/{slug}/{tab}', [SpaController::class, 'index'])->whereIn('tab', ['profil', 'analisis', 'jejaring', 'berita', 'kontroversi'])->name('isf.sosok.tab');
 Route::get('/opini-publik', [SpaController::class, 'index'])->name('isf.opini-publik');
 Route::get('/opini-publik/{subkategori}', [SpaController::class, 'index'])->whereIn('subkategori', ['op-ed', 'editorial', 'surat-pembaca', 'polling', 'kutipan'])->name('isf.opini-publik.subkategori');
+Route::get('/penulis/{slug}', [SpaController::class, 'index'])->name('isf.penulis.show');
 Route::get('/survei', [SpaController::class, 'index'])->name('isf.survei');
 Route::get('/survei/{slug}', [SpaController::class, 'index'])->name('isf.survei.show');
 Route::get('/media-kit', [SpaController::class, 'index'])->name('isf.media-kit');
@@ -107,6 +108,7 @@ Route::middleware('auth')->group(function () {
         'artikel' => 'artikel',
         'infografik' => 'infografik',
         'tokoh' => 'tokoh',
+        'kategori-lembaga' => 'tokoh',
         'data-grafik' => 'data_grafik',
         'alert' => 'alert',
         'email-briefing' => 'email_briefing',
@@ -129,6 +131,7 @@ Route::middleware('auth')->group(function () {
         Route::middleware("feature:{$feature}")->prefix("cms/{$segment}")->group(function () use ($segment) {
             Route::get('/', [IsfPageController::class, 'index'])->defaults('module', $segment)->name("cms.isf.{$segment}.index");
             Route::get('/create', [IsfPageController::class, 'create'])->defaults('module', $segment)->name("cms.isf.{$segment}.create");
+            Route::get('/{id}', [IsfPageController::class, 'show'])->defaults('module', $segment)->whereNumber('id')->name("cms.isf.{$segment}.show");
             Route::get('/{id}/edit', [IsfPageController::class, 'edit'])->defaults('module', $segment)->whereNumber('id')->name("cms.isf.{$segment}.edit");
         });
     }
