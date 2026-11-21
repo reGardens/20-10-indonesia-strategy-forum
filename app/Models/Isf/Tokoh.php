@@ -146,20 +146,20 @@ class Tokoh extends Model
     public function scopeInfluentialWeekly(Builder $query): Builder
     {
         return $query->where(function (Builder $q) {
-            $q->where('is_influential_weekly', true)
-              ->orWhere('is_featured', true);
+            $q->where('is_featured', true)
+              ->orWhere('is_influential_weekly', true);
         });
     }
 
     /**
-     * The published "Tokoh Pekan Ini" / "Tokoh Paling Berpengaruh Minggu Ini".
+     * The published "Sosok Pekan Ini".
      */
     public static function currentFeatured(): ?self
     {
         return static::query()->terbit()
-            ->influentialWeekly()
-            ->orderByDesc('updated_at')
-            ->orderByDesc('id')
-            ->first() ?? static::query()->terbit()->orderByDesc('influence_score')->first();
+            ->where('is_featured', true)
+            ->first()
+            ?? static::query()->terbit()->where('is_influential_weekly', true)->orderByDesc('id')->first()
+            ?? static::query()->terbit()->orderByDesc('influence_score')->first();
     }
 }

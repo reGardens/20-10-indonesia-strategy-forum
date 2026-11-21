@@ -57,13 +57,18 @@ class IsfRegisterController extends Controller
 
             // Issue #74: Kirim email verifikasi aktivasi akun bertanda tangan kriptografis (signed URL 24 jam)
             try {
+                $routeParams = [
+                    'id' => $user->id,
+                    'hash' => sha1($user->getEmailForVerification()),
+                ];
+                if ($request->filled('redirect')) {
+                    $routeParams['redirect'] = $request->input('redirect');
+                }
+
                 $verificationUrl = URL::temporarySignedRoute(
                     'isf.verification.verify',
                     now()->addHours(24),
-                    [
-                        'id' => $user->id,
-                        'hash' => sha1($user->getEmailForVerification()),
-                    ]
+                    $routeParams
                 );
 
                 Mail::to($user->email)->send(new MemberEmailVerificationMail($user, $verificationUrl));

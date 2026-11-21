@@ -80,11 +80,37 @@ const rubrik = computed(() => data.value?.rubrik || {
   title: 'Politik',
   label: 'Politik',
   description: 'Dinamika politik nasional, parlemen, partai, pemilu, dan lembaga negara.',
+  subkategori: [
+    { slug: 'sorotan', name: 'Sorotan', description: 'Isu dan laporan khusus sorotan politik nasional.' },
+    { slug: 'eksekutif', name: 'Eksekutif', description: 'Kebijakan kementerian, kabinet, dan lembaga eksekutif.' },
+    { slug: 'legislatif', name: 'Legislatif', description: 'Kinerja legislasi, rapat komisi, dan dinamika parlemen DPR RI.' },
+    { slug: 'dinamika-partai', name: 'Dinamika Partai', description: 'Perkembangan internal, suksesi, dan peta koalisi partai politik.' },
+    { slug: 'pemilu-pilkada', name: 'Pemilu Pilkada', description: 'Isu dinamika Pemilu, Pilpres, Pilkada, dan kepemiluan.' },
+    { slug: 'kegiatan-istana', name: 'Kegiatan Istana', description: 'Agenda, arahan strategis, dan kegiatan kepresidenan.' },
+  ]
 })
+
+function isTabActive(tabSlug) {
+  if (!tabSlug && !currentSubkategori.value) return true
+  if (!tabSlug || !currentSubkategori.value) return false
+  const cur = currentSubkategori.value
+  if (tabSlug === cur) return true
+  if (tabSlug === 'pemilu-pilkada' && cur === 'pemilu') return true
+  if (tabSlug === 'legislatif' && (cur === 'parlemen' || cur === 'dpr')) return true
+  if (tabSlug === 'eksekutif' && (cur === 'pemerintahan' || cur === 'presiden')) return true
+  if (tabSlug === 'dinamika-partai' && cur === 'partai') return true
+  return false
+}
 
 const activeSubkategoriName = computed(() => {
   if (!currentSubkategori.value) return null
-  const found = filterTabs.find(s => s.slug === currentSubkategori.value)
+  const cur = currentSubkategori.value
+  const found = filterTabs.find(s => s.slug === cur ||
+    (s.slug === 'pemilu-pilkada' && cur === 'pemilu') ||
+    (s.slug === 'legislatif' && (cur === 'parlemen' || cur === 'dpr')) ||
+    (s.slug === 'eksekutif' && (cur === 'pemerintahan' || cur === 'presiden')) ||
+    (s.slug === 'dinamika-partai' && cur === 'partai')
+  )
   return found?.name || currentSubkategori.value
 })
 
@@ -274,7 +300,7 @@ watch(
               @click="navigateSubkategori(tab.slug)"
               :class="[
                 'px-4 py-2 rounded text-xs font-space-grotesk font-bold transition-all shrink-0 cursor-pointer',
-                (tab.slug === null && !currentSubkategori) || (tab.slug && currentSubkategori === tab.slug)
+                isTabActive(tab.slug)
                   ? 'bg-isf-red text-white'
                   : 'bg-[#1a2333] text-neutral-300 hover:bg-[#253247] hover:text-white border border-neutral-700/60'
               ]"

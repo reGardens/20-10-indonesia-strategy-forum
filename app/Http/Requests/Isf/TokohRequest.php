@@ -23,8 +23,24 @@ class TokohRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
+        $merge = [];
         if (trim((string) $this->input('photo_url')) !== '' && trim((string) $this->input('photo_alt')) === '') {
-            $this->merge(['photo_alt' => mb_substr((string) $this->input('name'), 0, 255)]);
+            $merge['photo_alt'] = mb_substr((string) $this->input('name'), 0, 255);
+        }
+        if (!$this->has('calendar_year') || empty($this->input('calendar_year'))) {
+            $merge['calendar_year'] = (int) date('Y');
+        }
+        if (!$this->has('calendar_month') || empty($this->input('calendar_month'))) {
+            $merge['calendar_month'] = (int) date('n');
+        }
+        if (!$this->has('stats') || !is_array($this->input('stats'))) {
+            $merge['stats'] = [];
+        }
+        if (!$this->has('calendar_events') || !is_array($this->input('calendar_events'))) {
+            $merge['calendar_events'] = [];
+        }
+        if (!empty($merge)) {
+            $this->merge($merge);
         }
     }
 
@@ -62,9 +78,9 @@ class TokohRequest extends FormRequest
             'photo_alt' => [...$this->textRules(false), 'required_with:photo_url'],
             'photo_url' => $this->urlRules(),
 
-            'stats' => ['required', 'array', 'min:1', 'max:8'],
-            'stats.*.label' => $this->textRules(true, 100),
-            'stats.*.value' => ['required'],
+            'stats' => ['nullable', 'array'],
+            'stats.*.label' => ['nullable', 'string', 'max:100'],
+            'stats.*.value' => ['nullable'],
 
             'skor_value' => ['required', 'integer', 'min:0', 'max:100'],
             'skor_period' => $this->textRules(true, 100),
@@ -84,11 +100,11 @@ class TokohRequest extends FormRequest
             'related_articles.*.publishedAt' => $this->dateRules(),
             'related_articles.*.relativeLabel' => $this->textRules(false, 50),
 
-            'calendar_year' => ['required', 'integer', 'min:2000', 'max:2100'],
-            'calendar_month' => ['required', 'integer', 'min:1', 'max:12'],
-            'calendar_events' => $this->listRules(),
-            'calendar_events.*.date' => $this->dateRules(),
-            'calendar_events.*.title' => $this->textRules(),
+            'calendar_year' => ['nullable', 'integer', 'min:2000', 'max:2100'],
+            'calendar_month' => ['nullable', 'integer', 'min:1', 'max:12'],
+            'calendar_events' => ['nullable', 'array'],
+            'calendar_events.*.date' => $this->dateRules(false),
+            'calendar_events.*.title' => $this->textRules(false),
 
             'teaser' => $this->textRules(false, 1000),
             'is_featured' => ['boolean'],

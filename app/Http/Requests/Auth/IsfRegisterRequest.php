@@ -43,6 +43,9 @@ class IsfRegisterRequest extends FormRequest
             // Captcha verification
             'captcha_key' => ['required', 'string'],
             'captcha_answer' => ['required', 'string'],
+
+            // Optional post-verification redirect URL
+            'redirect' => ['nullable', 'string', 'max:500'],
         ];
     }
 

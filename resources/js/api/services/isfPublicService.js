@@ -59,6 +59,10 @@ export function getArtikel(slug) {
   return get('/isf/artikel/' + encodeURIComponent(slug))
 }
 
+export function getPenulisDetail(slug) {
+  return get('/isf/penulis/' + encodeURIComponent(slug))
+}
+
 export function getInfografikDetail(slug) {
   return get('/isf/infografik/' + encodeURIComponent(slug))
 }

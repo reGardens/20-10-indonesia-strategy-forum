@@ -1,4 +1,5 @@
 <script setup>
+import { useCmsPagination } from '@/Composables/useCmsPagination'
 import { ref, computed, onMounted } from 'vue'
 import { Head, Link } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
@@ -24,7 +25,7 @@ import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 defineOptions({ layout: CmsLayout })
 
 const items = ref([])
-const currentPage = ref(1)
+const currentPage = useCmsPagination('/cms/data-grafik')
 const perPage = ref(10)
 const liveId = ref(null)
 const loading = ref(true)
@@ -138,7 +139,7 @@ onMounted(() => {
         <h1 class="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
           <span>Kelola ISF Insight & Data Grafik</span>
           <Badge class="bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 text-xs">
-            {{ meta.total }} Total
+            {{ items.length }} Total
           </Badge>
         </h1>
         <p class="text-sm text-muted-foreground mt-1">

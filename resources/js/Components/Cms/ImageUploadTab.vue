@@ -16,7 +16,8 @@ const props = defineProps({
   modelValue: { type: String, default: '' },
   aspectClass: { type: String, default: 'aspect-[16/9]' },
   placeholder: { type: String, default: 'https://images.unsplash.com/...' },
-  previewLabel: { type: String, default: 'Pratinjau Gambar' }
+  previewLabel: { type: String, default: 'Pratinjau Gambar' },
+  showHint: { type: Boolean, default: true }
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -76,7 +77,7 @@ function removeImage() {
       <div v-if="modelValue && !imageLoadError" class="space-y-1.5">
         <div class="flex items-center justify-between">
           <p class="text-[11px] text-muted-foreground font-medium">{{ previewLabel }}:</p>
-          <span class="text-[10px] text-muted-foreground italic">Arahkan kursor ke gambar untuk mengganti atau menghapus</span>
+          <span v-if="showHint" class="text-[10px] text-muted-foreground italic">Arahkan kursor ke gambar untuk mengganti atau menghapus</span>
         </div>
 
         <div

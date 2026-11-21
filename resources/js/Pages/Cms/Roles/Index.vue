@@ -1,4 +1,5 @@
 <script setup>
+import { useCmsPagination } from '@/Composables/useCmsPagination'
 import { ref, computed } from "vue";
 import { Head, Link, router } from "@inertiajs/vue3";
 import CmsLayout from "@/Layouts/CmsLayout.vue";
@@ -28,7 +29,7 @@ const props = defineProps({
     roles: { type: Array, required: true },
 });
 
-const currentPage = ref(1);
+const currentPage = useCmsPagination()
 const perPage = ref(10);
 
 const paginatedRoles = computed(() => {

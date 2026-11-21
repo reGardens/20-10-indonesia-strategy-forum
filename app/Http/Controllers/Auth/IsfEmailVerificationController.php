@@ -43,13 +43,16 @@ class IsfEmailVerificationController extends Controller
             return redirect('/anggota?verified=invalid');
         }
 
+        $redirectUrl = $request->query('redirect');
+        $safeRedirect = ($redirectUrl && str_starts_with($redirectUrl, '/')) ? $redirectUrl : null;
+
         // 4. Handle already verified accounts
         if ($user->hasVerifiedEmail()) {
             if (! Auth::check() || Auth::id() !== $user->id) {
                 Auth::login($user);
             }
 
-            return redirect('/anggota?verified=already');
+            return redirect($safeRedirect ?: '/anggota?verified=already');
         }
 
         // 5. Mark as verified and trigger standard Laravel event
@@ -62,7 +65,7 @@ class IsfEmailVerificationController extends Controller
 
         Log::info("Email verified successfully for user {$user->email} (ID: {$user->id})");
 
-        return redirect('/anggota?verified=success');
+        return redirect($safeRedirect ?: '/anggota?verified=success');
     }
 
     /**

@@ -60,7 +60,7 @@ const { data, status, load } = useIsfContent(() => {
 const rubrik = computed(() => data.value?.rubrik || {
   title: 'Hukum',
   label: 'Hukum',
-  description: 'Analisis yuridis, putusan pengadilan, kepatuhan regulasi, dan kasus hukum nasional.',
+  description: 'Analisis yuridis, RUU, putusan peradilan, penegakan hukum, dan kepatuhan regulasi.',
   subkategori: [
     { slug: 'regulasi', name: 'Regulasi & Perundang-undangan', description: 'UU, Perpres, Perda baru dan kepatuhan regulasi.' },
     { slug: 'putusan', name: 'Putusan Peradilan', description: 'Analisis Putusan MK, MA, dan peradilan umum.' },

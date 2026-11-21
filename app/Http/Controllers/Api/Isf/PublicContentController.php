@@ -644,6 +644,8 @@ class PublicContentController extends Controller
         $page = max(1, (int) $request->input('page', 1));
         $limit = min(48, max(1, (int) $request->input('limit', 9)));
 
+        $politikCat = Category::query()->terbit()->where('slug', 'politik')->first();
+
         // Daftar subkategori lengkap sesuai kebutuhan rubrik Politik ISF
         $subcategories = [
             ['name' => 'Sorotan', 'slug' => 'sorotan', 'description' => 'Isu dan laporan khusus sorotan politik nasional.'],
@@ -773,7 +775,7 @@ class PublicContentController extends Controller
                 'key' => 'politik',
                 'title' => 'Politik',
                 'label' => 'Politik',
-                'description' => 'Dinamika politik nasional, parlemen, partai, pemilu, dan lembaga negara.',
+                'description' => $politikCat?->description ?: 'Dinamika politik nasional, parlemen, partai, pemilu, dan lembaga negara.',
                 'subkategori' => $subcategories,
                 'activeSubkategori' => $subkategori,
             ],
@@ -988,7 +990,7 @@ class PublicContentController extends Controller
                 'key' => 'hukum',
                 'title' => 'Hukum',
                 'label' => 'Hukum',
-                'description' => 'Analisis yuridis, putusan pengadilan, kepatuhan regulasi, dan kasus hukum nasional.',
+                'description' => $hukumCat?->description ?: 'Analisis yuridis, RUU, putusan peradilan, penegakan hukum, dan kepatuhan regulasi.',
                 'subkategori' => $subcategories,
                 'activeSubkategori' => $subkategori,
             ],
@@ -1283,7 +1285,7 @@ class PublicContentController extends Controller
                 'key' => 'kebijakan',
                 'title' => 'Kebijakan Publik',
                 'label' => 'Kebijakan Publik',
-                'description' => 'Analisis & riset kebijakan per sektor, evaluasi regulasi, data fiskal, dan pelacakan program strategis pemerintah.',
+                'description' => $kebijakanCat?->description ?: 'Kebijakan publik, ekonomi, fiskal, moneter, dan regulasi sektoral.',
                 'subkategori' => $subcategories,
                 'activeSubkategori' => $subkategori,
             ],
@@ -1598,7 +1600,7 @@ class PublicContentController extends Controller
                 ] : null,
             ])->values()->all();
 
-        // Surat Pembaca yang disetujui (max 6)
+        // Surat Pembaca / Artikel by Member yang disetujui (max 6)
         $letters = Letter::query()->disetujui()->terbit()
             ->orderBy('order', 'asc')
             ->orderByDesc('published_at')
@@ -1609,23 +1611,78 @@ class PublicContentController extends Controller
                 'title' => $l->title,
                 'slug' => $l->slug,
                 'body' => $l->body,
+                'summary' => $l->summary,
+                'category' => $l->category ?? 'Opini',
+                'subcategory' => $l->subcategory,
                 'sender_name' => $l->sender_name,
+                'author_role' => $l->author_role,
+                'author_avatar' => $l->author_avatar,
+                'image_url' => $l->image_url,
                 'sender_city' => $l->sender_city,
                 'published_at' => $l->published_at?->format('Y-m-d'),
                 'published_at_formatted' => $l->published_at ? \Carbon\Carbon::parse($l->published_at)->locale('id')->isoFormat('D MMMM Y') : '',
             ])->values()->all();
+
+        // 4 Artikel Sorotan Member (terbaru yang dibuat/disetujui member)
+        $memberArticles = Article::query()->terbit()->where('is_by_member', true)
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
+            ->take(4)
+            ->get();
+        $sorotanMember = $memberArticles->map(function ($art) use ($cardMapper) {
+            $card = $cardMapper($art);
+            $card['is_by_member'] = true;
+            $card['author_avatar'] = $art->author_avatar;
+            $card['author_name'] = $art->author_name ?: 'Member Terverifikasi ISF';
+            $card['author_affiliation'] = $art->author_role ?: 'Member ISF';
+            $card['author_slug'] = Str::slug($card['author_name'] ?: 'penulis');
+            $card['summary'] = $art->summary ?? '';
+            return $card;
+        })->values()->all();
+
+        if (count($sorotanMember) < 4) {
+            $needed = 4 - count($sorotanMember);
+            $existingSlugs = collect($sorotanMember)->pluck('slug')->all();
+            $extraLetters = Letter::query()->disetujui()->terbit()
+                ->whereNotIn('slug', $existingSlugs)
+                ->orderBy('order', 'asc')
+                ->orderByDesc('published_at')
+                ->take($needed)
+                ->get();
+            foreach ($extraLetters as $l) {
+                $sorotanMember[] = [
+                    'slug' => $l->slug,
+                    'title' => $l->title,
+                    'category' => $l->category ?? 'Opini',
+                    'subcategory' => $l->subcategory ?? 'Artikel Member',
+                    'summary' => $l->summary ?? Str::limit(strip_tags($l->body), 150),
+                    'publishedAt' => $l->published_at?->format('Y-m-d'),
+                    'readingMinutes' => $l->reading_minutes ?? 5,
+                    'imageUrl' => $l->image_url,
+                    'imageAlt' => $l->image_alt ?: $l->title,
+                    'author' => $l->sender_name,
+                    'author_name' => $l->sender_name,
+                    'author_slug' => Str::slug($l->sender_name ?: 'penulis'),
+                    'author_affiliation' => $l->author_role ?: ($l->sender_city ?: 'Member ISF'),
+                    'author_avatar' => $l->author_avatar,
+                    'is_by_member' => true,
+                    'to' => '/artikel/' . $l->slug,
+                ];
+            }
+        }
 
         return response()->json([
             'rubrik' => [
                 'key' => 'opini',
                 'title' => 'Opini Publik',
                 'label' => 'Opini Publik',
-                'description' => 'Wadah pemikiran kritis, pandangan resmi redaksi ISF, dan suara kontribusi masyarakat Indonesia.',
+                'description' => $parent?->description ?: 'Wadah pemikiran kritis, pandangan resmi redaksi, dan suara kontribusi publik.',
                 'subkategori' => $subcategories,
                 'activeSubkategori' => $subkategori,
             ],
             'headline' => $headline,
             'articles' => $listArticles,
+            'sorotanMember' => $sorotanMember,
             'meta' => [
                 'currentPage' => $page,
                 'lastPage' => $lastPage,
@@ -1636,6 +1693,113 @@ class PublicContentController extends Controller
             'readerPolls' => $activePolls,
             'kutipanPublik' => $quotes,
             'suratPembaca' => $letters,
+        ]);
+    }
+
+    /**
+     * GET /api/isf/penulis/{slug}
+     *
+     * Detail profil penulis / kontributor opini publik beserta daftar karya artikelnya.
+     */
+    public function penulis(Request $request, string $slug): JsonResponse
+    {
+        $normalizedSlug = Str::slug($slug);
+
+        // Cari di Letter (artikel by member)
+        $letters = Letter::query()->disetujui()->terbit()->get();
+        $matchingLetters = $letters->filter(function (Letter $l) use ($normalizedSlug) {
+            $authorSlug = Str::slug($l->sender_name ?: '');
+            return $authorSlug === $normalizedSlug || Str::contains($authorSlug, $normalizedSlug) || Str::contains($normalizedSlug, $authorSlug);
+        });
+
+        // Cari di Article (artikel umum / by member)
+        $articles = Article::query()->terbit()->get();
+        $matchingArticles = $articles->filter(function (Article $a) use ($normalizedSlug) {
+            $authorSlug = Str::slug($a->author_name ?: '');
+            return $authorSlug === $normalizedSlug || Str::contains($authorSlug, $normalizedSlug) || Str::contains($normalizedSlug, $authorSlug);
+        });
+
+        // Cari di User
+        $user = \App\Models\User::where('name', 'like', "%{$slug}%")
+            ->orWhereRaw("LOWER(REPLACE(name, ' ', '-')) = ?", [$normalizedSlug])
+            ->first();
+
+        if ($matchingLetters->isEmpty() && $matchingArticles->isEmpty() && ! $user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Profil penulis tidak ditemukan.',
+            ], 404);
+        }
+
+        // Tentukan data identitas penulis
+        $sampleLetter = $matchingLetters->first();
+        $sampleArticle = $matchingArticles->first();
+
+        $authorName = $sampleLetter?->sender_name
+            ?: ($sampleArticle?->author_name
+            ?: ($user?->name ?: ucwords(str_replace('-', ' ', $slug))));
+
+        $authorRole = $sampleLetter?->author_role
+            ?: ($sampleArticle?->author_role
+            ?: ($sampleLetter?->sender_city ? 'Member ISF · ' . $sampleLetter->sender_city : 'Member Terverifikasi ISF'));
+
+        $authorAvatar = $sampleLetter?->author_avatar
+            ?: ($sampleArticle?->author_avatar ?: null);
+
+        $authorCity = $sampleLetter?->sender_city ?: null;
+
+        // Kumpulkan daftar artikel unik karya penulis
+        $categoryLabel = $this->categoryLabeler();
+        $cardMapper = $this->articleCardMapper($categoryLabel);
+
+        $combinedArticles = collect();
+
+        foreach ($matchingArticles as $art) {
+            $card = $cardMapper($art);
+            $card['is_by_member'] = (bool) $art->is_by_member;
+            $card['author_avatar'] = $art->author_avatar ?: $authorAvatar;
+            $card['author_name'] = $art->author_name ?: $authorName;
+            $card['author_affiliation'] = $art->author_role ?: $authorRole;
+            $card['summary'] = $art->summary ?? '';
+            $combinedArticles->push($card);
+        }
+
+        $existingSlugs = $combinedArticles->pluck('slug')->all();
+
+        foreach ($matchingLetters as $l) {
+            if (! in_array($l->slug, $existingSlugs, true)) {
+                $combinedArticles->push([
+                    'slug' => $l->slug,
+                    'title' => $l->title,
+                    'category' => $l->category ?? 'Opini',
+                    'subcategory' => $l->subcategory ?? 'Artikel Member',
+                    'summary' => $l->summary ?? Str::limit(strip_tags($l->body), 160),
+                    'publishedAt' => $l->published_at?->format('Y-m-d'),
+                    'readingMinutes' => $l->reading_minutes ?? 5,
+                    'imageUrl' => $l->image_url,
+                    'imageAlt' => $l->image_alt ?: $l->title,
+                    'author' => $l->sender_name,
+                    'author_name' => $l->sender_name,
+                    'author_affiliation' => $l->author_role ?: ($l->sender_city ?: 'Member ISF'),
+                    'author_avatar' => $l->author_avatar ?: $authorAvatar,
+                    'is_by_member' => true,
+                    'to' => '/artikel/' . $l->slug,
+                ]);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'name' => $authorName,
+                'slug' => $normalizedSlug,
+                'role' => $authorRole,
+                'city' => $authorCity,
+                'avatar' => $authorAvatar,
+                'bio' => 'Kontributor aktif kanal Opini Publik Indonesia Strategy Forum (ISF). Berkomitmen menyajikan ulasan kritis, bernas, dan berorientasi pada kemajuan kebijakan bangsa.',
+                'total_articles' => $combinedArticles->count(),
+                'articles' => $combinedArticles->values()->all(),
+            ],
         ]);
     }
 
@@ -1855,19 +2019,30 @@ class PublicContentController extends Controller
         $slug = Str::slug($validated['title']) . '-' . Str::lower(Str::random(5));
 
         $letter = Letter::create([
+            'user_id' => $request->user()?->id,
             'sender_name' => $validated['sender_name'],
             'sender_email' => $validated['sender_email'],
             'sender_city' => $validated['sender_city'] ?? null,
+            'author_role' => $validated['author_role'] ?? null,
+            'author_avatar' => $validated['author_avatar'] ?? null,
             'title' => $validated['title'],
             'slug' => $slug,
+            'category' => $validated['category'] ?? 'kebijakan',
+            'subcategory' => $validated['subcategory'] ?? null,
+            'summary' => $validated['summary'] ?? null,
             'body' => $validated['body'],
+            'reading_minutes' => $validated['reading_minutes'] ?? 5,
+            'image_url' => $validated['image_url'] ?? null,
+            'image_alt' => $validated['image_alt'] ?? null,
+            'link_url' => $validated['link_url'] ?? null,
+            'fact_blocks' => $validated['fact_blocks'] ?? null,
             'moderation_status' => 'pending',
             'status' => 'terbit',
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Surat pembaca Anda berhasil dikirim dan masuk antrean moderasi redaksi. Surat akan ditayangkan setelah diverifikasi.',
+            'message' => 'Artikel Anda berhasil dikirim dan masuk antrean moderasi redaksi. Artikel akan ditayangkan setelah disetujui.',
             'data' => [
                 'id' => $letter->id,
                 'title' => $letter->title,
@@ -1957,7 +2132,7 @@ class PublicContentController extends Controller
                     ->orWhere('author_name', 'like', $like);
             });
         }
-        $articles = $articleQuery->orderByDesc('published_at')->orderByDesc('id')->take(20)->get()->map(function (Article $a) use ($query) {
+        $articles = $articleQuery->orderByDesc('published_at')->orderByDesc('id')->take(100)->get()->map(function (Article $a) use ($query) {
             $summary = $a->summary ?: 'Analisis mendalam kebijakan dan regulasi strategis nasional.';
             // Cuplikan diambil dari bagian yang memuat kata kunci: ringkasan dulu, lalu isi artikel.
             $snippetSource = $summary;
@@ -1992,7 +2167,7 @@ class PublicContentController extends Controller
                     ->orWhere('skor_explanation', 'like', $like);
             });
         }
-        $tokohs = $tokohQuery->orderByDesc('updated_at')->take(15)->get()->map(function (Tokoh $t) use ($query) {
+        $tokohs = $tokohQuery->orderByDesc('updated_at')->take(60)->get()->map(function (Tokoh $t) use ($query) {
             $summary = $t->teaser ?: ($t->skor_explanation ?: ($t->position ?: 'Profil tokoh publik dan pembuat kebijakan strategis.'));
             return [
                 'id' => (string) $t->id,
@@ -2019,7 +2194,7 @@ class PublicContentController extends Controller
                     ->orWhere('category', 'like', $like);
             });
         }
-        $infographics = $infographicQuery->orderByDesc('published_at')->take(15)->get()->map(function (Infographic $inf) use ($query) {
+        $infographics = $infographicQuery->orderByDesc('published_at')->take(60)->get()->map(function (Infographic $inf) use ($query) {
             $summary = 'Infografik dan visualisasi data: ' . $inf->title;
             return [
                 'id' => (string) $inf->id,
@@ -2048,7 +2223,7 @@ class PublicContentController extends Controller
                     ->orWhere('penutup', 'like', $like);
             });
         }
-        $briefings = $briefingQuery->orderByDesc('tanggal')->take(15)->get()->map(function (Briefing $b) use ($query) {
+        $briefings = $briefingQuery->orderByDesc('tanggal')->take(60)->get()->map(function (Briefing $b) use ($query) {
             $summary = $b->ringkasan_catatan ?: ($b->pembuka ?: 'Briefing intelijen kebijakan dan regulasi strategis.');
             return [
                 'id' => (string) $b->id,
@@ -2086,7 +2261,7 @@ class PublicContentController extends Controller
                     || str_contains(mb_strtolower($item['author'] ?? ''), $q);
             });
         }
-        $videos = $videos->take(15)->map(function ($item) use ($query) {
+        $videos = $videos->take(60)->map(function ($item) use ($query) {
             $summary = $item['summary'] ?? ($item['title'] . ' — Diskusi dan ulasan strategis dari Dewan Pakar Indonesia Strategy Forum.');
             return [
                 'id' => (string) ($item['id'] ?? '1'),
@@ -3117,10 +3292,7 @@ HTML;
                     ['slug' => 'semua', 'name' => 'Semua Tokoh'],
                     ['slug' => 'eksekutif', 'name' => 'Eksekutif'],
                     ['slug' => 'legislatif', 'name' => 'Legislatif'],
-                    ['slug' => 'yudikatif', 'name' => 'Yudikatif'],
                     ['slug' => 'pakar', 'name' => 'Pakar & Akademisi'],
-                    ['slug' => 'militer', 'name' => 'Militer & Hankam'],
-                    ['slug' => 'pengusaha', 'name' => 'Pengusaha'],
                 ],
                 'activeKategori' => $kategori ?: 'semua',
                 'isuOptions' => [

@@ -19,11 +19,22 @@ class Letter extends Model
     protected $table = 'isf_letters';
 
     protected $fillable = [
+        'user_id',
         'sender_name',
         'sender_email',
         'sender_city',
         'title',
         'slug',
+        'category',
+        'subcategory',
+        'summary',
+        'author_role',
+        'author_avatar',
+        'reading_minutes',
+        'image_url',
+        'image_alt',
+        'link_url',
+        'fact_blocks',
         'body',
         'moderation_status',
         'moderated_at',
@@ -40,7 +51,14 @@ class Letter extends Model
             'moderated_at' => 'datetime',
             'published_at' => 'datetime',
             'order' => 'integer',
+            'reading_minutes' => 'integer',
+            'fact_blocks' => 'array',
         ];
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function moderator(): BelongsTo

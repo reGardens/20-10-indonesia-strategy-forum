@@ -14,12 +14,23 @@ class LetterSubmissionRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $user = $this->user();
         $this->merge([
-            'sender_name' => $this->input('sender_name') ?? $this->input('nama_pengirim'),
-            'sender_email' => $this->input('sender_email') ?? $this->input('email_pengirim'),
+            'sender_name' => $this->input('sender_name') ?? $this->input('author_name') ?? $this->input('nama_pengirim') ?? $user?->name,
+            'sender_email' => $this->input('sender_email') ?? $this->input('email_pengirim') ?? $user?->email,
             'sender_city' => $this->input('sender_city') ?? $this->input('kota_domisili'),
-            'title' => $this->input('title') ?? $this->input('judul_surat'),
-            'body' => $this->input('body') ?? $this->input('isi_surat'),
+            'author_role' => $this->input('author_role') ?? $this->input('jabatan'),
+            'title' => $this->input('title') ?? $this->input('judul_surat') ?? $this->input('judul'),
+            'body' => $this->input('body') ?? $this->input('isi_surat') ?? $this->input('konten'),
+            'summary' => $this->input('summary') ?? $this->input('ringkasan'),
+            'category' => $this->input('category') ?? $this->input('kategori') ?? 'kebijakan',
+            'subcategory' => $this->input('subcategory') ?? $this->input('subkategori'),
+            'author_avatar' => $this->input('author_avatar') ?? $this->input('foto_penulis'),
+            'image_url' => $this->input('image_url') ?? $this->input('gambar_sampul'),
+            'image_alt' => $this->input('image_alt'),
+            'reading_minutes' => $this->input('reading_minutes') ? (int) $this->input('reading_minutes') : 5,
+            'link_url' => $this->input('link_url'),
+            'fact_blocks' => $this->input('fact_blocks'),
         ]);
     }
 
@@ -29,16 +40,31 @@ class LetterSubmissionRequest extends FormRequest
             'sender_name' => ['required', 'string', 'max:150'],
             'sender_email' => ['required', 'string', 'email', 'max:150'],
             'sender_city' => ['nullable', 'string', 'max:100'],
+            'author_role' => ['nullable', 'string', 'max:150'],
             'title' => ['required', 'string', 'min:5', 'max:300'],
-            'body' => ['required', 'string', 'min:20', 'max:10000'],
-            'captcha_key' => ['required', 'string'],
-            'captcha_answer' => ['required', 'string'],
+            'category' => ['nullable', 'string', 'max:50'],
+            'subcategory' => ['nullable', 'string', 'max:100'],
+            'summary' => ['nullable', 'string', 'max:1000'],
+            'body' => ['required', 'string', 'min:20', 'max:20000'],
+            'author_avatar' => ['nullable', 'string', 'max:500'],
+            'image_url' => ['nullable', 'string', 'max:500'],
+            'image_alt' => ['nullable', 'string', 'max:255'],
+            'reading_minutes' => ['nullable', 'integer', 'min:1', 'max:120'],
+            'link_url' => ['nullable', 'string', 'max:500'],
+            'fact_blocks' => ['nullable'],
+            'captcha_key' => ['nullable', 'string'],
+            'captcha_answer' => ['nullable', 'string'],
         ];
     }
 
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
+            // Member terdaftar / terautentikasi tidak memerlukan captcha
+            if ($this->user()) {
+                return;
+            }
+
             // Allow testing bypass with 'TEST_CAPTCHA'
             if (app()->environment('testing') && $this->input('captcha_answer') === 'TEST_CAPTCHA') {
                 return;

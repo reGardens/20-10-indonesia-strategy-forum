@@ -34,7 +34,14 @@ export const cmsResources = {
             http.post(`/cms/artikel/${id}/hero`).then((r) => r.data),
     },
     infografik: createCmsResource("infografik"),
-    tokoh: createCmsResource("tokoh"),
+    tokoh: {
+        ...createCmsResource("tokoh"),
+        setFeatured: (id) =>
+            http.post(`/cms/tokoh/${id}/set-featured`).then((r) => r.data),
+        togglePolitik: (id) =>
+            http.post(`/cms/tokoh/${id}/toggle-politik`).then((r) => r.data),
+    },
+    kategoriLembaga: createCmsResource("kategori-lembaga"),
     dataGrafik: {
         ...createCmsResource("data-grafik"),
         reorder: (items) =>
@@ -72,7 +79,13 @@ export const cmsResources = {
     monitoringKebijakan: createCmsResource("monitoring-kebijakan"),
     readerPoll: createCmsResource("reader-poll"),
     kutipanPublik: createCmsResource("kutipan-publik"),
-    suratPembaca: createCmsResource("surat-pembaca"),
+    suratPembaca: {
+        ...createCmsResource("surat-pembaca"),
+        approve: (id, notes = "") =>
+            http.post(`/cms/surat-pembaca/${id}/approve`, { notes }).then((r) => r.data),
+        reject: (id, notes = "") =>
+            http.post(`/cms/surat-pembaca/${id}/reject`, { notes }).then((r) => r.data),
+    },
     survei: createCmsResource("survei"),
     kemitraan: {
         ...createCmsResource("kemitraan"),

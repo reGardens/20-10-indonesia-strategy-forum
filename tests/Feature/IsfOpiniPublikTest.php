@@ -17,14 +17,24 @@ class IsfOpiniPublikTest extends TestCase
 {
     use DatabaseTransactions;
 
-    private function createAdminUser(array $features = ['reader_poll', 'kutipan_publik', 'surat_pembaca']): User
+    private function createAdminUser(array $features = ['reader_poll', 'kutipan_publik', 'surat_pembaca'], string $role = 'admin'): User
     {
-        return User::create([
+        if ($role) {
+            \Spatie\Permission\Models\Role::firstOrCreate(['name' => $role, 'guard_name' => 'web']);
+        }
+
+        $user = User::create([
             'name' => 'Editor Opini',
             'email' => 'editor-opini-' . uniqid() . '@example.test',
             'password' => Hash::make('secret123'),
             'allowed_features' => $features,
         ]);
+
+        if ($role) {
+            $user->assignRole($role);
+        }
+
+        return $user;
     }
 
     public function test_opini_publik_web_and_api_return_expected_structure(): void
@@ -177,8 +187,16 @@ class IsfOpiniPublikTest extends TestCase
         $pubRes1->assertOk();
         $pubRes1->assertJsonMissing(['id' => $letterId]);
 
+        // 3b. Non-admin user cannot approve (must be admin or super-admin)
+        $memberUser = $this->createAdminUser(['surat_pembaca'], 'member');
+        $forbiddenRes = $this->actingAs($memberUser)
+            ->postJson("/api/cms/surat-pembaca/{$letterId}/approve", [
+                'notes' => 'Coba approve',
+            ]);
+        $forbiddenRes->assertStatus(403);
+
         // 4. Admin approves letter
-        $admin = $this->createAdminUser(['surat_pembaca']);
+        $admin = $this->createAdminUser(['surat_pembaca'], 'admin');
         $approveRes = $this->actingAs($admin)
             ->postJson("/api/cms/surat-pembaca/{$letterId}/approve", [
                 'notes' => 'Layak tayang dengan judul orisinal',
@@ -191,6 +209,61 @@ class IsfOpiniPublikTest extends TestCase
         $pubRes2 = $this->getJson('/api/isf/surat-pembaca');
         $pubRes2->assertOk();
         $pubRes2->assertJsonFragment(['id' => $letterId]);
+
+        // 6. Assert article is also copied to isf_articles table with is_by_member = true
+        $createdArticle = Article::where('title', $letter->title)->first();
+        $this->assertNotNull($createdArticle);
+        $this->assertTrue((bool) $createdArticle->is_by_member);
+        $this->assertEquals('terbit', $createdArticle->status);
+
+        // 7. Rejecting the letter removes the article from isf_articles and sets ditolak status
+        $rejectRes = $this->actingAs($admin)
+            ->postJson("/api/cms/surat-pembaca/{$letterId}/reject", [
+                'notes' => 'Topik tidak relevan dengan kebijakan',
+            ]);
+        $rejectRes->assertOk();
+
+        $this->assertEquals('ditolak', $letter->fresh()->moderation_status);
+        $this->assertNull(Article::where('title', $letter->title)->where('is_by_member', true)->first());
+
+        // 8. Rejected letter cannot be approved again
+        $reApproveRes = $this->actingAs($admin)
+            ->postJson("/api/cms/surat-pembaca/{$letterId}/approve", [
+                'notes' => 'Coba approve lagi',
+            ]);
+        $reApproveRes->assertStatus(422);
+    }
+
+    public function test_public_penulis_profile_endpoint(): void
+    {
+        $uniqueName = 'Penulis Uji ' . uniqid();
+        $slug = \Illuminate\Support\Str::slug($uniqueName);
+
+        $letter = Letter::create([
+            'sender_name' => $uniqueName,
+            'sender_email' => 'penulis@example.test',
+            'sender_city' => 'Surabaya',
+            'title' => 'Analisis Kebijakan ' . uniqid(),
+            'slug' => 'analisis-kebijakan-' . uniqid(),
+            'body' => 'Naskah ulasan kebijakan publik',
+            'moderation_status' => 'disetujui',
+            'status' => 'terbit',
+            'published_at' => now(),
+        ]);
+
+        // API Endpoint test
+        $res = $this->getJson("/api/isf/penulis/{$slug}");
+        $res->assertOk();
+        $res->assertJsonPath('data.name', $uniqueName);
+        $this->assertNotEmpty($res->json('data.articles'));
+
+        // Web Route test
+        $web = $this->get("/penulis/{$slug}");
+        $web->assertOk();
+
+        // Non-existent penulis
+        $res404 = $this->getJson('/api/isf/penulis/penulis-fiktif-' . uniqid());
+        $res404->assertStatus(404);
     }
 
     public function test_cms_acl_enforcement_for_opini_modules(): void

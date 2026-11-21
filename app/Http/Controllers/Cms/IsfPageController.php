@@ -22,6 +22,7 @@ class IsfPageController extends Controller
         'artikel' => 'Artikel',
         'infografik' => 'Infografik',
         'tokoh' => 'Tokoh',
+        'kategori-lembaga' => 'KategoriLembaga',
         'data-grafik' => 'DataGrafik',
         'alert' => 'Alert',
         'email-briefing' => 'EmailBriefing',
@@ -60,6 +61,13 @@ class IsfPageController extends Controller
         abort_unless(ctype_digit($id), 404);
 
         return Inertia::render('Cms/Isf/'.$this->folder($request).'/Form', ['id' => (int) $id]);
+    }
+
+    public function show(Request $request, string $id): Response
+    {
+        abort_unless(ctype_digit($id), 404);
+
+        return Inertia::render('Cms/Isf/'.$this->folder($request).'/Detail', ['id' => (int) $id]);
     }
 
     public function settings(): Response

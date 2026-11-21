@@ -48,7 +48,7 @@ class TokohResource extends JsonResource
             'type' => 'tokoh',
             'typeLabel' => 'Tokoh Pekan Ini',
             'title' => $this->name,
-            'summary' => $this->teaser ?? '',
+            'summary' => $this->summary_analysis ?: ($this->teaser ?: ($this->position ?: '')),
             'to' => "/tokoh/{$this->slug}",
         ];
     }

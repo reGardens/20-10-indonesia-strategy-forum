@@ -190,7 +190,7 @@ describe("Rubrik Opini Publik ISF", () => {
     it("SuratPembacaForm memuat field nama, email, kota, judul, isi, dan captcha", () => {
         const { root: el } = mountComponent(SuratPembacaForm);
 
-        expect(el.textContent).toContain("Kirim Surat Pembaca");
+        expect(el.textContent).toContain("Buat Artikel");
         expect(el.querySelector('input[id="sp_nama"]')).not.toBeNull();
         expect(el.querySelector('input[id="sp_email"]')).not.toBeNull();
         expect(el.querySelector('input[id="sp_kota"]')).not.toBeNull();

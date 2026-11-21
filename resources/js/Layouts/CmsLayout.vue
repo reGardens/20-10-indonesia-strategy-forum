@@ -79,6 +79,9 @@ onUnmounted(() => {
 
 function logout() {
     profileOpen.value = false;
+    if (typeof sessionStorage !== "undefined") {
+        sessionStorage.clear();
+    }
     const csrfToken = document
         .querySelector('meta[name="csrf-token"]')
         ?.getAttribute("content");
