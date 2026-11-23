@@ -52,11 +52,7 @@ class IsfEmailVerificationController extends Controller
                 Auth::login($user);
             }
 
-            $defaultRedirect = ($user->hasRole('member') && ! $user->hasAnyRole(['admin', 'editor', 'super-admin']))
-                ? '/cms/artikel'
-                : '/anggota?verified=already';
-
-            return redirect($safeRedirect ?: $defaultRedirect);
+            return redirect($safeRedirect ?: '/anggota?verified=already');
         }
 
         // 5. Mark as verified and trigger standard Laravel event
@@ -69,11 +65,7 @@ class IsfEmailVerificationController extends Controller
 
         Log::info("Email verified successfully for user {$user->email} (ID: {$user->id})");
 
-        $defaultRedirect = ($user->hasRole('member') && ! $user->hasAnyRole(['admin', 'editor', 'super-admin']))
-            ? '/cms/artikel'
-            : '/anggota?verified=success';
-
-        return redirect($safeRedirect ?: $defaultRedirect);
+        return redirect($safeRedirect ?: '/anggota?verified=success');
     }
 
     /**

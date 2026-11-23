@@ -29,14 +29,12 @@ class MemberArticleCmsWorkflowTest extends TestCase
         return $user;
     }
 
-    public function test_member_role_has_only_artikel_feature(): void
+    public function test_member_can_access_cms_artikel_module(): void
     {
         $member = $this->createUser('Member User', 'member');
 
-        $this->assertEquals(['artikel'], $member->features());
-        $this->assertTrue($member->hasFeature('artikel'));
-        $this->assertFalse($member->hasFeature('banner'));
-        $this->assertFalse($member->hasFeature('tokoh'));
+        $response = $this->actingAs($member)->get('/cms/artikel');
+        $response->assertStatus(200);
     }
 
     public function test_member_sees_only_own_articles_in_cms_api(): void
