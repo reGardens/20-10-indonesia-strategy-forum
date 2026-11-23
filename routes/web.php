@@ -97,8 +97,12 @@ Route::middleware('auth')->group(function () {
     // Dashboard (accessible to all — data is filtered server-side by feature access)
     Route::get('/cms/dashboard', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])->name('cms.dashboard');
 
-    // /cms root redirects to dashboard
+    // /cms root redirects to dashboard (atau /cms/artikel untuk role member)
     Route::get('/cms', function () {
+        $user = auth()->user();
+        if ($user && $user->hasRole('member') && ! $user->hasAnyRole(['admin', 'editor', 'super-admin'])) {
+            return redirect()->route('cms.isf.artikel.index');
+        }
         return redirect('/cms/dashboard');
     });
 

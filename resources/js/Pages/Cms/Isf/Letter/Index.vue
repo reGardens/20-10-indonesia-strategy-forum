@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { Head, usePage } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
 import { cmsResources, errorMessage } from '@/api/services/isfCmsService'
+import { activeCategories as CATEGORIES, loadCategories } from '@/Pages/Cms/Isf/options'
 import { alertSuccess, alertError } from '@/Composables/useAlert'
 import Swal from 'sweetalert2'
 import LoadingIndicator from '@/Pages/Cms/components/shared/LoadingIndicator.vue'
@@ -16,7 +17,8 @@ import {
   TableBody,
   TableRow,
   TableHead,
-  TableCell
+  TableCell,
+  FilterSelect
 } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
@@ -33,6 +35,7 @@ const loading = ref(true)
 const loadError = ref('')
 const search = ref('')
 const statusFilter = ref('')
+const categoryFilter = ref('')
 const currentPage = ref(1)
 const perPage = ref(10)
 let searchTimeout = null
@@ -49,6 +52,7 @@ async function loadData() {
     const res = await cmsResources.suratPembaca.list({
       q: search.value || undefined,
       status: statusFilter.value || undefined,
+      category: categoryFilter.value || undefined,
     })
     items.value = res.data?.data || res.data || []
   } catch (err) {
@@ -68,6 +72,11 @@ function onSearchInput() {
 
 function onStatusChange(status) {
   statusFilter.value = status
+  currentPage.value = 1
+  loadData()
+}
+
+function onCategoryChange() {
   currentPage.value = 1
   loadData()
 }
@@ -160,7 +169,8 @@ function getInitials(name) {
     .toUpperCase()
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await loadCategories()
   loadData()
 })
 </script>
@@ -184,9 +194,9 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Filters: Search + Status Pill Buttons (Consistent with other CMS pages) -->
-    <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-      <div class="relative w-full sm:w-80">
+    <!-- Filters: Search + Kategori + Status Pill Buttons (Consistent with other CMS pages) -->
+    <div class="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+      <div class="relative w-full md:w-72">
         <Input
           v-model="search"
           placeholder="Cari nama penulis, kota, atau judul artikel..."
@@ -200,58 +210,72 @@ onMounted(() => {
         />
       </div>
 
-      <!-- Pill Buttons for Status (Matches other CMS Index pages) -->
-      <div class="flex items-center gap-2 overflow-x-auto justify-start py-0.5">
-        <span class="text-xs text-muted-foreground whitespace-nowrap">Status:</span>
-        <div class="flex gap-1">
-          <button
-            type="button"
-            @click="onStatusChange('')"
-            :class="[
-              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
-              statusFilter === ''
-                ? 'bg-red-600 text-white'
-                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
-            ]"
-          >
-            Semua Status
-          </button>
-          <button
-            type="button"
-            @click="onStatusChange('pending')"
-            :class="[
-              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
-              statusFilter === 'pending'
-                ? 'bg-amber-600 text-white'
-                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
-            ]"
-          >
-            Pending
-          </button>
-          <button
-            type="button"
-            @click="onStatusChange('disetujui')"
-            :class="[
-              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
-              statusFilter === 'disetujui'
-                ? 'bg-emerald-600 text-white'
-                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
-            ]"
-          >
-            Disetujui
-          </button>
-          <button
-            type="button"
-            @click="onStatusChange('ditolak')"
-            :class="[
-              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
-              statusFilter === 'ditolak'
-                ? 'bg-rose-600 text-white'
-                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
-            ]"
-          >
-            Ditolak
-          </button>
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 w-full md:w-auto justify-start md:justify-end py-0.5">
+        <!-- Filter Kategori (opsi sama dengan menu artikel) -->
+        <div class="flex items-center gap-2">
+          <label for="filter-kategori-letter" class="text-xs text-muted-foreground whitespace-nowrap">Kategori:</label>
+          <FilterSelect
+            id="filter-kategori-letter"
+            v-model="categoryFilter"
+            placeholder="Select Kategori"
+            :options="CATEGORIES"
+            @change="onCategoryChange"
+          />
+        </div>
+
+        <!-- Pill Buttons for Status (Matches other CMS Index pages) -->
+        <div class="flex items-center gap-2 overflow-x-auto justify-start py-0.5">
+          <span class="text-xs text-muted-foreground whitespace-nowrap">Status:</span>
+          <div class="flex gap-1">
+            <button
+              type="button"
+              @click="onStatusChange('')"
+              :class="[
+                'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+                statusFilter === ''
+                  ? 'bg-red-600 text-white'
+                  : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+              ]"
+            >
+              Semua Status
+            </button>
+            <button
+              type="button"
+              @click="onStatusChange('pending')"
+              :class="[
+                'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+                statusFilter === 'pending'
+                  ? 'bg-amber-600 text-white'
+                  : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+              ]"
+            >
+              Pending
+            </button>
+            <button
+              type="button"
+              @click="onStatusChange('disetujui')"
+              :class="[
+                'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+                statusFilter === 'disetujui'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+              ]"
+            >
+              Disetujui
+            </button>
+            <button
+              type="button"
+              @click="onStatusChange('ditolak')"
+              :class="[
+                'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+                statusFilter === 'ditolak'
+                  ? 'bg-rose-600 text-white'
+                  : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+              ]"
+            >
+              Ditolak
+            </button>
+          </div>
         </div>
       </div>
     </div>

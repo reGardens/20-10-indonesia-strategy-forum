@@ -11,6 +11,7 @@ use App\Models\Isf\Chart;
 use App\Models\Isf\Infographic;
 use App\Models\Isf\Tokoh;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -37,9 +38,13 @@ class AdminDashboardController extends Controller
      * Each user only sees the modules they have the feature for (ACL);
      * user/role stats are for super-admin only.
      */
-    public function index(): Response
+    public function index(): Response|RedirectResponse
     {
         $user = Auth::user();
+        if ($user && $user->hasRole('member') && ! $user->hasAnyRole(['admin', 'editor', 'super-admin'])) {
+            return redirect()->route('cms.isf.artikel.index');
+        }
+
         $isSuperAdmin = $user->hasRole('super-admin');
 
         $contentStats = [];

@@ -390,15 +390,6 @@ async function handleImageUpload(event) {
 
 <template>
     <div class="rich-text-editor">
-        <!-- Hidden file input for image upload -->
-        <input
-            ref="imageInput"
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
-            class="hidden"
-            @change="handleImageUpload"
-        />
-
         <!-- Toolbar -->
         <div
             v-if="editor"
@@ -638,14 +629,6 @@ async function handleImageUpload(event) {
                 title="Link"
             >
                 <IconComponent name="Link" class="w-4 h-4" />
-            </button>
-            <button
-                @click="addImage"
-                class="p-1.5 rounded hover:bg-accent transition-all"
-                type="button"
-                title="Image"
-            >
-                <IconComponent name="Image" class="w-4 h-4" />
             </button>
 
             <!-- Symbol Picker Popover -->

@@ -100,6 +100,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Features this user can use (super-admin always has all of them).
+     * Role member murni hanya memiliki akses ke modul artikel.
      *
      * @return list<string>
      */
@@ -107,6 +108,10 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         if ($this->hasRole('super-admin')) {
             return self::ISF_FEATURES;
+        }
+
+        if ($this->hasRole('member') && ! $this->hasAnyRole(['admin', 'editor', 'super-admin'])) {
+            return ['artikel'];
         }
 
         $features = $this->allowed_features;
@@ -123,11 +128,23 @@ class User extends Authenticatable implements MustVerifyEmail
             return true;
         }
 
+        if ($this->hasRole('member') && ! $this->hasAnyRole(['admin', 'editor', 'super-admin'])) {
+            return $feature === 'artikel';
+        }
+
         $features = $this->allowed_features;
         if (!is_array($features)) {
             $features = self::defaultFeatures();
         }
 
         return in_array($feature, $features);
+    }
+
+    /**
+     * Artikel yang ditulis oleh user ini.
+     */
+    public function articles(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\Isf\Article::class, 'user_id');
     }
 }

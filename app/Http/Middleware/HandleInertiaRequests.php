@@ -44,6 +44,9 @@ class HandleInertiaRequests extends Middleware
                     'permissions' => $request->user()->getAllPermissions()->pluck('name'),
                     // ISF CMS modules this user can open (ACL); used by the sidebar
                     'features' => $request->user()->features(),
+                    // Data profil penulis member jika tercantum di akun pengguna
+                    'author_role' => $request->user()->author_role ?? ($request->user()->hasRole('member') ? 'Member ISF' : null),
+                    'author_avatar' => $request->user()->author_avatar ?? $request->user()->avatar ?? null,
                 ] : null,
             ],
             'flash' => [
