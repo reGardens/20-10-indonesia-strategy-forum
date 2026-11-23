@@ -56,11 +56,17 @@ class IsfPageController extends Controller
         return Inertia::render('Cms/Isf/'.$this->folder($request).'/Form', ['id' => null]);
     }
 
-    public function edit(Request $request, string $id): Response
+    public function edit(Request $request, string $id): Response|\Illuminate\Http\RedirectResponse
     {
         abort_unless(ctype_digit($id), 404);
 
-        return Inertia::render('Cms/Isf/'.$this->folder($request).'/Form', ['id' => (int) $id]);
+        $module = $this->folder($request);
+        $user = $request->user();
+        if ($module === 'Artikel' && $user && $user->hasRole('member') && ! $user->hasAnyRole(['admin', 'editor', 'super-admin'])) {
+            return redirect('/cms/artikel/' . $id);
+        }
+
+        return Inertia::render('Cms/Isf/'.$module.'/Form', ['id' => (int) $id]);
     }
 
     public function show(Request $request, string $id): Response

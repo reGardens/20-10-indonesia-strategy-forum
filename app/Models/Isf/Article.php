@@ -16,6 +16,7 @@ class Article extends Model
     protected $table = 'isf_articles';
 
     protected $fillable = [
+        'user_id',
         'slug',
         'title',
         'category',
@@ -46,6 +47,7 @@ class Article extends Model
     protected function casts(): array
     {
         return [
+            'user_id' => 'integer',
             'published_at' => 'date:Y-m-d',
             'reading_minutes' => 'integer',
             'fact_blocks' => 'array',
@@ -56,6 +58,14 @@ class Article extends Model
             'popular_rank' => 'integer',
             'is_by_member' => 'boolean',
         ];
+    }
+
+    /**
+     * Penulis artikel jika dibuat oleh member teregistrasi.
+     */
+    public function authorUser(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
 
     /**

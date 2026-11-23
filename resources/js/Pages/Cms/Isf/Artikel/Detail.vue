@@ -1,6 +1,6 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { Head, Link, router } from '@inertiajs/vue3'
+import { ref, computed, onMounted } from 'vue'
+import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
 import { cmsResources } from '@/api/services/isfCmsService'
 import { confirmDelete, alertSuccess, alertError } from '@/Composables/useAlert'
@@ -19,6 +19,16 @@ import {
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
 defineOptions({ layout: CmsLayout })
+
+const page = usePage()
+const authUser = computed(() => page.props.auth?.user)
+const isMember = computed(() => {
+  const roles = authUser.value?.roles || []
+  const roleNames = Array.isArray(roles) ? roles.map((r) => typeof r === 'string' ? r : (r?.name || '')) : []
+  const hasMemberRole = roleNames.includes('member')
+  const hasStaffRole = roleNames.some((r) => ['admin', 'super-admin', 'editor'].includes(r))
+  return hasMemberRole && !hasStaffRole
+})
 
 const props = defineProps({
   id: { type: Number, required: true }
@@ -83,7 +93,7 @@ onMounted(fetchArticle)
           <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <span>Detail Artikel</span>
             <span
-              v-if="item?.is_by_member"
+              v-if="item?.is_by_member && !isMember"
               class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20"
             >
               by member
@@ -95,7 +105,7 @@ onMounted(fetchArticle)
         </div>
       </div>
 
-      <div v-if="item" class="flex items-center gap-2">
+      <div v-if="item && !isMember && !item.is_by_member" class="flex items-center gap-2">
         <Link :href="`/cms/artikel/${item.id}/edit`">
           <Button variant="outline" size="sm" class="h-9 text-xs gap-1.5">
             <IconComponent name="Edit" :size="14" />
@@ -176,7 +186,7 @@ onMounted(fetchArticle)
             <div class="min-w-0 flex-1">
               <div class="text-sm font-semibold text-foreground flex items-center gap-2">
                 <span>{{ item.author_name || 'Dewan Redaksi ISF' }}</span>
-                <span v-if="item.is_by_member" class="text-[10px] px-1.5 py-0.2 rounded bg-red-500/10 text-red-600 font-semibold border border-red-500/20">Member</span>
+                <span v-if="item.is_by_member && !isMember" class="text-[10px] px-1.5 py-0.2 rounded bg-red-500/10 text-red-600 font-semibold border border-red-500/20">Member</span>
               </div>
               <div class="text-xs text-muted-foreground truncate">
                 {{ item.author_role || 'Penulis' }} • Estimasi Baca: {{ item.reading_minutes || 5 }} Menit

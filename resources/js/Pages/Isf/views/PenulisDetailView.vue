@@ -272,14 +272,6 @@ function formatDate(val) {
               >
                 <IconPhoto class="w-10 h-10 stroke-[1.25] text-neutral-400 group-hover:text-neutral-500 transition-colors" />
               </div>
-
-              <!-- Badge By Member -->
-              <div class="absolute top-2.5 left-2.5">
-                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-isf-red text-white shadow-sm">
-                  <IconAward class="w-3 h-3" />
-                  By Member
-                </span>
-              </div>
             </IsfLink>
 
             <!-- Card Body -->

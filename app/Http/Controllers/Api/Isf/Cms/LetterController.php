@@ -35,6 +35,60 @@ class LetterController extends CmsResourceController
 
     protected array $order = ['created_at' => 'desc', 'id' => 'desc'];
 
+    public function index(Request $request): JsonResponse
+    {
+        $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'status' => ['nullable', 'string', 'max:50'],
+            'moderation_status' => ['nullable', 'string', 'max:50'],
+            'category' => ['nullable', 'string', 'max:50'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:500'],
+        ]);
+
+        $query = Letter::query()->select($this->listColumns);
+
+        if ($keyword = trim((string) $request->query('q', ''))) {
+            $like = '%' . addcslashes($keyword, '\\%_') . '%';
+            $query->where(function ($q) use ($like) {
+                foreach ($this->searchColumns as $column) {
+                    $q->orWhere($column, 'like', $like);
+                }
+            });
+        }
+
+        // Support filtering by moderation_status (or status param passed by UI as pending/disetujui/ditolak)
+        $statusParam = $request->query('moderation_status') ?: $request->query('status');
+        if ($statusParam !== null && $statusParam !== '') {
+            if (in_array($statusParam, ['pending', 'disetujui', 'ditolak'], true)) {
+                $query->where('moderation_status', $statusParam);
+            } elseif (in_array($statusParam, ['terbit', 'draft', 'draf'], true)) {
+                $query->where('status', $statusParam === 'draf' ? 'draft' : $statusParam);
+            }
+        }
+
+        if ($cat = $request->query('category')) {
+            $query->where('category', $cat);
+        }
+
+        foreach ($this->order as $column => $direction) {
+            $query->orderBy($column, $direction);
+        }
+
+        $perPage = (int) $request->query('per_page', 50);
+        $paginated = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $paginated->items(),
+            'meta' => [
+                'current_page' => $paginated->currentPage(),
+                'last_page' => $paginated->lastPage(),
+                'per_page' => $paginated->perPage(),
+                'total' => $paginated->total(),
+            ],
+        ]);
+    }
+
     public function show(Letter $suratPembaca): JsonResponse
     {
         return $this->showModel($suratPembaca);
@@ -144,6 +198,7 @@ class LetterController extends CmsResourceController
         Article::updateOrCreate(
             ['slug' => $slug],
             [
+                'user_id' => $suratPembaca->user_id,
                 'title' => $suratPembaca->title,
                 'category' => $category,
                 'subcategory' => $subcategory,
@@ -156,7 +211,7 @@ class LetterController extends CmsResourceController
                 'reading_minutes' => $suratPembaca->reading_minutes ?: 5,
                 'image_url' => $suratPembaca->image_url,
                 'image_alt' => $suratPembaca->image_alt,
-                'link_url' => $suratPembaca->link_url,
+                'link_url' => $suratPembaca->link_url ?: ('/artikel/' . $category . '/' . $slug),
                 'fact_blocks' => $suratPembaca->fact_blocks,
                 'status' => 'terbit',
                 'is_by_member' => true,

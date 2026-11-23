@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { Button, Input, Label } from '@/Components/UI'
+import { Button, Input, Label, DatePicker } from '@/Components/UI'
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
 const props = defineProps({
@@ -186,7 +186,18 @@ function updateField(rowIndex, key, value) {
               <span class="text-xs text-foreground">{{ field.checkboxLabel || field.label }}</span>
             </label>
 
-            <!-- Number / Date / Text / URL -->
+            <!-- DatePicker -->
+            <DatePicker
+              v-else-if="field.type === 'date'"
+              :id="`row-${idx}-${field.key}`"
+              :model-value="row[field.key]"
+              @update:model-value="updateField(idx, field.key, $event)"
+              :placeholder="field.placeholder || 'dd/mm/yyyy'"
+              :required="field.required"
+              class="h-8 text-xs"
+            />
+
+            <!-- Number / Text / URL -->
             <Input
               v-else
               :id="`row-${idx}-${field.key}`"

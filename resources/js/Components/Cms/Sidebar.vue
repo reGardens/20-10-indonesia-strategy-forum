@@ -47,7 +47,52 @@ function hasFeature(feature) {
     return userFeatures.value.includes(feature);
 }
 
-const menuGroups = computed(() => [
+const isOnlyMember = computed(() => {
+    return hasRole("member") && !hasRole("admin") && !hasRole("editor") && !hasRole("super-admin");
+});
+
+const menuGroups = computed(() => {
+    // Role Member murni: hanya tampil menu Artikel di CMS (Issue #92)
+    if (isOnlyMember.value) {
+        return [
+            {
+                key: "konten-member",
+                label: locale.value === "id" ? "Konten Member" : "Member Content",
+                collapsible: false,
+                items: [
+                    {
+                        label: "Artikel",
+                        href: "/cms/artikel",
+                        icon: "Article",
+                        visible: true,
+                    },
+                ],
+            },
+            {
+                key: "situs-publik",
+                label: locale.value === "id" ? "Situs Publik" : "Public Sites",
+                collapsible: false,
+                items: [
+                    {
+                        label: "Beranda ISF",
+                        href: "/",
+                        icon: "World",
+                        visible: true,
+                        external: true,
+                    },
+                    {
+                        label: "Dasbor Anggota",
+                        href: "/anggota",
+                        icon: "Shield",
+                        visible: true,
+                        external: true,
+                    },
+                ],
+            },
+        ];
+    }
+
+    return [
     {
         key: "navigasi-utama",
         label: locale.value === "id" ? "Navigasi Utama" : "Main Navigation",
@@ -57,6 +102,26 @@ const menuGroups = computed(() => [
                 label: t("nav.dashboard") || "Dasbor",
                 href: "/cms/dashboard",
                 icon: "LayoutDashboard",
+                visible: true,
+            },
+        ],
+    },
+    {
+        key: "menu-artikel",
+        label: locale.value === "id" ? "Artikel" : "Articles",
+        icon: "Article",
+        collapsible: true,
+        items: [
+            {
+                label: "Artikel",
+                href: "/cms/artikel",
+                icon: "Article",
+                visible: true,
+            },
+            {
+                label: "Kategori",
+                href: "/cms/kategori",
+                icon: "Category",
                 visible: true,
             },
         ],
@@ -96,18 +161,6 @@ const menuGroups = computed(() => [
                 href: "/cms/iklan",
                 icon: "Tag",
                 visible: true,
-            },
-            {
-                label: "Kategori",
-                href: "/cms/kategori",
-                icon: "Category",
-                visible: true,
-            },
-            {
-                label: "Artikel",
-                href: "/cms/artikel",
-                icon: "Article",
-                visible: hasFeature("artikel"),
             },
             {
                 label: "Infografik",
@@ -360,7 +413,8 @@ const menuGroups = computed(() => [
             },
         ],
     },
-]);
+];
+});
 
 const visibleGroups = computed(() =>
     menuGroups.value
@@ -372,7 +426,9 @@ const visibleGroups = computed(() =>
 );
 
 // State accordion: Simpan key group yang sedang terbuka
-const openGroups = ref({});
+const openGroups = ref({
+    "menu-artikel": true,
+});
 
 function isGroupActive(group) {
     return group.items.some((item) => isActive(item.href));

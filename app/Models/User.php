@@ -130,4 +130,12 @@ class User extends Authenticatable implements MustVerifyEmail
 
         return in_array($feature, $features);
     }
+
+    /**
+     * Artikel yang ditulis oleh user ini.
+     */
+    public function articles(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\Isf\Article::class, 'user_id');
+    }
 }

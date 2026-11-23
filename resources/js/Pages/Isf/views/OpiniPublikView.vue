@@ -41,7 +41,6 @@ import {
   SectionHeading,
   ReaderPollCard,
   KutipanPublikCard,
-  SuratPembacaForm,
 } from '@/Components/Isf'
 import Pagination from '@/Components/UI/Pagination.vue'
 import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
@@ -64,7 +63,6 @@ const currentSubkategori = computed(() => {
 })
 
 const currentPage = ref(1)
-const showSuratModal = ref(false)
 const kutipanFilter = ref('all') // 'all' | 'tokoh' | 'netizen'
 const expandedLetterId = ref(null)
 
@@ -176,67 +174,16 @@ const ctaList = [
   { label: 'CTA 5' },
 ]
 
-const ctaBuatArtikelLabel = computed(() => {
-  return isLoggedIn.value ? 'Buat Artikel' : 'Daftar untuk Buat Artikel'
-})
-
-async function handleBuatArtikelClick() {
-  await ensureLoaded()
-  if (!isLoggedIn.value) {
-    // Belum login / belum terdaftar: arahkan ke registrasi dengan redirect kembali ke opini publik + modal terbuka
-    router.push({
-      path: '/register',
-      query: { redirect: '/opini-publik?buat_artikel=1' },
-    })
-    return
-  }
-  showSuratModal.value = true
+function handleDaftarBuatArtikel() {
+  window.location.href = '/register?redirect=/cms/artikel'
 }
-
-// Lock background body scroll and persist open state in localStorage (auto reopen on refresh)
-watch(showSuratModal, (isOpen) => {
-  if (typeof localStorage !== 'undefined') {
-    if (isOpen) {
-      localStorage.setItem('isf_popup_buat_artikel_open', '1')
-    } else {
-      localStorage.removeItem('isf_popup_buat_artikel_open')
-    }
-  }
-  if (typeof document !== 'undefined') {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-  }
-})
-
-onBeforeUnmount(() => {
-  if (typeof document !== 'undefined') {
-    document.body.style.overflow = ''
-  }
-})
 
 onMounted(async () => {
   await ensureLoaded()
-  // Buka modal otomatis bila kembali dari tautan verifikasi email, query param buat_artikel=1, atau tersimpan di localStorage (saat refresh)
-  if (
-    route.query.buat_artikel === '1' ||
-    route.query.open_modal === '1' ||
-    (typeof localStorage !== 'undefined' && localStorage.getItem('isf_popup_buat_artikel_open') === '1')
-  ) {
-    showSuratModal.value = true
+  if (typeof localStorage !== 'undefined') {
+    localStorage.removeItem('isf_popup_buat_artikel_open')
   }
 })
-
-watch(
-  () => route.query.buat_artikel,
-  (val) => {
-    if (val === '1') {
-      showSuratModal.value = true
-    }
-  }
-)
 
 function navigateSubkategori(slug) {
   currentPage.value = 1
@@ -259,12 +206,6 @@ function toggleLetter(id) {
   expandedLetterId.value = expandedLetterId.value === id ? null : id
 }
 
-function onSuratSubmitted() {
-  if (typeof localStorage !== 'undefined') {
-    localStorage.removeItem('isf_popup_buat_artikel_open')
-  }
-  load()
-}
 
 // Reset dan reload saat subkategori berganti (tanpa click-to-scroll sesuai instruksi)
 watch(
@@ -354,14 +295,15 @@ watch(
               </button>
             </div>
 
-            <!-- CTA Buat Artikel (Di kanan header navy) -->
+            <!-- CTA Daftar Buat Artikel (hanya untuk pengunjung belum login; jika login menulis langsung di CMS) -->
             <button
+              v-if="!isLoggedIn"
               type="button"
-              @click="handleBuatArtikelClick"
+              @click="handleDaftarBuatArtikel"
               class="inline-flex items-center gap-1.5 px-4 py-2 rounded text-xs font-space-grotesk font-bold bg-isf-red hover:bg-red-700 text-white transition-all shrink-0 shadow-xs cursor-pointer"
             >
               <IconFileText class="w-3.5 h-3.5" />
-              <span>{{ ctaBuatArtikelLabel }}</span>
+              <span>Daftar untuk Buat Artikel</span>
             </button>
           </div>
         </div>
@@ -389,9 +331,8 @@ watch(
               :key="i"
               class="flex flex-col justify-between bg-neutral-50 rounded-xl border border-neutral-200 overflow-hidden"
             >
-              <!-- Image 16:10 with By Member badge -->
+              <!-- Image 16:10 -->
               <div class="relative aspect-[16/10] bg-neutral-200">
-                <div class="absolute top-2.5 left-2.5 h-5 w-20 bg-neutral-300 rounded-full"></div>
               </div>
 
               <!-- Content -->
@@ -653,14 +594,6 @@ watch(
                 >
                   <IconPhoto class="w-10 h-10 stroke-[1.25] text-neutral-400 group-hover:text-neutral-500 transition-colors" />
                 </div>
-
-                <!-- Badge By Member over Image -->
-                <div class="absolute top-2.5 left-2.5">
-                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-isf-red text-white shadow-sm">
-                    <IconAward class="w-3 h-3" />
-                    By Member
-                  </span>
-                </div>
               </IsfLink>
 
               <!-- Card Content -->
@@ -853,12 +786,13 @@ watch(
           </div>
 
           <button
+            v-if="!isLoggedIn"
             type="button"
-            @click="handleBuatArtikelClick"
+            @click="handleDaftarBuatArtikel"
             class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white text-xs sm:text-sm font-bold font-space-grotesk transition-colors shrink-0 shadow-xs cursor-pointer self-start sm:self-auto"
           >
             <IconFileText class="w-4 h-4 text-isf-red" />
-            <span>{{ ctaBuatArtikelLabel }}</span>
+            <span>Daftar untuk Buat Artikel</span>
           </button>
         </div>
 
@@ -932,11 +866,12 @@ watch(
             Jadilah yang pertama mengirimkan analisis dan gagasan Anda untuk dipublikasikan di ISF.
           </p>
           <button
+            v-if="!isLoggedIn"
             type="button"
-            @click="handleBuatArtikelClick"
+            @click="handleDaftarBuatArtikel"
             class="mt-4 px-4 py-2 rounded-lg bg-isf-red text-white text-xs font-bold font-space-grotesk hover:bg-red-700 transition-colors cursor-pointer"
           >
-            {{ isLoggedIn ? 'Buat Artikel Sekarang' : 'Daftar untuk Buat Artikel' }}
+            Daftar untuk Buat Artikel
           </button>
         </div>
       </section>
@@ -1016,57 +951,10 @@ watch(
         </div>
       </section>
     </main>
-
-    <!-- ═══ MODAL POPUP BUAT ARTIKEL BY MEMBER (Apple-Style Fluid Animation) ═════════ -->
-    <Transition name="apple-modal">
-      <div
-        v-if="showSuratModal"
-        class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/75 backdrop-blur-md overflow-hidden"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-surat-title"
-        @click.self="showSuratModal = false"
-      >
-        <div class="apple-modal-content relative w-full max-w-4xl my-auto">
-          <SuratPembacaForm
-            :is-modal="true"
-            @close="showSuratModal = false"
-            @submitted="onSuratSubmitted"
-          />
-        </div>
-      </div>
-    </Transition>
   </div>
 </template>
 
 <style scoped>
-/* Apple-style fluid modal spring animation */
-.apple-modal-enter-active {
-  transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.apple-modal-leave-active {
-  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.apple-modal-enter-from,
-.apple-modal-leave-to {
-  opacity: 0;
-}
-
-.apple-modal-enter-active .apple-modal-content {
-  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.apple-modal-leave-active .apple-modal-content {
-  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.apple-modal-enter-from .apple-modal-content {
-  opacity: 0;
-  transform: scale(0.95) translateY(14px);
-}
-.apple-modal-leave-to .apple-modal-content {
-  opacity: 0;
-  transform: scale(0.97) translateY(8px);
-}
-
 .isf-no-scrollbar::-webkit-scrollbar {
   display: none;
 }

@@ -24,6 +24,21 @@ class ArticleRequest extends FormRequest
         if (trim((string) $this->input('image_url')) !== '' && trim((string) $this->input('image_alt')) === '') {
             $this->merge(['image_alt' => mb_substr((string) $this->input('title'), 0, 255)]);
         }
+
+        $user = $this->user();
+        $isOnlyMember = $user && $user->hasRole('member') && ! $user->hasAnyRole(['admin', 'editor', 'super-admin']);
+        if ($isOnlyMember) {
+            $this->merge([
+                'is_hero' => false,
+                'show_in_terkini' => false,
+                'is_popular' => false,
+                'status' => 'draf',
+                'published_at' => $this->input('published_at') ?: now()->format('Y-m-d'),
+                'author_name' => $user->name,
+                'author_role' => $user->author_role ?? $this->input('author_role') ?? 'Member ISF',
+                'author_avatar' => $user->author_avatar ?? $user->avatar ?? null,
+            ]);
+        }
     }
 
     public function rules(): array

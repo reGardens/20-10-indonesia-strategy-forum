@@ -54,7 +54,12 @@ class AuthenticatedSessionController extends Controller
             return Inertia::location($target);
         }
 
-        // Login murni dari /login atau /register → dashboard CMS (semua role; data difilter per akses fitur).
+        // Login murni dari /login atau /register → arahkan ke modul CMS yang relevan
+        $user = Auth::user();
+        if ($user && $user->hasRole('member') && ! $user->hasAnyRole(['admin', 'editor', 'super-admin'])) {
+            return redirect()->route('cms.isf.artikel.index');
+        }
+
         return redirect()->route('cms.dashboard');
     }
 

@@ -1,6 +1,6 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
-import { Head, Link } from '@inertiajs/vue3'
+import { ref, computed, onMounted, watch } from 'vue'
+import { Head, Link, usePage } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
 import { cmsResources } from '@/api/services/isfCmsService'
 import { activeCategories as CATEGORIES, loadCategories } from '@/Pages/Cms/Isf/options'
@@ -25,6 +25,16 @@ import {
 import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 
 defineOptions({ layout: CmsLayout })
+
+const inertiaPage = usePage()
+const authUser = computed(() => inertiaPage.props.auth?.user)
+const isMember = computed(() => {
+  const roles = authUser.value?.roles || []
+  const roleNames = Array.isArray(roles) ? roles.map((r) => typeof r === 'string' ? r : (r?.name || '')) : []
+  const hasMemberRole = roleNames.includes('member')
+  const hasStaffRole = roleNames.some((r) => ['admin', 'super-admin', 'editor'].includes(r))
+  return hasMemberRole && !hasStaffRole
+})
 
 const items = ref([])
 const perPage = ref(10)
@@ -164,7 +174,7 @@ onMounted(() => {
           </Badge>
         </h1>
         <p class="text-sm text-muted-foreground mt-1">
-          Kelola berita, opini kebijakan, artikel hero, serta blok fakta kunci untuk halaman publik.
+          {{ isMember ? 'Kelola dan tulis artikel Anda untuk dikurasi redaksi Indonesia Strategy Forum.' : 'Kelola berita, opini kebijakan, artikel hero, serta blok fakta kunci untuk halaman publik.' }}
         </p>
       </div>
       <Link href="/cms/artikel/create">
@@ -244,6 +254,7 @@ onMounted(() => {
             Draf
           </button>
           <button
+            v-if="!isMember"
             type="button"
             @click="onByMemberToggle"
             :class="[
@@ -282,10 +293,10 @@ onMounted(() => {
             <TableHead class="min-w-[280px]">Judul & Slug</TableHead>
             <TableHead class="w-28">Kategori</TableHead>
             <TableHead class="w-24">Status</TableHead>
-            <TableHead class="w-32">Penempatan</TableHead>
+            <TableHead v-if="!isMember" class="w-32">Penempatan</TableHead>
             <TableHead class="w-28 whitespace-nowrap">Tanggal</TableHead>
             <!-- Kolom Terpisah: Tayang Hero dengan Tooltip Visual -->
-            <TableHead class="text-center w-36 whitespace-nowrap">
+            <TableHead v-if="!isMember" class="text-center w-36 whitespace-nowrap">
               <div class="inline-flex items-center justify-center gap-1.5 relative group cursor-pointer select-none">
                 <span>Tayang Hero</span>
                 <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-muted text-muted-foreground hover:text-foreground text-[10px] font-bold border border-border">?</span>
@@ -327,8 +338,8 @@ onMounted(() => {
         </TableHeader>
         <TableBody>
           <TableRow v-if="items.length === 0">
-            <TableCell colspan="9" class="text-center py-10 text-muted-foreground text-sm">
-              Tidak ada artikel ditemukan.
+            <TableCell :colspan="isMember ? 7 : 9" class="text-center py-10 text-muted-foreground text-sm">
+              {{ isMember ? 'Belum ada artikel yang Anda buat. Klik Tambah Artikel untuk mulai menulis naskah.' : 'Tidak ada artikel ditemukan.' }}
             </TableCell>
           </TableRow>
           <TableRow
@@ -357,9 +368,9 @@ onMounted(() => {
             <TableCell class="py-3">
               <div class="font-semibold text-foreground text-sm leading-snug line-clamp-2 flex flex-wrap items-center gap-1.5">
                 <span>{{ item.title }}</span>
-                <!-- Badge kecil "by member" di samping value judul/slug jika artikel dibuat oleh member -->
+                <!-- Badge kecil "by member" di samping value judul/slug jika artikel dibuat oleh member (hanya tampil untuk staf redaksi/admin) -->
                 <span
-                  v-if="item.is_by_member"
+                  v-if="item.is_by_member && !isMember"
                   class="inline-flex items-center px-1.5 py-0.2 rounded text-[9.5px] font-semibold bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 whitespace-nowrap"
                 >
                   by member
@@ -388,7 +399,7 @@ onMounted(() => {
             <TableCell>
               <StatusBadge :status="item.status" />
             </TableCell>
-            <TableCell class="whitespace-nowrap">
+            <TableCell v-if="!isMember" class="whitespace-nowrap">
               <div class="flex items-center gap-1 whitespace-nowrap">
                 <LiveBadge v-if="item.id === liveId" label="Hero Tayang" />
                 <span
@@ -424,7 +435,7 @@ onMounted(() => {
             </TableCell>
 
             <!-- Dedicated Column: Tayang Hero -->
-            <TableCell class="text-center whitespace-nowrap">
+            <TableCell v-if="!isMember" class="text-center whitespace-nowrap">
               <span
                 v-if="item.id === liveId"
                 class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
@@ -464,16 +475,17 @@ onMounted(() => {
                   </Button>
                 </Link>
 
-                <!-- Edit -->
-                <Link :href="`/cms/artikel/${item.id}/edit`">
+                <!-- Edit (artikel member tidak bisa diedit) -->
+                <Link v-if="!isMember && !item.is_by_member" :href="`/cms/artikel/${item.id}/edit`">
                   <Button variant="outline" size="sm" class="h-8 px-2.5 text-xs font-medium hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center">
                     <IconComponent name="Edit" :size="14" class="mr-1" />
                     Edit
                   </Button>
                 </Link>
 
-                <!-- Hapus -->
+                <!-- Hapus (artikel member tidak bisa dihapus) -->
                 <Button
+                  v-if="!isMember && !item.is_by_member"
                   variant="outline"
                   size="sm"
                   class="h-8 px-2.5 text-xs font-medium text-red-500 border-red-500/30 hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center"
