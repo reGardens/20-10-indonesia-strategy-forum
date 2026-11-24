@@ -3,7 +3,7 @@
  * Detail Profil Penulis Opini Publik — /penulis/:slug
  * Menampilkan identitas penulis member, afiliasi, bio, dan daftar artikel terverifikasi yang telah terbit di ISF.
  */
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   IconArrowLeft,
@@ -23,6 +23,7 @@ import {
   IsfLink,
   SectionHeading,
 } from '@/Components/Isf'
+import Pagination from '@/Components/UI/Pagination.vue'
 import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
 import { getPenulisDetail } from '@/api/services/isfPublicService'
 import { useIsfContent } from '@/Composables/useIsfContent'
@@ -36,6 +37,26 @@ const { data, status, load } = useIsfContent(() =>
 const author = computed(() => data.value?.data ?? null)
 const articles = computed(() => author.value?.articles ?? [])
 
+const currentPage = ref(1)
+const perPage = 12
+const totalPages = computed(() => Math.ceil((articles.value.length || 0) / perPage) || 1)
+const paginatedArticles = computed(() => {
+  const start = (currentPage.value - 1) * perPage
+  return articles.value.slice(start, start + perPage)
+})
+
+function onPageChange(page) {
+  currentPage.value = page
+  if (typeof window !== 'undefined') {
+    const el = document.getElementById('daftar-karya-member-heading')
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    } else {
+      window.scrollTo({ top: 380, behavior: 'smooth' })
+    }
+  }
+}
+
 watch(
   () => author.value?.name,
   (name) => {
@@ -47,7 +68,10 @@ watch(
 
 watch(
   () => route.params.slug,
-  () => load(),
+  () => {
+    currentPage.value = 1
+    load()
+  },
   { immediate: true }
 )
 
@@ -123,9 +147,9 @@ function formatDate(val) {
           <div class="h-3 w-44 bg-neutral-200 rounded mb-1.5"></div>
           <div class="h-6 w-56 bg-neutral-300 rounded"></div>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div
-            v-for="i in 3"
+            v-for="i in 4"
             :key="i"
             class="flex flex-col justify-between bg-white rounded-xl border border-neutral-200 overflow-hidden"
           >
@@ -238,6 +262,7 @@ function formatDate(val) {
       <section class="space-y-6">
         <div class="border-b border-neutral-200 pb-3 flex items-center justify-between">
           <SectionHeading
+            id="daftar-karya-member-heading"
             title="Daftar Karya & Analisis"
             size="md"
           >
@@ -251,9 +276,9 @@ function formatDate(val) {
           <p class="text-xs text-neutral-500 mt-1">Artikel baru yang diajukan oleh penulis sedang dalam tahap peninjauan redaksi.</p>
         </div>
 
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <article
-            v-for="(card, cIdx) in articles"
+            v-for="(card, cIdx) in paginatedArticles"
             :key="card.slug || cIdx"
             class="group flex flex-col justify-between bg-white hover:bg-neutral-50/80 rounded-xl border border-neutral-200/90 overflow-hidden transition-all duration-300 hover:shadow-md hover:border-isf-red/40"
           >
@@ -312,6 +337,15 @@ function formatDate(val) {
               </div>
             </div>
           </article>
+        </div>
+
+        <!-- Pagination -->
+        <div v-if="totalPages > 1" class="py-5 sm:py-6 flex justify-center border-t border-neutral-200 mt-6">
+          <Pagination
+            :current-page="currentPage"
+            :total-pages="totalPages"
+            @update:current-page="onPageChange"
+          />
         </div>
       </section>
     </div>

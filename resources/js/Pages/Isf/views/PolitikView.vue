@@ -37,6 +37,7 @@ import {
   PetaKursiParlemen,
   SectionHeading,
 } from '@/Components/Isf'
+import Pagination from '@/Components/UI/Pagination.vue'
 import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
 import { formatDate } from '@/Utils/formatters'
 import { getPolitik } from '@/api/services/isfPublicService'
@@ -115,7 +116,7 @@ const activeSubkategoriName = computed(() => {
 })
 
 const headline = computed(() => data.value?.headline || null)
-const meta = computed(() => data.value?.meta || { currentPage: 1, lastPage: 1, total: 0, perPage: 9 })
+const meta = computed(() => data.value?.meta || { currentPage: 1, lastPage: 1, total: 0, perPage: 12 })
 const petaKursi = computed(() => data.value?.petaKursi || {})
 const tokohPolitik = computed(() => data.value?.tokohPolitik || [])
 
@@ -134,41 +135,26 @@ const allListArticles = computed(() => {
   return accumulatedArticles.value
 })
 
-const hasMore = computed(() => {
-  return meta.value.currentPage < meta.value.lastPage
-})
-
-async function fetchData(page = 1, append = false) {
-  if (append) {
-    loadingMore.value = true
-  } else {
-    loading.value = true
-    error.value = null
-  }
+async function fetchData(page = 1) {
+  loading.value = true
+  error.value = null
 
   try {
     const res = await getPolitik(
       currentSubkategori.value,
       page,
-      8,
+      12,
       {
         q: searchQuery.value || null,
         date: selectedDate.value || null,
       }
     )
     data.value = res
-
-    const newArticles = res.articles || []
-    if (append) {
-      accumulatedArticles.value = [...accumulatedArticles.value, ...newArticles]
-    } else {
-      accumulatedArticles.value = newArticles
-    }
+    accumulatedArticles.value = res.articles || []
   } catch (err) {
     error.value = err
   } finally {
     loading.value = false
-    loadingMore.value = false
   }
 }
 
@@ -176,6 +162,7 @@ function navigateSubkategori(slug) {
   currentPage.value = 1
   accumulatedArticles.value = []
   const query = { ...route.query }
+  delete query.page
   if (!slug) {
     router.push({ path: '/politik', query })
   } else {
@@ -189,26 +176,28 @@ function onSearchInput(e) {
   searchDebounce = setTimeout(() => {
     currentPage.value = 1
     const query = { ...route.query }
+    delete query.page
     if (searchQuery.value) {
       query.q = searchQuery.value
     } else {
       delete query.q
     }
     router.push({ query })
-    fetchData(1, false)
+    fetchData(1)
   }, 400)
 }
 
 function onDateChange() {
   currentPage.value = 1
   const query = { ...route.query }
+  delete query.page
   if (selectedDate.value) {
     query.date = selectedDate.value
   } else {
     delete query.date
   }
   router.push({ query })
-  fetchData(1, false)
+  fetchData(1)
 }
 
 function resetFilters() {
@@ -218,25 +207,39 @@ function resetFilters() {
   const query = { ...route.query }
   delete query.q
   delete query.date
+  delete query.page
   router.push({ query })
-  fetchData(1, false)
+  fetchData(1)
 }
 
-function loadMore() {
-  if (hasMore.value && !loadingMore.value) {
-    currentPage.value += 1
-    fetchData(currentPage.value, true)
+function onPageChange(page) {
+  currentPage.value = page
+  const query = { ...route.query }
+  if (page > 1) {
+    query.page = String(page)
+  } else {
+    delete query.page
+  }
+  router.push({ query })
+  fetchData(page)
+  if (typeof window !== 'undefined') {
+    const el = document.getElementById('daftar-artikel-politik-heading')
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    } else {
+      window.scrollTo({ top: 380, behavior: 'smooth' })
+    }
   }
 }
 
 // Reset dan reload saat subkategori atau route query berubah
 watch(
-  () => [route.params.subkategori, route.query.q, route.query.date],
+  () => [route.params.subkategori, route.query.q, route.query.date, route.query.page],
   () => {
     searchQuery.value = route.query.q || ''
     selectedDate.value = route.query.date || ''
-    currentPage.value = 1
-    fetchData(1, false)
+    currentPage.value = Math.max(1, parseInt(route.query.page) || 1)
+    fetchData(currentPage.value)
   },
   { immediate: true }
 )
@@ -366,14 +369,22 @@ watch(
 
     <!-- ═══ 3. SKELETON LOADER ═══ -->
     <main v-if="loading && accumulatedArticles.length === 0" class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12 mt-8 sm:mt-12 space-y-8 animate-pulse" aria-busy="true">
-      <div class="bg-white rounded-lg border border-neutral-300 p-6 space-y-4">
-        <div class="h-4 w-36 bg-neutral-200 rounded"></div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div v-for="n in 4" :key="n" class="space-y-3">
-            <div class="aspect-[4/3] bg-neutral-200 rounded"></div>
-            <div class="h-3 w-20 bg-neutral-200 rounded"></div>
-            <div class="h-5 w-full bg-neutral-300 rounded"></div>
-            <div class="h-3 w-28 bg-neutral-200 rounded"></div>
+      <div class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden">
+        <div class="border-b border-neutral-200 px-4 py-3 sm:px-6 sm:py-4">
+          <div class="h-4 w-36 bg-neutral-200 rounded"></div>
+        </div>
+        <div class="p-4 sm:p-6 lg:p-8">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div v-for="n in 4" :key="n" class="p-4 bg-white rounded-xl border border-neutral-200 space-y-3">
+              <div class="aspect-[16/10] bg-neutral-200 rounded"></div>
+              <div class="h-3 w-16 bg-neutral-200 rounded"></div>
+              <div class="h-5 w-full bg-neutral-300 rounded"></div>
+              <div class="h-3 w-4/5 bg-neutral-200 rounded"></div>
+              <div class="pt-3 border-t border-neutral-100 flex items-center justify-between">
+                <div class="h-3 w-24 bg-neutral-200 rounded"></div>
+                <div class="h-3 w-16 bg-neutral-200 rounded"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -384,140 +395,14 @@ watch(
       <ErrorMessage
         message="Gagal memuat konten rubrik Politik. Periksa koneksi Anda lalu coba lagi."
         retryable
-        @retry="fetchData(1, false)"
+        @retry="fetchData(1)"
       />
     </div>
 
     <!-- ═══ 4. CONTENT SECTIONS ═══ -->
     <main v-else class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12 mt-8 sm:mt-12 space-y-8 sm:space-y-12">
-      <!-- ═══ KASUS A: LAYOUT MULTIMEDIA & VIDEO INVESTIGATIF (UNTUK FILTER 'SOROTAN') ═══ -->
+      <!-- ═══ SECTION: DAFTAR ARTIKEL POLITIK (GRID 12 CARDS 4x3 + PAGINATION) ═══ -->
       <section
-        v-if="currentSubkategori === 'sorotan'"
-        aria-labelledby="sorotan-investigatif-heading"
-        class="bg-isf-navy text-white rounded-lg border border-neutral-800 shadow-sm overflow-hidden"
-      >
-        <!-- Section Header -->
-        <div class="border-b border-neutral-800 px-4 py-3 sm:px-6 sm:py-4 flex flex-wrap items-center justify-between gap-2">
-          <div class="flex items-center gap-2">
-            <span class="inline-block w-2.5 h-2.5 bg-isf-red rounded-xs"></span>
-            <span class="text-xs font-mono font-bold tracking-widest uppercase text-isf-red">
-              Laporan Khusus & Investigasi
-            </span>
-            <span class="text-neutral-600">•</span>
-            <h2 id="sorotan-investigatif-heading" class="font-space-grotesk text-sm sm:text-base font-bold text-white uppercase tracking-wider">
-              Multimedia & Video Investigatif Politik
-            </h2>
-          </div>
-          <span class="text-[11px] font-mono text-neutral-400">
-            Liputan Mendalam & Analisis Strategis
-          </span>
-        </div>
-
-        <!-- Layout Grid: 8 Cols Featured di Kiri + 4 Cols Playlist di Kanan -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-neutral-800">
-          <!-- Featured Story (Kiri) -->
-          <article v-if="allListArticles.length > 0" class="lg:col-span-7 xl:col-span-8 p-4 sm:p-6 lg:p-7">
-            <IsfLink :to="allListArticles[0].to" :class="[linkClass, 'group block']">
-              <div class="relative overflow-hidden aspect-video bg-neutral-900 rounded-md shadow-sm">
-                <img
-                  v-if="allListArticles[0].imageUrl"
-                  :src="allListArticles[0].imageUrl"
-                  :alt="allListArticles[0].title"
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div v-else class="w-full h-full flex items-center justify-center bg-neutral-800 text-neutral-400">
-                  <IconBuildingBank class="w-12 h-12" />
-                </div>
-                <!-- Play Icon Overlay -->
-                <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent flex items-center justify-center">
-                  <div class="w-14 h-14 rounded-full bg-isf-red text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                    <IconPlayerPlay class="w-6 h-6 fill-current translate-x-0.5" />
-                  </div>
-                </div>
-                <div class="absolute top-3 left-3 bg-isf-red text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded font-mono">
-                  SOROTAN UTAMA
-                </div>
-              </div>
-
-              <span class="isf-kicker text-isf-red mt-3.5 block font-bold text-xs uppercase tracking-wider">
-                {{ allListArticles[0].category }} · {{ allListArticles[0].subcategory || 'Investigasi' }}
-              </span>
-              <h3 class="font-headline mt-1.5 text-xl sm:text-2xl lg:text-3xl font-bold leading-tight text-white group-hover:text-red-400 transition-colors">
-                {{ allListArticles[0].title }}
-              </h3>
-              <p v-if="allListArticles[0].summary" class="mt-2 font-serif text-xs sm:text-sm text-neutral-300 leading-relaxed line-clamp-3">
-                {{ allListArticles[0].summary }}
-              </p>
-              <div class="mt-3.5 flex items-center justify-between text-xs text-neutral-400 font-mono">
-                <span class="font-medium text-neutral-300">{{ allListArticles[0].author || 'Tim Riset ISF' }}</span>
-                <time v-if="allListArticles[0].publishedAt" :datetime="allListArticles[0].publishedAt">
-                  {{ formatDate(allListArticles[0].publishedAt) }}
-                </time>
-              </div>
-            </IsfLink>
-          </article>
-
-          <!-- Playlist Queue List (Kanan) -->
-          <div class="lg:col-span-5 xl:col-span-4 p-4 sm:p-6 flex flex-col divide-y divide-neutral-800">
-            <p class="text-[11px] font-bold uppercase tracking-wider text-neutral-400 font-mono pb-3">
-              Daftar Laporan Terkait
-            </p>
-            <article
-              v-for="item in allListArticles.slice(1, 5)"
-              :key="item.slug || item.id"
-              class="py-3.5 first:pt-2 last:pb-2"
-            >
-              <IsfLink :to="item.to" :class="[linkClass, 'group flex items-start gap-3']">
-                <div class="relative w-28 shrink-0 aspect-video rounded overflow-hidden bg-neutral-900">
-                  <img
-                    v-if="item.imageUrl"
-                    :src="item.imageUrl"
-                    :alt="item.title"
-                    class="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                    loading="lazy"
-                  />
-                  <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <IconPlayerPlay class="w-4 h-4 text-white fill-current opacity-80" />
-                  </div>
-                </div>
-                <div class="min-w-0 flex-1">
-                  <span class="text-[10px] font-mono text-isf-red uppercase tracking-wider block">
-                    {{ item.subcategory || item.category || 'Sorotan' }}
-                  </span>
-                  <h4 class="font-space-grotesk text-xs sm:text-sm font-bold leading-snug text-white group-hover:text-red-400 transition-colors line-clamp-2 mt-0.5">
-                    {{ item.title }}
-                  </h4>
-                  <time v-if="item.publishedAt" class="text-[10px] text-neutral-400 font-mono block mt-1">
-                    {{ formatDate(item.publishedAt) }}
-                  </time>
-                </div>
-              </IsfLink>
-            </article>
-
-            <div v-if="allListArticles.length <= 1" class="py-8 text-center text-xs text-neutral-400">
-              Belum ada arsip sorotan tambahan.
-            </div>
-          </div>
-        </div>
-
-        <!-- Load More untuk Sorotan -->
-        <div v-if="hasMore" class="p-4 sm:p-5 border-t border-neutral-800 flex justify-center bg-neutral-950/40">
-          <button
-            type="button"
-            @click="loadMore"
-            :disabled="loadingMore"
-            class="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-isf-red text-white text-xs font-bold hover:bg-red-700 transition-colors cursor-pointer disabled:opacity-50"
-          >
-            <span v-if="loadingMore">Memuat...</span>
-            <span v-else>Muat Lebih Banyak Sorotan</span>
-            <IconChevronDown class="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </section>
-
-      <!-- ═══ KASUS B: LAYOUT SECTION POLITIK DI PAGE BERANDA (UNTUK SEMUA KATEGORI LAINNYA) ═══ -->
-      <section
-        v-else
         aria-labelledby="daftar-artikel-politik-heading"
         class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden"
       >
@@ -548,57 +433,58 @@ watch(
           </button>
         </div>
 
-        <!-- Layout 4 Kolom Bergaris Persis Section Politik di Beranda -->
-        <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-neutral-200 border-b border-neutral-200">
-          <IsfLink
-            v-for="(item, idx) in allListArticles"
-            :key="item.slug || item.id || idx"
-            :to="item.to"
-            :class="[
-              linkClass,
-              'group block min-w-0 p-4 sm:p-5 hover:bg-neutral-50/80 transition-colors'
-            ]"
-          >
-            <ImagePlaceholder
-              :label="item.imageAlt || item.title"
-              :src="item.imageUrl || ''"
-              aspect="photo"
-              bare
-              :priority="idx === 0"
-            />
-            <span class="isf-kicker text-isf-red mt-3 block font-bold text-[11px] sm:text-xs">
-              {{ item.category }}{{ item.subcategory ? ` · ${item.subcategory}` : '' }}
-            </span>
-            <h3 class="isf-headline mt-1 text-[16px] sm:text-[17px] leading-[1.2] group-hover:text-isf-red transition-colors line-clamp-2">
-              {{ item.title }}
-            </h3>
-            <p v-if="item.summary" class="mt-1.5 font-serif text-[12px] sm:text-[13px] leading-[1.4] text-neutral-600 line-clamp-2">
-              {{ item.summary }}
-            </p>
-            <!-- Penulis between sejajar dengan tanggal -->
-            <div class="isf-byline mt-3 pt-2.5 border-t border-neutral-100 flex items-center justify-between text-[11px] sm:text-xs text-neutral-500">
-              <span class="truncate font-medium text-neutral-700 max-w-[55%]">
-                {{ item.author || 'Tim Redaksi ISF' }}
-              </span>
-              <time v-if="item.publishedAt" :datetime="item.publishedAt" class="shrink-0 text-neutral-500">
-                {{ formatDate(item.publishedAt) }}
-              </time>
-            </div>
-          </IsfLink>
+        <!-- 4 Kolom Artikel (Grid 12 Cards 4x3) -->
+        <div v-else class="p-4 sm:p-6 lg:p-8">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <article
+              v-for="(item, idx) in allListArticles"
+              :key="item.slug || item.id || idx"
+              class="group flex flex-col justify-between bg-white hover:bg-neutral-50/80 rounded-xl border border-neutral-200 overflow-hidden transition-all duration-300 hover:shadow-md hover:border-isf-red/40"
+            >
+              <IsfLink :to="item.to" class="block relative aspect-[16/10] overflow-hidden bg-neutral-200">
+                <ImagePlaceholder
+                  :label="item.imageAlt || item.title"
+                  :src="item.imageUrl || ''"
+                  aspect="photo"
+                  bare
+                  :priority="idx === 0"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              </IsfLink>
+              <div class="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
+                <div>
+                  <span class="isf-kicker text-isf-red block font-bold text-[11px] sm:text-xs">
+                    {{ item.category }}{{ item.subcategory ? ` · ${item.subcategory}` : '' }}
+                  </span>
+                  <h3 class="isf-headline mt-1.5 text-[15px] sm:text-[16px] leading-[1.3] group-hover:text-isf-red transition-colors line-clamp-2">
+                    <IsfLink :to="item.to">
+                      {{ item.title }}
+                    </IsfLink>
+                  </h3>
+                  <p v-if="item.summary" class="mt-1.5 font-serif text-[12px] sm:text-[13px] leading-[1.4] text-neutral-600 line-clamp-2">
+                    {{ item.summary }}
+                  </p>
+                </div>
+                <div class="isf-byline pt-3 border-t border-neutral-100 flex items-center justify-between text-[11px] sm:text-xs text-neutral-500 mt-auto">
+                  <span class="truncate font-medium text-neutral-700 max-w-[55%]">
+                    {{ item.author || 'Tim Redaksi ISF' }}
+                  </span>
+                  <time v-if="item.publishedAt" :datetime="item.publishedAt" class="shrink-0 text-neutral-500">
+                    {{ formatDate(item.publishedAt) }}
+                  </time>
+                </div>
+              </div>
+            </article>
+          </div>
         </div>
 
-        <!-- Pagination Klik More (Load More) -->
-        <div v-if="hasMore" class="p-5 sm:p-6 flex justify-center border-t border-neutral-200 bg-neutral-50/50">
-          <button
-            type="button"
-            @click="loadMore"
-            :disabled="loadingMore"
-            class="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-isf-red text-white text-xs sm:text-sm font-space-grotesk font-bold hover:bg-red-700 transition-colors shadow-xs cursor-pointer disabled:opacity-50"
-          >
-            <span v-if="loadingMore">Memuat lebih banyak...</span>
-            <span v-else>Muat Lebih Banyak Artikel</span>
-            <IconChevronDown class="w-4 h-4" />
-          </button>
+        <!-- Pagination -->
+        <div v-if="meta.lastPage > 1" :class="['py-5 sm:py-6 flex justify-center border-t border-neutral-200', sectionPad]">
+          <Pagination
+            :current-page="meta.currentPage"
+            :total-pages="meta.lastPage"
+            @update:current-page="onPageChange"
+          />
         </div>
       </section>
 
