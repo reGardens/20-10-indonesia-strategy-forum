@@ -7,8 +7,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title inertia>{{ config('app.name', 'CMS Landing') }}</title>
-    <link rel="icon" type="image/jpeg" href="{{ asset('images/isf/logo-isf.jpeg') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/isf/logo-isf.jpeg') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/isf/ISF-Logo-2.png') }}?v=2">
+    <link rel="apple-touch-icon" href="{{ asset('images/isf/ISF-Logo-2.png') }}?v=2">
     <meta name="theme-color" content="#0B1220">
 
     <!-- Preload font lokal; @font-face & semua style CMS ada di resources/css/app.css -->

@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Indonesia Strategy Forum</title>
-    <link rel="icon" type="image/jpeg" href="{{ asset('images/isf/logo-isf.jpeg') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/isf/logo-isf.jpeg') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/isf/ISF-Logo-2.png') }}?v=2">
+    <link rel="apple-touch-icon" href="{{ asset('images/isf/ISF-Logo-2.png') }}?v=2">
     <meta name="theme-color" content="#0B1220">
     @php
         // Status login untuk header publik (dibaca sinkron oleh useIsfSession) → tidak tampil "Login" sekejap.
