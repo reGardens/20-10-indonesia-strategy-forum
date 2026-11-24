@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\Isf\IsfCacheService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class IsfFooterSettingTest extends TestCase
@@ -27,6 +28,8 @@ class IsfFooterSettingTest extends TestCase
 
     private function superAdmin(): User
     {
+        Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
+
         $user = User::create([
             'name' => 'Admin Footer',
             'email' => 'admin-footer-' . uniqid() . '@example.com',
