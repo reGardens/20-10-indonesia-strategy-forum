@@ -129,9 +129,9 @@ function logout() {
                     class="flex items-center gap-2.5 font-bold"
                 >
                     <img
-                        src="/images/isf/logo-isf.jpeg"
+                        src="/images/isf/ISF-Logo-1.png"
                         alt="ISF Logo"
-                        class="w-9 h-9 rounded-lg object-cover shadow-sm border border-neutral-700/60 shrink-0"
+                        class="w-9 h-9 rounded-lg object-contain bg-isf-navy p-0.5 shadow-sm border border-neutral-700/60 shrink-0"
                         width="36"
                         height="36"
                     />
@@ -164,9 +164,9 @@ function logout() {
                 </button>
                 <div class="flex items-center gap-2 lg:hidden">
                     <img
-                        src="/images/isf/logo-isf.jpeg"
+                        src="/images/isf/ISF-Logo-1.png"
                         alt="ISF Logo"
-                        class="w-7 h-7 rounded object-cover shadow-sm border border-neutral-700/60 shrink-0"
+                        class="w-7 h-7 rounded object-contain bg-isf-navy p-0.5 shadow-sm border border-neutral-700/60 shrink-0"
                         width="28"
                         height="28"
                     />

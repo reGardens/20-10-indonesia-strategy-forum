@@ -1,12 +1,11 @@
 <script setup>
 /**
- * IsfLogo — ISF logo (public/images/isf/logo-isf.jpeg, same file used by the
- * favicon and the email briefing). It is displayed without a decorative frame.
+ * IsfLogo — ISF logo for CMS login (public/images/isf/ISF-Logo-1.png).
  */
 import { computed } from "vue";
 import { cn } from "@/lib/utils";
 
-const ISF_LOGO_URL = "/images/isf/logo-isf.jpeg";
+const ISF_LOGO_URL = "/images/isf/ISF-Logo-1.png";
 
 const props = defineProps({
     // Square size: sm = 32px, md = 40px, lg = 64px, xl = 96px
@@ -46,7 +45,7 @@ const classes = computed(() =>
         <img
             :src="ISF_LOGO_URL"
             :alt="alt"
-            class="h-full w-full object-cover"
+            class="h-full w-full object-contain p-1"
             width="96"
             height="96"
             decoding="async"
