@@ -104,6 +104,12 @@ const menuGroups = computed(() => {
                 icon: "LayoutDashboard",
                 visible: true,
             },
+            {
+                label: "Footer",
+                href: "/cms/footer",
+                icon: "LayoutBottombar",
+                visible: hasFeature("pengaturan_halaman"),
+            },
         ],
     },
     {

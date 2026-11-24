@@ -176,6 +176,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}/edit', [IsfPageController::class, 'edit'])->defaults('module', 'iklan')->whereNumber('id')->name('cms.isf.iklan.edit');
     });
 
+    Route::prefix('cms/footer')->middleware('feature:pengaturan_halaman')->group(function () {
+        Route::get('/', [IsfPageController::class, 'footer'])->name('cms.isf.footer.index');
+    });
+
     Route::get('/cms/pengaturan-halaman', fn () => redirect()->route('cms.isf.running-text.index'))
         ->name('cms.isf.pengaturan-halaman');
 

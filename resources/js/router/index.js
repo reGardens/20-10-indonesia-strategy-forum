@@ -312,6 +312,82 @@ const routes = [
     redirect: '/pencarian'
   },
   {
+    path: '/syarat-ketentuan',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-syarat-ketentuan',
+        component: () => import('../Pages/Isf/views/LegalPageView.vue'),
+        meta: { title: 'Syarat & Ketentuan · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
+    path: '/privacy-policy',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-privacy-policy',
+        component: () => import('../Pages/Isf/views/LegalPageView.vue'),
+        meta: { title: 'Kebijakan Privasi · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
+    path: '/kebijakan-privasi',
+    redirect: '/privacy-policy'
+  },
+  {
+    path: '/pedoman-media-siber',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-pedoman-media-siber',
+        component: () => import('../Pages/Isf/views/LegalPageView.vue'),
+        meta: { title: 'Pedoman Pemberitaan Media Siber · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
+    path: '/cookie-policy',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-cookie-policy',
+        component: () => import('../Pages/Isf/views/LegalPageView.vue'),
+        meta: { title: 'Kebijakan Cookie · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
+    path: '/tentang-isf',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-tentang-isf',
+        component: () => import('../Pages/Isf/views/LegalPageView.vue'),
+        meta: { title: 'Tentang ISF · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
+    path: '/kontak',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-kontak',
+        component: () => import('../Pages/Isf/views/LegalPageView.vue'),
+        meta: { title: 'Kontak Redaksi · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
     path: '/anggota',
     component: IsfMemberLayout,
     children: [

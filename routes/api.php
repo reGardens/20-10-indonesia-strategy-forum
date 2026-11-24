@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Isf\Cms\CaseTimelineController;
 use App\Http\Controllers\Api\Isf\Cms\CategoryController;
 use App\Http\Controllers\Api\Isf\Cms\ChartController;
 use App\Http\Controllers\Api\Isf\Cms\DatabasePeraturanController;
+use App\Http\Controllers\Api\Isf\Cms\FooterSettingController;
 use App\Http\Controllers\Api\Isf\Cms\InfographicController;
 use App\Http\Controllers\Api\Isf\Cms\LegalGlossaryController;
 use App\Http\Controllers\Api\Isf\Cms\LegalTermController;
@@ -91,6 +92,7 @@ Route::middleware(['web'])->prefix('isf')->group(function () {
         ->middleware('throttle:6,1')
         ->name('api.isf.media-kit.rfp');
     Route::get('/kategori/{kategori}', [PublicContentController::class, 'kategori'])->name('api.isf.kategori');
+    Route::get('/footer', [PublicContentController::class, 'footer'])->name('api.isf.footer');
     Route::get('/infografik', [PublicContentController::class, 'infografik'])->name('api.isf.infografik');
     Route::get('/infografik/{slug}', [PublicContentController::class, 'infografikDetail'])->name('api.isf.infografik.show');
     Route::get('/anggota', [PublicContentController::class, 'anggota'])->name('api.isf.anggota');
@@ -187,6 +189,11 @@ Route::middleware(['web', 'auth'])->prefix('cms')->name('api.cms.')->group(funct
         ->middleware('feature:pengaturan_halaman')->name('pengaturan-halaman.show');
     Route::put('/pengaturan-halaman', [SettingController::class, 'update'])
         ->middleware('feature:pengaturan_halaman')->name('pengaturan-halaman.update');
+
+    Route::get('/footer', [FooterSettingController::class, 'show'])
+        ->middleware('feature:pengaturan_halaman')->name('footer.show');
+    Route::put('/footer', [FooterSettingController::class, 'update'])
+        ->middleware('feature:pengaturan_halaman')->name('footer.update');
 
     Route::get('/running-text', [SettingController::class, 'getRunningText'])->name('running-text.index');
     Route::post('/running-text', [SettingController::class, 'createRunningText'])->name('running-text.store');
