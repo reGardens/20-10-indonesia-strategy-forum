@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Isf;
 
+use App\Http\Controllers\Api\Isf\Cms\FooterSettingController;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Isf\AlertResource;
 use App\Http\Resources\Isf\ArticleResource;
@@ -3704,6 +3705,19 @@ HTML;
                 'created_at' => $proposal->created_at?->format('Y-m-d H:i:s'),
             ],
         ], 201);
+    }
+
+    /**
+     * Konten dinamis Footer untuk landing page dan situs publik (Issue #99).
+     */
+    public function footer(): JsonResponse
+    {
+        $footer = Setting::get('footer', FooterSettingController::defaultFooter());
+        $merged = array_merge(FooterSettingController::defaultFooter(), $footer);
+
+        return response()->json([
+            'data' => $merged,
+        ]);
     }
 
     private function notFound(string $message): JsonResponse

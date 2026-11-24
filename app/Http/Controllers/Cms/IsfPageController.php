@@ -44,6 +44,7 @@ class IsfPageController extends Controller
         'surat-pembaca' => 'Letter',
         'survei' => 'Survey',
         'kemitraan' => 'PartnershipRfp',
+        'footer' => 'Footer',
     ];
 
     public function index(Request $request): Response
@@ -99,6 +100,11 @@ class IsfPageController extends Controller
     public function kemitraanSectionForm(Request $request): Response
     {
         return Inertia::render('Cms/Isf/PartnershipRfp/SectionForm');
+    }
+
+    public function footer(): Response
+    {
+        return Inertia::render('Cms/Isf/Footer/Index');
     }
 
     /**

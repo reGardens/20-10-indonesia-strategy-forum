@@ -158,6 +158,12 @@ export const iklanService = {
         http.post(`/cms/iklan/${id}/toggle`).then((r) => r.data.data),
 };
 
+/** Footer Setting standalone service (Issue #99) */
+export const footerService = {
+    get: () => http.get("/cms/footer").then((r) => r.data.data),
+    update: (data) => http.put("/cms/footer", data).then((r) => r.data),
+};
+
 /** Category options for dropdown pickers across CMS modules: [{ id, value, label, color }] */
 export function categoryOptions() {
     return http.get("/cms/options/categories").then((r) => r.data.data);

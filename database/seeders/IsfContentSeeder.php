@@ -261,6 +261,7 @@ class IsfContentSeeder extends Seeder
         ]);
 
         Setting::put('anggota', $anggota['user']);
+        Setting::put('footer', \App\Http\Controllers\Api\Isf\Cms\FooterSettingController::defaultFooter());
     }
 
     private function pekanIniSummary(array $beranda, string $type): ?string
