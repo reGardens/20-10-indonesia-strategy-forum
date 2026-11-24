@@ -642,7 +642,7 @@ class PublicContentController extends Controller
         $search = $request->query('q') ? trim((string) $request->query('q')) : null;
         $date = $request->query('date') ? trim((string) $request->query('date')) : null;
         $page = max(1, (int) $request->input('page', 1));
-        $limit = min(48, max(1, (int) $request->input('limit', 9)));
+        $limit = min(48, max(1, (int) $request->input('limit', 12)));
 
         $politikCat = Category::query()->terbit()->where('slug', 'politik')->first();
 
@@ -720,11 +720,10 @@ class PublicContentController extends Controller
 
         // Headline: pada halaman 1, artikel pertama dijadikan headline
         $headline = null;
-        $listArticles = $mappedArticles;
         if ($page === 1 && count($mappedArticles) > 0) {
             $headline = $mappedArticles[0];
-            $listArticles = array_slice($mappedArticles, 1);
         }
+        $listArticles = $mappedArticles;
 
         // Peta Kursi Parlemen default (DPR 2024-2029)
         $seatRows = ParliamentSeat::query()
@@ -855,7 +854,7 @@ class PublicContentController extends Controller
     {
         $subkategori = $request->query('subkategori') ? strtolower(trim((string) $request->query('subkategori'))) : null;
         $page = max(1, (int) $request->input('page', 1));
-        $limit = min(24, max(1, (int) $request->input('limit', 9)));
+        $limit = min(48, max(1, (int) $request->input('limit', 12)));
 
         // Kategori induk Hukum
         $hukumCat = Category::query()->terbit()->where('slug', 'hukum')->first();
@@ -913,11 +912,10 @@ class PublicContentController extends Controller
 
         // Headline: pada halaman 1, artikel pertama dijadikan headline
         $headline = null;
-        $listArticles = $mappedArticles;
         if ($page === 1 && count($mappedArticles) > 0) {
             $headline = $mappedArticles[0];
-            $listArticles = array_slice($mappedArticles, 1);
         }
+        $listArticles = $mappedArticles;
 
         // Opini Pakar Hukum
         $opiniPakar = Article::query()
@@ -1121,7 +1119,7 @@ class PublicContentController extends Controller
     {
         $subkategori = $request->query('subkategori') ? strtolower(trim((string) $request->query('subkategori'))) : null;
         $page = max(1, (int) $request->input('page', 1));
-        $limit = min(24, max(1, (int) $request->input('limit', 9)));
+        $limit = min(48, max(1, (int) $request->input('limit', 12)));
 
         // Kategori induk Kebijakan Publik
         $kebijakanCat = Category::query()->terbit()->where('slug', 'kebijakan')->first();
@@ -1185,11 +1183,10 @@ class PublicContentController extends Controller
 
         // Headline
         $headline = null;
-        $listArticles = $mappedArticles;
         if ($page === 1 && count($mappedArticles) > 0) {
             $headline = $mappedArticles[0];
-            $listArticles = array_slice($mappedArticles, 1);
         }
+        $listArticles = $mappedArticles;
 
         // Policy Briefs
         $briefQuery = PolicyBrief::query()->terbit();
@@ -1475,7 +1472,7 @@ class PublicContentController extends Controller
     {
         $subkategori = $request->query('subkategori') ? strtolower(trim((string) $request->query('subkategori'))) : null;
         $page = max(1, (int) $request->input('page', 1));
-        $limit = min(24, max(1, (int) $request->input('limit', 9)));
+        $limit = min(48, max(1, (int) $request->input('limit', 12)));
 
         // Subkategori Opini Publik
         $parent = Category::query()->terbit()->where('slug', 'opini')->first();
@@ -1543,11 +1540,10 @@ class PublicContentController extends Controller
 
         // Headline
         $headline = null;
-        $listArticles = $mappedArticles;
         if ($page === 1 && count($mappedArticles) > 0) {
             $headline = $mappedArticles[0];
-            $listArticles = array_slice($mappedArticles, 1);
         }
+        $listArticles = $mappedArticles;
 
         // Reader Poll (Aktif & Featured)
         $voterHash = $this->getVoterHash($request);

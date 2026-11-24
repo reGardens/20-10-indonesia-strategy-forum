@@ -71,7 +71,7 @@ const { data, status, load } = useIsfContent(() => {
   const param = ['polling', 'kutipan'].includes(currentSubkategori.value)
     ? null
     : currentSubkategori.value
-  return getOpiniPublik(param, currentPage.value, 9)
+  return getOpiniPublik(param, currentPage.value, 12)
 })
 
 const rubrik = computed(() => data.value?.rubrik || {
@@ -96,8 +96,17 @@ const activeSubkategoriName = computed(() => {
 })
 
 const headline = computed(() => data.value?.headline || null)
-const articles = computed(() => data.value?.articles || [])
-const meta = computed(() => data.value?.meta || { currentPage: 1, lastPage: 1, total: 0, perPage: 9 })
+const articles = computed(() => {
+  const list = data.value?.articles || []
+  if (headline.value && currentPage.value === 1 && list.length === 11) {
+    const isDup = list.some(a => (a.id && a.id === headline.value.id) || (a.slug && a.slug === headline.value.slug))
+    if (!isDup) {
+      return [...list, headline.value]
+    }
+  }
+  return list
+})
+const meta = computed(() => data.value?.meta || { currentPage: 1, lastPage: 1, total: 0, perPage: 12 })
 const activePollIndex = ref(0)
 const readerPolls = computed(() => {
   if (data.value?.readerPolls && data.value.readerPolls.length > 0) {
@@ -198,7 +207,12 @@ function onPageChange(page) {
   currentPage.value = page
   load()
   if (typeof window !== 'undefined') {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    const el = document.getElementById('daftar-artikel-opini')
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    } else {
+      window.scrollTo({ top: 380, behavior: 'smooth' })
+    }
   }
 }
 
@@ -365,44 +379,44 @@ watch(
         </div>
       </div>
 
-      <!-- Section 2 Skeleton: Jajak Pendapat Pembaca (Navy Frame) -->
-      <div class="bg-isf-navy text-white rounded-lg border border-neutral-800 shadow-sm overflow-hidden p-6 lg:p-8 space-y-6">
-        <div class="border-b border-neutral-800 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <!-- Section 2 Skeleton: Jajak Pendapat Pembaca -->
+      <div class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden p-6 lg:p-8 space-y-6">
+        <div class="border-b border-neutral-200 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div class="space-y-1">
-            <div class="h-3 w-44 bg-neutral-700 rounded"></div>
+            <div class="h-3 w-44 bg-neutral-200 rounded"></div>
             <div class="flex items-center gap-2">
               <div class="w-3 h-3 bg-isf-red rounded-xs"></div>
-              <div class="h-6 w-60 bg-neutral-600 rounded"></div>
+              <div class="h-6 w-60 bg-neutral-300 rounded"></div>
             </div>
           </div>
           <div class="flex gap-2">
-            <div class="h-7 w-20 bg-neutral-800 rounded-full"></div>
-            <div class="h-7 w-20 bg-neutral-800 rounded-full"></div>
+            <div class="h-7 w-20 bg-neutral-200 rounded-full"></div>
+            <div class="h-7 w-20 bg-neutral-200 rounded-full"></div>
           </div>
         </div>
 
-        <!-- Poll Card Inside Navy Frame -->
-        <div class="max-w-3xl mx-auto bg-neutral-900/90 rounded-xl border border-neutral-800 p-5 sm:p-7 space-y-6">
+        <!-- Poll Card Inside Light Frame -->
+        <div class="max-w-3xl mx-auto bg-neutral-50 rounded-xl border border-neutral-200 p-5 sm:p-7 space-y-6">
           <div class="space-y-2">
-            <div class="h-3 w-24 bg-neutral-700 rounded"></div>
-            <div class="h-6 w-full bg-neutral-600 rounded"></div>
-            <div class="h-6 w-3/4 bg-neutral-600 rounded"></div>
-            <div class="h-3.5 w-5/6 bg-neutral-700 rounded mt-1"></div>
+            <div class="h-3 w-24 bg-neutral-200 rounded"></div>
+            <div class="h-6 w-full bg-neutral-300 rounded"></div>
+            <div class="h-6 w-3/4 bg-neutral-300 rounded"></div>
+            <div class="h-3.5 w-5/6 bg-neutral-200 rounded mt-1"></div>
           </div>
           <!-- Option Bars -->
           <div class="space-y-3">
-            <div v-for="opt in 3" :key="opt" class="h-12 w-full bg-neutral-800/80 rounded-lg border border-neutral-700/60 flex items-center px-4 justify-between">
+            <div v-for="opt in 3" :key="opt" class="h-12 w-full bg-white rounded-lg border border-neutral-200 flex items-center px-4 justify-between">
               <div class="flex items-center gap-3">
-                <div class="w-4 h-4 rounded-full border border-neutral-600 bg-neutral-700"></div>
-                <div class="h-3.5 w-44 bg-neutral-700 rounded"></div>
+                <div class="w-4 h-4 rounded-full border border-neutral-300 bg-neutral-200"></div>
+                <div class="h-3.5 w-44 bg-neutral-200 rounded"></div>
               </div>
-              <div class="h-3.5 w-10 bg-neutral-700 rounded"></div>
+              <div class="h-3.5 w-10 bg-neutral-200 rounded"></div>
             </div>
           </div>
           <!-- Vote Button & Disclaimer -->
           <div class="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div class="h-9 w-32 bg-isf-red/70 rounded-lg"></div>
-            <div class="h-3 w-56 bg-neutral-700 rounded"></div>
+            <div class="h-3 w-56 bg-neutral-200 rounded"></div>
           </div>
         </div>
       </div>
@@ -459,7 +473,7 @@ watch(
             <div class="h-6 w-64 bg-neutral-300 rounded"></div>
             <div class="h-3.5 w-96 max-w-full bg-neutral-200 rounded mt-1"></div>
           </div>
-          <div class="h-9 w-36 bg-neutral-900/80 rounded-lg shrink-0"></div>
+          <div class="h-9 w-36 bg-neutral-200 rounded-lg shrink-0"></div>
         </div>
 
         <!-- 2 Letter Cards Stack -->
@@ -507,26 +521,25 @@ watch(
           </div>
         </div>
 
-        <!-- 2 Columns Grid of Articles with divider border -->
-        <div class="grid grid-cols-1 lg:grid-cols-2">
-          <div
-            v-for="n in 6"
-            :key="n"
-            class="grid grid-cols-[6rem_minmax(0,1fr)] sm:grid-cols-[12rem_minmax(0,1fr)] lg:grid-cols-[10rem_minmax(0,1fr)] xl:grid-cols-[14rem_minmax(0,1fr)] items-start gap-3 sm:gap-5 border-b border-neutral-200 px-3 py-3.5 sm:px-4 sm:py-5 xl:px-[30px] lg:[&:nth-child(odd)]:border-r"
-          >
-            <!-- Thumbnail -->
-            <div class="aspect-[4/3] bg-neutral-200 rounded-md"></div>
-            <!-- Text Content -->
-            <div class="space-y-2 min-w-0">
-              <div class="h-3 w-20 bg-neutral-200 rounded"></div>
-              <div class="h-4.5 w-full bg-neutral-300 rounded"></div>
-              <div class="h-4.5 w-4/5 bg-neutral-300 rounded"></div>
-              <div class="h-3 w-full bg-neutral-200 rounded mt-1"></div>
-              <div class="h-3 w-3/4 bg-neutral-200 rounded"></div>
-              <div class="flex items-center gap-2 pt-1">
-                <div class="h-2.5 w-16 bg-neutral-200 rounded"></div>
-                <div class="h-2.5 w-12 bg-neutral-200 rounded"></div>
-                <div class="h-2.5 w-24 bg-neutral-200 rounded"></div>
+        <!-- 4 Columns Grid of Articles (Grid 12 Cards 4x3) -->
+        <div class="p-4 sm:p-6 lg:p-8">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div
+              v-for="n in 4"
+              :key="n"
+              class="p-4 bg-white rounded-xl border border-neutral-200 space-y-3"
+            >
+              <!-- Thumbnail -->
+              <div class="aspect-[16/10] bg-neutral-200 rounded-md"></div>
+              <!-- Text Content -->
+              <div class="space-y-2 min-w-0">
+                <div class="h-3 w-20 bg-neutral-200 rounded"></div>
+                <div class="h-4.5 w-full bg-neutral-300 rounded"></div>
+                <div class="h-3 w-3/4 bg-neutral-200 rounded"></div>
+                <div class="flex items-center gap-2 pt-1 border-t border-neutral-100">
+                  <div class="h-2.5 w-16 bg-neutral-200 rounded"></div>
+                  <div class="h-2.5 w-12 bg-neutral-200 rounded"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -878,7 +891,6 @@ watch(
 
       <!-- ═══ SECTION 5: DAFTAR ARTIKEL TERBARU + PAGINATION (Format Identik dengan Politik) ═══ -->
       <section
-        v-if="!currentSubkategori || ['op-ed', 'editorial'].includes(currentSubkategori)"
         aria-labelledby="daftar-artikel-opini"
         class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden"
       >
@@ -902,43 +914,49 @@ watch(
           </p>
         </div>
 
-        <!-- 2 Kolom Artikel Bergaris: responsive grid with strict line-clamp-2 for description -->
-        <div v-else class="grid grid-cols-1 lg:grid-cols-2">
-          <IsfLink
-            v-for="item in articles"
-            :key="item.slug"
-            :to="item.to || `/artikel/${item.slug}`"
-            :class="[
-              linkClass,
-              'group grid min-w-0 grid-cols-[6rem_minmax(0,1fr)] sm:grid-cols-[12rem_minmax(0,1fr)] lg:grid-cols-[10rem_minmax(0,1fr)] xl:grid-cols-[14rem_minmax(0,1fr)] items-start gap-3 sm:gap-5 border-b border-neutral-200 px-3 py-3.5 sm:px-4 sm:py-5 xl:px-[30px] lg:[&:nth-child(odd)]:border-r last:border-b-0 lg:last:border-b'
-            ]"
-          >
-            <ImagePlaceholder
-              :label="item.imageAlt || item.title"
-              :src="item.imageUrl || item.thumbnail || item.cover_image || ''"
-              aspect="photo"
-              bare
-            />
-            <div class="min-w-0">
-              <span class="isf-kicker text-isf-red text-[11px] sm:text-xs">
-                {{ item.category }}{{ item.subcategory ? ` · ${item.subcategory}` : '' }}
-              </span>
-              <span class="isf-headline mt-1 block text-[15px] sm:text-[17px] leading-[1.25] group-hover:text-isf-red xl:text-[19px] transition-colors line-clamp-2">
-                {{ item.title }}
-              </span>
-              <!-- Batasi deskripsi hanya 2 baris saja lalu beri elipsis (...) -->
-              <p v-if="item.summary || item.excerpt" class="mt-1.5 block font-serif text-[13px] sm:text-[14px] leading-[1.45] text-neutral-600 line-clamp-2">
-                {{ item.summary || item.excerpt }}
-              </p>
-              <div class="isf-byline mt-2 sm:mt-3 flex items-center gap-2 text-[11px] sm:text-xs">
-                <time v-if="item.publishedAt" :datetime="item.publishedAt">
-                  {{ formatDate(item.publishedAt) }}
-                </time>
-                <span v-if="item.readingMinutes" class="text-neutral-400">• {{ item.readingMinutes }} mnt</span>
-                <span v-if="item.author || item.author_name" class="text-neutral-500 truncate max-w-[120px] sm:max-w-none">• {{ item.author || item.author_name }}</span>
+        <!-- 4 Kolom Artikel (Grid 12 Cards 4x3) -->
+        <div v-else class="p-4 sm:p-6 lg:p-8">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <article
+              v-for="(item, idx) in articles"
+              :key="item.slug || item.id || idx"
+              class="group flex flex-col justify-between bg-white hover:bg-neutral-50/80 rounded-xl border border-neutral-200 overflow-hidden transition-all duration-300 hover:shadow-md hover:border-isf-red/40"
+            >
+              <IsfLink :to="item.to || `/artikel/${item.slug}`" class="block relative aspect-[16/10] overflow-hidden bg-neutral-200">
+                <ImagePlaceholder
+                  :label="item.imageAlt || item.title"
+                  :src="item.imageUrl || item.thumbnail || item.cover_image || ''"
+                  aspect="photo"
+                  bare
+                  :priority="idx === 0"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              </IsfLink>
+              <div class="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
+                <div>
+                  <span class="isf-kicker text-isf-red block font-bold text-[11px] sm:text-xs">
+                    {{ item.category }}{{ item.subcategory ? ` · ${item.subcategory}` : '' }}
+                  </span>
+                  <h3 class="isf-headline mt-1.5 text-[15px] sm:text-[16px] leading-[1.3] group-hover:text-isf-red transition-colors line-clamp-2">
+                    <IsfLink :to="item.to || `/artikel/${item.slug}`">
+                      {{ item.title }}
+                    </IsfLink>
+                  </h3>
+                  <p v-if="item.summary || item.excerpt" class="mt-1.5 font-serif text-[12px] sm:text-[13px] leading-[1.4] text-neutral-600 line-clamp-2">
+                    {{ item.summary || item.excerpt }}
+                  </p>
+                </div>
+                <div class="isf-byline pt-3 border-t border-neutral-100 flex items-center justify-between text-[11px] sm:text-xs text-neutral-500 mt-auto">
+                  <span class="truncate font-medium text-neutral-700 max-w-[55%]">
+                    {{ item.author || item.author_name || 'Tim Riset ISF' }}
+                  </span>
+                  <time v-if="item.publishedAt" :datetime="item.publishedAt" class="shrink-0 text-neutral-500">
+                    {{ formatDate(item.publishedAt) }}
+                  </time>
+                </div>
               </div>
-            </div>
-          </IsfLink>
+            </article>
+          </div>
         </div>
 
         <!-- Pagination -->

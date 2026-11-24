@@ -72,7 +72,7 @@ export function getKategori(kategori, offset = 0, limit = 7) {
   return get('/isf/kategori/' + encodeURIComponent(kategori) + '?offset=' + Number(offset) + '&limit=' + Number(limit))
 }
 
-export function getPolitik(subkategori = null, page = 1, limit = 9, params = {}) {
+export function getPolitik(subkategori = null, page = 1, limit = 12, params = {}) {
   const qs = new URLSearchParams()
   if (subkategori) qs.set('subkategori', subkategori)
   if (page) qs.set('page', String(page))
@@ -90,7 +90,7 @@ export function getPetaKursi(lembaga = 'DPR', periode = '2024-2029') {
   return get('/isf/peta-kursi?' + qs.toString())
 }
 
-export function getHukum(subkategori = null, page = 1, limit = 9) {
+export function getHukum(subkategori = null, page = 1, limit = 12) {
   const qs = new URLSearchParams()
   if (subkategori) qs.set('subkategori', subkategori)
   if (page) qs.set('page', String(page))
@@ -114,7 +114,7 @@ export function getTimelineKasus(slug = null) {
   return get('/isf/timeline-kasus' + (queryString ? `?${queryString}` : ''))
 }
 
-export function getKebijakanPublik(subkategori = null, page = 1, limit = 9) {
+export function getKebijakanPublik(subkategori = null, page = 1, limit = 12) {
   const qs = new URLSearchParams()
   if (subkategori) qs.set('subkategori', subkategori)
   if (page) qs.set('page', String(page))
@@ -140,11 +140,11 @@ export function getMonitoringKebijakan(params = {}) {
   return get('/isf/monitoring-kebijakan' + (queryString ? `?${queryString}` : ''))
 }
 
-export function getOpiniPublik(subkategori = null, page = 1, limit = 9) {
+export function getOpiniPublik(subkategori = null, page = 1, limit = 12) {
   const params = new URLSearchParams()
   if (subkategori) params.set('subkategori', subkategori)
   if (page > 1) params.set('page', String(page))
-  if (limit !== 9) params.set('limit', String(limit))
+  if (limit !== 12) params.set('limit', String(limit))
   const qs = params.toString()
   return get('/isf/opini-publik' + (qs ? `?${qs}` : ''))
 }

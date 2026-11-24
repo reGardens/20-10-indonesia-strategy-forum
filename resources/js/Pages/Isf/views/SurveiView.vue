@@ -317,32 +317,50 @@ watch(
               <div class="h-4 w-24 bg-neutral-200 rounded"></div>
             </div>
           </div>
-          <div class="lg:col-span-5 h-56 bg-neutral-900 rounded-xl"></div>
+          <div class="lg:col-span-5 h-56 bg-neutral-200 rounded-xl"></div>
         </div>
       </div>
 
-      <!-- Section 2 Skeleton: Timeline Navy -->
-      <div class="bg-isf-navy rounded-lg border border-neutral-800 shadow-sm overflow-hidden p-4 sm:p-6 space-y-6">
-        <div class="border-b border-neutral-800 pb-4 flex items-center justify-between">
+      <!-- Section 2 Skeleton: Timeline -->
+      <div class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden p-4 sm:p-6 space-y-6">
+        <div class="border-b border-neutral-200 pb-4 flex items-center justify-between">
           <div class="flex items-center gap-2">
             <div class="w-3 h-3 bg-isf-red rounded-xs"></div>
-            <div class="h-4 w-48 bg-neutral-700 rounded"></div>
+            <div class="h-4 w-48 bg-neutral-300 rounded"></div>
           </div>
-          <div class="h-3 w-32 bg-neutral-800 rounded"></div>
+          <div class="h-3 w-32 bg-neutral-200 rounded"></div>
         </div>
         <div class="space-y-4 py-2">
-          <div class="h-16 w-full bg-neutral-800/60 rounded-lg"></div>
-          <div class="h-16 w-full bg-neutral-800/40 rounded-lg"></div>
+          <div class="h-16 w-full bg-neutral-100 rounded-lg border border-neutral-200"></div>
+          <div class="h-16 w-full bg-neutral-100/70 rounded-lg border border-neutral-200"></div>
         </div>
       </div>
 
-      <!-- Section 3 Skeleton: Grid Cards -->
+      <!-- Section 3 Skeleton: Grid Cards (4 Kolom) -->
       <div class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden">
         <div class="border-b border-neutral-200 px-4 py-3 sm:px-6 sm:py-4">
-          <div class="h-4 w-40 bg-neutral-300 rounded"></div>
+          <div class="h-4 w-40 bg-neutral-200 rounded"></div>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 sm:p-6">
-          <div v-for="n in 3" :key="n" class="h-64 bg-neutral-100 rounded-xl border border-neutral-200"></div>
+        <div class="p-4 sm:p-6 lg:p-8">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div
+              v-for="n in 4"
+              :key="n"
+              class="p-4 bg-white rounded-xl border border-neutral-200 space-y-3"
+            >
+              <div class="flex items-center justify-between">
+                <div class="h-3 w-20 bg-neutral-200 rounded"></div>
+                <div class="h-3 w-16 bg-neutral-200 rounded"></div>
+              </div>
+              <div class="h-5 w-full bg-neutral-300 rounded"></div>
+              <div class="h-3 w-4/5 bg-neutral-200 rounded"></div>
+              <div class="h-16 bg-neutral-100 rounded-lg border border-neutral-200"></div>
+              <div class="pt-2 border-t border-neutral-100 flex items-center justify-between">
+                <div class="h-3 w-24 bg-neutral-200 rounded"></div>
+                <div class="h-3 w-16 bg-neutral-200 rounded"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </main>

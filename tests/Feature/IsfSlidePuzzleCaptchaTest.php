@@ -78,6 +78,32 @@ class IsfSlidePuzzleCaptchaTest extends TestCase
     }
 
     /**
+     * Test puzzle verify endpoint approves token-based verification from vue3-puzzle-vcode.
+     */
+    public function test_puzzle_verify_endpoint_approves_token_verification(): void
+    {
+        $res = $this->getJson('/api/isf/captcha/puzzle')->assertOk();
+        $key = $res->json('key');
+        $token = $res->json('token');
+        $targetX = Cache::get('puzzle:' . $key);
+
+        $this->assertNotEmpty($token);
+
+        $verifyRes = $this->postJson('/api/isf/captcha/puzzle/verify', [
+            'key' => $key,
+            'token' => $token,
+        ]);
+
+        $verifyRes->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'offset' => (float) $targetX,
+            ]);
+
+        $this->assertEquals((float) $targetX, (float) Cache::get('puzzle_verified:' . $key));
+    }
+
+    /**
      * Test puzzle verify endpoint rejects offset outside tolerance.
      */
     public function test_puzzle_verify_endpoint_rejects_incorrect_offset(): void
