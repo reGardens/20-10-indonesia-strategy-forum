@@ -69,7 +69,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useIsfPwa } from '@/composables/useIsfPwa'
+import { useIsfPwa } from '@/Composables/useIsfPwa'
 
 const { canInstall, installPwa, dismissInstallPrompt, initPwa } = useIsfPwa()
 const isDismissed = ref(false)

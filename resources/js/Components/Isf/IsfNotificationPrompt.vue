@@ -113,7 +113,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { useIsfPushNotification } from "@/composables/useIsfPushNotification";
+import { useIsfPushNotification } from "@/Composables/useIsfPushNotification";
 
 const {
     isSupported,
