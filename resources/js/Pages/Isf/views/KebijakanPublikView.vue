@@ -97,8 +97,6 @@ const articles = computed(() => {
 const meta = computed(() => data.value?.meta || { currentPage: 1, lastPage: 1, total: 0, perPage: 12 })
 const policyBriefs = computed(() => data.value?.policyBriefs || [])
 const dataGrafik = computed(() => data.value?.dataGrafik || [])
-const databasePeraturans = computed(() => data.value?.databasePeraturans || [])
-const monitoringData = computed(() => data.value?.monitoringKebijakan || [])
 
 function navigateSubkategori(slug) {
   currentPage.value = 1

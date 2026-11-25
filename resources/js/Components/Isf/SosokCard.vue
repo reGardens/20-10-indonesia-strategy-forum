@@ -18,6 +18,11 @@ const targetUrl = computed(() => {
   return props.tokoh.to || `/sosok/${props.tokoh.slug}`
 })
 
+const ratingDisplay = computed(() => {
+  const avg = Number(props.tokoh.rating_average ?? props.tokoh.rating ?? 0)
+  return avg > 0 ? avg.toFixed(1) : '0.0'
+})
+
 const categoryBadgeColor = computed(() => {
   const cat = (props.tokoh.role_category || '').toLowerCase()
   switch (cat) {
@@ -66,11 +71,10 @@ const categoryBadgeColor = computed(() => {
         </span>
 
         <span
-          v-if="tokoh.influence_score || tokoh.skor_value"
           class="px-2.5 py-1 rounded-md bg-[#0B1220]/90 backdrop-blur-xs text-white text-[11px] font-mono font-bold flex items-center gap-1 shadow-xs border border-white/10"
         >
-          <IconAward class="w-3.5 h-3.5 text-amber-400 shrink-0" />
-          <span>Skor {{ tokoh.influence_score || tokoh.skor_value }}</span>
+          <span class="text-amber-400">★</span>
+          <span>Rating {{ ratingDisplay }}/5</span>
         </span>
       </div>
 

@@ -305,7 +305,7 @@ onMounted(() => {
             <TableHead class="w-12 text-center text-xs">#</TableHead>
             <TableHead class="w-16 text-center text-xs">Foto</TableHead>
             <TableHead class="min-w-[190px] w-[24%]">Sosok & Profil</TableHead>
-            <TableHead class="w-32">Lembaga & Skor</TableHead>
+            <TableHead class="w-28">Lembaga</TableHead>
             <TableHead class="min-w-[150px] w-[18%]">Jabatan / Posisi</TableHead>
             <TableHead class="w-20 text-center">Status</TableHead>
             <TableHead class="w-36 text-center">Sosok Pekan Ini</TableHead>
@@ -352,17 +352,12 @@ onMounted(() => {
               </div>
             </TableCell>
             <TableCell>
-              <div class="flex flex-col gap-1 items-start">
-                <span
-                  class="text-[11px] font-semibold px-2 py-0.5 rounded border capitalize"
-                  :class="getCategoryColor(item.role_category)"
-                >
-                  {{ item.role_category || 'Tokoh' }}
-                </span>
-                <span class="text-[11px] font-mono font-medium text-muted-foreground">
-                  Skor: <span class="font-bold text-foreground">{{ item.influence_score ?? item.skor_value ?? '-' }}</span>/100
-                </span>
-              </div>
+              <span
+                class="text-[11px] font-semibold px-2 py-0.5 rounded border capitalize"
+                :class="getCategoryColor(item.role_category)"
+              >
+                {{ item.role_category || 'Tokoh' }}
+              </span>
             </TableCell>
             <TableCell class="text-xs text-foreground font-medium">
               <div class="line-clamp-2">{{ item.position }}</div>

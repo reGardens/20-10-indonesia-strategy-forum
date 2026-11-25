@@ -98,6 +98,11 @@ class Tokoh extends Model
         ];
     }
 
+    public function reviews(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(TokohReview::class, 'tokoh_id');
+    }
+
     /**
      * Scope to filter by role category.
      */

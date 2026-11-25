@@ -152,11 +152,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/cms/email-briefing/{briefing}/preview', [BriefingPreviewController::class, 'cmsPreview'])
         ->middleware('feature:email_briefing')->whereNumber('briefing')->name('cms.isf.email-briefing.preview');
 
-    Route::prefix('cms/running-text')->group(function () {
-        Route::get('/', [IsfPageController::class, 'index'])->defaults('module', 'running-text')->name('cms.isf.running-text.index');
-        Route::get('/create', [IsfPageController::class, 'create'])->defaults('module', 'running-text')->name('cms.isf.running-text.create');
-        Route::get('/{id}/edit', [IsfPageController::class, 'edit'])->defaults('module', 'running-text')->whereNumber('id')->name('cms.isf.running-text.edit');
-    });
+    Route::get('/cms/running-text', fn () => redirect()->route('cms.isf.artikel.index'))->name('cms.isf.running-text.index');
 
     Route::prefix('cms/media-sorotan')->group(function () {
         Route::get('/', [IsfPageController::class, 'index'])->defaults('module', 'media-sorotan')->name('cms.isf.media-sorotan.index');
@@ -170,9 +166,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}/edit', [IsfPageController::class, 'edit'])->defaults('module', 'hot-news')->whereNumber('id')->name('cms.isf.hot-news.edit');
     });
 
-    Route::prefix('cms/top-rank')->group(function () {
-        Route::get('/', [IsfPageController::class, 'index'])->defaults('module', 'top-rank')->name('cms.isf.top-rank.index');
-    });
+    Route::get('/cms/top-rank', fn () => redirect()->route('cms.isf.artikel.index'))->name('cms.isf.top-rank.index');
 
     Route::prefix('cms/iklan')->group(function () {
         Route::get('/', [IsfPageController::class, 'index'])->defaults('module', 'iklan')->name('cms.isf.iklan.index');
@@ -184,7 +178,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [IsfPageController::class, 'footer'])->name('cms.isf.footer.index');
     });
 
-    Route::get('/cms/pengaturan-halaman', fn () => redirect()->route('cms.isf.running-text.index'))
+    Route::get('/cms/pengaturan-halaman', fn () => redirect()->route('cms.isf.artikel.index'))
         ->name('cms.isf.pengaturan-halaman');
 
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');

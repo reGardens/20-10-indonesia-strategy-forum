@@ -3381,6 +3381,8 @@ HTML;
             'photo_alt' => $t->photo_alt ?: "Foto profil {$t->name}",
             'influence_score' => $t->influence_score ?? $t->skor_value ?? 75,
             'skor_value' => $t->skor_value ?? 75,
+            'rating_average' => $t->rating_average !== null ? round((float) $t->rating_average, 1) : null,
+            'rating_count' => (int) ($t->rating_count ?? 0),
             'is_influential_weekly' => (bool) ($t->is_influential_weekly || $t->is_featured),
             'to' => "/sosok/{$t->slug}",
         ];
@@ -3429,9 +3431,15 @@ HTML;
 
         // Hero: Tokoh Paling Berpengaruh Minggu Ini
         $featuredHero = Tokoh::currentFeatured();
+        if ($featuredHero) {
+            $featuredHero->loadAvg('reviews as rating_average', 'rating');
+            $featuredHero->loadCount('reviews as rating_count');
+        }
 
         $total = (clone $query)->count();
-        $items = $query->orderBy('name', 'asc')
+        $items = $query->withAvg('reviews as rating_average', 'rating')
+            ->withCount('reviews as rating_count')
+            ->orderBy('name', 'asc')
             ->forPage($page, $limit)
             ->get();
 
@@ -3587,6 +3595,8 @@ HTML;
 
         // Related Tokoh: serumpun & terbagi menjadi Tokoh Eksekutif dan Tokoh Legislatif
         $related = Tokoh::query()->terbit()
+            ->withAvg('reviews as rating_average', 'rating')
+            ->withCount('reviews as rating_count')
             ->where('id', '!=', $tokoh->id)
             ->where('role_category', $tokoh->role_category)
             ->limit(4)
@@ -3594,6 +3604,8 @@ HTML;
 
         if ($related->isEmpty()) {
             $related = Tokoh::query()->terbit()
+                ->withAvg('reviews as rating_average', 'rating')
+                ->withCount('reviews as rating_count')
                 ->where('id', '!=', $tokoh->id)
                 ->limit(4)
                 ->get();
@@ -3601,6 +3613,8 @@ HTML;
 
         // Tokoh Eksekutif (Pemerintahan / Kementerian / Presiden)
         $tokohEksekutif = Tokoh::query()->terbit()
+            ->withAvg('reviews as rating_average', 'rating')
+            ->withCount('reviews as rating_count')
             ->where('id', '!=', $tokoh->id)
             ->where(function ($q) {
                 $q->where('role_category', 'eksekutif')
@@ -3613,6 +3627,8 @@ HTML;
 
         if ($tokohEksekutif->isEmpty()) {
             $tokohEksekutif = Tokoh::query()->terbit()
+                ->withAvg('reviews as rating_average', 'rating')
+                ->withCount('reviews as rating_count')
                 ->where('id', '!=', $tokoh->id)
                 ->limit(4)
                 ->get();
@@ -3620,6 +3636,8 @@ HTML;
 
         // Tokoh Legislatif (Parlemen DPR / DPD / MPR)
         $tokohLegislatif = Tokoh::query()->terbit()
+            ->withAvg('reviews as rating_average', 'rating')
+            ->withCount('reviews as rating_count')
             ->where('id', '!=', $tokoh->id)
             ->where(function ($q) {
                 $q->where('role_category', 'legislatif')
@@ -3633,6 +3651,8 @@ HTML;
 
         if ($tokohLegislatif->isEmpty()) {
             $tokohLegislatif = Tokoh::query()->terbit()
+                ->withAvg('reviews as rating_average', 'rating')
+                ->withCount('reviews as rating_count')
                 ->where('id', '!=', $tokoh->id)
                 ->whereNotIn('id', $tokohEksekutif->pluck('id')->all())
                 ->limit(4)
@@ -3643,8 +3663,12 @@ HTML;
             }
         }
 
+        $tokohData = $cardMapper($tokoh);
+        $tokohData['rating_average'] = $reviewAvg;
+        $tokohData['rating_count'] = $reviewCount;
+
         return response()->json([
-            'tokoh' => $cardMapper($tokoh),
+            'tokoh' => $tokohData,
             'tabs' => [
                 'profil' => $profil,
                 'analisis' => $analisis,
