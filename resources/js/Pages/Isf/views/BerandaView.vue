@@ -8,6 +8,7 @@ import {
     ImagePlaceholder,
     IsfBannerCarousel,
     IsfInsightSlider,
+    IsfTopRankCarousel,
     IsfLink,
     IsfAdBanner,
     IsfAdPopupModal,
@@ -22,9 +23,6 @@ import { formatDate } from "@/Utils/formatters";
 import { getAds, getBeranda, trackAdClick, trackAdImpression } from "@/api/services/isfPublicService";
 import { useIsfContent } from "@/Composables/useIsfContent";
 import { useIsfPopupQueue } from "@/Composables/useIsfPopupQueue";
-import { useIsfHeaderFont } from "@/Composables/useIsfHeaderFont";
-
-const { currentFont, setFont, fontOptions } = useIsfHeaderFont();
 
 const { data, status, load } = useIsfContent(getBeranda);
 onMounted(load);
@@ -42,6 +40,7 @@ const chart = computed(() => data.value?.chart);
 const terkini = computed(() => data.value?.terkini || []);
 const sections = computed(() => data.value?.sections || {});
 const latestNews = computed(() => terkini.value.slice(0, 3));
+const topRankList = computed(() => data.value?.topRank || []);
 const activeMediaTab = ref('popular');
 
 // Iklan dari tabel isf_ads (GET /api/isf/ads): spanduk dipilih acak tiap halaman dibuka,
@@ -210,36 +209,6 @@ const sectionPad = "px-3 lg:px-4 xl:px-[30px]";
 
 <template>
     <div>
-        <!-- Floating Emulator Tipografi Header di bawah tengah layar -->
-        <Teleport to="body">
-            <div
-                class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-1.5 rounded-full border border-neutral-700/80 bg-neutral-900/95 px-3.5 py-1.5 shadow-2xl backdrop-blur-md select-none"
-                data-testid="header-font-emulator"
-                role="group"
-                aria-label="Emulator Tipografi Header"
-            >
-                <span
-                    class="pr-1 text-[10px] font-bold uppercase tracking-wider text-neutral-400 font-space-grotesk whitespace-nowrap"
-                    >Font Header:</span
-                >
-                <button
-                    v-for="opt in fontOptions"
-                    :key="opt.id"
-                    type="button"
-                    :class="[
-                        'cursor-pointer rounded-full px-2.5 py-0.5 text-[11px] font-bold transition-all whitespace-nowrap',
-                        currentFont === opt.id
-                            ? 'bg-isf-red text-white shadow-xs'
-                            : 'text-neutral-300 hover:text-white hover:bg-neutral-800/80',
-                    ]"
-                    :title="`Uji Tipografi: ${opt.label}`"
-                    @click="setFont(opt.id)"
-                >
-                    {{ opt.label }}
-                </button>
-            </div>
-        </Teleport>
-
         <BerandaSkeleton v-if="status === 'loading'" />
         <div
             v-else-if="status !== 'ready'"
@@ -277,11 +246,18 @@ const sectionPad = "px-3 lg:px-4 xl:px-[30px]";
                         <div
                             class="isf-marquee-track flex whitespace-nowrap gap-10 font-ui text-[13.5px] font-medium text-neutral-900"
                         >
-                            <!-- Repeat items to form seamless scroll -->
-                            <div
+                            <!-- Repeat items to form seamless scroll (Bisa diklik jika ada URL/link) -->
+                            <component
+                                :is="item.url || item.to ? IsfLink : 'div'"
                                 v-for="(item, idx) in [...topBars, ...topBars]"
                                 :key="idx"
-                                class="flex items-center gap-2.5 shrink-0 whitespace-nowrap"
+                                :to="item.url || item.to || undefined"
+                                :class="[
+                                    'flex items-center gap-2.5 shrink-0 whitespace-nowrap',
+                                    item.url || item.to
+                                        ? 'group/item hover:text-isf-red transition-colors cursor-pointer'
+                                        : '',
+                                ]"
                             >
                                 <span class="text-neutral-400 select-none"
                                     >•</span
@@ -291,17 +267,24 @@ const sectionPad = "px-3 lg:px-4 xl:px-[30px]";
                                         item.badge &&
                                         item.badge !== topBars[0]?.badge
                                     "
-                                    class="px-1.5 py-0.5 rounded text-[10px] uppercase font-bold bg-neutral-200 text-neutral-800"
+                                    class="px-1.5 py-0.5 rounded text-[10px] uppercase font-bold bg-neutral-200 text-neutral-800 group-hover/item:bg-neutral-300 transition-colors"
                                 >
                                     {{ item.badge }}
                                 </span>
-                                <span>{{ item.announcement }}</span>
+                                <span
+                                    :class="[
+                                        item.url || item.to
+                                            ? 'group-hover/item:underline underline-offset-2'
+                                            : '',
+                                    ]"
+                                    >{{ item.announcement }}</span
+                                >
                                 <span
                                     v-if="item.info"
                                     class="text-neutral-500 text-xs font-normal"
                                     >({{ item.info }})</span
                                 >
-                            </div>
+                            </component>
                         </div>
                     </div>
                 </div>
@@ -573,6 +556,11 @@ const sectionPad = "px-3 lg:px-4 xl:px-[30px]";
                         >
                             <IsfInsightSlider
                                 :insights="insightList"
+                                :cell-pad="cellPad"
+                            />
+                            <!-- Top Rank Artikel 1 s/d 3 of the Week di bawah ISF Insight -->
+                            <IsfTopRankCarousel
+                                :items="topRankList"
                                 :cell-pad="cellPad"
                             />
                             <!-- Slot Iklan Spanduk Sponsor -->

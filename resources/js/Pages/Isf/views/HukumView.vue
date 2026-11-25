@@ -79,10 +79,10 @@ const activeSubkategoriName = computed(() => {
 const headline = computed(() => data.value?.headline || null)
 const articles = computed(() => {
   const list = data.value?.articles || []
-  if (headline.value && currentPage.value === 1 && list.length === 11) {
+  if (headline.value && currentPage.value === 1) {
     const isDup = list.some(a => (a.id && a.id === headline.value.id) || (a.slug && a.slug === headline.value.slug))
     if (!isDup) {
-      return [...list, headline.value]
+      return [headline.value, ...list]
     }
   }
   return list
@@ -105,7 +105,7 @@ function onPageChange(page) {
   currentPage.value = page
   load()
   if (typeof window !== 'undefined') {
-    const el = document.getElementById('daftar-artikel-hukum')
+    const el = document.getElementById('headline-hukum') || document.getElementById('daftar-artikel-hukum')
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' })
     } else {
@@ -209,42 +209,40 @@ watch(
 
     <!-- ═══ 2. SKELETON LOADER (Presisi mencerminkan isi konten di Desktop & Mobile) ═══ -->
     <main v-if="status === 'loading' && !data" class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12 mt-8 sm:mt-12 space-y-8 sm:space-y-12 animate-pulse" aria-busy="true" aria-label="Memuat konten rubrik Hukum">
-      <!-- Section 1 Skeleton: Headline -->
-      <div class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden">
+      <!-- Section 1 Skeleton: Grid 4 Kolom (4x3 Cards) -->
+      <div class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden">
         <div class="border-b border-neutral-200 px-4 py-3 sm:px-6 sm:py-4">
           <div class="h-4 w-36 bg-neutral-200 rounded"></div>
         </div>
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 p-4 sm:p-6">
-          <div class="lg:col-span-7 aspect-[16/10] bg-neutral-200 rounded-md"></div>
-          <div class="lg:col-span-5 flex flex-col justify-between space-y-4">
-            <div class="space-y-3">
-              <div class="h-3 w-28 bg-neutral-200 rounded"></div>
-              <div class="h-7 w-full bg-neutral-300 rounded"></div>
-              <div class="h-7 w-4/5 bg-neutral-300 rounded"></div>
-              <div class="h-4 w-full bg-neutral-200 rounded mt-2"></div>
-              <div class="h-4 w-5/6 bg-neutral-200 rounded"></div>
-            </div>
-            <div class="pt-3 border-t border-neutral-200 flex gap-3">
-              <div class="h-3 w-24 bg-neutral-200 rounded"></div>
-              <div class="h-3 w-20 bg-neutral-200 rounded"></div>
+        <div class="p-4 sm:p-6 lg:p-8">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div v-for="i in 4" :key="i" class="p-4 bg-white rounded-xl border border-neutral-200 space-y-3">
+              <div class="aspect-[4/3] bg-neutral-200 rounded"></div>
+              <div class="h-3 w-16 bg-neutral-200 rounded"></div>
+              <div class="h-5 w-full bg-neutral-300 rounded"></div>
+              <div class="h-3 w-4/5 bg-neutral-200 rounded"></div>
+              <div class="pt-3 border-t border-neutral-100 flex items-center justify-between">
+                <div class="h-3 w-24 bg-neutral-200 rounded"></div>
+                <div class="h-3 w-16 bg-neutral-200 rounded"></div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Section 2 Skeleton: Timeline Kasus -->
-      <div class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden p-4 sm:p-6 space-y-6">
-        <div class="border-b border-neutral-200 pb-4 flex items-center justify-between">
+      <!-- Section 2 Skeleton: Timeline Kasus Navy -->
+      <div class="bg-isf-navy rounded-lg border border-neutral-800 shadow-sm overflow-hidden p-4 sm:p-6 space-y-6">
+        <div class="border-b border-neutral-800 pb-4 flex items-center justify-between">
           <div class="flex items-center gap-2">
             <div class="w-3 h-3 bg-isf-red rounded-xs"></div>
-            <div class="h-4 w-48 bg-neutral-300 rounded"></div>
+            <div class="h-4 w-48 bg-neutral-700 rounded"></div>
           </div>
-          <div class="h-3 w-32 bg-neutral-200 rounded"></div>
+          <div class="h-3 w-32 bg-neutral-800 rounded"></div>
         </div>
         <div class="space-y-4 py-2">
-          <div class="h-5 w-64 bg-neutral-200 rounded"></div>
-          <div class="h-20 w-full bg-neutral-100 rounded-lg border border-neutral-200"></div>
-          <div class="h-16 w-full bg-neutral-100/70 rounded-lg border border-neutral-200"></div>
+          <div class="h-5 w-64 bg-neutral-700 rounded"></div>
+          <div class="h-20 w-full bg-neutral-800/60 rounded"></div>
+          <div class="h-16 w-full bg-neutral-800/40 rounded"></div>
         </div>
       </div>
 
@@ -262,24 +260,6 @@ watch(
           </div>
         </div>
       </div>
-
-      <!-- Section 5 Skeleton: Artikel Grid 4 Kolom -->
-      <div class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden">
-        <div class="border-b border-neutral-200 px-4 py-3 sm:px-6 sm:py-4">
-          <div class="h-4 w-32 bg-neutral-200 rounded"></div>
-        </div>
-        <div class="p-4 sm:p-6 lg:p-8">
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div v-for="i in 4" :key="i" class="p-4 bg-white rounded-xl border border-neutral-200 space-y-3">
-              <div class="aspect-[16/10] bg-neutral-200 rounded"></div>
-              <div class="h-3 w-16 bg-neutral-200 rounded"></div>
-              <div class="h-5 w-full bg-neutral-300 rounded"></div>
-              <div class="h-3 w-4/5 bg-neutral-200 rounded"></div>
-              <div class="h-3 w-1/3 bg-neutral-200 rounded mt-2"></div>
-            </div>
-          </div>
-        </div>
-      </div>
     </main>
 
     <!-- Error state -->
@@ -293,63 +273,85 @@ watch(
 
     <!-- ═══ 3. LOADED CONTENT VIEW ═════════════════════════════════════════ -->
     <main v-else class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12 mt-8 sm:mt-12 space-y-8 sm:space-y-12">
-      <!-- ═══ SECTION 1: SOROTAN UTAMA (HEADLINE) ═════════════════════════ -->
+      <!-- ═══ SECTION 1: SOROTAN HUKUM (GRID 12 CARDS 4x3 + PAGINATION) ═════════════════════ -->
       <section
-        v-if="headline && (!currentSubkategori || ['regulasi', 'putusan'].includes(currentSubkategori))"
+        v-if="!currentSubkategori || ['regulasi', 'putusan', 'kasus'].includes(currentSubkategori)"
         aria-labelledby="headline-hukum"
-        class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden"
+        class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden"
       >
         <div class="border-b border-neutral-200">
           <SectionHeading
             id="headline-hukum"
-            title="Sorotan Hukum"
+            :title="activeSubkategoriName ? `Sorotan Hukum · ${activeSubkategoriName}` : 'Sorotan Hukum'"
             size="lg"
             :class="sectionPad"
           >
-            <template #eyebrow>Laporan Khusus & Analisis Yuridis</template>
+            <template #eyebrow>
+              {{ meta.total }} Total Artikel{{ activeSubkategoriName ? ` (${activeSubkategoriName})` : '' }}
+            </template>
           </SectionHeading>
         </div>
 
-        <IsfLink
-          :to="headline.to"
-          :class="[
-            linkClass,
-            'group grid grid-cols-1 gap-4 py-4 sm:gap-6 sm:py-5 lg:grid-cols-12 lg:gap-8 lg:py-6',
-            sectionPad
-          ]"
-        >
-          <ImagePlaceholder
-            :label="headline.imageAlt || headline.title"
-            :src="headline.imageUrl || ''"
-            aspect="news"
-            priority
-            class="lg:col-span-7"
-          />
-          <div class="min-w-0 lg:col-span-5 flex flex-col justify-between">
-            <div>
-              <span class="isf-kicker text-isf-red font-bold text-[11px] sm:text-xs">
-                {{ headline.category }}{{ headline.subcategory ? ` · ${headline.subcategory}` : '' }}
-              </span>
-              <h2 class="isf-headline mt-1.5 block text-[20px] sm:text-[24px] md:text-[28px] lg:text-[30px] leading-[1.18] group-hover:text-isf-red transition-colors">
-                {{ headline.title }}
-              </h2>
-              <p v-if="headline.summary" class="mt-2 sm:mt-3 block font-serif text-[14px] sm:text-[16px] leading-[1.5] text-neutral-600 line-clamp-3 sm:line-clamp-5">
-                {{ headline.summary }}
-              </p>
-            </div>
+        <!-- Empty state jika tidak ada artikel -->
+        <div v-if="articles.length === 0" class="py-16 text-center" :class="sectionPad">
+          <p class="text-neutral-500 text-sm font-space-grotesk">
+            Belum ada artikel yang diterbitkan untuk kategori ini.
+          </p>
+        </div>
 
-            <div class="isf-byline mt-3 sm:mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 pt-3 border-t border-neutral-200 text-[11px] sm:text-xs">
-              <strong>{{ headline.author }}</strong>
-              <time v-if="headline.publishedAt" :datetime="headline.publishedAt">
-                {{ formatDate(headline.publishedAt) }}
-              </time>
-              <span v-if="headline.readingMinutes" class="inline-flex items-center gap-1 text-neutral-500">
-                <IconClock class="h-3.5 w-3.5" aria-hidden="true" />
-                {{ headline.readingMinutes }} menit baca
-              </span>
-            </div>
+        <!-- 4 Kolom Artikel (Grid 12 Cards 4x3 seperti Page Politik) -->
+        <div v-else class="p-4 sm:p-6 lg:p-8">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <article
+              v-for="(item, idx) in articles.slice(0, 12)"
+              :key="item.slug || item.id || idx"
+              class="group flex flex-col justify-between bg-white hover:bg-neutral-50/80 rounded-xl border border-neutral-200 overflow-hidden transition-all duration-300 hover:shadow-md hover:border-isf-red/40"
+            >
+              <IsfLink :to="item.to" class="block relative aspect-[4/3] overflow-hidden bg-neutral-200">
+                <ImagePlaceholder
+                  :label="item.imageAlt || item.title"
+                  :src="item.imageUrl || ''"
+                  aspect="card"
+                  bare
+                  :priority="idx === 0"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              </IsfLink>
+              <div class="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
+                <div>
+                  <span class="isf-kicker text-isf-red block font-bold text-[11px] sm:text-xs">
+                    {{ item.category }}{{ item.subcategory ? ` · ${item.subcategory}` : '' }}
+                  </span>
+                  <h3 class="isf-headline mt-1.5 text-[15px] sm:text-[16px] leading-[1.3] group-hover:text-isf-red transition-colors line-clamp-2">
+                    <IsfLink :to="item.to">
+                      {{ item.title }}
+                    </IsfLink>
+                  </h3>
+                  <p v-if="item.summary" class="mt-1.5 font-serif text-[12px] sm:text-[13px] leading-[1.4] text-neutral-600 line-clamp-2">
+                    {{ item.summary }}
+                  </p>
+                </div>
+                <div class="isf-byline pt-3 border-t border-neutral-100 flex items-center justify-between text-[11px] sm:text-xs text-neutral-500 mt-auto">
+                  <span class="truncate font-medium text-neutral-700 max-w-[55%]">
+                    {{ item.author || 'Tim Riset ISF' }}
+                  </span>
+                  <time v-if="item.publishedAt" :datetime="item.publishedAt" class="shrink-0 text-neutral-500">
+                    {{ formatDate(item.publishedAt) }}
+                  </time>
+                </div>
+              </div>
+            </article>
           </div>
-        </IsfLink>
+        </div>
+
+        <!-- Pagination -->
+        <div v-if="meta.lastPage > 1" :class="['py-5 sm:py-6 flex justify-center border-t border-neutral-200', sectionPad]">
+          <Pagination
+            :current-page="meta.currentPage"
+            :total-pages="meta.lastPage"
+            @update:current-page="onPageChange"
+          />
+        </div>
       </section>
 
       <!-- ═══ SECTION 2: WIDGET TIMELINE KASUS HUKUM BESAR (NAVY) ═══════════ -->
@@ -454,86 +456,6 @@ watch(
         </div>
       </section>
 
-      <!-- ═══ SECTION 4: ARTIKEL TERBARU + PAGINATION ═ -->
-      <section
-        v-if="!currentSubkategori || ['regulasi', 'putusan'].includes(currentSubkategori)"
-        aria-labelledby="daftar-artikel-hukum"
-        class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden"
-      >
-        <div class="border-b border-neutral-200">
-          <SectionHeading
-            id="daftar-artikel-hukum"
-            title="Artikel Terbaru"
-            size="lg"
-            :class="sectionPad"
-          >
-            <template #eyebrow>
-              {{ meta.total }} Total Artikel{{ activeSubkategoriName ? ` (${activeSubkategoriName})` : '' }}
-            </template>
-          </SectionHeading>
-        </div>
-
-        <!-- Empty state jika benar-benar tidak ada artikel -->
-        <div v-if="articles.length === 0 && !headline" class="py-16 text-center" :class="sectionPad">
-          <p class="text-neutral-500 text-sm font-space-grotesk">
-            Belum ada artikel yang diterbitkan untuk kategori ini.
-          </p>
-        </div>
-
-        <!-- 4 Kolom Artikel (Grid 12 Cards 4x3) -->
-        <div v-else class="p-4 sm:p-6 lg:p-8">
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <article
-              v-for="(item, idx) in articles"
-              :key="item.slug || item.id || idx"
-              class="group flex flex-col justify-between bg-white hover:bg-neutral-50/80 rounded-xl border border-neutral-200 overflow-hidden transition-all duration-300 hover:shadow-md hover:border-isf-red/40"
-            >
-              <IsfLink :to="item.to" class="block relative aspect-[16/10] overflow-hidden bg-neutral-200">
-                <ImagePlaceholder
-                  :label="item.imageAlt || item.title"
-                  :src="item.imageUrl || ''"
-                  aspect="photo"
-                  bare
-                  :priority="idx === 0"
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-              </IsfLink>
-              <div class="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
-                <div>
-                  <span class="isf-kicker text-isf-red block font-bold text-[11px] sm:text-xs">
-                    {{ item.category }}{{ item.subcategory ? ` · ${item.subcategory}` : '' }}
-                  </span>
-                  <h3 class="isf-headline mt-1.5 text-[15px] sm:text-[16px] leading-[1.3] group-hover:text-isf-red transition-colors line-clamp-2">
-                    <IsfLink :to="item.to">
-                      {{ item.title }}
-                    </IsfLink>
-                  </h3>
-                  <p v-if="item.summary" class="mt-1.5 font-serif text-[12px] sm:text-[13px] leading-[1.4] text-neutral-600 line-clamp-2">
-                    {{ item.summary }}
-                  </p>
-                </div>
-                <div class="isf-byline pt-3 border-t border-neutral-100 flex items-center justify-between text-[11px] sm:text-xs text-neutral-500 mt-auto">
-                  <span class="truncate font-medium text-neutral-700 max-w-[55%]">
-                    {{ item.author || 'Tim Riset ISF' }}
-                  </span>
-                  <time v-if="item.publishedAt" :datetime="item.publishedAt" class="shrink-0 text-neutral-500">
-                    {{ formatDate(item.publishedAt) }}
-                  </time>
-                </div>
-              </div>
-            </article>
-          </div>
-        </div>
-
-        <!-- Pagination -->
-        <div v-if="meta.lastPage > 1" :class="['py-5 sm:py-6 flex justify-center border-t border-neutral-200', sectionPad]">
-          <Pagination
-            :current-page="meta.currentPage"
-            :total-pages="meta.lastPage"
-            @update:current-page="onPageChange"
-          />
-        </div>
-      </section>
 
       <!-- ═══ SECTION 5: GLOSARIUM HUKUM INTERAKTIF (DI SECTION AKHIR DI BAWAH ARTIKEL TERBARU) ═══ -->
       <section

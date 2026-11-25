@@ -222,12 +222,13 @@ watch(
       </div>
     </header>
 
-    <!-- ═══ FILTER BAR (DI KELUARKAN DARI BACKGROUND HITAM/NAVY) ═══ -->
-    <div class="bg-white border-b border-neutral-200/90 shadow-2xs py-4 sm:py-5">
+    <!-- ═══ FILTER BAR (SEMUA FILTER DI SEBELAH KANAN TANPA DIVIDER) ═══ -->
+    <div class="bg-white py-3 sm:py-4">
       <div class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 text-xs">
-          <!-- Left: Dropdown Filter Isu + Wilayah + Reset Button -->
-          <div class="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
+        <!-- Row: Semua Filter (Isu, Wilayah, Search, Reset) Diposisikan di Sebelah Kanan -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center sm:justify-end gap-2.5 sm:gap-3 text-xs">
+          <!-- Dropdown Filters & Reset Row -->
+          <div class="flex flex-wrap items-center justify-end gap-2 sm:gap-3 order-2 sm:order-1">
             <!-- Filter Isu Dropdown (FilterSelect) -->
             <div class="flex items-center gap-1.5 text-xs text-neutral-600">
               <span class="text-neutral-500 font-medium whitespace-nowrap">Isu:</span>
@@ -237,7 +238,7 @@ watch(
                 :is-dark="false"
                 size="sm"
                 aria-label="Filter Isu Survei"
-                class="min-w-[150px]"
+                class="min-w-[140px]"
                 @update:model-value="selectIsu"
               />
             </div>
@@ -251,7 +252,7 @@ watch(
                 :is-dark="false"
                 size="sm"
                 aria-label="Filter Wilayah Survei"
-                class="min-w-[160px]"
+                class="min-w-[140px]"
                 @update:model-value="onWilayahChange"
               />
             </div>
@@ -269,21 +270,21 @@ watch(
             </button>
           </div>
 
-          <!-- Right: Search Input Utama (Sebelah Kanan) -->
-          <div class="relative w-full md:w-72 lg:w-80 shrink-0">
-            <IconSearch class="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <!-- Search Input Utama (Full width di mobile, rapi di kanan di desktop) -->
+          <div class="relative w-full sm:w-60 md:w-72 order-1 sm:order-2">
+            <IconSearch class="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               v-model="currentSearch"
               type="text"
               placeholder="Cari survei atau lembaga..."
               @input="onSearchInput"
-              class="w-full h-9 pl-9 pr-8 rounded-lg bg-neutral-50 border border-neutral-300 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:bg-white focus:ring-1 focus:ring-isf-red focus:border-isf-red transition-all"
+              class="w-full h-8 pl-8 pr-7 rounded-lg bg-neutral-50 border border-neutral-300 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:bg-white focus:ring-1 focus:ring-isf-red focus:border-isf-red transition-all"
             />
             <button
               v-if="currentSearch"
               type="button"
               @click="clearSearch"
-              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 text-xs px-1 cursor-pointer"
+              class="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 text-xs px-1 cursor-pointer"
               aria-label="Hapus pencarian"
             >
               ✕
@@ -296,7 +297,7 @@ watch(
     <!-- ═══ 2. SKELETON LOADER (Presisi mencerminkan struktur konten di Desktop & Mobile) ═══ -->
     <main
       v-if="status === 'loading' && !data"
-      class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12 mt-8 sm:mt-12 space-y-8 sm:space-y-12 animate-pulse"
+      class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12 mt-0 space-y-8 sm:space-y-12 animate-pulse"
       aria-busy="true"
       aria-label="Memuat data survei opini publik"
     >
@@ -376,7 +377,7 @@ watch(
     </div>
 
     <!-- ═══ 3. LOADED CONTENT VIEW ═════════════════════════════════════════ -->
-    <main v-else class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12 mt-8 sm:mt-12 space-y-8 sm:space-y-12">
+    <main v-else class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12 mt-0 space-y-8 sm:space-y-12">
       <!-- ═══ SECTION 1: SOROTAN UTAMA SURVEI (FEATURED REPORT) ══════════════ -->
       <section
         v-if="featuredSurvey && currentPage === 1 && currentIsu === 'semua' && currentWilayah === 'semua' && !currentSearch"

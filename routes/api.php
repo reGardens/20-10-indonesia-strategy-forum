@@ -46,6 +46,11 @@ Route::middleware(['web'])->prefix('isf')->group(function () {
     });
     // Status login untuk header publik (nama & inisial saja, no-store).
     Route::get('/me', [SessionController::class, 'me'])->name('api.isf.me');
+    // Detail Profil & Pembaruan Akun Pengguna (Issue #93).
+    Route::middleware(['auth'])->prefix('/profile')->group(function () {
+        Route::get('/', [SessionController::class, 'profile'])->name('api.isf.profile');
+        Route::put('/', [SessionController::class, 'updateProfile'])->name('api.isf.profile.update');
+    });
     // Nomor WhatsApp Aktif milik user login + verifikasi OTP (Issue #42).
     Route::middleware(['auth', 'throttle:10,1'])->prefix('/me/whatsapp')->group(function () {
         Route::put('/', [WhatsAppVerificationController::class, 'update'])->name('api.isf.me.whatsapp.update');
@@ -120,6 +125,10 @@ Route::middleware(['web', 'auth'])->prefix('cms')->name('api.cms.')->group(funct
         ->parameters(['banner' => 'banner'])->middleware('feature:banner');
     Route::post('artikel/{article}/hero', [ArticleController::class, 'setHero'])
         ->middleware('feature:artikel')->name('artikel.hero');
+    Route::post('artikel/{article}/toggle-running-text', [ArticleController::class, 'toggleRunningText'])
+        ->middleware('feature:artikel')->name('artikel.toggle-running-text');
+    Route::post('artikel/{article}/toggle-top-rank', [ArticleController::class, 'toggleTopRank'])
+        ->middleware('feature:artikel')->name('artikel.toggle-top-rank');
     Route::apiResource('artikel', ArticleController::class)
         ->parameters(['artikel' => 'article'])->middleware('feature:artikel');
     Route::apiResource('infografik', InfographicController::class)
@@ -217,6 +226,10 @@ Route::middleware(['web', 'auth'])->prefix('cms')->name('api.cms.')->group(funct
     Route::put('/hot-news/{id}', [SettingController::class, 'updateHotNewsItem'])->whereNumber('id')->name('hot-news.update-item');
     Route::delete('/hot-news/{id}', [SettingController::class, 'deleteHotNewsItem'])->whereNumber('id')->name('hot-news.destroy');
     Route::put('/hot-news', [SettingController::class, 'updateHotNews'])->name('hot-news.update');
+
+    Route::get('/top-rank/article-options', [SettingController::class, 'getTopRankArticleOptions'])->name('top-rank.article-options');
+    Route::get('/top-rank', [SettingController::class, 'getTopRank'])->name('top-rank.index');
+    Route::put('/top-rank', [SettingController::class, 'updateTopRank'])->name('top-rank.update');
 
     Route::get('/iklan', [AdController::class, 'index'])->name('iklan.index');
     Route::post('/iklan', [AdController::class, 'store'])->name('iklan.store');

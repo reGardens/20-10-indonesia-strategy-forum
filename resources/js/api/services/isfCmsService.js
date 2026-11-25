@@ -32,6 +32,10 @@ export const cmsResources = {
         ...createCmsResource("artikel"),
         setHero: (id) =>
             http.post(`/cms/artikel/${id}/hero`).then((r) => r.data),
+        toggleRunningText: (id, payload = {}) =>
+            http.post(`/cms/artikel/${id}/toggle-running-text`, payload).then((r) => r.data),
+        toggleTopRank: (id, payload = {}) =>
+            http.post(`/cms/artikel/${id}/toggle-top-rank`, payload).then((r) => r.data),
     },
     infografik: createCmsResource("infografik"),
     tokoh: {
@@ -61,6 +65,11 @@ export const cmsResources = {
             http.get("/cms/hot-news/article-options").then((r) => r.data.data),
         syncArticles: () =>
             http.post("/cms/hot-news/sync-articles").then((r) => r.data.data),
+    },
+    topRank: {
+        get: () => http.get("/cms/top-rank").then((r) => r.data.data),
+        update: (items) => http.put("/cms/top-rank", { items }).then((r) => r.data),
+        getArticleOptions: () => http.get("/cms/top-rank/article-options").then((r) => r.data.data),
     },
     kategori: createCmsResource("kategori"),
     kursiParlemen: {

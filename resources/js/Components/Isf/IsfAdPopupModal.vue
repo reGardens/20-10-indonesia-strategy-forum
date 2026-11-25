@@ -11,7 +11,7 @@
  * Mode `controlled`: dibuka saat di-mount dan menutup dengan emit('close'); jadwal muncul ulang
  * diatur pemanggil (useIsfPopupQueue), tanpa flag "sudah dilihat".
  */
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
 
 const props = defineProps({
     ad: {
@@ -24,7 +24,7 @@ const props = defineProps({
     },
     storageKey: {
         type: String,
-        default: '',
+        default: "",
     },
     // Dikendalikan antrean popup (Beranda): tanpa sessionStorage/cookie "sudah dilihat".
     controlled: {
@@ -34,18 +34,24 @@ const props = defineProps({
 });
 
 // ad-click: tautan iklan diklik (untuk statistik klik).
-const emit = defineEmits(['close', 'ad-click']);
+const emit = defineEmits(["close", "ad-click"]);
 
 const isVisible = ref(false);
 const skipTimeLeft = ref(30);
 let skipTimerInterval = null;
 let nonSkippableTimer = null;
 
-const adType = computed(() => props.ad?.type || 'banner'); // 'banner' (Tipe A) | 'video' (Tipe B)
-const title = computed(() => props.ad?.title || 'Pengumuman Mitra');
-const imageUrl = computed(() => props.ad?.imageUrl || props.ad?.image_url || '');
-const videoUrl = computed(() => props.ad?.videoUrl || props.ad?.video_url || '');
-const targetUrl = computed(() => props.ad?.targetUrl || props.ad?.target_url || '');
+const adType = computed(() => props.ad?.type || "banner"); // 'banner' (Tipe A) | 'video' (Tipe B)
+const title = computed(() => props.ad?.title || "Pengumuman Mitra");
+const imageUrl = computed(
+    () => props.ad?.imageUrl || props.ad?.image_url || "",
+);
+const videoUrl = computed(
+    () => props.ad?.videoUrl || props.ad?.video_url || "",
+);
+const targetUrl = computed(
+    () => props.ad?.targetUrl || props.ad?.target_url || "",
+);
 const isExternal = computed(() => /^https?:\/\//i.test(targetUrl.value));
 
 // Skip settings (Issue #72)
@@ -57,10 +63,14 @@ const isSkippable = computed(() => {
 const skipDelaySeconds = computed(() => {
     const raw = props.ad?.skipDelaySeconds ?? props.ad?.skip_delay_seconds;
     if (raw === undefined || raw === null) {
-        return adType.value === 'video' ? 10 : 0;
+        return adType.value === "video" ? 10 : 0;
     }
     const parsed = Number(raw);
-    return Number.isFinite(parsed) && parsed >= 0 ? parsed : (adType.value === 'video' ? 10 : 0);
+    return Number.isFinite(parsed) && parsed >= 0
+        ? parsed
+        : adType.value === "video"
+          ? 10
+          : 0;
 });
 
 const canSkip = computed(() => {
@@ -69,7 +79,9 @@ const canSkip = computed(() => {
 
 const effectiveStorageKey = computed(() => {
     if (props.storageKey) return props.storageKey;
-    return adType.value === 'video' ? 'isf_popup_video_seen' : 'isf_popup_banner_seen';
+    return adType.value === "video"
+        ? "isf_popup_video_seen"
+        : "isf_popup_banner_seen";
 });
 
 const videoDuration = computed(() => {
@@ -79,7 +91,7 @@ const videoDuration = computed(() => {
 
 // Ekstraksi ID video YouTube
 const youtubeId = computed(() => {
-    if (!videoUrl.value) return '';
+    if (!videoUrl.value) return "";
     let cleaned = String(videoUrl.value).trim();
     const iframeMatch = cleaned.match(/src=["']([^"']+)["']/i);
     if (iframeMatch && iframeMatch[1]) cleaned = iframeMatch[1].trim();
@@ -89,32 +101,101 @@ const youtubeId = computed(() => {
     const vMatch = cleaned.match(/[?&]v=([a-zA-Z0-9_-]{11})(?:[&?]|$)/);
     if (vMatch && vMatch[1]) return vMatch[1];
 
-    const pathMatch = cleaned.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:embed\/|shorts\/|live\/|v\/|watch\/))([a-zA-Z0-9_-]{11})/);
+    const pathMatch = cleaned.match(
+        /(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:embed\/|shorts\/|live\/|v\/|watch\/))([a-zA-Z0-9_-]{11})/,
+    );
     if (pathMatch && pathMatch[1]) return pathMatch[1];
 
-    return '';
+    return "";
 });
 
 const youtubeEmbedUrl = computed(() => {
-    if (!youtubeId.value) return '';
+    if (!youtubeId.value) return "";
     // Browser memblokir autoplay bersuara bila popup muncul tanpa klik pengguna (timer), jadi video
     // diputar tanpa suara (mute=1); pengunjung bisa menyalakan suara lewat kontrol player.
-    return `https://www.youtube.com/embed/${youtubeId.value}?autoplay=1&mute=1&controls=1&rel=0&playsinline=1`;
+    // enablejsapi=1 disertakan agar event video berakhir (ended) dapat dideteksi via postMessage.
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const originParam = origin ? `&origin=${encodeURIComponent(origin)}` : "";
+    return `https://www.youtube.com/embed/${youtubeId.value}?autoplay=1&mute=1&controls=1&rel=0&playsinline=1&enablejsapi=1${originParam}`;
 });
 
 const isDirectVideo = computed(() => {
     if (!videoUrl.value) return false;
-    return /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(videoUrl.value) || videoUrl.value.startsWith('/storage/uploads/videos/');
+    return (
+        /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(videoUrl.value) ||
+        videoUrl.value.startsWith("/storage/uploads/videos/")
+    );
 });
+
+let videoAutoCloseTimer = null;
+const youtubeIframeRef = ref(null);
+
+function startVideoAutoCloseTimer(seconds) {
+    clearTimeout(videoAutoCloseTimer);
+    clearTimeout(nonSkippableTimer);
+    const duration =
+        Number(seconds) > 0 ? Number(seconds) : videoDuration.value;
+    if (duration > 0) {
+        videoAutoCloseTimer = setTimeout(() => {
+            closeModal();
+        }, duration * 1000);
+    }
+}
+
+function handleVideoMessage(event) {
+    if (!event.data) return;
+    try {
+        const msg =
+            typeof event.data === "string"
+                ? JSON.parse(event.data)
+                : event.data;
+        // YouTube iframe player: state 0 = YT.PlayerState.ENDED
+        if (
+            (msg?.event === "onStateChange" && (msg?.info === 0 || msg?.info === "0")) ||
+            (msg?.event === "infoDelivery" && msg?.info && (msg.info.playerState === 0 || msg.info.playerState === "0")) ||
+            (msg?.info && typeof msg.info === "object" && (msg.info.playerState === 0 || msg.info.playerState === "0"))
+        ) {
+            closeModal();
+        }
+    } catch {
+        // Not JSON
+    }
+}
+
+function onYouTubeIframeLoad(e) {
+    const iframe = e?.target || youtubeIframeRef.value;
+    if (!iframe?.contentWindow) return;
+    try {
+        iframe.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 1 }), '*');
+        iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'addEventListener', args: ['onStateChange'] }), '*');
+    } catch {}
+}
+
+function onNativeVideoLoaded(e) {
+    if (
+        e?.target?.duration &&
+        Number.isFinite(e.target.duration) &&
+        e.target.duration > 0
+    ) {
+        startVideoAutoCloseTimer(e.target.duration);
+    }
+}
+
+function onNativeVideoTimeUpdate(e) {
+    const v = e?.target;
+    if (v && v.duration > 0 && v.currentTime >= v.duration - 0.3) {
+        closeModal();
+    }
+}
 
 function openModal() {
     isVisible.value = true;
-    if (adType.value === 'video') {
+    if (adType.value === "video") {
         if (isSkippable.value) {
             startSkipCountdown();
-        } else {
-            startNonSkippableTimer();
         }
+        // Selalu pasang auto-close saat durasi video habis (Issue #93)
+        startVideoAutoCloseTimer(videoDuration.value);
     } else {
         if (skipDelaySeconds.value > 0) {
             startSkipCountdown();
@@ -156,10 +237,11 @@ function closeModal() {
     isVisible.value = false;
     clearInterval(skipTimerInterval);
     clearTimeout(nonSkippableTimer);
+    clearTimeout(videoAutoCloseTimer);
     if (!props.forcePreview && !props.controlled) {
         try {
-            sessionStorage.setItem(effectiveStorageKey.value, 'true');
-            sessionStorage.setItem('isf_popup_ad_seen', 'true');
+            sessionStorage.setItem(effectiveStorageKey.value, "true");
+            sessionStorage.setItem("isf_popup_ad_seen", "true");
             // Juga set cookie session sebagai fallback
             document.cookie = `${effectiveStorageKey.value}=1; path=/; SameSite=Lax`;
         } catch (e) {
@@ -167,7 +249,7 @@ function closeModal() {
         }
     }
 
-    emit('close');
+    emit("close");
 }
 
 function handleBackdropClick(e) {
@@ -177,7 +259,7 @@ function handleBackdropClick(e) {
             return;
         }
         // Jika video non-skippable, tidak bisa ditutup via backdrop
-        if (adType.value === 'video' && !isSkippable.value) {
+        if (adType.value === "video" && !isSkippable.value) {
             return;
         }
         // Jika timer skip/tutup belum selesai, tidak bisa ditutup via backdrop
@@ -189,12 +271,12 @@ function handleBackdropClick(e) {
 }
 
 function handleKeydown(e) {
-    if (e.key === 'Escape' && isVisible.value) {
+    if (e.key === "Escape" && isVisible.value) {
         if (props.forcePreview) {
             closeModal();
             return;
         }
-        if (adType.value === 'video' && !isSkippable.value) {
+        if (adType.value === "video" && !isSkippable.value) {
             return;
         }
         if (!canSkip.value) {
@@ -205,19 +287,28 @@ function handleKeydown(e) {
 }
 
 onMounted(() => {
-    window.addEventListener('keydown', handleKeydown);
+    window.addEventListener("keydown", handleKeydown);
+    window.addEventListener("message", handleVideoMessage);
 
     if (props.forcePreview || props.controlled) {
         openModal();
         return;
     }
     try {
-        const seenInSession = sessionStorage.getItem(effectiveStorageKey.value) || sessionStorage.getItem('isf_popup_ad_seen');
-        const seenInCookie = document.cookie.split('; ').some((row) => row.startsWith(`${effectiveStorageKey.value}=`) || row.startsWith('isf_popup_ad_seen='));
+        const seenInSession =
+            sessionStorage.getItem(effectiveStorageKey.value) ||
+            sessionStorage.getItem("isf_popup_ad_seen");
+        const seenInCookie = document.cookie
+            .split("; ")
+            .some(
+                (row) =>
+                    row.startsWith(`${effectiveStorageKey.value}=`) ||
+                    row.startsWith("isf_popup_ad_seen="),
+            );
 
         if (!seenInSession && !seenInCookie) {
             const isActive = props.ad?.isActive ?? props.ad?.is_active ?? true;
-            const isDraft = props.ad?.status === 'draf';
+            const isDraft = props.ad?.status === "draf";
 
             if (isActive && !isDraft) {
                 // Beri jeda 500ms agar halaman beranda ter-render terlebih dahulu
@@ -234,14 +325,19 @@ onMounted(() => {
 onBeforeUnmount(() => {
     clearInterval(skipTimerInterval);
     clearTimeout(nonSkippableTimer);
-    window.removeEventListener('keydown', handleKeydown);
+    clearTimeout(videoAutoCloseTimer);
+    window.removeEventListener("keydown", handleKeydown);
+    window.removeEventListener("message", handleVideoMessage);
 });
 
-watch(() => props.forcePreview, (newVal) => {
-    if (newVal) {
-        openModal();
-    }
-});
+watch(
+    () => props.forcePreview,
+    (newVal) => {
+        if (newVal) {
+            openModal();
+        }
+    },
+);
 </script>
 
 <template>
@@ -270,12 +366,16 @@ watch(() => props.forcePreview, (newVal) => {
                     data-testid="ad-popup-banner-content"
                 >
                     <!-- Banner Card -->
-                    <div class="w-full overflow-hidden rounded-xl bg-neutral-900 border border-neutral-700/70 shadow-2xl">
+                    <div
+                        class="w-full overflow-hidden rounded-xl bg-neutral-900 border border-neutral-700/70 shadow-2xl"
+                    >
                         <a
                             v-if="imageUrl"
                             :href="targetUrl || '#'"
                             :target="isExternal ? '_blank' : undefined"
-                            :rel="isExternal ? 'noopener noreferrer' : undefined"
+                            :rel="
+                                isExternal ? 'noopener noreferrer' : undefined
+                            "
                             class="group block relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red"
                             @click="emit('ad-click')"
                         >
@@ -284,18 +384,33 @@ watch(() => props.forcePreview, (newVal) => {
                                 :alt="title || 'Iklan Sponsor'"
                                 class="w-full max-h-[70vh] object-contain group-hover:scale-[1.01] transition-transform duration-300"
                             />
-                            <div v-if="title" class="p-3.5 bg-neutral-900/95 border-t border-neutral-800 text-left">
-                                <h3 class="text-sm font-semibold text-white font-space-grotesk group-hover:text-isf-red transition-colors line-clamp-2">
+                            <div
+                                v-if="title"
+                                class="p-3.5 bg-neutral-900/95 border-t border-neutral-800 text-left"
+                            >
+                                <h3
+                                    class="text-sm font-semibold text-white font-space-grotesk group-hover:text-isf-red transition-colors line-clamp-2"
+                                >
                                     {{ title }}
                                 </h3>
-                                <p v-if="targetUrl" class="mt-1 text-[11px] text-neutral-400 font-sans flex items-center gap-1">
+                                <p
+                                    v-if="targetUrl"
+                                    class="mt-1 text-[11px] text-neutral-400 font-sans flex items-center gap-1"
+                                >
                                     <span>Klik untuk info lebih lanjut</span>
-                                    <span class="text-isf-red font-bold">&rarr;</span>
+                                    <span class="text-isf-red font-bold"
+                                        >&rarr;</span
+                                    >
                                 </p>
                             </div>
                         </a>
-                        <div v-else class="p-12 text-center text-neutral-400 bg-neutral-900">
-                            <p class="text-sm font-space-grotesk">Materi iklan sponsor belum diunggah.</p>
+                        <div
+                            v-else
+                            class="p-12 text-center text-neutral-400 bg-neutral-900"
+                        >
+                            <p class="text-sm font-space-grotesk">
+                                Materi iklan sponsor belum diunggah.
+                            </p>
                         </div>
                     </div>
 
@@ -307,9 +422,13 @@ watch(() => props.forcePreview, (newVal) => {
                             class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900/90 border border-neutral-700/80 text-white/90 text-xs font-medium font-space-grotesk shadow-2xl backdrop-blur-md select-none animate-in fade-in duration-150"
                             data-testid="ad-popup-banner-countdown"
                         >
-                            <span class="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                            <span
+                                class="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse"
+                            />
                             <span>Dapat ditutup dalam</span>
-                            <strong class="font-mono text-white font-bold">{{ skipTimeLeft }}s</strong>
+                            <strong class="font-mono text-white font-bold"
+                                >{{ skipTimeLeft }}s</strong
+                            >
                         </div>
 
                         <!-- State B: Tombol Tutup (✕) aktif setelah countdown habis -->
@@ -322,7 +441,10 @@ watch(() => props.forcePreview, (newVal) => {
                             title="Tutup"
                             @click="closeModal"
                         >
-                            <span class="text-xl leading-none font-bold text-neutral-300 group-hover:text-white transition-colors">✕</span>
+                            <span
+                                class="text-xl leading-none font-bold text-neutral-300 group-hover:text-white transition-colors"
+                                >✕</span
+                            >
                         </button>
                     </div>
                 </div>
@@ -334,13 +456,23 @@ watch(() => props.forcePreview, (newVal) => {
                     data-testid="ad-popup-video-content"
                 >
                     <!-- Header Modal Video -->
-                    <div class="px-4 py-2.5 bg-neutral-950 border-b border-neutral-800 flex items-center justify-between text-xs text-neutral-300 font-space-grotesk">
+                    <div
+                        class="px-4 py-2.5 bg-neutral-950 border-b border-neutral-800 flex items-center justify-between text-xs text-neutral-300 font-space-grotesk"
+                    >
                         <div class="flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-isf-red animate-pulse" />
-                            <span class="font-bold text-white uppercase tracking-wider text-[11px]">Iklan Video</span>
+                            <span
+                                class="w-2 h-2 rounded-full bg-isf-red animate-pulse"
+                            />
+                            <span
+                                class="font-bold text-white uppercase tracking-wider text-[11px]"
+                                >Iklan Video</span
+                            >
                             <template v-if="!isSkippable">
                                 <span class="text-neutral-500">•</span>
-                                <span class="text-amber-400 text-[11px] font-semibold" data-testid="video-non-skippable-info">
+                                <span
+                                    class="text-amber-400 text-[11px] font-semibold"
+                                    data-testid="video-non-skippable-info"
+                                >
                                     Wajib ditonton
                                 </span>
                             </template>
@@ -348,7 +480,9 @@ watch(() => props.forcePreview, (newVal) => {
                     </div>
 
                     <!-- Video Container (16:9) dengan YouTube-Style Skip Button -->
-                    <div class="relative w-full aspect-video bg-black flex items-center justify-center overflow-hidden">
+                    <div
+                        class="relative w-full aspect-video bg-black flex items-center justify-center overflow-hidden"
+                    >
                         <!-- Direct Video (MP4 / WebM / File Upload) -->
                         <video
                             v-if="isDirectVideo"
@@ -359,23 +493,37 @@ watch(() => props.forcePreview, (newVal) => {
                             playsinline
                             class="w-full h-full object-contain"
                             data-testid="ad-popup-native-video"
+                            @ended="closeModal"
+                            @timeupdate="onNativeVideoTimeUpdate"
+                            @loadedmetadata="onNativeVideoLoaded"
                         />
 
                         <!-- YouTube Embed -->
                         <iframe
                             v-else-if="youtubeEmbedUrl"
+                            ref="youtubeIframeRef"
                             :src="youtubeEmbedUrl"
                             class="w-full h-full border-0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allow="
+                                accelerometer;
+                                autoplay;
+                                clipboard-write;
+                                encrypted-media;
+                                gyroscope;
+                                picture-in-picture;
+                            "
                             allowfullscreen
                             referrerpolicy="strict-origin-when-cross-origin"
                             data-testid="ad-popup-youtube-video"
+                            @load="onYouTubeIframeLoad"
                         />
 
                         <!-- Fallback jika belum ada video -->
                         <div v-else class="text-center p-8 text-neutral-400">
                             <span class="text-3xl block mb-2">🎬</span>
-                            <p class="text-sm font-space-grotesk">Cuplikan video sponsor belum disetel.</p>
+                            <p class="text-sm font-space-grotesk">
+                                Cuplikan video sponsor belum disetel.
+                            </p>
                         </div>
 
                         <!-- ═══ YOUTUBE-STYLE SKIP BUTTON OVERLAY (Pojok Kanan Bawah) ═══ -->
@@ -389,9 +537,13 @@ watch(() => props.forcePreview, (newVal) => {
                                 class="select-none inline-flex items-center gap-2 px-3.5 py-1.5 rounded-sm bg-black/85 border border-white/20 text-white/95 text-xs font-medium font-space-grotesk shadow-xl backdrop-blur-md"
                                 data-testid="ad-popup-skip-countdown"
                             >
-                                <span class="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                                <span
+                                    class="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse"
+                                />
                                 <span>Lewati iklan dalam</span>
-                                <strong class="font-mono text-white font-bold">{{ skipTimeLeft }}s</strong>
+                                <strong class="font-mono text-white font-bold"
+                                    >{{ skipTimeLeft }}s</strong
+                                >
                             </div>
 
                             <!-- State B: Tombol Aktif (Dapat di-skip) -->
@@ -404,7 +556,10 @@ watch(() => props.forcePreview, (newVal) => {
                                 @click="closeModal"
                             >
                                 <span>Lewati Iklan</span>
-                                <span class="text-sm font-bold text-isf-red group-hover:translate-x-0.5 transition-transform">→</span>
+                                <span
+                                    class="text-sm font-bold text-isf-red group-hover:translate-x-0.5 transition-transform"
+                                    >→</span
+                                >
                             </button>
                         </div>
 
@@ -414,21 +569,34 @@ watch(() => props.forcePreview, (newVal) => {
                             class="absolute bottom-5 right-4 z-20 pointer-events-none select-none"
                             data-testid="ad-popup-non-skippable-badge"
                         >
-                            <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-black/85 border border-white/15 text-neutral-300 text-xs font-space-grotesk shadow-lg backdrop-blur-md">
-                                <span class="h-1.5 w-1.5 rounded-full bg-isf-red" />
-                                <span class="text-[11px] font-medium">Iklan tidak dapat dilewati</span>
+                            <div
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-black/85 border border-white/15 text-neutral-300 text-xs font-space-grotesk shadow-lg backdrop-blur-md"
+                            >
+                                <span
+                                    class="h-1.5 w-1.5 rounded-full bg-isf-red"
+                                />
+                                <span class="text-[11px] font-medium"
+                                    >Iklan tidak dapat dilewati</span
+                                >
                             </div>
                         </div>
                     </div>
 
                     <!-- Footer Info & Tautan Sponsor -->
-                    <div class="p-3.5 bg-neutral-950 border-t border-neutral-800 flex items-center justify-between gap-4">
+                    <div
+                        class="p-3.5 bg-neutral-950 border-t border-neutral-800 flex items-center justify-between gap-4"
+                    >
                         <div class="min-w-0">
-                            <h4 class="text-xs font-bold text-white font-space-grotesk truncate">
+                            <h4
+                                class="text-xs font-bold text-white font-space-grotesk truncate"
+                            >
                                 {{ title }}
                             </h4>
-                            <p class="text-[11px] text-neutral-400 truncate font-sans">
-                                Tayangan iklan sponsor resmi Indonesia Strategy Forum.
+                            <p
+                                class="text-[11px] text-neutral-400 truncate font-sans"
+                            >
+                                Tayangan iklan sponsor resmi Indonesia Strategy
+                                Forum.
                             </p>
                         </div>
 
@@ -437,7 +605,11 @@ watch(() => props.forcePreview, (newVal) => {
                                 v-if="targetUrl"
                                 :href="targetUrl"
                                 :target="isExternal ? '_blank' : undefined"
-                                :rel="isExternal ? 'noopener noreferrer' : undefined"
+                                :rel="
+                                    isExternal
+                                        ? 'noopener noreferrer'
+                                        : undefined
+                                "
                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-isf-red hover:bg-isf-red-dark text-white text-xs font-bold font-space-grotesk transition-all shadow-xs"
                                 @click="emit('ad-click')"
                             >

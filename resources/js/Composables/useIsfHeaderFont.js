@@ -6,70 +6,26 @@ export const FONT_OPTIONS = [
         label: "Montserrat",
         family: "'Montserrat', sans-serif",
     },
-    {
-        id: "arial",
-        label: "Arial",
-        family: "Arial, 'Arial Rounded MT Bold', sans-serif",
-    },
-    {
-        id: "roboto",
-        label: "Roboto",
-        family: "'Roboto', sans-serif",
-    },
 ];
 
-export const VALID_FONTS = FONT_OPTIONS.map((o) => o.id);
-const STORAGE_KEY = "isf_header_font";
+export const VALID_FONTS = ["montserrat"];
 
-function getInitialFont() {
-    try {
-        if (typeof window !== "undefined" && window.localStorage) {
-            const saved = window.localStorage.getItem(STORAGE_KEY);
-            if (VALID_FONTS.includes(saved)) {
-                return saved;
-            }
-        }
-    } catch {
-        // ignore
-    }
-    return "montserrat";
-}
-
-// Module-level reactive singleton state for synchronized font emulator
-const currentFont = ref(getInitialFont());
+// Module-level reactive singleton state for synchronized font (permanently locked to Montserrat)
+const currentFont = ref("montserrat");
 
 // Initialize document data attribute if running in browser
 if (typeof document !== "undefined" && document.documentElement) {
-    document.documentElement.setAttribute("data-isf-font", currentFont.value);
+    document.documentElement.setAttribute("data-isf-font", "montserrat");
 }
 
 /**
- * Composable for managing and synchronizing the ISF header font emulator.
- *
- * Supported typography:
- * - 'montserrat': Modern geometric bold (ISF default)
- * - 'arial': Arial / Arial Rounded MT Bold
- * - 'roboto': Roboto
+ * Composable for managing header font (standardized permanently to Montserrat).
  */
 export function useIsfHeaderFont() {
     function setFont(newFont) {
-        if (VALID_FONTS.includes(newFont)) {
-            currentFont.value = newFont;
-            try {
-                if (typeof window !== "undefined") {
-                    if (window.localStorage) {
-                        window.localStorage.setItem(STORAGE_KEY, newFont);
-                    }
-                    if (document.documentElement) {
-                        document.documentElement.setAttribute(
-                            "data-isf-font",
-                            newFont,
-                        );
-                    }
-                }
-            } catch {
-                // ignore
-            }
+        currentFont.value = "montserrat";
+        if (typeof document !== "undefined" && document.documentElement) {
+            document.documentElement.setAttribute("data-isf-font", "montserrat");
         }
     }
 
@@ -80,4 +36,3 @@ export function useIsfHeaderFont() {
         validFonts: VALID_FONTS,
     };
 }
-

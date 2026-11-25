@@ -88,6 +88,7 @@
                 <aside
                     class="order-3 min-w-0 border-t border-neutral-300 lg:order-1 lg:border-t-0"
                 >
+                    <!-- ISF Insight Skeleton -->
                     <div class="space-y-3 p-4 xl:px-[30px]">
                         <div class="h-3 w-24 rounded bg-neutral-300"></div>
                         <div class="h-5 w-4/5 rounded bg-neutral-300"></div>
@@ -96,33 +97,26 @@
                             class="h-20 border border-neutral-300 bg-neutral-100"
                         ></div>
                     </div>
+
+                    <!-- Top Rank Skeleton (Issue #93) -->
                     <div class="border-t border-neutral-300">
                         <div
-                            class="h-11 border-b border-neutral-300 px-4 xl:px-[30px]"
+                            class="h-11 border-b border-neutral-300 px-4 xl:px-[30px] flex items-center justify-between"
                         >
-                            <div
-                                class="mt-4 h-3 w-24 rounded bg-neutral-300"
-                            ></div>
+                            <div class="h-3 w-20 rounded bg-neutral-300"></div>
+                            <div class="h-3 w-10 rounded bg-neutral-200"></div>
                         </div>
-                        <div class="px-4 xl:px-[30px]">
-                            <div
-                                v-for="n in 3"
-                                :key="n"
-                                class="flex gap-3 border-b border-neutral-300 py-3"
-                            >
-                                <div
-                                    class="h-14 w-14 shrink-0 bg-neutral-200"
-                                ></div>
-                                <div class="flex-1 space-y-2">
-                                    <div
-                                        class="h-3 w-16 rounded bg-neutral-200"
-                                    ></div>
-                                    <div
-                                        class="h-4 w-full rounded bg-neutral-300"
-                                    ></div>
-                                    <div
-                                        class="h-3 w-1/3 rounded bg-neutral-200"
-                                    ></div>
+                        <div class="p-4 xl:px-[30px]">
+                            <div class="relative w-full h-[360px] rounded-[4px] border border-neutral-300 bg-neutral-200 overflow-hidden flex flex-col justify-between p-4">
+                                <div class="h-5 w-16 bg-neutral-300 rounded"></div>
+                                <div class="space-y-2">
+                                    <div class="h-4 w-5/6 bg-neutral-400 rounded"></div>
+                                    <div class="h-3 w-full bg-neutral-300 rounded"></div>
+                                    <div class="h-3 w-2/3 bg-neutral-300 rounded"></div>
+                                    <div class="pt-2 border-t border-neutral-300/60 flex justify-between">
+                                        <div class="h-3 w-20 bg-neutral-400 rounded"></div>
+                                        <div class="h-3 w-14 bg-neutral-400 rounded"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

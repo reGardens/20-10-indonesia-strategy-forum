@@ -179,6 +179,73 @@ const hukumLeft = computed(() => hukumItems.value.slice(0, 2));
 const hukumLead = computed(() => hukumItems.value[2] || null);
 const hukumRight = computed(() => hukumItems.value.slice(3, 7));
 
+const defaultKebijakanCards = [
+    {
+        title: "Kebijakan Fiskal Hijau: Skema Insentif Pajak & Transisi Energi Bersih 2026",
+        kicker: "ANALISIS FISKAL",
+        category: "Kebijakan",
+        summary: "Pemerintah mematangkan peta jalan insentif perpajakan bagi industri pelopor energi baru terbarukan sembari mempersiapkan pemberlakuan tarif pajak karbon secara bertahap.",
+        imageUrl: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?q=80&w=600&auto=format&fit=crop",
+        publishedAt: new Date().toISOString(),
+        author: { name: "Dr. Hendra Wijaya", role: "Dewan Pakar Fiskal ISF" },
+        to: "/beranda",
+    },
+    {
+        title: "Pemetaan Dampak Regulasi Moneter & Suku Bunga Sektoral",
+        kicker: "DAMPAK REGULASI",
+        category: "Kebijakan",
+        summary: "Ketahanan rasio kecukupan modal perbankan dan efisiensi beban pinjaman modal kerja industri berorientasi ekspor.",
+        imageUrl: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?q=80&w=600&auto=format&fit=crop",
+        publishedAt: new Date(Date.now() - 86400000).toISOString(),
+        author: { name: "Tim Riset Kebijakan", role: "Analis Makroekonomi" },
+        to: "/beranda",
+    },
+    {
+        title: "Rekomendasi Kebijakan: Akselerasi Deregulasi Perizinan Berbasis Risiko",
+        kicker: "POLICY BRIEF",
+        category: "Kebijakan",
+        summary: "Kepastian regulasi dan simplifikasi birokrasi digital adalah pilar fundamental untuk mendongkrak daya saing investasi Indonesia.",
+        imageUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=600&auto=format&fit=crop",
+        publishedAt: new Date(Date.now() - 172800000).toISOString(),
+        author: { name: "Prof. Siti Rahmawati", role: "Ketua Tim Kajian Deregulasi ISF" },
+        to: "/beranda",
+    },
+    {
+        title: "Harmonisasi Belanja Pusat & Transfer Daerah: Penguatan Fiskal 2026",
+        kicker: "KEBIJAKAN FISKAL",
+        category: "Kebijakan",
+        summary: "Pemerintah mempercepat konsolidasi transfer ke daerah guna menjaga sinkronisasi target pembangunan nasional dan stabilitas moneter.",
+        imageUrl: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=600&auto=format&fit=crop",
+        publishedAt: new Date(Date.now() - 259200000).toISOString(),
+        author: { name: "Analis Kebijakan Publik", role: "Dewan Riset ISF" },
+        to: "/beranda",
+    },
+];
+
+const kebijakanCards = computed(() => {
+    const sec = props.sections?.kebijakan || {};
+    if (Array.isArray(sec.items) && sec.items.length >= 4) {
+        return sec.items.slice(0, 4);
+    }
+    if (Array.isArray(sec.items) && sec.items.length > 0) {
+        const list = [...sec.items];
+        while (list.length < 4) {
+            list.push(defaultKebijakanCards[list.length]);
+        }
+        return list;
+    }
+    if (sec.lead) {
+        const list = [sec.lead];
+        if (sec.impact) list.push(sec.impact);
+        if (sec.brief) list.push(sec.brief);
+        while (list.length < 4) {
+            list.push(defaultKebijakanCards[list.length]);
+        }
+        return list;
+    }
+    return defaultKebijakanCards;
+});
+
 const kebijakanData = computed(() => {
     const sec = props.sections?.kebijakan || {};
     return {
@@ -345,7 +412,7 @@ const videoData = computed(() => {
                     :to="item.to || '#'"
                     :class="[
                         linkClass,
-                        'group block min-w-0 border-b border-neutral-300 py-4 last:border-b-0 px-3 lg:border-b-0 lg:border-r lg:px-4 lg:py-5 lg:last:border-r-0 xl:px-[30px]',
+                        'group flex flex-col min-w-0 border-b border-neutral-300 py-4 last:border-b-0 px-3 lg:border-b-0 lg:border-r lg:px-4 lg:py-5 lg:last:border-r-0 xl:px-[30px]',
                     ]"
                     ><ImagePlaceholder
                         :label="item.title"
@@ -362,7 +429,7 @@ const videoData = computed(() => {
                     >
                         {{ item.title }}
                     </h3>
-                    <div class="isf-byline mt-2 flex items-center justify-between text-[11px] sm:text-xs text-neutral-500">
+                    <div class="isf-byline mt-auto pt-3 flex items-center justify-between text-[11px] sm:text-xs text-neutral-500">
                         <span class="truncate font-medium text-neutral-700 max-w-[55%]">
                             {{ getAuthorName(item) }}
                         </span>
@@ -647,165 +714,47 @@ const videoData = computed(() => {
                 </template>
             </SectionHeading>
 
-            <div
-                class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-neutral-300"
-            >
-                <!-- Kolom 1: Sorotan Utama Kebijakan -->
-                <article
-                    class="py-5 lg:py-6 flex flex-col justify-between"
-                    :class="cellPad"
+            <!-- Layout 4 kolom bergaris (4 kartu artikel Kebijakan Publik) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                <IsfLink
+                    v-for="(item, idx) in kebijakanCards"
+                    :key="item.id || item.title || idx"
+                    :to="item.to || '#'"
+                    :class="[
+                        linkClass,
+                        'group flex flex-col min-w-0 border-b border-neutral-300 py-4 last:border-b-0 px-3 lg:border-b-0 lg:border-r lg:px-4 lg:py-5 lg:last:border-r-0 xl:px-[30px]',
+                    ]"
                 >
-                    <div>
-                        <div class="overflow-hidden bg-neutral-100 mb-3">
-                            <ImagePlaceholder
-                                :label="kebijakanData.lead.title"
-                                :src="kebijakanData.lead.imageUrl"
-                                aspect="photo"
-                                priority
-                            />
-                        </div>
-                        <span class="isf-kicker text-isf-red">{{
-                            kebijakanData.lead.kicker
-                        }}</span>
-                        <h3
-                            class="isf-headline mt-1.5 text-[20px] sm:text-[22px] leading-[1.2]"
-                        >
-                            <IsfLink
-                                :to="kebijakanData.lead.to || '#'"
-                                :class="[linkClass, 'hover:text-isf-red']"
-                            >
-                                {{ kebijakanData.lead.title }}
-                            </IsfLink>
-                        </h3>
-                        <p
-                            v-if="kebijakanData.lead.summary"
-                            class="mt-2.5 font-serif text-[15px] leading-[1.5] text-neutral-600"
-                        >
-                            {{ kebijakanData.lead.summary }}
-                        </p>
-                    </div>
-                    <div
-                        class="mt-4 pt-3 border-t border-neutral-200 flex items-center justify-between text-xs text-neutral-500 font-ui"
+                    <ImagePlaceholder
+                        :label="item.title"
+                        :src="item.imageUrl || ''"
+                        aspect="photo"
+                        bare
+                        :priority="idx === 0"
+                    />
+                    <span class="isf-kicker mt-3 text-isf-red">{{
+                        item.kicker || item.category || 'Kebijakan'
+                    }}</span>
+                    <h3
+                        class="isf-headline mt-1 text-[17px] leading-[1.2] group-hover:text-isf-red xl:text-[19px]"
                     >
-                        <span class="font-semibold text-neutral-800">{{
-                            kebijakanData.lead.author
-                        }}</span>
-                        <time :datetime="kebijakanData.lead.publishedAt">{{
-                            formatDate(kebijakanData.lead.publishedAt)
-                        }}</time>
-                    </div>
-                </article>
-
-                <!-- Kolom 2: Dampak Regulasi & Pasar Matrix -->
-                <article
-                    class="py-5 lg:py-6 flex flex-col justify-between isf-surface-cream"
-                    :class="cellPad"
-                >
-                    <div>
-                        <div
-                            v-if="kebijakanData.impact.imageUrl"
-                            class="overflow-hidden bg-neutral-100 mb-3"
-                        >
-                            <ImagePlaceholder
-                                :label="kebijakanData.impact.title"
-                                :src="kebijakanData.impact.imageUrl"
-                                aspect="photo"
-                            />
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span
-                                class="h-2 w-2 rounded-full bg-isf-red"
-                            ></span>
-                            <span class="isf-kicker text-neutral-900">{{
-                                kebijakanData.impact.kicker
-                            }}</span>
-                        </div>
-                        <h3
-                            class="isf-headline mt-1.5 text-[19px] sm:text-[21px] leading-[1.2]"
-                        >
-                            <IsfLink
-                                :to="kebijakanData.impact.to || '#'"
-                                :class="[linkClass, 'hover:text-isf-red']"
-                            >
-                                {{ kebijakanData.impact.title }}
-                            </IsfLink>
-                        </h3>
-                        <ul
-                            v-if="kebijakanData.impact.keyPoints?.length"
-                            class="mt-3.5 space-y-2.5 font-serif text-[14px] text-neutral-700 leading-relaxed"
-                        >
-                            <li
-                                v-for="(point, pIdx) in kebijakanData.impact
-                                    .keyPoints"
-                                :key="pIdx"
-                                class="flex items-start gap-2"
-                            >
-                                <span
-                                    class="text-isf-red font-bold select-none leading-none mt-1"
-                                    >›</span
-                                >
-                                <span>{{ point }}</span>
-                            </li>
-                        </ul>
-                    </div>
-                    <div
-                        class="mt-4 pt-3 border-t border-neutral-200 flex items-center justify-between text-xs text-neutral-500 font-ui"
+                        {{ item.title }}
+                    </h3>
+                    <p
+                        v-if="item.summary"
+                        class="mt-2 font-serif text-[13px] leading-[1.4] text-neutral-600 line-clamp-2"
                     >
-                        <span>Pembaruan Analisis Fiskal</span>
-                        <time :datetime="kebijakanData.impact.publishedAt">{{
-                            formatDate(kebijakanData.impact.publishedAt)
-                        }}</time>
+                        {{ item.summary }}
+                    </p>
+                    <div class="isf-byline mt-auto pt-3 flex items-center justify-between text-[11px] sm:text-xs text-neutral-500">
+                        <span class="truncate font-medium text-neutral-700 max-w-[55%]">
+                            {{ getAuthorName(item) }}
+                        </span>
+                        <time :datetime="item.publishedAt" class="shrink-0">
+                            {{ formatDate(item.publishedAt) }}
+                        </time>
                     </div>
-                </article>
-
-                <!-- Kolom 3: Policy Brief Dewan Pakar -->
-                <article
-                    class="py-5 lg:py-6 flex flex-col justify-between"
-                    :class="cellPad"
-                >
-                    <div>
-                        <div
-                            v-if="kebijakanData.brief.imageUrl"
-                            class="overflow-hidden bg-neutral-100 mb-3"
-                        >
-                            <ImagePlaceholder
-                                :label="kebijakanData.brief.title"
-                                :src="kebijakanData.brief.imageUrl"
-                                aspect="photo"
-                            />
-                        </div>
-                        <span class="isf-kicker text-neutral-900">{{
-                            kebijakanData.brief.kicker
-                        }}</span>
-                        <h3
-                            class="isf-headline mt-1.5 text-[19px] sm:text-[21px] leading-[1.2]"
-                        >
-                            <IsfLink
-                                :to="kebijakanData.brief.to || '#'"
-                                :class="[linkClass, 'hover:text-isf-red']"
-                            >
-                                {{ kebijakanData.brief.title }}
-                            </IsfLink>
-                        </h3>
-                        <blockquote
-                            v-if="kebijakanData.brief.quote"
-                            class="mt-3.5 border-l-2 border-isf-red pl-3.5 italic text-neutral-700 font-serif text-[14.5px] leading-relaxed"
-                        >
-                            "{{ kebijakanData.brief.quote }}"
-                        </blockquote>
-                    </div>
-                    <div class="mt-4 pt-3 border-t border-neutral-200">
-                        <p class="text-xs font-bold text-neutral-900 font-ui">
-                            {{ kebijakanData.brief.author }}
-                        </p>
-                        <p
-                            v-if="kebijakanData.brief.authorRole"
-                            class="text-[11px] text-neutral-500 font-ui"
-                        >
-                            {{ kebijakanData.brief.authorRole }}
-                        </p>
-                    </div>
-                </article>
+                </IsfLink>
             </div>
         </section>
 

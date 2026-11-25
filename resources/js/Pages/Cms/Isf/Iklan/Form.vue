@@ -246,16 +246,18 @@ defineExpose({
               <p v-if="err('kicker')" class="text-xs text-red-400 mt-1">{{ err('kicker') }}</p>
             </div>
 
-            <!-- Target URL -->
+            <!-- Target URL / Tautan Kunjungi Sponsor -->
             <div class="space-y-1.5">
-              <Label for="target_url" class="text-xs font-medium text-foreground">URL Tujuan</Label>
+              <Label for="target_url" class="text-xs font-medium text-foreground">
+                URL Link Tujuan (Wording "Kunjungi Sponsor")
+              </Label>
               <Input
                 id="target_url"
                 v-model="form.target_url"
-                placeholder="Contoh: /register atau https://mitra.com"
+                placeholder="Contoh: https://mitra.com atau /register"
                 class="h-9 text-xs font-mono"
               />
-              <p class="text-[11px] text-muted-foreground">Kosongkan untuk memakai /register.</p>
+              <p class="text-[11px] text-muted-foreground">Tautan dinamis tombol "Kunjungi Sponsor" pada popup dan klik banner (kosongkan untuk memakai /register).</p>
               <p v-if="err('target_url')" class="text-xs text-red-400 mt-1">{{ err('target_url') }}</p>
             </div>
           </div>

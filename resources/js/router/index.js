@@ -388,6 +388,22 @@ const routes = [
     ]
   },
   {
+    path: '/profil',
+    component: IsfPublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'isf-profil-detail',
+        component: () => import('../Pages/Isf/views/ProfileDetailView.vue'),
+        meta: { title: 'Detail Profil · Indonesia Strategy Forum' }
+      }
+    ]
+  },
+  {
+    path: '/profile',
+    redirect: '/profil'
+  },
+  {
     path: '/anggota',
     component: IsfMemberLayout,
     children: [

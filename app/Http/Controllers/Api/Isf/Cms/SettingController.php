@@ -9,6 +9,7 @@ use App\Models\Isf\Category;
 use App\Models\Isf\Setting;
 use App\Services\Isf\IsfCacheService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Str;
 
 /**
  * CMS API — Pengaturan Halaman (feature: pengaturan_halaman).
@@ -101,6 +102,7 @@ class SettingController extends Controller
             'announcement' => 'required|string|max:500',
             'badge' => 'nullable|string|max:50',
             'info' => 'nullable|string|max:100',
+            'url' => 'nullable|string|max:500',
             'status' => 'nullable|string|in:terbit,draf',
             'summary' => 'nullable|string',
             'content' => 'nullable|string',
@@ -117,6 +119,7 @@ class SettingController extends Controller
             'badge' => $validated['badge'] ?: 'Sorotan',
             'announcement' => $validated['announcement'],
             'info' => $validated['info'] ?: 'Edisi Pekan Ini',
+            'url' => $validated['url'] ?? ($request->input('url') ?? null),
             'status' => $validated['status'] ?: 'terbit',
         ];
 
@@ -134,6 +137,7 @@ class SettingController extends Controller
             'announcement' => 'required|string|max:500',
             'badge' => 'nullable|string|max:50',
             'info' => 'nullable|string|max:100',
+            'url' => 'nullable|string|max:500',
             'status' => 'nullable|string|in:terbit,draf',
             'summary' => 'nullable|string',
             'content' => 'nullable|string',
@@ -153,6 +157,7 @@ class SettingController extends Controller
             'badge' => $validated['badge'] ?: 'Sorotan',
             'announcement' => $validated['announcement'],
             'info' => $validated['info'] ?: 'Edisi Pekan Ini',
+            'url' => $validated['url'] ?? ($request->input('url') ?? ($topBars[$index]['url'] ?? null)),
             'status' => $validated['status'] ?: 'terbit',
         ]);
 
@@ -655,6 +660,7 @@ class SettingController extends Controller
                 'badge' => $firstActive['badge'] ?? 'Sorotan',
                 'announcement' => $firstActive['announcement'] ?? '',
                 'info' => $firstActive['info'] ?? '',
+                'url' => $firstActive['url'] ?? ($firstActive['link'] ?? ''),
             ];
         }
     }
@@ -755,11 +761,118 @@ class SettingController extends Controller
                 'topBars' => $topBars,
                 'mediaSorotan' => $mediaSorotan,
                 'hotNews' => $hotNews,
+                'topRank' => $beranda['topRank'] ?? [],
                 'pekanIni' => $beranda['pekanIni'] ?? ['dateStart' => '', 'dateEnd' => ''],
             ],
             'anggota' => Setting::get('anggota', [
                 'name' => '', 'role' => '', 'organization' => '', 'plan' => '', 'sektor' => [],
             ]),
         ];
+    }
+
+    /**
+     * Opsi artikel untuk selector Top Rank 1-3 di CMS.
+     */
+    public function getTopRankArticleOptions(): JsonResponse
+    {
+        $articles = Article::query()->terbit()
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
+            ->limit(50)
+            ->get(['id', 'title', 'slug', 'category', 'author_name', 'summary', 'body', 'image_url', 'published_at'])
+            ->map(function ($a) {
+                return [
+                    'id' => (string) $a->id,
+                    'title' => $a->title,
+                    'slug' => $a->slug,
+                    'summary' => $a->summary ?: Str::limit(strip_tags((string) $a->body), 120),
+                    'author' => $a->author_name ?: 'Redaksi ISF',
+                    'image_url' => $a->image_url,
+                    'url' => $a->publicUrl(),
+                    'published_at' => $a->published_at ? $a->published_at->format('d M Y') : date('d M Y'),
+                ];
+            });
+
+        return response()->json(['data' => $articles]);
+    }
+
+    /**
+     * Mendapatkan daftar 3 slot Top Rank 1-3 of the Week di CMS.
+     */
+    public function getTopRank(): JsonResponse
+    {
+        $beranda = Setting::get('beranda', []);
+        $items = $beranda['topRank'] ?? [];
+
+        if (empty($items)) {
+            $defaultArticles = Article::query()->terbit()->orderByDesc('published_at')->limit(3)->get();
+            $items = [
+                [
+                    'rank' => 1,
+                    'article_id' => $defaultArticles->get(0)?->id ?? '',
+                    'title' => $defaultArticles->get(0)?->title ?? 'Peringkat 1: Analisis Dinamika Kebijakan Strategis Nasional',
+                    'summary' => $defaultArticles->get(0)?->summary ?? 'Telaah mendalam arah kebijakan pembangunan dan stabilitas regulasi nasional.',
+                    'author' => $defaultArticles->get(0)?->author_name ?: 'Tim Riset ISF',
+                    'image_url' => $defaultArticles->get(0)?->image_url ?? 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?q=80&w=600&auto=format&fit=crop',
+                    'url' => $defaultArticles->get(0)?->publicUrl() ?? '/beranda',
+                    'status' => 'terbit',
+                ],
+                [
+                    'rank' => 2,
+                    'article_id' => $defaultArticles->get(1)?->id ?? '',
+                    'title' => $defaultArticles->get(1)?->title ?? 'Peringkat 2: Evaluasi Kepatuhan Regulasi dan Kepastian Hukum Usaha',
+                    'summary' => $defaultArticles->get(1)?->summary ?? 'Dampak regulasi mutakhir bagi organ korporasi dan iklim investasi.',
+                    'author' => $defaultArticles->get(1)?->author_name ?: 'Dewan Pakar Hukum',
+                    'image_url' => $defaultArticles->get(1)?->image_url ?? 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?q=80&w=600&auto=format&fit=crop',
+                    'url' => $defaultArticles->get(1)?->publicUrl() ?? '/beranda',
+                    'status' => 'terbit',
+                ],
+                [
+                    'rank' => 3,
+                    'article_id' => $defaultArticles->get(2)?->id ?? '',
+                    'title' => $defaultArticles->get(2)?->title ?? 'Peringkat 3: Peta Jalan Transformasi Fiskal dan Sektor Energi Bersih',
+                    'summary' => $defaultArticles->get(2)?->summary ?? 'Kesiapan instrumen fiskal dalam mendorong transisi energi terbarukan.',
+                    'author' => $defaultArticles->get(2)?->author_name ?: 'Analis Kebijakan Publik',
+                    'image_url' => $defaultArticles->get(2)?->image_url ?? 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?q=80&w=600&auto=format&fit=crop',
+                    'url' => $defaultArticles->get(2)?->publicUrl() ?? '/beranda',
+                    'status' => 'terbit',
+                ],
+            ];
+        }
+
+        return response()->json(['data' => $items]);
+    }
+
+    /**
+     * Memperbarui kurasi Top Rank 1-3 of the Week di CMS.
+     */
+    public function updateTopRank(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $items = $request->input('items', []);
+        $beranda = Setting::get('beranda', []);
+
+        $sanitized = [];
+        for ($i = 1; $i <= 3; $i++) {
+            $incoming = collect($items)->first(fn($it) => (int) ($it['rank'] ?? 0) === $i) ?? ($items[$i - 1] ?? []);
+            $sanitized[] = [
+                'rank' => $i,
+                'article_id' => $incoming['article_id'] ?? null,
+                'title' => trim((string) ($incoming['title'] ?? '')),
+                'summary' => trim((string) ($incoming['summary'] ?? '')),
+                'author' => trim((string) ($incoming['author'] ?? 'Redaksi ISF')),
+                'image_url' => trim((string) ($incoming['image_url'] ?? '')),
+                'url' => trim((string) ($incoming['url'] ?? '/beranda')),
+                'status' => in_array($incoming['status'] ?? 'terbit', ['terbit', 'draf']) ? $incoming['status'] : 'terbit',
+            ];
+        }
+
+        $beranda['topRank'] = $sanitized;
+        Setting::put('beranda', $beranda);
+        IsfCacheService::clearBeranda();
+
+        return response()->json([
+            'message' => 'Top Rank 1-3 of the Week berhasil diperbarui.',
+            'data' => $sanitized,
+        ]);
     }
 }
