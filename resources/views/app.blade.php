@@ -8,8 +8,14 @@
 
     <title inertia>{{ config('app.name', 'CMS Landing') }}</title>
     <link rel="icon" type="image/png" href="{{ asset('images/isf/ISF-Logo-2.png') }}?v=2">
-    <link rel="apple-touch-icon" href="{{ asset('images/isf/ISF-Logo-2.png') }}?v=2">
+    <link rel="apple-touch-icon" href="{{ asset('icons/icon-180x180.png') }}">
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
     <meta name="theme-color" content="#0B1220">
+    <meta name="application-name" content="Indonesia Strategy Forum">
+    <meta name="apple-mobile-web-app-title" content="ISF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
 
     <!-- Preload font lokal; @font-face & semua style CMS ada di resources/css/app.css -->
     <link rel="preload" as="font" type="font/woff2" crossorigin

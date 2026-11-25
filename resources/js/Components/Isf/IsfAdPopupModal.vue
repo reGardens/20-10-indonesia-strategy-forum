@@ -172,13 +172,7 @@ function onYouTubeIframeLoad(e) {
 }
 
 function onNativeVideoLoaded(e) {
-    if (
-        e?.target?.duration &&
-        Number.isFinite(e.target.duration) &&
-        e.target.duration > 0
-    ) {
-        startVideoAutoCloseTimer(e.target.duration);
-    }
+    // Penutupan video ditangani secara natural oleh event @ended="closeModal"
 }
 
 function onNativeVideoTimeUpdate(e) {
@@ -194,8 +188,8 @@ function openModal() {
         if (isSkippable.value) {
             startSkipCountdown();
         }
-        // Selalu pasang auto-close saat durasi video habis (Issue #93)
-        startVideoAutoCloseTimer(videoDuration.value);
+        // Jangan pasang timer buta (blind timer) agar video/webinar tidak tertutup mendadak sebelum selesai.
+        // Modal akan tertutup saat video berakhir (event ended / YouTube state 0) atau tombol Lewati diklik.
     } else {
         if (skipDelaySeconds.value > 0) {
             startSkipCountdown();

@@ -512,64 +512,6 @@ watch(
                 <div class="text-[11px] text-muted-foreground mt-0.5">Tampil sebagai headline utama di Beranda.</div>
               </div>
             </label>
-
-            <!-- Sorotan / Teks Berjalan (Running Text) -->
-            <div class="p-3 rounded-lg border border-border bg-card space-y-2.5">
-              <label class="flex items-start gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  v-model="form.show_in_running_text"
-                  class="mt-0.5 rounded border-input text-red-600 focus:ring-red-500 h-4 w-4"
-                />
-                <div>
-                  <div class="text-xs font-semibold text-foreground">Sorotan (Teks Berjalan / Running Text)</div>
-                  <div class="text-[11px] text-muted-foreground mt-0.5">Tampilkan judul artikel ini pada pita teks berjalan Beranda (maksimal 5 artikel aktif).</div>
-                </div>
-              </label>
-              <div v-if="form.show_in_running_text" class="pl-6.5 pt-1 flex items-center gap-2">
-                <label for="running_text_order" class="text-xs text-muted-foreground whitespace-nowrap">Urutan Running Text:</label>
-                <select
-                  id="running_text_order"
-                  v-model.number="form.running_text_order"
-                  class="h-8 px-2.5 text-xs rounded-md border border-input bg-background text-foreground"
-                >
-                  <option :value="null">Otomatis (Sesuai Slot Tersedia)</option>
-                  <option :value="1">Running Text 1</option>
-                  <option :value="2">Running Text 2</option>
-                  <option :value="3">Running Text 3</option>
-                  <option :value="4">Running Text 4</option>
-                  <option :value="5">Running Text 5</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Top Artikel (Top 1 s/d 3 of the Week) -->
-            <div class="p-3 rounded-lg border border-border bg-card space-y-2.5">
-              <label class="flex items-start gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  v-model="form.show_in_top_rank"
-                  class="mt-0.5 rounded border-input text-red-600 focus:ring-red-500 h-4 w-4"
-                />
-                <div>
-                  <div class="text-xs font-semibold text-foreground">Top Artikel (Top of the Week)</div>
-                  <div class="text-[11px] text-muted-foreground mt-0.5">Tampilkan pada modul slider Top Artikel di Beranda (maksimal 3 artikel aktif).</div>
-                </div>
-              </label>
-              <div v-if="form.show_in_top_rank" class="pl-6.5 pt-1 flex items-center gap-2">
-                <label for="top_rank_order" class="text-xs text-muted-foreground whitespace-nowrap">Peringkat:</label>
-                <select
-                  id="top_rank_order"
-                  v-model.number="form.top_rank_order"
-                  class="h-8 px-2.5 text-xs rounded-md border border-input bg-background text-foreground"
-                >
-                  <option :value="null">Otomatis (Sesuai Slot Tersedia)</option>
-                  <option :value="1">Top Artikel 1 (Gold)</option>
-                  <option :value="2">Top Artikel 2 (Red)</option>
-                  <option :value="3">Top Artikel 3 (Silver)</option>
-                </select>
-              </div>
-            </div>
           </div>
         </CardContent>
       </Card>

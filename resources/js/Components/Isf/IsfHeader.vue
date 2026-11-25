@@ -29,6 +29,7 @@ import { useIsfHeaderFont } from "@/Composables/useIsfHeaderFont";
 import { logout } from "@/api/services/isfSessionService";
 import { useIsfSession } from "@/Composables/useIsfSession";
 import IsfProfileMenu from "@/Components/Isf/IsfProfileMenu.vue";
+import IsfNotificationMenu from "@/Components/Isf/IsfNotificationMenu.vue";
 import WhatsAppVerifyDialog from "@/Components/Isf/WhatsAppVerifyDialog.vue";
 import Input from "@/Components/UI/Input.vue";
 import Label from "@/Components/UI/Label.vue";
@@ -432,17 +433,9 @@ defineExpose({
                 <!-- Portal Anggota / Login / Search / Member Profile (kanan) -->
                 <div class="flex items-center gap-2 sm:gap-3 shrink-0 justify-end lg:min-w-[220px]">
                     <template v-if="isLoggedIn">
-                        <button
-                            type="button"
-                            aria-label="Notifikasi"
-                            title="Notifikasi"
-                            :class="['inline-flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-md border border-white/10 text-white transition-colors hover:border-white/30 hover:bg-white/10 hover:text-isf-red', focusRing]"
-                        >
-                            <svg class="h-4 w-4 sm:h-5 sm:w-5 shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true" focusable="false">
-                                <path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6" />
-                                <path d="M9 17v1a3 3 0 0 0 6 0v-1" />
-                            </svg>
-                        </button>
+                        <!-- Menu Notifikasi Lonceng (Landing Page) -->
+                        <IsfNotificationMenu />
+
                         <!-- User login: ikon avatar saja; klik → menu berisi nama + Keluar (seperti CMS) -->
                         <IsfProfileMenu
                             :name="sessionUser.name"

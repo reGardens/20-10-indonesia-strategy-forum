@@ -28,6 +28,7 @@ use App\Http\Controllers\Api\Isf\Cms\SettingController;
 use App\Http\Controllers\Api\Isf\Cms\TokohController;
 use App\Http\Controllers\Api\Isf\PublicAdController;
 use App\Http\Controllers\Api\Isf\PublicContentController;
+use App\Http\Controllers\Api\Isf\PushNotificationController;
 use App\Http\Controllers\Api\Isf\SessionController;
 use App\Http\Controllers\Api\Isf\TokohReviewController;
 use App\Http\Controllers\Api\Isf\WhatsAppVerificationController;
@@ -115,6 +116,16 @@ Route::middleware(['web'])->prefix('isf')->group(function () {
         ->name('api.isf.register');
     Route::post('/media/upload', [\App\Http\Controllers\Api\Isf\Cms\MediaUploadController::class, 'upload'])
         ->name('api.isf.media.upload');
+
+    // Web Push Notifications
+    Route::prefix('push')->group(function () {
+        Route::get('/vapid-key', [PushNotificationController::class, 'vapidKey'])->name('api.isf.push.vapid-key');
+        Route::post('/subscribe', [PushNotificationController::class, 'subscribe'])->name('api.isf.push.subscribe');
+        Route::post('/unsubscribe', [PushNotificationController::class, 'unsubscribe'])->name('api.isf.push.unsubscribe');
+        Route::post('/test', [PushNotificationController::class, 'sendTest'])->name('api.isf.push.test');
+        Route::get('/notifications', [PushNotificationController::class, 'notifications'])->name('api.isf.push.notifications');
+        Route::post('/notifications/read', [PushNotificationController::class, 'markRead'])->name('api.isf.push.notifications.read');
+    });
 });
 
 // ISF CMS API (authenticated session + per-module feature access)

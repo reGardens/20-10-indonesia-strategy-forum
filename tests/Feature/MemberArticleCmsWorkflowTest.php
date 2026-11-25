@@ -18,6 +18,15 @@ class MemberArticleCmsWorkflowTest extends TestCase
         Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
     }
 
+    protected function tearDown(): void
+    {
+        Article::where('slug', 'like', 'artikel-member-%')
+            ->orWhere('slug', 'like', 'artikel-rahasia-%')
+            ->delete();
+        User::where('email', 'like', 'user-%@example.test')->delete();
+        parent::tearDown();
+    }
+
     private function createUser(string $name, string $role = 'member'): User
     {
         $user = User::create([

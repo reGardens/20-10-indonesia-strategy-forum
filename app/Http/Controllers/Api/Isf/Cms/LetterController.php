@@ -220,6 +220,32 @@ class LetterController extends CmsResourceController
 
         IsfCacheService::clearBeranda();
 
+        // Kirim push notifikasi langsung ke member pembuat naskah & siarkan ke pembaca
+        try {
+            $pushService = app(\App\Services\IsfPushNotificationService::class);
+            $articleUrl = url($suratPembaca->link_url ?: ('/artikel/' . $category . '/' . $slug));
+
+            if ($suratPembaca->user_id) {
+                $author = \App\Models\User::find($suratPembaca->user_id);
+                if ($author) {
+                    $pushService->sendToUser(
+                        $author,
+                        'Naskah Anda Telah Disetujui!',
+                        'Naskah "' . $suratPembaca->title . '" telah disetujui dewan redaksi dan terbit di Indonesia Strategy Forum.',
+                        $articleUrl
+                    );
+                }
+            }
+
+            $pushService->broadcast(
+                'Warta Baru: ' . $suratPembaca->title,
+                $suratPembaca->summary ?: 'Analisis artikel terbaru telah terbit di Indonesia Strategy Forum.',
+                $articleUrl
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Gagal kirim notifikasi persetujuan artikel member: ' . $e->getMessage());
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Artikel by member berhasil disetujui untuk tayang.',
@@ -255,6 +281,23 @@ class LetterController extends CmsResourceController
                 Mail::to($suratPembaca->sender_email)->send(new ArticleRejectionMail($suratPembaca, (string) $reason));
             } catch (\Throwable $e) {
                 Log::warning('Gagal kirim email penolakan artikel ke '.$suratPembaca->sender_email.': '.$e->getMessage());
+            }
+        }
+
+        // Kirim push notification ke member pemilik naskah
+        if ($suratPembaca->user_id) {
+            try {
+                $author = \App\Models\User::find($suratPembaca->user_id);
+                if ($author) {
+                    app(\App\Services\IsfPushNotificationService::class)->sendToUser(
+                        $author,
+                        'Pembaruan Status Naskah',
+                        'Naskah "' . $suratPembaca->title . '" belum dapat disetujui: ' . ($reason ?: 'Periksa catatan redaksi.'),
+                        url('/cms/artikel')
+                    );
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Gagal kirim push notifikasi penolakan artikel member: ' . $e->getMessage());
             }
         }
 

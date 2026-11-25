@@ -12,12 +12,17 @@
         </button>
       </div>
     </div>
-    <router-view v-else />
+    <template v-else>
+      <router-view />
+      <IsfPwaInstallPrompt />
+      <IsfNotificationPrompt />
+    </template>
   </div>
 </template>
 
 <script setup>
 import { ref, onErrorCaptured } from "vue";
+import { IsfPwaInstallPrompt, IsfNotificationPrompt } from "@/Components/Isf";
 
 const hasError = ref(false);
 const errorMessage = ref("");
