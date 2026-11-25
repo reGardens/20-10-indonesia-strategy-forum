@@ -65,48 +65,10 @@ const careerFields = [
   { key: 'description', label: 'Keterangan / Dampak Kebijakan', type: 'text', span: 'sm:col-span-3', placeholder: 'Keterangan peran...' }
 ]
 
-const positionsFields = [
-  { key: 'period', label: 'Periode Menjabat', type: 'text', required: true, placeholder: 'e.g. 2019 - 2024' },
-  { key: 'position', label: 'Nama Jabatan', type: 'text', span: 'sm:col-span-2', required: true, placeholder: 'e.g. Anggota Komisi III DPR RI' },
-  { key: 'institution', label: 'Lembaga / Organisasi', type: 'text', span: 'sm:col-span-3', placeholder: 'e.g. Dewan Perwakilan Rakyat' }
-]
-
 const educationFields = [
   { key: 'degree', label: 'Gelar / Jenjang', type: 'text', required: true, placeholder: 'e.g. Sarjana Hukum (S.H.)' },
   { key: 'institution', label: 'Institusi / Universitas', type: 'text', span: 'sm:col-span-2', required: true, placeholder: 'e.g. Universitas Indonesia' },
   { key: 'year', label: 'Tahun Lulus', type: 'text', placeholder: 'e.g. 1998' }
-]
-
-const affiliationFields = [
-  { key: 'name', label: 'Nama Lembaga / Partai / Organisasi', type: 'text', span: 'sm:col-span-2', required: true, placeholder: 'e.g. Partai Demokrasi Strategis' },
-  { key: 'type', label: 'Jenis Afiliasi', type: 'text', placeholder: 'e.g. Partai Politik / Ormas' },
-  { key: 'role', label: 'Peran / Jabatan', type: 'text', span: 'sm:col-span-3', placeholder: 'e.g. Dewan Pembina' }
-]
-
-const alliesFields = [
-  { key: 'name', label: 'Nama Sekutu / Mitra Strategis', type: 'text', required: true, placeholder: 'e.g. Dr. Sri Hartati' },
-  { key: 'role', label: 'Peran / Afiliasi', type: 'text', placeholder: 'e.g. Menko Perekonomian' },
-  { key: 'relation', label: 'Konteks Kerjasama / Hubungan', type: 'text', span: 'sm:col-span-2', placeholder: 'e.g. Kolaborasi harmonisasi RUU Fiskal' }
-]
-
-const criticsFields = [
-  { key: 'name', label: 'Nama Tokoh Oposan / Pengkritik', type: 'text', required: true, placeholder: 'e.g. Koalisi Advokasi Transparansi' },
-  { key: 'role', label: 'Peran / Lembaga', type: 'text', placeholder: 'e.g. Lembaga Swadaya Masyarakat' },
-  { key: 'note', label: 'Pokok Kritik / Friksi Kebijakan', type: 'text', span: 'sm:col-span-2', placeholder: 'e.g. Mengkritisi minimnya konsultasi publik' }
-]
-
-const quotesFields = [
-  { key: 'text', label: 'Teks Kutipan Kunci', type: 'text', span: 'sm:col-span-3', required: true, placeholder: 'Pernyataan kunci figur...' },
-  { key: 'context', label: 'Konteks Pidato / Rapat', type: 'text', span: 'sm:col-span-2', placeholder: 'e.g. RDP Komisi III DPR RI' },
-  { key: 'date', label: 'Tanggal / Periode', type: 'text', placeholder: 'e.g. 2026-10-14' },
-  { key: 'source_url', label: 'Tautan Sumber (opsional)', type: 'url', span: 'sm:col-span-3', placeholder: 'https://...' }
-]
-
-const controversiesFields = [
-  { key: 'title', label: 'Judul Kontroversi / Isu Kebijakan', type: 'text', span: 'sm:col-span-2', required: true, placeholder: 'e.g. Polemik Pasal Imunitas Diskresi' },
-  { key: 'year', label: 'Tahun', type: 'text', placeholder: 'e.g. 2025' },
-  { key: 'status', label: 'Status Penanganan', type: 'text', placeholder: 'e.g. Selesai Direvisi' },
-  { key: 'description', label: 'Ringkasan Dinamika Isu', type: 'text', span: 'sm:col-span-3', placeholder: 'Uraian kasus dan implikasinya...' }
 ]
 
 const relatedArticleFields = [
@@ -294,7 +256,7 @@ function onMatrixColumnsChange(newColumns) {
       <Card class="border border-border/80 shadow-xs">
         <CardHeader class="pb-3">
           <CardTitle class="text-base font-semibold">Identitas & Klasifikasi Sosok</CardTitle>
-          <CardDescription class="text-xs">Nama lengkap, kategori lembaga, jabatan formal, foto profil, skor pengaruh, dan status publikasi.</CardDescription>
+          <CardDescription class="text-xs">Nama lengkap, kategori lembaga, jabatan formal, foto profil, dan status publikasi.</CardDescription>
         </CardHeader>
         <CardContent class="space-y-4">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -418,64 +380,9 @@ function onMatrixColumnsChange(newColumns) {
             </div>
           </div>
 
-          <!-- Skor Pengaruh, Skor Sorotan & Rasional Penjelasan (Dipindahkan dari Tab 2) -->
-          <div class="pt-3 border-t border-border space-y-4">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div class="space-y-1.5">
-                <Label for="influence_score" class="text-xs font-medium">Skor Pengaruh ISF (0 - 100) <span class="text-red-500">*</span></Label>
-                <Input
-                  id="influence_score"
-                  type="number"
-                  v-model.number="form.influence_score"
-                  min="0"
-                  max="100"
-                  class="h-9 text-xs font-bold text-red-600"
-                />
-                <p class="text-[11px] text-muted-foreground">Skor agregat bobot pengaruh politik, regulasi, dan jejaring publik.</p>
-                <p v-if="err('influence_score')" class="text-xs text-red-500 font-medium">{{ err('influence_score') }}</p>
-              </div>
-
-              <div class="space-y-1.5">
-                <Label for="skor_value" class="text-xs font-medium">Skor Sorotan Pekan Ini (0 - 100) <span class="text-red-500">*</span></Label>
-                <Input
-                  id="skor_value"
-                  type="number"
-                  v-model.number="form.skor_value"
-                  min="0"
-                  max="100"
-                  class="h-9 text-xs"
-                />
-                <p v-if="err('skor_value')" class="text-xs text-red-500 font-medium">{{ err('skor_value') }}</p>
-              </div>
-
-              <div class="space-y-1.5">
-                <Label for="skor_period" class="text-xs font-medium">Periode Pengukuran <span class="text-red-500">*</span></Label>
-                <Input
-                  id="skor_period"
-                  v-model="form.skor_period"
-                  placeholder="30 hari terakhir"
-                  class="h-9 text-xs"
-                />
-                <p v-if="err('skor_period')" class="text-xs text-red-500 font-medium">{{ err('skor_period') }}</p>
-              </div>
-            </div>
-
-            <div class="space-y-1.5">
-              <Label for="skor_explanation" class="text-xs font-medium">Rasional / Penjelasan Skor <span class="text-red-500">*</span></Label>
-              <textarea
-                id="skor_explanation"
-                v-model="form.skor_explanation"
-                rows="3"
-                placeholder="Rasional penilaian skor aktivitas figur pekan ini..."
-                class="w-full rounded-md border border-input bg-background p-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-              />
-              <p v-if="err('skor_explanation')" class="text-xs text-red-500 font-medium">{{ err('skor_explanation') }}</p>
-            </div>
-          </div>
-
-          <!-- Catatan Analisis ISF (Ringkasan) -->
+          <!-- Profil Singkat (Ringkasan) -->
           <div class="space-y-1.5 pt-1">
-            <Label for="summary_analysis" class="text-xs font-medium">Catatan Analisis ISF (Ringkasan 1 Kalimat)</Label>
+            <Label for="summary_analysis" class="text-xs font-medium">Profil Singkat (Ringkasan 1 Kalimat)</Label>
             <textarea
               id="summary_analysis"
               v-model="form.summary_analysis"
@@ -483,7 +390,7 @@ function onMatrixColumnsChange(newColumns) {
               placeholder="e.g. Tokoh kunci dalam percepatan pembahasan revisi perundang-undangan strategis dan penegakan hukum nasional."
               class="w-full rounded-md border border-input bg-background p-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
             />
-            <p class="text-[11px] text-muted-foreground">Ditampilkan sebagai catatan analisis editorial pada card profil direktori dan box analisis header sosok.</p>
+            <p class="text-[11px] text-muted-foreground">Ditampilkan sebagai catatan profil singkat pada card profil direktori dan box analisis header sosok.</p>
             <p v-if="err('summary_analysis')" class="text-xs text-red-500 font-medium">{{ err('summary_analysis') }}</p>
           </div>
 
@@ -515,7 +422,7 @@ function onMatrixColumnsChange(newColumns) {
       <Card class="border border-border/80 shadow-xs">
         <CardHeader class="pb-3">
           <CardTitle class="text-base font-semibold">Tab 1 — Profil & Rekam Jejak</CardTitle>
-          <CardDescription class="text-xs">Biografi perjalanan kepemimpinan, linimasa jabatan, riwayat jabatan strategis, dan latar belakang pendidikan formal.</CardDescription>
+          <CardDescription class="text-xs">Biografi perjalanan kepemimpinan, linimasa jabatan, dan latar belakang pendidikan formal.</CardDescription>
         </CardHeader>
         <CardContent class="space-y-5">
           <!-- Biografi & Perjalanan Karier -->
@@ -538,15 +445,6 @@ function onMatrixColumnsChange(newColumns) {
             legend="Linimasa Jabatan & Peran"
             description="Kronologi perjalanan jabatan dan peran publik tokoh dari masa ke masa."
             addLabel="Tambah Linimasa"
-          />
-
-          <!-- Riwayat Jabatan Strategis -->
-          <RepeatableRows
-            v-model="form.positions_history"
-            :fields="positionsFields"
-            legend="Riwayat Jabatan Strategis"
-            description="Portofolio jabatan struktural dan posisi publik formal yang pernah diemban."
-            addLabel="Tambah Jabatan"
           />
 
           <!-- Latar Belakang Pendidikan -->
@@ -650,46 +548,10 @@ function onMatrixColumnsChange(newColumns) {
         </CardContent>
       </Card>
 
-      <!-- 4. Tab 3 — Jejaring & Afiliasi -->
+      <!-- 4. Tab 3 — Berita & Aktivitas -->
       <Card class="border border-border/80 shadow-xs">
         <CardHeader class="pb-3">
-          <CardTitle class="text-base font-semibold">Tab 3 — Jejaring & Afiliasi</CardTitle>
-          <CardDescription class="text-xs">Peta jejaring kekuasaan dan afiliasi strategis: konstelasi politik, relasi pengaruh, mitra koalisi, serta poros pengkritik.</CardDescription>
-        </CardHeader>
-        <CardContent class="space-y-5">
-          <!-- Afiliasi Lembaga & Organisasi -->
-          <RepeatableRows
-            v-model="form.affiliations"
-            :fields="affiliationFields"
-            legend="Afiliasi Lembaga, Partai & Organisasi"
-            description="Institusi, partai politik, atau paguyuban resmi tempat figur bernaung."
-            addLabel="Tambah Afiliasi"
-          />
-
-          <!-- Sekutu & Mitra Strategis -->
-          <RepeatableRows
-            v-model="form.allies"
-            :fields="alliesFields"
-            legend="Sekutu & Mitra Strategis"
-            description="Tokoh atau institusi mitra strategis dalam mendorong agenda kebijakan."
-            addLabel="Tambah Sekutu"
-          />
-
-          <!-- Oposan & Pengkritik Kebijakan -->
-          <RepeatableRows
-            v-model="form.critics"
-            :fields="criticsFields"
-            legend="Oposan & Pengkritik Kebijakan"
-            description="Aktor atau kelompok masyarakat yang secara aktif memberikan perlawanan atau kritik terhadap figur."
-            addLabel="Tambah Oposan / Kritik"
-          />
-        </CardContent>
-      </Card>
-
-      <!-- 5. Tab 4 — Berita & Aktivitas -->
-      <Card class="border border-border/80 shadow-xs">
-        <CardHeader class="pb-3">
-          <CardTitle class="text-base font-semibold">Tab 4 — Berita & Aktivitas</CardTitle>
+          <CardTitle class="text-base font-semibold">Tab 3 — Berita & Aktivitas</CardTitle>
           <CardDescription class="text-xs">
             Feed berita dan liputan media terkait: kurasi artikel analisis yang disematkan langsung pada profil sosok ini.
           </CardDescription>
@@ -699,35 +561,8 @@ function onMatrixColumnsChange(newColumns) {
             v-model="form.related_articles"
             :fields="relatedArticleFields"
             legend="Feed Berita & Liputan Media Terkait"
-            description="Sematan artikel analisis yang terhubung langsung dengan sosok ini di Tab 4 Berita & Aktivitas."
+            description="Sematan artikel analisis yang terhubung langsung dengan sosok ini di Tab Berita & Aktivitas."
             addLabel="Tambah Artikel Terkait"
-          />
-        </CardContent>
-      </Card>
-
-      <!-- 6. Tab 5 — Kutipan & Kontroversi -->
-      <Card class="border border-border/80 shadow-xs">
-        <CardHeader class="pb-3">
-          <CardTitle class="text-base font-semibold">Tab 5 — Kutipan & Kontroversi</CardTitle>
-          <CardDescription class="text-xs">Pernyataan kunci kutipan strategis dan dinamika kontroversi peristiwa kritis.</CardDescription>
-        </CardHeader>
-        <CardContent class="space-y-5">
-          <!-- Pernyataan Kunci & Kutipan Strategis -->
-          <RepeatableRows
-            v-model="form.quotes"
-            :fields="quotesFields"
-            legend="Pernyataan Kunci & Kutipan Strategis"
-            description="Pernyataan resmi di parlemen, media massa, atau forum kebijakan."
-            addLabel="Tambah Kutipan"
-          />
-
-          <!-- Dinamika Kontroversi & Peristiwa Kritis -->
-          <RepeatableRows
-            v-model="form.controversies"
-            :fields="controversiesFields"
-            legend="Dinamika Kontroversi & Peristiwa Kritis"
-            description="Catatan peristiwa kontroversi, polemik kebijakan, atau dinamika hukum yang melibatkan sosok."
-            addLabel="Tambah Kasus / Kontroversi"
           />
         </CardContent>
       </Card>

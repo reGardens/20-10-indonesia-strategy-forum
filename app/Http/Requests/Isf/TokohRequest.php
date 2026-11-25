@@ -39,6 +39,15 @@ class TokohRequest extends FormRequest
         if (!$this->has('calendar_events') || !is_array($this->input('calendar_events'))) {
             $merge['calendar_events'] = [];
         }
+        if (!$this->has('skor_value') || $this->input('skor_value') === null || $this->input('skor_value') === '') {
+            $merge['skor_value'] = 75;
+        }
+        if (!$this->has('skor_period') || $this->input('skor_period') === null || $this->input('skor_period') === '') {
+            $merge['skor_period'] = 'Pekan Ini';
+        }
+        if (!$this->has('skor_explanation') || $this->input('skor_explanation') === null || $this->input('skor_explanation') === '') {
+            $merge['skor_explanation'] = '-';
+        }
         if (!empty($merge)) {
             $this->merge($merge);
         }
@@ -82,9 +91,9 @@ class TokohRequest extends FormRequest
             'stats.*.label' => ['nullable', 'string', 'max:100'],
             'stats.*.value' => ['nullable'],
 
-            'skor_value' => ['required', 'integer', 'min:0', 'max:100'],
-            'skor_period' => $this->textRules(true, 100),
-            'skor_explanation' => $this->textRules(true, 1000),
+            'skor_value' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'skor_period' => ['nullable', 'string', 'max:100'],
+            'skor_explanation' => ['nullable', 'string', 'max:1000'],
 
             'matrix_columns' => ['required', 'array', 'min:1', 'max:6'],
             'matrix_columns.*' => $this->textRules(true, 100),

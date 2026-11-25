@@ -228,24 +228,6 @@ const menuGroups = computed(() => {
                 icon: "FileText",
                 visible: hasFeature("policy_brief"),
             },
-            {
-                label: "Kategori Sektor",
-                href: "/cms/kategori-sektor",
-                icon: "Category",
-                visible: hasFeature("policy_brief"),
-            },
-            {
-                label: "Database Peraturan",
-                href: "/cms/database-peraturan",
-                icon: "BuildingBank",
-                visible: hasFeature("policy_brief"),
-            },
-            {
-                label: "Monitoring Kebijakan",
-                href: "/cms/monitoring-kebijakan",
-                icon: "Checklist",
-                visible: false, // Hidden sementara per instruksi backlog re-aktivasi
-            },
         ],
     },
     {

@@ -34,9 +34,7 @@ import {
   IconUser,
   IconAward,
   IconChartBar,
-  IconNetwork,
   IconNews,
-  IconQuote,
   IconShare,
   IconCheck,
   IconHeart,
@@ -62,7 +60,6 @@ import {
   SectionHeading,
   StarRating,
   SosokCard,
-  SosokNetworkGraph,
 } from '@/Components/Isf'
 import Button from '@/Components/UI/Button.vue'
 import Label from '@/Components/UI/Label.vue'
@@ -91,7 +88,7 @@ const slug = computed(() => route.params.slug)
 // Tab active from route param (/sosok/:slug/:tab) with fallback to 'profil'
 const activeTab = computed(() => {
   const t = route.params.tab
-  const validTabs = ['profil', 'analisis', 'jejaring', 'berita', 'kontroversi']
+  const validTabs = ['profil', 'analisis', 'berita']
   return validTabs.includes(t) ? t : 'profil'
 })
 
@@ -145,16 +142,24 @@ const reviewPage = ref({ currentPage: 1, lastPage: 1, total: 0 })
 const loadingMore = ref(false)
 let ulasanRequest = 0
 
-const summary = computed(
-  () =>
-    ulasan.value?.summary ?? {
-      average: 0,
-      total: 0,
-      distribution: {},
-      suka: 0,
-      tidakSuka: 0,
-    }
-)
+const summary = computed(() => {
+  if (ulasan.value?.summary) {
+    return ulasan.value.summary
+  }
+  const backendSummary = tabsData.value?.analisis?.ratingSummary
+  return {
+    average: Number(backendSummary?.average ?? tokoh.value?.rating_average ?? 0),
+    total: Number(backendSummary?.total ?? tokoh.value?.rating_count ?? 0),
+    distribution: backendSummary?.distribution ?? {},
+    suka: backendSummary?.suka ?? 0,
+    tidakSuka: backendSummary?.tidakSuka ?? 0,
+  }
+})
+
+const ratingDisplay = computed(() => {
+  const avg = Number(summary.value?.average || 0)
+  return avg > 0 ? avg.toFixed(1) : '0.0'
+})
 
 const viewer = computed(
   () => ulasan.value?.viewer ?? { authenticated: false, myReview: null }
@@ -455,13 +460,15 @@ watch(
                     {{ tokoh.role_category_label || tokoh.role_category }}
                   </span>
 
-                  <span
-                    v-if="tokoh.influence_score || tokoh.skor_value"
-                    class="px-2.5 py-0.5 rounded bg-white/10 text-white text-xs font-mono font-bold flex items-center gap-1.5 border border-white/20 shadow-2xs"
+                  <button
+                    type="button"
+                    @click="switchTab('analisis')"
+                    class="px-2.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-white text-xs font-mono font-bold flex items-center gap-1.5 border border-white/20 shadow-2xs transition-colors cursor-pointer"
+                    title="Lihat Rating Pembaca"
                   >
-                    <IconAward class="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                    <span>Skor Pengaruh {{ tokoh.influence_score || tokoh.skor_value }}/100</span>
-                  </span>
+                    <span class="text-amber-400">★</span>
+                    <span>Rating Pembaca {{ ratingDisplay }}/5</span>
+                  </button>
 
                   <span
                     v-for="isu in tokoh.issues"
@@ -480,10 +487,10 @@ watch(
                   {{ tokoh.position }}
                 </p>
 
-                <!-- Ringkasan Analisis ISF (Editorial Dark Box) -->
+                <!-- Ringkasan Profil Singkat (Editorial Dark Box) -->
                 <div class="p-4 sm:p-5 rounded-xl bg-white/5 border border-white/10 mb-6 backdrop-blur-2xs">
                   <div class="text-[10px] font-mono font-bold uppercase tracking-wider text-isf-red mb-1">
-                    Catatan Analisis ISF
+                    Profil Singkat
                   </div>
                   <p class="text-xs sm:text-sm md:text-[15px] text-neutral-200 font-serif italic leading-relaxed">
                     "{{ tokoh.summary_analysis || tokoh.bio }}"
@@ -543,7 +550,7 @@ watch(
             <span>Profil & Rekam Jejak</span>
           </button>
 
-          <!-- Tab 2: Analisis ISF & Rating -->
+          <!-- Tab 2: Rating Pembaca -->
           <button
             type="button"
             @click="switchTab('analisis')"
@@ -555,28 +562,13 @@ watch(
             ]"
           >
             <IconChartBar class="w-4 h-4" />
-            <span>Analisis ISF & Rating</span>
+            <span>Rating Pembaca</span>
             <span v-if="summary.total" class="px-1.5 py-0.2 rounded-full bg-isf-red text-[10px] text-white font-mono font-bold">
               {{ summary.total }}
             </span>
           </button>
 
-          <!-- Tab 3: Jejaring & Afiliasi -->
-          <button
-            type="button"
-            @click="switchTab('jejaring')"
-            :class="[
-              'flex items-center gap-2 py-3.5 px-4 text-xs sm:text-sm font-bold font-space-grotesk border-b-2 whitespace-nowrap cursor-pointer transition-all shrink-0',
-              activeTab === 'jejaring'
-                ? 'border-isf-red text-white bg-white/5'
-                : 'border-transparent text-neutral-400 hover:text-white hover:bg-white/5'
-            ]"
-          >
-            <IconNetwork class="w-4 h-4" />
-            <span>Jejaring & Afiliasi</span>
-          </button>
-
-          <!-- Tab 4: Berita & Aktivitas -->
+          <!-- Tab 3: Berita & Aktivitas -->
           <button
             type="button"
             @click="switchTab('berita')"
@@ -589,21 +581,6 @@ watch(
           >
             <IconNews class="w-4 h-4" />
             <span>Berita & Aktivitas</span>
-          </button>
-
-          <!-- Tab 5: Kutipan & Kontroversi -->
-          <button
-            type="button"
-            @click="switchTab('kontroversi')"
-            :class="[
-              'flex items-center gap-2 py-3.5 px-4 text-xs sm:text-sm font-bold font-space-grotesk border-b-2 whitespace-nowrap cursor-pointer transition-all shrink-0',
-              activeTab === 'kontroversi'
-                ? 'border-isf-red text-white bg-white/5'
-                : 'border-transparent text-neutral-400 hover:text-white hover:bg-white/5'
-            ]"
-          >
-            <IconQuote class="w-4 h-4" />
-            <span>Kutipan & Kontroversi</span>
           </button>
         </nav>
       </div>
@@ -659,7 +636,7 @@ watch(
           </div>
         </section>
 
-        <!-- 1.2 Linimasa Karier & Riwayat Jabatan: BORDER-T-4 ISF-RED -->
+        <!-- 1.2 Linimasa Karier & Pengabdian Strategis: BORDER-T-4 ISF-RED -->
         <section
           aria-labelledby="karier-jabatan-title"
           class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden"
@@ -698,43 +675,22 @@ watch(
                 </div>
               </div>
 
-              <!-- Kanan: Riwayat Jabatan & Pendidikan Formal -->
-              <div class="space-y-6">
-                <!-- Riwayat Jabatan -->
-                <div>
-                  <h4 class="font-headline text-base sm:text-lg font-bold text-neutral-950 mb-3 pb-2 border-b border-neutral-200 flex items-center gap-2">
-                    <span class="inline-block w-2.5 h-2.5 bg-isf-red rounded-xs"></span>
-                    <span>Riwayat Jabatan Strategis</span>
-                  </h4>
-                  <div v-if="!tabsData.profil?.positions_history?.length" class="py-6 text-center text-xs text-neutral-400">
-                    Belum ada riwayat jabatan tercatat.
-                  </div>
-                  <div v-else class="space-y-2.5">
-                    <div v-for="(p, idx) in tabsData.profil.positions_history" :key="idx" class="p-3 rounded-lg bg-neutral-50 border border-neutral-200">
-                      <span class="text-[10px] font-mono font-bold text-neutral-500">{{ p.period }}</span>
-                      <div class="text-xs font-bold text-neutral-900">{{ p.position }}</div>
-                      <div class="text-[11px] text-neutral-600 font-space-grotesk">{{ p.institution }}</div>
-                    </div>
-                  </div>
+              <!-- Kanan: Pendidikan Formal -->
+              <div>
+                <h4 class="font-headline text-base sm:text-lg font-bold text-neutral-950 mb-4 pb-2 border-b border-neutral-200 flex items-center gap-2">
+                  <span class="inline-block w-2.5 h-2.5 bg-isf-red rounded-xs"></span>
+                  <span>Latar Belakang Pendidikan</span>
+                </h4>
+                <div v-if="!tabsData.profil?.education?.length" class="py-6 text-center text-xs text-neutral-400">
+                  Belum ada catatan pendidikan formal.
                 </div>
-
-                <!-- Pendidikan Formal -->
-                <div>
-                  <h4 class="font-headline text-base sm:text-lg font-bold text-neutral-950 mb-3 pb-2 border-b border-neutral-200 flex items-center gap-2">
-                    <span class="inline-block w-2.5 h-2.5 bg-isf-red rounded-xs"></span>
-                    <span>Latar Belakang Pendidikan</span>
-                  </h4>
-                  <div v-if="!tabsData.profil?.education?.length" class="py-6 text-center text-xs text-neutral-400">
-                    Belum ada catatan pendidikan formal.
-                  </div>
-                  <div v-else class="space-y-2.5">
-                    <div v-for="(edu, idx) in tabsData.profil.education" :key="idx" class="flex items-start justify-between p-3 rounded-lg bg-neutral-50 border border-neutral-200">
-                      <div>
-                        <div class="text-xs font-bold text-neutral-900">{{ edu.degree }}</div>
-                        <div class="text-[11px] text-neutral-600 font-space-grotesk">{{ edu.institution }}</div>
-                      </div>
-                      <span class="text-[11px] font-mono font-bold text-isf-red">{{ edu.year }}</span>
+                <div v-else class="space-y-2.5">
+                  <div v-for="(edu, idx) in tabsData.profil.education" :key="idx" class="flex items-start justify-between p-3 rounded-lg bg-neutral-50 border border-neutral-200">
+                    <div>
+                      <div class="text-xs font-bold text-neutral-900">{{ edu.degree }}</div>
+                      <div class="text-[11px] text-neutral-600 font-space-grotesk">{{ edu.institution }}</div>
                     </div>
+                    <span class="text-[11px] font-mono font-bold text-isf-red">{{ edu.year }}</span>
                   </div>
                 </div>
               </div>
@@ -1091,34 +1047,7 @@ watch(
         </section>
       </div>
 
-      <!-- ── TAB 3: JEJARING & AFILIASI ────────────────────────────────── -->
-      <div v-else-if="activeTab === 'jejaring'" class="space-y-8 sm:space-y-12">
-        <section
-          aria-labelledby="jejaring-afiliasi-title"
-          class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden"
-        >
-          <div class="border-b border-neutral-200">
-            <SectionHeading
-              id="jejaring-afiliasi-title"
-              title="Peta Jejaring Kekuasaan & Afiliasi Strategis"
-              size="lg"
-              :class="sectionPad"
-            >
-              <template #eyebrow>Konstelasi Politik & Relasi Pengaruh</template>
-            </SectionHeading>
-          </div>
-          <div :class="[sectionPad, 'py-5 sm:py-6 lg:py-8']">
-            <SosokNetworkGraph
-              :affiliations="tabsData.jejaring?.affiliations || []"
-              :allies="tabsData.jejaring?.allies || []"
-              :critics="tabsData.jejaring?.critics || []"
-              :tokoh-name="tokoh.name"
-            />
-          </div>
-        </section>
-      </div>
-
-      <!-- ── TAB 4: BERITA & AKTIVITAS (2 KOLOM ARTIKEL BERGARIS PERSIS POLITIK) ─ -->
+      <!-- ── TAB 3: BERITA & AKTIVITAS (2 KOLOM ARTIKEL BERGARIS PERSIS POLITIK) ─ -->
       <div v-else-if="activeTab === 'berita'" class="space-y-8 sm:space-y-12">
         <section
           aria-labelledby="berita-aktivitas-title"
@@ -1178,88 +1107,6 @@ watch(
                 </div>
               </div>
             </IsfLink>
-          </div>
-        </section>
-      </div>
-
-      <!-- ── TAB 5: KUTIPAN & KONTROVERSI ──────────────────────────────── -->
-      <div v-else-if="activeTab === 'kontroversi'" class="space-y-8 sm:space-y-12">
-        <!-- 5.1 Kumpulan Kutipan Kunci: BORDER-T-4 ISF-RED -->
-        <section
-          aria-labelledby="kutipan-kunci-title"
-          class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden"
-        >
-          <div class="border-b border-neutral-200">
-            <SectionHeading
-              id="kutipan-kunci-title"
-              title="Pernyataan Kunci & Kutipan Strategis"
-              size="lg"
-              :class="sectionPad"
-            >
-              <template #eyebrow>Sikap Politik & Pandangan Kebijakan</template>
-            </SectionHeading>
-          </div>
-
-          <div :class="[sectionPad, 'py-5 sm:py-6 lg:py-8']">
-            <div v-if="!tabsData.kontroversi?.quotes?.length" class="py-8 text-center text-xs text-neutral-400">
-              Belum ada kutipan penting terdaftar.
-            </div>
-
-            <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div
-                v-for="(q, idx) in tabsData.kontroversi.quotes"
-                :key="idx"
-                class="p-5 rounded-xl border border-neutral-200 bg-white relative"
-              >
-                <p class="text-xs sm:text-sm font-serif italic text-neutral-800 leading-relaxed mb-3">
-                  "{{ q.text }}"
-                </p>
-                <div class="text-[11px] font-mono text-neutral-500">
-                  <span class="font-bold text-neutral-700">{{ q.context }}</span>
-                  <span v-if="q.date"> • {{ q.date }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- 5.2 Dinamika Kontroversi: BORDER-T-4 ISF-RED -->
-        <section
-          aria-labelledby="kontroversi-title"
-          class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden"
-        >
-          <div class="border-b border-neutral-200">
-            <SectionHeading
-              id="kontroversi-title"
-              title="Dinamika Kontroversi & Peristiwa Kritis"
-              size="lg"
-              :class="sectionPad"
-            >
-              <template #eyebrow>Catatan Perdebatan Publik & Kepatuhan Hukum</template>
-            </SectionHeading>
-          </div>
-
-          <div :class="[sectionPad, 'py-5 sm:py-6 lg:py-8']">
-            <div v-if="!tabsData.kontroversi?.controversies?.length" class="py-8 text-center text-xs text-neutral-400">
-              Tidak ada catatan kontroversi atau kasus hukum besar yang tercatat.
-            </div>
-
-            <div v-else class="space-y-4">
-              <div
-                v-for="(c, idx) in tabsData.kontroversi.controversies"
-                :key="idx"
-                class="p-4 rounded-lg border border-neutral-200 bg-neutral-50"
-              >
-                <div class="flex items-center justify-between gap-2 mb-1">
-                  <span class="text-xs font-mono font-bold text-isf-red">{{ c.year }}</span>
-                  <span v-if="c.status" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-neutral-200 text-neutral-700">
-                    {{ c.status }}
-                  </span>
-                </div>
-                <h4 class="text-sm font-bold text-neutral-900 mb-1">{{ c.title }}</h4>
-                <p class="text-xs text-neutral-600 font-space-grotesk leading-relaxed">{{ c.description }}</p>
-              </div>
-            </div>
           </div>
         </section>
       </div>
