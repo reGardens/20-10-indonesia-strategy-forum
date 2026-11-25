@@ -179,12 +179,26 @@ class ArticleController extends CmsResourceController
             $data['author_avatar'] = $user->author_avatar ?? $user->avatar ?? null;
         }
 
+        $isPublished = ($data['status'] ?? null) === 'terbit';
+        $isStaff = ! (! empty($data['is_by_member']) || $this->isOnlyMember($request->user()));
+        $shouldPush = $request->has('send_push_notification')
+            ? ($request->boolean('send_push_notification') && $isPublished)
+            : ($isPublished && $isStaff);
+        unset($data['send_push_notification']);
+
         $res = $this->storeModel($data);
 
-        // Jika dibuat oleh member, sinkronkan ke antrean moderasi Artikel by Member (isf_letters)
+        if ($shouldPush) {
+            $createdArticle = Article::where('slug', $data['slug'])->first();
+            if ($createdArticle) {
+                $this->dispatchArticlePush($createdArticle);
+            }
+        }
+
+        // Jika dibuat oleh member, sinkronkan ke antrean moderasi Artikel by Member (isf_letters) dan kirim notifikasi ke tim redaksi
         if (! empty($data['is_by_member']) || $this->isOnlyMember($request->user())) {
             $user = $request->user();
-            Letter::updateOrCreate(
+            $letter = Letter::updateOrCreate(
                 ['slug' => $data['slug']],
                 [
                     'user_id' => $user?->id ?? $data['user_id'] ?? null,
@@ -206,6 +220,19 @@ class ArticleController extends CmsResourceController
                     'status' => 'draft',
                 ]
             );
+
+            try {
+                $pushService = app(\App\Services\IsfPushNotificationService::class);
+                $pushService->sendToRoles(
+                    ['super-admin', 'admin', 'editor'],
+                    'Naskah Member Baru Masuk',
+                    'Naskah "' . \Illuminate\Support\Str::limit($data['title'], 40) . '" oleh ' . ($user?->name ?? 'Member') . ' menunggu moderasi.',
+                    url('/cms/surat-pembaca/' . $letter->id),
+                    ['type' => 'moderation', 'slug' => $data['slug'], 'letter_id' => $letter->id]
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Gagal kirim push naskah member ke admin: ' . $e->getMessage());
+            }
         }
 
         $this->resequenceRunningTexts();
@@ -227,9 +254,35 @@ class ArticleController extends CmsResourceController
             $data['link_url'] = '/artikel/' . $cat . '/' . ($data['slug'] ?? $article->slug);
         }
 
+        $wasPublished = $article->status === 'terbit';
+        $newStatus = $data['status'] ?? $article->status;
+        $isPublishing = $newStatus === 'terbit' && ! $wasPublished;
+        $shouldPush = $request->has('send_push_notification')
+            ? ($request->boolean('send_push_notification') && $newStatus === 'terbit')
+            : $isPublishing;
+        unset($data['send_push_notification']);
+
         $res = $this->updateModel($article, $data);
         $this->resequenceRunningTexts();
         $this->resequenceTopRanks();
+
+        $article->refresh();
+        if ($shouldPush) {
+            $this->dispatchArticlePush($article);
+        }
+
+        // Jika artikel member baru saja diterbitkan (sebelumnya belum terbit)
+        if ($article->is_by_member && $article->user_id && $article->status === 'terbit' && ! $wasPublished) {
+            $author = \App\Models\User::find($article->user_id);
+            if ($author) {
+                app(\App\Services\IsfPushNotificationService::class)->sendToUser(
+                    $author,
+                    'Naskah Anda Telah Terbit!',
+                    'Naskah "' . $article->title . '" telah disetujui dewan redaksi dan terbit di Indonesia Strategy Forum.',
+                    url($article->link_url ?? ('/artikel/' . ($article->category ?? 'kebijakan') . '/' . $article->slug))
+                );
+            }
+        }
 
         return $res;
     }
@@ -539,5 +592,26 @@ class ArticleController extends CmsResourceController
         }
 
         return $res;
+    }
+
+    protected function dispatchArticlePush(Article $article): void
+    {
+        try {
+            $pushService = app(\App\Services\IsfPushNotificationService::class);
+            $url = url($article->link_url ?? ('/artikel/' . ($article->category ?? 'kebijakan') . '/' . $article->slug));
+            $pushService->broadcast(
+                title: 'Warta Baru: ' . $article->title,
+                body: $article->summary ?: 'Analisis kebijakan strategis terbaru telah terbit di Indonesia Strategy Forum.',
+                url: $url,
+                data: [
+                    'type' => 'article',
+                    'id' => $article->id,
+                    'slug' => $article->slug,
+                    'category' => $article->category,
+                ]
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Gagal mengirim push notifikasi artikel: ' . $e->getMessage());
+        }
     }
 }

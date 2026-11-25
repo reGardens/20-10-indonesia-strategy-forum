@@ -45,6 +45,15 @@ class Letter extends Model
         'status',
     ];
 
+    protected $appends = [
+        'author_name',
+    ];
+
+    public function getAuthorNameAttribute(): ?string
+    {
+        return $this->sender_name ?: $this->user?->name;
+    }
+
     protected function casts(): array
     {
         return [

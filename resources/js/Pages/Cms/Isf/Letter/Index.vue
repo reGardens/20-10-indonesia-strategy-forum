@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { Head, usePage } from '@inertiajs/vue3'
+import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
 import { cmsResources, errorMessage } from '@/api/services/isfCmsService'
 import { activeCategories as CATEGORIES, loadCategories } from '@/Pages/Cms/Isf/options'
@@ -25,7 +25,13 @@ import IconComponent from '@/Components/IconComponent/IconComponent.vue'
 defineOptions({ layout: CmsLayout })
 
 const page = usePage()
-const userRoles = computed(() => page.props.auth?.user?.roles || [])
+const userRoles = computed(() => {
+  const roles = page.props.auth?.user?.roles || []
+  if (Array.isArray(roles)) {
+    return roles.map((r) => (typeof r === 'string' ? r : r.name))
+  }
+  return []
+})
 const canApprove = computed(() => {
   return userRoles.value.includes('admin') || userRoles.value.includes('super-admin')
 })
@@ -303,7 +309,7 @@ onMounted(async () => {
             <TableHead class="min-w-[340px]">Artikel & Kategori</TableHead>
             <TableHead class="w-36">Waktu Masuk</TableHead>
             <TableHead class="w-28 text-center">Status</TableHead>
-            <TableHead class="text-right min-w-[130px]">Aksi</TableHead>
+            <TableHead class="text-right min-w-[220px]">Aksi</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -387,8 +393,14 @@ onMounted(async () => {
                     </span>
                   </div>
 
-                  <div class="font-semibold text-foreground text-xs sm:text-sm leading-snug">
-                    {{ item.title || item.judul_surat }}
+                  <div>
+                    <Link
+                      :href="`/cms/surat-pembaca/${item.id}`"
+                      class="font-semibold text-foreground text-xs sm:text-sm leading-snug hover:underline hover:text-red-600 transition inline-block"
+                      title="Buka Detail Artikel"
+                    >
+                      {{ item.title || item.judul_surat }}
+                    </Link>
                   </div>
 
                   <p class="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
@@ -432,35 +444,21 @@ onMounted(async () => {
               </span>
             </TableCell>
 
-            <!-- Aksi: Lihat Detail, Setujui (Admin & Super Admin), Tolak -->
-            <TableCell class="text-right">
-              <!-- Jika sudah ditolak: tidak ada aksi apapun -->
-              <div v-if="item.moderation_status === 'ditolak' || item.status === 'ditolak'" class="flex items-center justify-end text-xs text-muted-foreground italic">
-                <span class="mr-2">Naskah Ditolak</span>
-                <Link :href="`/cms/surat-pembaca/${item.id}`">
+            <!-- Aksi: CTA Detail, Setujui (Admin & Super Admin), Tolak -->
+            <TableCell class="text-right whitespace-nowrap">
+              <div class="flex items-center justify-end gap-1.5">
+                <!-- CTA Detail mengarah ke page detail artikel by member -->
+                <Link :href="`/cms/surat-pembaca/${item.id}`" class="inline-flex">
                   <Button
+                    type="button"
                     variant="outline"
                     size="sm"
-                    class="h-8 px-2.5 text-xs font-medium text-foreground border-border hover:bg-muted inline-flex items-center"
-                    title="Lihat Detail Naskah"
-                  >
-                    <IconComponent name="Eye" :size="13" class="mr-1" />
-                    Lihat Detail
-                  </Button>
-                </Link>
-              </div>
-
-              <div v-else class="flex items-center justify-end gap-1.5">
-                <!-- Lihat Detail Link -->
-                <Link :href="`/cms/surat-pembaca/${item.id}`">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    class="h-8 px-2.5 text-xs font-medium text-foreground border-border hover:bg-muted inline-flex items-center"
+                    class="h-8 px-2.5 text-xs font-semibold text-foreground hover:bg-muted inline-flex items-center cursor-pointer"
                     title="Lihat Detail Artikel"
+                    @click="router.visit(`/cms/surat-pembaca/${item.id}`)"
                   >
                     <IconComponent name="Eye" :size="13" class="mr-1" />
-                    Lihat Detail
+                    Detail
                   </Button>
                 </Link>
 
@@ -488,6 +486,7 @@ onMounted(async () => {
 
                 <!-- Quick Reject Button -->
                 <Button
+                  v-if="item.moderation_status !== 'ditolak' && item.status !== 'ditolak'"
                   variant="outline"
                   size="sm"
                   class="h-8 px-2.5 text-xs font-medium text-amber-600 border-amber-500/30 hover:bg-amber-500/10 hover:text-amber-700 hover:border-amber-500 inline-flex items-center"
@@ -497,6 +496,14 @@ onMounted(async () => {
                   <IconComponent name="X" :size="13" class="mr-1" />
                   Tolak
                 </Button>
+
+                <!-- Status jika sudah ditolak -->
+                <span
+                  v-if="item.moderation_status === 'ditolak' || item.status === 'ditolak'"
+                  class="text-xs text-rose-500 italic px-1"
+                >
+                  Ditolak
+                </span>
               </div>
             </TableCell>
           </TableRow>

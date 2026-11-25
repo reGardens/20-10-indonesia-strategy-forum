@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import CmsLayout from '@/Layouts/CmsLayout.vue'
 import { cmsResources } from '@/api/services/isfCmsService'
-import { alertSuccess, alertError } from '@/Composables/useAlert'
+import { confirmDelete, alertSuccess, alertError } from '@/Composables/useAlert'
 import StatusBadge from '@/Pages/Cms/components/shared/StatusBadge.vue'
 import LoadingIndicator from '@/Pages/Cms/components/shared/LoadingIndicator.vue'
 import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
@@ -25,7 +25,7 @@ const page = usePage()
 const authRoles = computed(() => {
   const roles = page.props?.auth?.user?.roles || []
   if (Array.isArray(roles)) {
-    return roles.map((r) => (typeof r === 'string' ? r : r.name))
+    return roles.map((r) => (typeof r === 'string' ? r : (r?.name || ''))).filter(Boolean)
   }
   return []
 })
@@ -92,14 +92,25 @@ async function submitReject() {
   }
 }
 
+async function handleDelete() {
+  if (!item.value) return
+  const confirmed = await confirmDelete(item.value.title)
+  if (!confirmed) return
+  try {
+    await cmsResources.suratPembaca.remove(item.value.id)
+    alertSuccess('Artikel by member berhasil dihapus.')
+    router.visit('/cms/surat-pembaca')
+  } catch (err) {
+    alertError(err?.response?.data?.message || 'Gagal menghapus artikel.')
+  }
+}
+
 function formatDate(val) {
   if (!val) return '-'
   return new Date(val).toLocaleDateString('id-ID', {
     day: 'numeric',
     month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+    year: 'numeric'
   })
 }
 
@@ -110,7 +121,7 @@ onMounted(fetchLetter)
   <Head :title="item ? `${item.title} — Detail Artikel by Member` : 'Detail Artikel by Member'" />
 
   <div class="p-6 space-y-6 w-full">
-    <!-- Header / Actions -->
+    <!-- Header / Actions (Identik dengan Detail Artikel di modul Artikel) -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
       <div class="flex items-center gap-3">
         <Link href="/cms/surat-pembaca">
@@ -121,18 +132,18 @@ onMounted(fetchLetter)
         </Link>
         <div>
           <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <span>Detail Artikel by Member</span>
+            <span>Detail Artikel</span>
             <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20">
               by member
             </span>
           </h1>
           <p class="text-xs text-muted-foreground mt-0.5">
-            ID #{{ id }} • Tinjauan editorial dan validasi naskah kiriman pembaca
+            ID #{{ id }} • Pratinjau lengkap naskah dan validasi moderasi member
           </p>
         </div>
       </div>
 
-      <!-- Action Buttons: Setujui & Tolak -->
+      <!-- Action Buttons: Setujui, Tolak, Hapus -->
       <div v-if="item" class="flex items-center gap-2">
         <Button
           v-if="canApprove && item.moderation_status !== 'disetujui'"
@@ -155,46 +166,44 @@ onMounted(fetchLetter)
           class="h-9 text-xs font-semibold px-4 gap-1.5"
         >
           <IconComponent name="X" :size="14" />
-          Tolak Artikel
+          Tolak Naskah
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          :disabled="actionLoading"
+          @click="handleDelete"
+          class="h-9 text-xs gap-1.5 text-red-500 hover:text-red-600 hover:bg-red-500/10 hover:border-red-500"
+        >
+          <IconComponent name="Trash" :size="14" />
+          Hapus
         </Button>
       </div>
     </div>
 
-    <LoadingIndicator v-if="loading" text="Memuat naskah artikel..." />
+    <LoadingIndicator v-if="loading" text="Memuat detail artikel..." />
     <ErrorMessage v-else-if="loadError" :message="loadError" @retry="fetchLetter" />
 
     <div v-else-if="item" class="space-y-6">
-      <!-- Status Notice -->
+      <!-- Status Notice jika ditolak dan ada catatan -->
       <div
-        v-if="item.moderation_status === 'disetujui'"
-        class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs flex items-center justify-between"
-      >
-        <div class="flex items-center gap-2 font-medium">
-          <IconComponent name="Check" :size="16" class="text-emerald-500" />
-          <span>Artikel ini telah disetujui dan disinkronkan ke daftar Artikel ISF & Rubrik publik.</span>
-        </div>
-        <Link href="/cms/artikel" class="text-xs font-semibold underline hover:no-underline">
-          Lihat di Tabel Artikel →
-        </Link>
-      </div>
-
-      <div
-        v-else-if="item.moderation_status === 'ditolak'"
+        v-if="item.moderation_status === 'ditolak' && item.moderation_notes"
         class="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs space-y-1"
       >
         <div class="flex items-center gap-2 font-semibold">
           <IconComponent name="X" :size="16" />
-          <span>Artikel ini telah ditolak oleh redaksi.</span>
+          <span>Artikel ini telah ditolak oleh redaksi:</span>
         </div>
-        <p v-if="item.moderation_notes" class="text-xs italic pl-6">
-          Catatan: "{{ item.moderation_notes }}"
+        <p class="text-xs italic pl-6">
+          "{{ item.moderation_notes }}"
         </p>
       </div>
 
-      <!-- Main Content Card -->
+      <!-- Main Overview Card (Desain & Struktur 100% Identik dengan Detail Artikel) -->
       <Card class="border border-border/80 shadow-xs">
         <CardContent class="p-6 space-y-5">
-          <!-- Cover image if available -->
+          <!-- Cover Image if exists -->
           <div v-if="item.image_url" class="relative rounded-xl overflow-hidden aspect-video max-h-80 w-full bg-muted/40 border border-border/60">
             <img
               :src="item.image_url"
@@ -209,38 +218,38 @@ onMounted(fetchLetter)
             </div>
           </div>
 
-          <!-- Badges & Category -->
+          <!-- Badges & Metadata -->
           <div class="flex flex-wrap items-center gap-2 pt-1">
             <Badge class="bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 text-xs font-semibold capitalize">
-              {{ item.category || 'opini' }}
+              {{ item.category || 'kebijakan' }}
             </Badge>
             <Badge v-if="item.subcategory" variant="outline" class="text-xs font-mono">
               /{{ item.subcategory }}
             </Badge>
             <span
-              v-if="item.moderation_status === 'disetujui'"
-              class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+              v-if="item.moderation_status === 'disetujui' || item.status === 'terbit'"
+              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
             >
-              Disetujui
+              Terbit
             </span>
             <span
               v-else-if="item.moderation_status === 'ditolak'"
-              class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20"
+              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-rose-500/10 text-rose-600 border border-rose-500/20"
             >
               Ditolak
             </span>
             <span
               v-else
-              class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-500/10 text-amber-600 border border-amber-500/20"
             >
-              Pending (Menunggu Review)
+              Pending
             </span>
             <span class="text-xs text-muted-foreground ml-auto whitespace-nowrap">
-              Diterima: {{ formatDate(item.created_at) }}
+              Waktu Masuk: {{ formatDate(item.created_at) }}
             </span>
           </div>
 
-          <!-- Title & Slug -->
+          <!-- Title -->
           <div>
             <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-foreground leading-snug">
               {{ item.title }}
@@ -251,36 +260,29 @@ onMounted(fetchLetter)
             </div>
           </div>
 
-          <!-- Penulis Card with 1:1 Square Photo -->
-          <div class="flex items-center gap-4 p-4 rounded-xl bg-muted/30 border border-border/70">
-            <!-- 1:1 Photo -->
-            <div class="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-muted border-2 border-border/80 flex items-center justify-center shadow-xs">
+          <!-- Author Info with 1:1 Photo (Identik dengan Detail Artikel) -->
+          <div class="flex items-center gap-3.5 p-3.5 rounded-xl bg-muted/30 border border-border/60">
+            <div class="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-muted border border-border/80 flex items-center justify-center">
               <img
                 v-if="item.author_avatar"
                 :src="item.author_avatar"
-                :alt="item.author_name || item.sender_name"
+                :alt="item.author_name || item.sender_name || 'Penulis'"
                 class="w-full h-full object-cover"
               />
-              <IconComponent v-else name="User" :size="24" class="text-muted-foreground" />
+              <IconComponent v-else name="User" :size="20" class="text-muted-foreground" />
             </div>
-
-            <div class="min-w-0 flex-1 space-y-0.5">
-              <div class="text-sm font-bold text-foreground flex items-center gap-2">
-                <span>{{ item.author_name || item.sender_name }}</span>
-                <span class="text-[10px] px-1.5 py-0.2 rounded bg-red-500/10 text-red-600 font-semibold border border-red-500/20">Penulis Member</span>
+            <div class="min-w-0 flex-1">
+              <div class="text-sm font-semibold text-foreground flex items-center gap-2">
+                <span>{{ item.author_name || item.sender_name || 'Member ISF' }}</span>
+                <span class="text-[10px] px-1.5 py-0.2 rounded bg-red-500/10 text-red-600 font-semibold border border-red-500/20">Member</span>
               </div>
-              <div class="text-xs text-muted-foreground">
-                <span v-if="item.author_role">{{ item.author_role }} • </span>
-                <span v-if="item.sender_city">{{ item.sender_city }} • </span>
-                <span class="font-mono text-foreground">{{ item.sender_email }}</span>
-              </div>
-              <div class="text-[11px] text-muted-foreground">
-                Estimasi Baca: {{ item.reading_minutes || 5 }} Menit
+              <div class="text-xs text-muted-foreground truncate">
+                {{ item.author_role || 'Penulis' }} <span v-if="item.sender_email">• {{ item.sender_email }}</span> • Estimasi Baca: {{ item.reading_minutes || 5 }} Menit
               </div>
             </div>
           </div>
 
-          <!-- Summary -->
+          <!-- Summary (Ringkasan Eksekutif) -->
           <div v-if="item.summary" class="p-4 rounded-xl bg-muted/40 border-l-4 border-l-red-600 space-y-1">
             <span class="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Ringkasan Eksekutif</span>
             <p class="text-xs sm:text-sm text-foreground leading-relaxed italic">
@@ -326,7 +328,7 @@ onMounted(fetchLetter)
             </a>
           </div>
 
-          <!-- Full Body -->
+          <!-- Body Content -->
           <div class="pt-4 border-t border-border/70 space-y-3">
             <h3 class="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Naskah Lengkap Artikel
@@ -345,14 +347,14 @@ onMounted(fetchLetter)
       class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
     >
       <div class="bg-card border border-border rounded-xl p-5 max-w-md w-full space-y-4 shadow-xl">
-        <h3 class="text-base font-bold text-foreground">Tolak Artikel by Member</h3>
+        <h3 class="text-base font-bold text-foreground">Tolak Naskah Artikel by Member</h3>
         <p class="text-xs text-muted-foreground">
-          Berikan catatan atau alasan penolakan naskah (opsional namun disarankan agar menjadi catatan internal redaksi).
+          Berikan catatan atau alasan penolakan naskah (alasan akan dikirimkan ke email penulis dan dicatat di sistem).
         </p>
         <textarea
           v-model="rejectNotes"
           rows="3"
-          placeholder="Alasan penolakan (mis. data belum terverifikasi, plagiasi, dll)..."
+          placeholder="Alasan penolakan (mis. data belum terverifikasi, topik kurang sesuai, dll)..."
           class="w-full rounded-md border border-input bg-background p-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
         ></textarea>
         <p v-if="rejectError" class="text-xs text-red-500 font-medium">
@@ -383,4 +385,3 @@ onMounted(fetchLetter)
     </div>
   </div>
 </template>
-

@@ -24,6 +24,7 @@ export { default as StarRating } from './StarRating.vue';
 export { default as RatingSummary } from './RatingSummary.vue';
 export { default as ReviewCard } from './ReviewCard.vue';
 export { default as IsfProfileMenu } from './IsfProfileMenu.vue';
+export { default as IsfNotificationMenu } from './IsfNotificationMenu.vue';
 export { default as WhatsAppVerifyDialog } from './WhatsAppVerifyDialog.vue';
 export { default as IsfShareBar } from './IsfShareBar.vue';
 export { default as PetaKursiParlemen } from './PetaKursiParlemen.vue';
@@ -41,6 +42,8 @@ export { default as SurveiChart } from './SurveiChart.vue';
 export { default as SosokCard } from './SosokCard.vue';
 export { default as SosokNetworkGraph } from './SosokNetworkGraph.vue';
 export { default as IsfSlidePuzzleCaptcha } from './IsfSlidePuzzleCaptcha.vue';
+export { default as IsfPwaInstallPrompt } from './IsfPwaInstallPrompt.vue';
+export { default as IsfNotificationPrompt } from './IsfNotificationPrompt.vue';
 export { default as FilterSelect } from '../UI/FilterSelect.vue';
 
 

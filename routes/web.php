@@ -153,6 +153,7 @@ Route::middleware('auth')->group(function () {
         ->middleware('feature:email_briefing')->whereNumber('briefing')->name('cms.isf.email-briefing.preview');
 
     Route::get('/cms/running-text', fn () => redirect()->route('cms.isf.artikel.index'))->name('cms.isf.running-text.index');
+    Route::get('/cms/artikel-member', fn () => redirect()->route('cms.isf.surat-pembaca.index'))->name('cms.isf.artikel-member.index');
 
     Route::prefix('cms/media-sorotan')->group(function () {
         Route::get('/', [IsfPageController::class, 'index'])->defaults('module', 'media-sorotan')->name('cms.isf.media-sorotan.index');

@@ -18,6 +18,32 @@ class AppServiceProvider extends ServiceProvider
 
             return new \App\Services\WhatsApp\LogSender();
         });
+
+        // WebPush client binding
+        $this->app->singleton(\Minishlink\WebPush\WebPush::class, function () {
+            $config = config('webpush');
+            $auth = [];
+            $publicKey = $config['vapid']['public_key'] ?? null;
+            $privateKey = $config['vapid']['private_key'] ?? null;
+
+            if (!empty($publicKey) && !empty($privateKey)) {
+                $auth['VAPID'] = [
+                    'subject' => $config['vapid']['subject'] ?? url('/'),
+                    'publicKey' => $publicKey,
+                    'privateKey' => $privateKey,
+                ];
+            }
+
+            return (new \Minishlink\WebPush\WebPush(
+                $auth,
+                [],
+                new \GuzzleHttp\Client(['timeout' => 30, ...($config['client_options'] ?? [])]),
+                new \GuzzleHttp\Psr7\HttpFactory(),
+                new \GuzzleHttp\Psr7\HttpFactory()
+            ))
+            ->setReuseVAPIDHeaders(true)
+            ->setAutomaticPadding($config['automatic_padding'] ?? true);
+        });
     }
 
     public function boot(): void

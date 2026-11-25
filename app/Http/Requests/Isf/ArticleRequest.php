@@ -73,6 +73,7 @@ class ArticleRequest extends FormRequest
             'is_popular' => ['boolean'],
             'popular_rank' => ['nullable', 'integer', 'min:1', 'max:99'],
             'status' => $this->statusRules(),
+            'send_push_notification' => ['nullable', 'boolean'],
         ];
     }
 }
