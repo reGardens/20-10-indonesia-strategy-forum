@@ -93,31 +93,13 @@ describe("IsfHeader", () => {
         expect(root.querySelector('[data-testid="header-layout-switcher"]')).toBeNull();
     });
 
-    it("header sinkron secara reaktif dengan useIsfHeaderFont (Montserrat, Arial, Roboto)", async () => {
+    it("header terstandarisasi secara permanen dengan font Montserrat", async () => {
         const { root } = await renderHeader();
         const headerEl = root.querySelector("header");
-        const { setFont } = useIsfHeaderFont();
 
-        // Default font: montserrat
+        // Standard font: montserrat
         expect(headerEl.classList.contains("isf-font-montserrat")).toBe(true);
-
-        // Switch ke Arial via composable
-        setFont("arial");
-        await nextTick();
-        expect(headerEl.classList.contains("isf-font-arial")).toBe(true);
-        expect(localStorage.getItem("isf_header_font")).toBe("arial");
-
-        // Switch ke Roboto via composable
-        setFont("roboto");
-        await nextTick();
-        expect(headerEl.classList.contains("isf-font-roboto")).toBe(true);
-        expect(localStorage.getItem("isf_header_font")).toBe("roboto");
-
-        // Switch kembali ke Montserrat
-        setFont("montserrat");
-        await nextTick();
-        expect(headerEl.classList.contains("isf-font-montserrat")).toBe(true);
-        expect(localStorage.getItem("isf_header_font")).toBe("montserrat");
+        expect(document.documentElement.getAttribute("data-isf-font")).toBe("montserrat");
     });
 
     it("memiliki kontrol aksesibilitas pencarian dan menu hamburger", async () => {

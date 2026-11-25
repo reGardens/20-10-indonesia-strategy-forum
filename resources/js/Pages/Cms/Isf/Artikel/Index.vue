@@ -5,6 +5,7 @@ import CmsLayout from '@/Layouts/CmsLayout.vue'
 import { cmsResources } from '@/api/services/isfCmsService'
 import { activeCategories as CATEGORIES, loadCategories } from '@/Pages/Cms/Isf/options'
 import { confirmDelete, alertSuccess, alertError } from '@/Composables/useAlert'
+import Swal from 'sweetalert2'
 import { useCmsPagination } from '@/Composables/useCmsPagination'
 import StatusBadge from '@/Pages/Cms/components/shared/StatusBadge.vue'
 import LiveBadge from '@/Pages/Cms/components/shared/LiveBadge.vue'
@@ -40,6 +41,10 @@ const items = ref([])
 const perPage = ref(10)
 const meta = ref({ current_page: 1, last_page: 1, total: 0, per_page: 10 })
 const liveId = ref(null)
+const runningTextCount = ref(0)
+const topRankCount = ref(0)
+const togglingRunningTextId = ref(null)
+const togglingTopRankId = ref(null)
 const loading = ref(true)
 const errorMsg = ref('')
 
@@ -75,6 +80,8 @@ async function loadData() {
       per_page: res.per_page || perPage.value
     }
     liveId.value = res.live_id || null
+    runningTextCount.value = res.running_text_count ?? 0
+    topRankCount.value = res.top_rank_count ?? 0
   } catch (err) {
     errorMsg.value = err?.response?.data?.message || 'Gagal memuat daftar artikel.'
   } finally {
@@ -130,6 +137,117 @@ async function handleSetHero(item) {
     alertError(err?.response?.data?.message || 'Gagal mengubah artikel tayang.')
   } finally {
     settingHeroId.value = null
+  }
+}
+
+async function handleToggleRunningText(item) {
+  if (item.show_in_running_text) {
+    const inputOptions = {}
+    const count = Math.max(runningTextCount.value, item.running_text_order || 1)
+    for (let i = 1; i <= Math.min(5, Math.max(count, 1)); i++) {
+      inputOptions[String(i)] = `Running Text ${i}`
+    }
+    inputOptions['off'] = 'Nonaktifkan / Lepas dari Running Text'
+
+    const { value: choice } = await Swal.fire({
+      title: 'Atur Urutan Running Text',
+      text: item.title,
+      input: 'select',
+      inputOptions,
+      inputValue: String(item.running_text_order || 1),
+      showCancelButton: true,
+      confirmButtonText: 'Simpan',
+      cancelButtonText: 'Batal',
+      confirmButtonColor: '#e10600',
+    })
+
+    if (!choice) return
+
+    togglingRunningTextId.value = item.id
+    try {
+      const payload = choice === 'off' ? { action: 'off' } : { order: parseInt(choice, 10) }
+      const res = await cmsResources.artikel.toggleRunningText(item.id, payload)
+      await loadData()
+      alertSuccess(res.message || 'Status Running Text berhasil diperbarui.')
+    } catch (err) {
+      alertError(err?.response?.data?.message || 'Gagal mengubah status running text.')
+    } finally {
+      togglingRunningTextId.value = null
+    }
+  } else {
+    if (runningTextCount.value >= 5) {
+      alertError('Maksimal 5 running text. Harap nonaktifkan salah satu yang dipilih terlebih dahulu.')
+      return
+    }
+
+    togglingRunningTextId.value = item.id
+    try {
+      const res = await cmsResources.artikel.toggleRunningText(item.id, {})
+      await loadData()
+      alertSuccess(res.message || 'Artikel berhasil ditambahkan ke Running Text.')
+    } catch (err) {
+      alertError(err?.response?.data?.message || 'Gagal menambahkan artikel ke running text.')
+    } finally {
+      togglingRunningTextId.value = null
+    }
+  }
+}
+
+async function handleToggleTopRank(item) {
+  if (item.show_in_top_rank) {
+    const labels = {
+      '1': 'Top Artikel 1 (Peringkat 1 - Gold)',
+      '2': 'Top Artikel 2 (Peringkat 2 - Red)',
+      '3': 'Top Artikel 3 (Peringkat 3 - Silver)',
+    }
+    const inputOptions = {}
+    const count = Math.max(topRankCount.value, item.top_rank_order || 1)
+    for (let i = 1; i <= Math.min(3, Math.max(count, 1)); i++) {
+      inputOptions[String(i)] = labels[String(i)]
+    }
+    inputOptions['off'] = 'Nonaktifkan / Lepas dari Top Artikel'
+
+    const { value: choice } = await Swal.fire({
+      title: 'Atur Peringkat Top Artikel',
+      text: item.title,
+      input: 'select',
+      inputOptions,
+      inputValue: String(item.top_rank_order || 1),
+      showCancelButton: true,
+      confirmButtonText: 'Simpan',
+      cancelButtonText: 'Batal',
+      confirmButtonColor: '#d97706',
+    })
+
+    if (!choice) return
+
+    togglingTopRankId.value = item.id
+    try {
+      const payload = choice === 'off' ? { action: 'off' } : { order: parseInt(choice, 10) }
+      const res = await cmsResources.artikel.toggleTopRank(item.id, payload)
+      await loadData()
+      alertSuccess(res.message || 'Status Top Artikel berhasil diperbarui.')
+    } catch (err) {
+      alertError(err?.response?.data?.message || 'Gagal mengubah status top artikel.')
+    } finally {
+      togglingTopRankId.value = null
+    }
+  } else {
+    if (topRankCount.value >= 3) {
+      alertError('Maksimal 3 Top Artikel. Harap nonaktifkan salah satu yang dipilih terlebih dahulu.')
+      return
+    }
+
+    togglingTopRankId.value = item.id
+    try {
+      const res = await cmsResources.artikel.toggleTopRank(item.id, {})
+      await loadData()
+      alertSuccess(res.message || 'Artikel berhasil ditambahkan ke Top Artikel.')
+    } catch (err) {
+      alertError(err?.response?.data?.message || 'Gagal menambahkan artikel ke top artikel.')
+    } finally {
+      togglingTopRankId.value = null
+    }
   }
 }
 
@@ -332,13 +450,21 @@ onMounted(() => {
                 </div>
               </div>
             </TableHead>
+            <!-- Kolom Running Text (Maksimal 5) -->
+            <TableHead v-if="!isMember" class="text-center w-40 whitespace-nowrap">
+              Running Text ({{ runningTextCount }}/5)
+            </TableHead>
+            <!-- Kolom Top Artikel (Maksimal 3) -->
+            <TableHead v-if="!isMember" class="text-center w-40 whitespace-nowrap">
+              Top Artikel ({{ topRankCount }}/3)
+            </TableHead>
             <!-- Kolom Aksi (Detail, Edit, Hapus) -->
             <TableHead class="text-right min-w-[200px]">Aksi</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow v-if="items.length === 0">
-            <TableCell :colspan="isMember ? 7 : 9" class="text-center py-10 text-muted-foreground text-sm">
+            <TableCell :colspan="isMember ? 7 : 11" class="text-center py-10 text-muted-foreground text-sm">
               {{ isMember ? 'Belum ada artikel yang Anda buat. Klik Tambah Artikel untuk mulai menulis naskah.' : 'Tidak ada artikel ditemukan.' }}
             </TableCell>
           </TableRow>
@@ -415,13 +541,25 @@ onMounted(() => {
                   Terkini
                 </span>
                 <span
+                  v-if="item.show_in_running_text"
+                  class="text-[9px] px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300 font-semibold whitespace-nowrap"
+                >
+                  Running {{ item.running_text_order || '' }}
+                </span>
+                <span
+                  v-if="item.show_in_top_rank"
+                  class="text-[9px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-semibold whitespace-nowrap"
+                >
+                  Top {{ item.top_rank_order || '' }}
+                </span>
+                <span
                   v-if="item.is_popular"
                   class="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium whitespace-nowrap"
                 >
                   Populer
                 </span>
                 <span
-                  v-if="item.id !== liveId && !item.is_hero && !item.show_in_terkini && !item.is_popular"
+                  v-if="item.id !== liveId && !item.is_hero && !item.show_in_terkini && !item.show_in_running_text && !item.show_in_top_rank && !item.is_popular"
                   class="text-[10px] text-muted-foreground"
                 >
                   —
@@ -449,7 +587,7 @@ onMounted(() => {
                 variant="outline"
                 size="sm"
                 :disabled="settingHeroId === item.id"
-                class="h-8 px-2.5 text-xs font-medium text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-700 hover:border-emerald-500 transition-colors inline-flex items-center"
+                class="h-8 px-2.5 text-xs font-medium text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-700 hover:border-emerald-500 transition-colors inline-flex items-center cursor-pointer"
                 @click="handleSetHero(item)"
                 title="Tayangkan sebagai Hero Beranda"
               >
@@ -457,6 +595,70 @@ onMounted(() => {
                 <IconComponent v-else name="Check" :size="13" class="mr-1 text-emerald-600" />
                 Tayangkan
               </Button>
+            </TableCell>
+
+            <!-- Dedicated Column: Running Text (X/5) -->
+            <TableCell v-if="!isMember" class="text-center whitespace-nowrap py-2.5">
+              <div class="inline-flex flex-col items-center gap-1">
+                <Button
+                  v-if="item.show_in_running_text"
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  :disabled="togglingRunningTextId === item.id"
+                  class="h-7 px-2.5 text-[11px] bg-red-600 text-white font-bold hover:bg-red-700 border-red-600 shadow-xs inline-flex items-center cursor-pointer"
+                  @click="handleToggleRunningText(item)"
+                  title="Klik untuk ubah urutan (1-5) atau nonaktifkan running text"
+                >
+                  <IconComponent v-if="togglingRunningTextId === item.id" name="Refresh" :size="12" class="mr-1 animate-spin" />
+                  <span v-else>✓ Running Text {{ item.running_text_order || 1 }}</span>
+                </Button>
+                <Button
+                  v-else
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  :disabled="togglingRunningTextId === item.id"
+                  class="h-7 px-2.5 text-[11px] border-dashed border-red-600/60 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 inline-flex items-center font-medium cursor-pointer"
+                  @click="handleToggleRunningText(item)"
+                  title="Pilih untuk pita teks berjalan (maksimal 5)"
+                >
+                  <IconComponent v-if="togglingRunningTextId === item.id" name="Refresh" :size="12" class="mr-1 animate-spin" />
+                  <span v-else>Pilih Running Text</span>
+                </Button>
+              </div>
+            </TableCell>
+
+            <!-- Dedicated Column: Top Artikel (X/3) -->
+            <TableCell v-if="!isMember" class="text-center whitespace-nowrap py-2.5">
+              <div class="inline-flex flex-col items-center gap-1">
+                <Button
+                  v-if="item.show_in_top_rank"
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  :disabled="togglingTopRankId === item.id"
+                  class="h-7 px-2.5 text-[11px] bg-amber-600 text-white font-bold hover:bg-amber-700 border-amber-600 shadow-xs inline-flex items-center cursor-pointer"
+                  @click="handleToggleTopRank(item)"
+                  title="Klik untuk ubah peringkat (1-3) atau nonaktifkan top artikel"
+                >
+                  <IconComponent v-if="togglingTopRankId === item.id" name="Refresh" :size="12" class="mr-1 animate-spin" />
+                  <span v-else>✓ Top Artikel {{ item.top_rank_order || 1 }}</span>
+                </Button>
+                <Button
+                  v-else
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  :disabled="togglingTopRankId === item.id"
+                  class="h-7 px-2.5 text-[11px] border-dashed border-amber-600/60 text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/40 inline-flex items-center font-medium cursor-pointer"
+                  @click="handleToggleTopRank(item)"
+                  title="Pilih untuk widget slider Top Artikel (maksimal 3)"
+                >
+                  <IconComponent v-if="togglingTopRankId === item.id" name="Refresh" :size="12" class="mr-1 animate-spin" />
+                  <span v-else>Pilih Top Artikel</span>
+                </Button>
+              </div>
             </TableCell>
 
             <!-- Dedicated Column: Aksi (CTA Detail, Edit, Hapus) -->
@@ -475,17 +677,17 @@ onMounted(() => {
                   </Button>
                 </Link>
 
-                <!-- Edit (artikel member tidak bisa diedit) -->
-                <Link v-if="!isMember && !item.is_by_member" :href="`/cms/artikel/${item.id}/edit`">
+                <!-- Edit (artikel regular dan artikel member bisa diedit oleh admin & super-admin) -->
+                <Link v-if="!isMember" :href="`/cms/artikel/${item.id}/edit`">
                   <Button variant="outline" size="sm" class="h-8 px-2.5 text-xs font-medium hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center">
                     <IconComponent name="Edit" :size="14" class="mr-1" />
                     Edit
                   </Button>
                 </Link>
 
-                <!-- Hapus (artikel member tidak bisa dihapus) -->
+                <!-- Hapus (artikel regular dan artikel member bisa dihapus oleh admin & super-admin) -->
                 <Button
-                  v-if="!isMember && !item.is_by_member"
+                  v-if="!isMember"
                   variant="outline"
                   size="sm"
                   class="h-8 px-2.5 text-xs font-medium text-red-500 border-red-500/30 hover:bg-red-500/10 hover:text-red-600 hover:border-red-500 inline-flex items-center"

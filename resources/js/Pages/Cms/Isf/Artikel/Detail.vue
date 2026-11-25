@@ -105,7 +105,7 @@ onMounted(fetchArticle)
         </div>
       </div>
 
-      <div v-if="item && !isMember && !item.is_by_member" class="flex items-center gap-2">
+      <div v-if="item && !isMember" class="flex items-center gap-2">
         <Link :href="`/cms/artikel/${item.id}/edit`">
           <Button variant="outline" size="sm" class="h-9 text-xs gap-1.5">
             <IconComponent name="Edit" :size="14" />

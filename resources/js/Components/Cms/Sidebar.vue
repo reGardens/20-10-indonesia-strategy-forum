@@ -145,12 +145,6 @@ const menuGroups = computed(() => {
                 visible: hasFeature("banner"),
             },
             {
-                label: "Running Text",
-                href: "/cms/running-text",
-                icon: "Speakerphone",
-                visible: true,
-            },
-            {
                 label: "Media Sorotan",
                 href: "/cms/media-sorotan",
                 icon: "Video",

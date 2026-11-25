@@ -130,30 +130,47 @@ const focusRing =
             :style="{ top: `${position.top}px`, right: `${position.right}px` }"
             @keydown="onKeydown"
         >
-            <div
-                class="flex items-center gap-3 border-b border-white/10 px-4 py-3.5"
-                role="none"
+            <!-- Header Profil: Icon Avatar + Masuk Sebagai + Nama User disatukan menjadi button link ke /profil -->
+            <router-link
+                to="/profil"
+                role="menuitem"
+                data-testid="profile-menu-header-link"
+                :ref="(el) => { if (whatsappStatus === 'verified') firstItemEl = el?.$el || el; }"
+                class="group flex w-full items-center gap-3 border-b border-white/10 px-4 py-3.5 transition-colors hover:bg-white/5 focus-visible:bg-white/10 focus-visible:outline-none cursor-pointer text-left"
+                @click="setOpen(false)"
             >
                 <span
-                    class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xs bg-isf-red font-space-grotesk text-xs font-bold tracking-wider text-white"
+                    class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xs bg-isf-red font-space-grotesk text-xs font-bold tracking-wider text-white group-hover:bg-isf-red-dark transition-colors"
                     aria-hidden="true"
                     >{{ initials }}</span
                 >
-                <div class="min-w-0">
+                <div class="min-w-0 flex-1">
                     <p
-                        class="font-space-grotesk text-[10px] font-bold uppercase tracking-[0.16em] text-neutral-400"
+                        class="font-space-grotesk text-[10px] font-bold uppercase tracking-[0.16em] text-neutral-400 group-hover:text-neutral-300 transition-colors"
                     >
                         Masuk sebagai
                     </p>
                     <p
-                        class="mt-0.5 truncate font-space-grotesk text-sm font-semibold text-white"
+                        class="mt-0.5 truncate font-space-grotesk text-sm font-semibold text-white group-hover:text-amber-300 transition-colors"
                         :title="name"
                         data-testid="profile-menu-name"
                     >
                         {{ name }}
                     </p>
                 </div>
-            </div>
+                <svg
+                    class="h-4 w-4 shrink-0 text-neutral-400 group-hover:text-amber-300 transition-colors"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                >
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </router-link>
             <!-- Issue #42: alert Nomor WhatsApp (kosong / belum terverifikasi) -->
             <div
                 v-if="whatsappStatus !== 'verified'"
@@ -180,7 +197,6 @@ const focusRing =
             </div>
             <div class="p-1.5" role="none">
                 <button
-                    :ref="(el) => { if (whatsappStatus === 'verified') firstItemEl = el; }"
                     type="button"
                     role="menuitem"
                     :disabled="loggingOut"

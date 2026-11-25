@@ -77,32 +77,63 @@ class PublicContentController extends Controller
                 'pekanIni' => ['dateStart' => null, 'dateEnd' => null],
             ]);
             $topBar = $settings['topBar'] ?? ['badge' => 'Sorotan', 'announcement' => '', 'info' => ''];
-            $topBars = $settings['topBars'] ?? null;
-            if ($topBars === null) {
-                $topBars = [
-                    [
-                        'badge' => !empty($topBar['badge']) ? $topBar['badge'] : 'Sorotan',
-                        'announcement' => !empty($topBar['announcement']) ? $topBar['announcement'] : 'KUHP baru resmi berlaku sejak 2 Januari 2026 — simak dampaknya bagi dunia usaha.',
-                        'info' => !empty($topBar['info']) ? $topBar['info'] : 'Edisi Pekan Ini',
+            
+            $runningArticles = Article::query()->terbit()
+                ->where('show_in_running_text', true)
+                ->orderByRaw('CASE WHEN running_text_order IS NULL THEN 99 ELSE running_text_order END ASC')
+                ->orderByDesc('published_at')
+                ->limit(5)
+                ->get();
+
+            if ($runningArticles->isNotEmpty()) {
+                $activeTopBars = $runningArticles->values()->map(function (Article $a, int $idx) {
+                    $pubDate = $a->published_at ? $a->published_at->format('d M Y') : 'Edisi Pekan Ini';
+                    $url = $a->publicUrl();
+                    return [
+                        'id' => (string) $a->id,
+                        'badge' => $a->categoryLabel(),
+                        'announcement' => $a->title,
+                        'info' => $pubDate,
+                        'url' => $url,
+                        'to' => $url,
                         'status' => 'terbit',
-                    ],
-                    [
-                        'badge' => 'Regulasi',
-                        'announcement' => 'DPR jadwalkan rapat kerja lanjutan pembahasan RUU Perampasan Aset bersama pemerintah.',
-                        'info' => 'Pembaruan Terkini',
-                        'status' => 'terbit',
-                    ],
-                    [
-                        'badge' => 'Kebijakan',
-                        'announcement' => 'Pedoman tata kelola dan kepatuhan ESG korporasi mulai diimplementasikan bertahap.',
-                        'info' => 'Sorotan Industri',
-                        'status' => 'terbit',
-                    ],
-                ];
-            }
-            $activeTopBars = array_values(array_filter($topBars, fn($item) => ($item['status'] ?? 'terbit') === 'terbit'));
-            if (empty($activeTopBars) && !empty($topBar['announcement'])) {
-                $activeTopBars = [$topBar];
+                        'order' => $a->running_text_order ?? ($idx + 1),
+                    ];
+                })->all();
+            } else {
+                $topBars = $settings['topBars'] ?? null;
+                if ($topBars === null) {
+                    $topBars = [
+                        [
+                            'badge' => !empty($topBar['badge']) ? $topBar['badge'] : 'Sorotan',
+                            'announcement' => !empty($topBar['announcement']) ? $topBar['announcement'] : 'KUHP baru resmi berlaku sejak 2 Januari 2026 — simak dampaknya bagi dunia usaha.',
+                            'info' => !empty($topBar['info']) ? $topBar['info'] : 'Edisi Pekan Ini',
+                            'status' => 'terbit',
+                        ],
+                        [
+                            'badge' => 'Regulasi',
+                            'announcement' => 'DPR jadwalkan rapat kerja lanjutan pembahasan RUU Perampasan Aset bersama pemerintah.',
+                            'info' => 'Pembaruan Terkini',
+                            'status' => 'terbit',
+                        ],
+                        [
+                            'badge' => 'Kebijakan',
+                            'announcement' => 'Pedoman tata kelola dan kepatuhan ESG korporasi mulai diimplementasikan bertahap.',
+                            'info' => 'Sorotan Industri',
+                            'status' => 'terbit',
+                        ],
+                    ];
+                }
+                $activeTopBars = array_values(array_filter($topBars, fn($item) => ($item['status'] ?? 'terbit') === 'terbit'));
+                if (empty($activeTopBars) && !empty($topBar['announcement'])) {
+                    $activeTopBars = [$topBar];
+                }
+                $activeTopBars = array_map(function ($it) {
+                    $targetUrl = $it['url'] ?? ($it['link'] ?? '');
+                    $it['url'] = $targetUrl;
+                    $it['to'] = $targetUrl;
+                    return $it;
+                }, $activeTopBars);
             }
 
             $banners = Banner::query()->terbit()
@@ -236,11 +267,72 @@ class PublicContentController extends Controller
                 ];
             }
 
+            $topRankArticles = Article::query()->terbit()
+                ->where('show_in_top_rank', true)
+                ->orderByRaw('CASE WHEN top_rank_order IS NULL THEN 99 ELSE top_rank_order END ASC')
+                ->orderByDesc('published_at')
+                ->limit(3)
+                ->get();
+
+            if ($topRankArticles->isNotEmpty()) {
+                $activeTopRank = $topRankArticles->values()->map(function (Article $a, int $idx) {
+                    return [
+                        'id' => (string) $a->id,
+                        'rank' => (int) ($a->top_rank_order ?? ($idx + 1)),
+                        'title' => $a->title,
+                        'summary' => $a->summary ?: Str::limit(strip_tags((string) $a->body), 120),
+                        'author' => $a->author_name ?: 'Redaksi ISF',
+                        'image_url' => $a->image_url,
+                        'to' => $a->publicUrl(),
+                        'url' => $a->publicUrl(),
+                        'published_at' => $a->published_at ? $a->published_at->format('d M Y') : date('d M Y'),
+                        'status' => 'terbit',
+                    ];
+                })->all();
+            } else {
+                $topRankItems = $settings['topRank'] ?? [];
+                $activeTopRank = is_array($topRankItems)
+                    ? array_values(array_filter($topRankItems, fn($it) => ($it['status'] ?? 'terbit') === 'terbit'))
+                    : [];
+
+                if (empty($activeTopRank)) {
+                    $activeTopRank = Article::query()->terbit()
+                        ->orderByDesc('published_at')
+                        ->orderByDesc('id')
+                        ->limit(3)
+                        ->get()
+                        ->values()
+                        ->map(function (Article $a, int $idx) {
+                            return [
+                                'id' => (string) $a->id,
+                                'rank' => $idx + 1,
+                                'title' => $a->title,
+                                'summary' => $a->summary ?: Str::limit(strip_tags((string) $a->body), 120),
+                                'author' => $a->author_name ?: 'Redaksi ISF',
+                                'image_url' => $a->image_url,
+                                'to' => $a->publicUrl(),
+                                'url' => $a->publicUrl(),
+                                'published_at' => $a->published_at ? $a->published_at->format('d M Y') : date('d M Y'),
+                                'status' => 'terbit',
+                            ];
+                        })
+                        ->all();
+                } else {
+                    usort($activeTopRank, fn($a, $b) => ((int) ($a['rank'] ?? 0)) <=> ((int) ($b['rank'] ?? 0)));
+                    $activeTopRank = array_map(function ($it, $idx) {
+                        $it['rank'] = (int) ($it['rank'] ?? ($idx + 1));
+                        $it['to'] = $it['url'] ?? '/beranda';
+                        return $it;
+                    }, $activeTopRank, array_keys($activeTopRank));
+                }
+            }
+
             return [
                 'topBar' => $settings['topBar'] ?? null,
                 'topBars' => $activeTopBars,
                 'banners' => $banners,
                 'hotNews' => $activeHotNews,
+                'topRank' => $activeTopRank,
                 'hero' => $hero ? (new ArticleResource($hero))->hero() : null,
                 'factBlocks' => $hero?->fact_blocks ?? [],
                 'chart' => $chart ? (new ChartResource($chart))->resolve($request) : null,
@@ -2891,17 +2983,83 @@ HTML;
             }
         }
 
-        // 3. Kebijakan (3-Column Asymmetric Analytical Grid)
-        // Dari CMS Artikel kategori "kebijakan" (termasuk eks-"ekonomi") (terbit, terbaru): artikel ke-1 = utama,
-        // ke-2 = Dampak Regulasi (poin dari Fact Block / ringkasan), ke-3 = Policy Brief (kutipan = ringkasan).
-        // Slot tanpa artikel tetap memakai konten contoh di bawah (perilaku lama tidak berubah).
+        // 3. Kebijakan (4 Cards Layout)
         $kebijakanArticles = Article::query()->terbit()
             ->whereIn('category', IsfRubrik::categories('kebijakan'))
             ->orderByDesc('published_at')
             ->orderByDesc('id')
-            ->take(3)
+            ->take(4)
             ->get()
             ->values();
+
+        $kebijakanItems = [];
+        foreach ($kebijakanArticles as $art) {
+            $kebijakanItems[] = [
+                'id' => (string) $art->id,
+                'title' => $art->title,
+                'kicker' => $art->categoryLabel() ?: 'KEBIJAKAN',
+                'category' => 'Kebijakan',
+                'summary' => $art->summary ?: '',
+                'imageUrl' => $art->image_url ?: '',
+                'publishedAt' => $art->published_at ? $art->published_at->format('Y-m-d') : date('Y-m-d'),
+                'author' => trim(($art->author_name ?: 'Tim Riset Kebijakan ISF') . ($art->author_role ? ', ' . $art->author_role : '')),
+                'to' => $art->publicUrl(),
+            ];
+        }
+
+        if (count($kebijakanItems) < 4) {
+            $defaultKebijakan = [
+                [
+                    'id' => 'kbj-1',
+                    'title' => 'Kebijakan Fiskal Hijau: Skema Insentif Pajak & Transisi Energi Bersih 2026',
+                    'kicker' => 'ANALISIS FISKAL',
+                    'category' => 'Kebijakan',
+                    'summary' => 'Pemerintah mematangkan peta jalan insentif perpajakan bagi industri pelopor energi baru terbarukan sembari mempersiapkan pemberlakuan tarif pajak karbon secara bertahap.',
+                    'imageUrl' => 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?q=80&w=600&auto=format&fit=crop',
+                    'publishedAt' => date('Y-m-d'),
+                    'author' => 'Dr. Hendra Wijaya, Dewan Pakar Fiskal ISF',
+                    'to' => '/beranda',
+                ],
+                [
+                    'id' => 'kbj-2',
+                    'title' => 'Pemetaan Dampak Regulasi Moneter & Suku Bunga Sektoral',
+                    'kicker' => 'DAMPAK REGULASI',
+                    'category' => 'Kebijakan',
+                    'summary' => 'Likuiditas Perbankan, Sektor Riil & Manufaktur, serta iklim investasi menghadapi tren penyesuaian suku bunga acuan.',
+                    'imageUrl' => 'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?q=80&w=600&auto=format&fit=crop',
+                    'publishedAt' => date('Y-m-d', strtotime('-1 day')),
+                    'author' => 'Tim Riset Kebijakan ISF',
+                    'to' => '/beranda',
+                ],
+                [
+                    'id' => 'kbj-3',
+                    'title' => 'Rekomendasi Kebijakan: Akselerasi Deregulasi Perizinan Berbasis Risiko',
+                    'kicker' => 'POLICY BRIEF',
+                    'category' => 'Kebijakan',
+                    'summary' => 'Kepastian regulasi dan simplifikasi birokrasi digital adalah pilar fundamental untuk mendongkrak daya saing investasi Indonesia.',
+                    'imageUrl' => 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=600&auto=format&fit=crop',
+                    'publishedAt' => date('Y-m-d', strtotime('-2 days')),
+                    'author' => 'Prof. Siti Rahmawati, Ketua Tim Kajian Deregulasi ISF',
+                    'to' => '/beranda',
+                ],
+                [
+                    'id' => 'kbj-4',
+                    'title' => 'Harmonisasi Belanja Pusat & Transfer Daerah: Penguatan Fiskal 2026',
+                    'kicker' => 'KEBIJAKAN FISKAL',
+                    'category' => 'Kebijakan',
+                    'summary' => 'Pemerintah mempercepat konsolidasi transfer ke daerah guna menjaga sinkronisasi target pembangunan nasional dan stabilitas moneter.',
+                    'imageUrl' => 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=600&auto=format&fit=crop',
+                    'publishedAt' => date('Y-m-d', strtotime('-3 days')),
+                    'author' => 'Analis Kebijakan Publik, Dewan Riset ISF',
+                    'to' => '/beranda',
+                ],
+            ];
+            foreach ($defaultKebijakan as $def) {
+                if (count($kebijakanItems) < 4) {
+                    $kebijakanItems[] = $def;
+                }
+            }
+        }
 
         $kebijakanLead = [
             'id' => 'kbj-lead-1',
@@ -3083,6 +3241,7 @@ HTML;
                 'items' => $hukumItems,
             ],
             'kebijakan' => [
+                'items' => $kebijakanItems,
                 'lead' => $kebijakanLead,
                 'impact' => $kebijakanImpact,
                 'brief' => $kebijakanBrief,

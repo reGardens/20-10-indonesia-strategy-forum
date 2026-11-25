@@ -115,7 +115,7 @@ const topBar = computed(() => activeBars.value.find((bar) => bar.isTop) || null)
         <!-- Single Column Header: Red Circle + ISF Insight + Slide Nav Controls -->
         <div :class="['isf-col-head flex items-center justify-between', cellPad]">
             <p id="insight-title" class="isf-label">
-                ISF Insight
+                <span><span class="text-isf-red">ISF</span><span class="ml-1 text-neutral-900">INSIGHT</span></span>
             </p>
 
             <!-- Controls (Prev / Next & Counter) jika ada > 1 slide -->

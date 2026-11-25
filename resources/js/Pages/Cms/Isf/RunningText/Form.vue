@@ -40,6 +40,7 @@ const { form, err, loading, loadError, saving, save, load } = useCmsForm({
     badge: 'Sorotan',
     announcement: '',
     info: 'Edisi Pekan Ini',
+    url: '',
     status: 'terbit'
   }
 })
@@ -160,6 +161,21 @@ const badgeOptions = computed(() => {
               Keterangan pelengkap yang akan tampil dalam tanda kurung di samping pengumuman.
             </p>
             <p v-if="err('info')" class="text-xs text-red-400 mt-1">{{ err('info') }}</p>
+          </div>
+
+          <!-- Link / URL Tautan Tujuan -->
+          <div class="space-y-1.5">
+            <Label for="url" class="text-xs font-medium text-foreground">Link / Tautan Tujuan (Opsional)</Label>
+            <Input
+              id="url"
+              v-model="form.url"
+              placeholder="Contoh: /artikel/kebijakan/... atau https://..."
+              class="h-9 text-xs"
+            />
+            <p class="text-[11px] text-muted-foreground">
+              Tautan yang akan terbuka saat teks berjalan diklik di Beranda publik.
+            </p>
+            <p v-if="err('url')" class="text-xs text-red-400 mt-1">{{ err('url') }}</p>
           </div>
         </CardContent>
       </Card>

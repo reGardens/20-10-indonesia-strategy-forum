@@ -29,6 +29,7 @@ class IsfPageController extends Controller
         'running-text' => 'RunningText',
         'media-sorotan' => 'MediaSorotan',
         'hot-news' => 'HotNews',
+        'top-rank' => 'TopRank',
         'iklan' => 'Iklan',
         'kategori' => 'Kategori',
         'kursi-parlemen' => 'KursiParlemen',

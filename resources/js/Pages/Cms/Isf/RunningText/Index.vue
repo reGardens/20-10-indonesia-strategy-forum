@@ -223,6 +223,10 @@ onMounted(loadData)
             </TableCell>
             <TableCell class="text-xs font-medium text-foreground max-w-md">
               <div class="line-clamp-2">{{ item.announcement }}</div>
+              <div v-if="item.url" class="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground font-mono">
+                <span class="text-red-500 font-sans font-bold text-[10px]">URL:</span>
+                <span class="truncate max-w-xs">{{ item.url }}</span>
+              </div>
             </TableCell>
             <TableCell class="text-xs text-muted-foreground">
               <div class="line-clamp-2">{{ item.info || '-' }}</div>
