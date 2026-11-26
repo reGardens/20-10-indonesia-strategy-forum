@@ -32,8 +32,50 @@ class ArticleController extends CmsResourceController
         return $user && $user->hasRole('member') && ! $user->hasAnyRole(['admin', 'editor', 'super-admin']);
     }
 
+    private function syncRejectedLetters(): void
+    {
+        $rejectedLetters = Letter::where('moderation_status', 'ditolak')->get();
+        foreach ($rejectedLetters as $letter) {
+            $slug = $letter->slug ?: \Illuminate\Support\Str::slug($letter->title);
+            if (! $slug) {
+                $slug = 'artikel-member-'.$letter->id;
+            }
+            $exists = Article::where('slug', $slug)->orWhere('title', $letter->title)->first();
+            if ($exists) {
+                if ($exists->status !== 'ditolak') {
+                    $exists->update([
+                        'status' => 'ditolak',
+                        'is_by_member' => true,
+                    ]);
+                }
+            } else {
+                Article::create([
+                    'user_id' => $letter->user_id,
+                    'slug' => $slug,
+                    'title' => $letter->title,
+                    'category' => $letter->category ?: 'opini',
+                    'subcategory' => $letter->subcategory ?: 'surat-pembaca',
+                    'published_at' => $letter->published_at ?? now(),
+                    'summary' => $letter->summary ?: \Illuminate\Support\Str::limit(strip_tags($letter->body), 200),
+                    'body' => $letter->body,
+                    'author_name' => $letter->author_name ?: $letter->sender_name,
+                    'author_role' => $letter->author_role,
+                    'author_avatar' => $letter->author_avatar,
+                    'reading_minutes' => $letter->reading_minutes ?: 5,
+                    'image_url' => $letter->image_url,
+                    'image_alt' => $letter->image_alt,
+                    'link_url' => $letter->link_url ?: ('/artikel/' . ($letter->category ?: 'opini') . '/' . $slug),
+                    'fact_blocks' => $letter->fact_blocks,
+                    'status' => 'ditolak',
+                    'is_by_member' => true,
+                ]);
+            }
+        }
+    }
+
     public function index(\Illuminate\Http\Request $request): JsonResponse
     {
+        $this->syncRejectedLetters();
         $this->resequenceRunningTexts();
         $this->resequenceTopRanks();
 
@@ -115,9 +157,9 @@ class ArticleController extends CmsResourceController
             $query->orderBy($column, $direction);
         }
 
-        $perPage = (int) $request->query('per_page', 10);
+        $perPage = (int) $request->query('per_page', 20);
         if ($perPage < 1 || $perPage > 500) {
-            $perPage = 10;
+            $perPage = 20;
         }
 
         return response()->json(array_merge(

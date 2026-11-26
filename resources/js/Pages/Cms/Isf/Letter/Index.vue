@@ -36,6 +36,15 @@ const canApprove = computed(() => {
   return userRoles.value.includes('admin') || userRoles.value.includes('super-admin')
 })
 
+function isPending(item) {
+  if (!item) return false
+  const modStatus = item.moderation_status
+  const status = item.status
+  if (modStatus === 'disetujui' || status === 'disetujui' || status === 'terbit') return false
+  if (modStatus === 'ditolak' || status === 'ditolak') return false
+  return true
+}
+
 const items = ref([])
 const loading = ref(true)
 const loadError = ref('')
@@ -134,11 +143,25 @@ async function handleReject(item) {
   if (!result.isConfirmed) return
   const reason = result.value
 
+  // Tampilkan loading modal selama backend memproses penolakan dan mengirim email SMTP
+  Swal.fire({
+    title: 'Memproses Penolakan...',
+    html: '<p class="text-xs text-muted-foreground mt-1">Menyimpan status dan mengirim catatan evaluasi ke email penulis...</p>',
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    showConfirmButton: false,
+    didOpen: () => {
+      Swal.showLoading()
+    }
+  })
+
   try {
     await cmsResources.suratPembaca.reject(item.id, reason)
+    Swal.close()
     alertSuccess(`Artikel "${item.title || item.judul_surat}" telah ditolak dan catatan evaluasi telah dikirimkan ke email penulis.`)
     loadData()
   } catch (err) {
+    Swal.close()
     alertError(errorMessage(err, 'Gagal menolak artikel.'))
   }
 }
@@ -408,7 +431,13 @@ onMounted(async () => {
                   </p>
 
                   <div
-                    v-if="item.moderation_notes || item.catatan_redaksi"
+                    v-if="(item.moderation_status === 'ditolak' || item.status === 'ditolak') && (item.moderation_notes || item.catatan_redaksi)"
+                    class="mt-1 text-[11px] text-rose-600 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20 inline-block font-medium"
+                  >
+                    Alasan Ditolak: {{ item.moderation_notes || item.catatan_redaksi }}
+                  </div>
+                  <div
+                    v-else-if="item.moderation_notes || item.catatan_redaksi"
                     class="mt-1 text-[11px] text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 inline-block"
                   >
                     Catatan: {{ item.moderation_notes || item.catatan_redaksi }}
@@ -444,7 +473,7 @@ onMounted(async () => {
               </span>
             </TableCell>
 
-            <!-- Aksi: CTA Detail, Setujui (Admin & Super Admin), Tolak -->
+            <!-- Aksi: CTA Detail, Setujui (Hanya jika pending), Tolak (Hanya jika pending) -->
             <TableCell class="text-right whitespace-nowrap">
               <div class="flex items-center justify-end gap-1.5">
                 <!-- CTA Detail mengarah ke page detail artikel by member -->
@@ -462,9 +491,9 @@ onMounted(async () => {
                   </Button>
                 </Link>
 
-                <!-- Quick Approve Button (Requires Admin or Super Admin role) -->
+                <!-- Quick Approve Button (Hanya jika pending & belum pernah ditolak/disetujui) -->
                 <Button
-                  v-if="canApprove && (item.moderation_status !== 'disetujui' && item.status !== 'disetujui')"
+                  v-if="canApprove && isPending(item)"
                   variant="outline"
                   size="sm"
                   class="h-8 px-2.5 text-xs font-medium text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-700 hover:border-emerald-500 inline-flex items-center"
@@ -477,16 +506,16 @@ onMounted(async () => {
 
                 <!-- Status note if not admin/super-admin -->
                 <span
-                  v-else-if="!canApprove && (item.moderation_status !== 'disetujui' && item.status !== 'disetujui')"
+                  v-else-if="!canApprove && isPending(item)"
                   class="text-[10px] text-muted-foreground italic px-1"
                   title="Persetujuan hanya dapat dilakukan oleh Admin dan Super Admin"
                 >
                   Butuh Admin
                 </span>
 
-                <!-- Quick Reject Button -->
+                <!-- Quick Reject Button (Hanya jika pending & belum pernah disetujui/ditolak) -->
                 <Button
-                  v-if="item.moderation_status !== 'ditolak' && item.status !== 'ditolak'"
+                  v-if="isPending(item)"
                   variant="outline"
                   size="sm"
                   class="h-8 px-2.5 text-xs font-medium text-amber-600 border-amber-500/30 hover:bg-amber-500/10 hover:text-amber-700 hover:border-amber-500 inline-flex items-center"
@@ -496,14 +525,6 @@ onMounted(async () => {
                   <IconComponent name="X" :size="13" class="mr-1" />
                   Tolak
                 </Button>
-
-                <!-- Status jika sudah ditolak -->
-                <span
-                  v-if="item.moderation_status === 'ditolak' || item.status === 'ditolak'"
-                  class="text-xs text-rose-500 italic px-1"
-                >
-                  Ditolak
-                </span>
               </div>
             </TableCell>
           </TableRow>

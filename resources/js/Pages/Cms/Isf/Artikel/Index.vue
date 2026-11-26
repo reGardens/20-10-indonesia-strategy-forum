@@ -38,8 +38,8 @@ const isMember = computed(() => {
 })
 
 const items = ref([])
-const perPage = ref(10)
-const meta = ref({ current_page: 1, last_page: 1, total: 0, per_page: 10 })
+const perPage = ref(20)
+const meta = ref({ current_page: 1, last_page: 1, total: 0, per_page: 20 })
 const liveId = ref(null)
 const runningTextCount = ref(0)
 const topRankCount = ref(0)
@@ -372,6 +372,18 @@ onMounted(() => {
             Draf
           </button>
           <button
+            type="button"
+            @click="onStatusChange('ditolak')"
+            :class="[
+              'px-2.5 py-1 text-xs rounded-md font-medium transition-colors',
+              statusFilter === 'ditolak'
+                ? 'bg-rose-600 text-white'
+                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
+            ]"
+          >
+            Ditolak
+          </button>
+          <button
             v-if="!isMember"
             type="button"
             @click="onByMemberToggle"
@@ -401,6 +413,7 @@ onMounted(() => {
         :per-page="meta.per_page"
         :total="meta.total"
         :total-pages="meta.last_page"
+        :per-page-options="[10, 20, 50, 100]"
         @update:current-page="onPageChange"
         @update:per-page="onPerPageChange"
       >

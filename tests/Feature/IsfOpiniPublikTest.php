@@ -216,7 +216,7 @@ class IsfOpiniPublikTest extends TestCase
         $this->assertTrue((bool) $createdArticle->is_by_member);
         $this->assertEquals('terbit', $createdArticle->status);
 
-        // 7. Rejecting the letter removes the article from isf_articles and sets ditolak status
+        // 7. Rejecting the letter updates the article in isf_articles with ditolak status
         $rejectRes = $this->actingAs($admin)
             ->postJson("/api/cms/surat-pembaca/{$letterId}/reject", [
                 'notes' => 'Topik tidak relevan dengan kebijakan',
@@ -224,7 +224,9 @@ class IsfOpiniPublikTest extends TestCase
         $rejectRes->assertOk();
 
         $this->assertEquals('ditolak', $letter->fresh()->moderation_status);
-        $this->assertNull(Article::where('title', $letter->title)->where('is_by_member', true)->first());
+        $rejectedArticle = Article::where('title', $letter->title)->where('is_by_member', true)->first();
+        $this->assertNotNull($rejectedArticle);
+        $this->assertEquals('ditolak', $rejectedArticle->status);
 
         // 8. Rejected letter cannot be approved again
         $reApproveRes = $this->actingAs($admin)

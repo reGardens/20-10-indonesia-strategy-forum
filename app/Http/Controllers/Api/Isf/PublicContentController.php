@@ -1712,11 +1712,11 @@ class PublicContentController extends Controller
                 'published_at_formatted' => $l->published_at ? \Carbon\Carbon::parse($l->published_at)->locale('id')->isoFormat('D MMMM Y') : '',
             ])->values()->all();
 
-        // 4 Artikel Sorotan Member (terbaru yang dibuat/disetujui member)
+        // Artikel Sorotan Member (terbaru yang dibuat/disetujui member, mendukung grid 4x3 dan pagination)
         $memberArticles = Article::query()->terbit()->where('is_by_member', true)
             ->orderByDesc('published_at')
             ->orderByDesc('id')
-            ->take(4)
+            ->take(48)
             ->get();
         $sorotanMember = $memberArticles->map(function ($art) use ($cardMapper) {
             $card = $cardMapper($art);
@@ -1729,35 +1729,32 @@ class PublicContentController extends Controller
             return $card;
         })->values()->all();
 
-        if (count($sorotanMember) < 4) {
-            $needed = 4 - count($sorotanMember);
-            $existingSlugs = collect($sorotanMember)->pluck('slug')->all();
-            $extraLetters = Letter::query()->disetujui()->terbit()
-                ->whereNotIn('slug', $existingSlugs)
-                ->orderBy('order', 'asc')
-                ->orderByDesc('published_at')
-                ->take($needed)
-                ->get();
-            foreach ($extraLetters as $l) {
-                $sorotanMember[] = [
-                    'slug' => $l->slug,
-                    'title' => $l->title,
-                    'category' => $l->category ?? 'Opini',
-                    'subcategory' => $l->subcategory ?? 'Artikel Member',
-                    'summary' => $l->summary ?? Str::limit(strip_tags($l->body), 150),
-                    'publishedAt' => $l->published_at?->format('Y-m-d'),
-                    'readingMinutes' => $l->reading_minutes ?? 5,
-                    'imageUrl' => $l->image_url,
-                    'imageAlt' => $l->image_alt ?: $l->title,
-                    'author' => $l->sender_name,
-                    'author_name' => $l->sender_name,
-                    'author_slug' => Str::slug($l->sender_name ?: 'penulis'),
-                    'author_affiliation' => $l->author_role ?: ($l->sender_city ?: 'Member ISF'),
-                    'author_avatar' => $l->author_avatar,
-                    'is_by_member' => true,
-                    'to' => '/artikel/' . $l->slug,
-                ];
-            }
+        $existingSlugs = collect($sorotanMember)->pluck('slug')->all();
+        $extraLetters = Letter::query()->disetujui()->terbit()
+            ->whereNotIn('slug', $existingSlugs)
+            ->orderBy('order', 'asc')
+            ->orderByDesc('published_at')
+            ->take(48)
+            ->get();
+        foreach ($extraLetters as $l) {
+            $sorotanMember[] = [
+                'slug' => $l->slug,
+                'title' => $l->title,
+                'category' => $l->category ?? 'Opini',
+                'subcategory' => $l->subcategory ?? 'Artikel Member',
+                'summary' => $l->summary ?? Str::limit(strip_tags($l->body), 150),
+                'publishedAt' => $l->published_at?->format('Y-m-d'),
+                'readingMinutes' => $l->reading_minutes ?? 5,
+                'imageUrl' => $l->image_url,
+                'imageAlt' => $l->image_alt ?: $l->title,
+                'author' => $l->sender_name,
+                'author_name' => $l->sender_name,
+                'author_slug' => Str::slug($l->sender_name ?: 'penulis'),
+                'author_affiliation' => $l->author_role ?: ($l->sender_city ?: 'Member ISF'),
+                'author_avatar' => $l->author_avatar,
+                'is_by_member' => true,
+                'to' => '/artikel/' . $l->slug,
+            ];
         }
 
         return response()->json([

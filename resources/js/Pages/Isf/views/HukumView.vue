@@ -210,20 +210,36 @@ watch(
     <!-- ═══ 2. SKELETON LOADER (Presisi mencerminkan isi konten di Desktop & Mobile) ═══ -->
     <main v-if="status === 'loading' && !data" class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12 mt-8 sm:mt-12 space-y-8 sm:space-y-12 animate-pulse" aria-busy="true" aria-label="Memuat konten rubrik Hukum">
       <!-- Section 1 Skeleton: Grid 4 Kolom (4x3 Cards) -->
-      <div class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden">
+      <div class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden">
         <div class="border-b border-neutral-200 px-4 py-3 sm:px-6 sm:py-4">
-          <div class="h-4 w-36 bg-neutral-200 rounded"></div>
+          <div class="space-y-1.5">
+            <div class="h-3 w-32 bg-neutral-200 rounded"></div>
+            <div class="flex items-center gap-2">
+              <div class="w-2.5 h-2.5 bg-isf-red rounded-xs"></div>
+              <div class="h-5 sm:h-6 w-48 sm:w-56 bg-neutral-300 rounded"></div>
+            </div>
+          </div>
         </div>
         <div class="p-4 sm:p-6 lg:p-8">
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div v-for="i in 4" :key="i" class="p-4 bg-white rounded-xl border border-neutral-200 space-y-3">
-              <div class="aspect-[4/3] bg-neutral-200 rounded"></div>
-              <div class="h-3 w-16 bg-neutral-200 rounded"></div>
-              <div class="h-5 w-full bg-neutral-300 rounded"></div>
-              <div class="h-3 w-4/5 bg-neutral-200 rounded"></div>
-              <div class="pt-3 border-t border-neutral-100 flex items-center justify-between">
-                <div class="h-3 w-24 bg-neutral-200 rounded"></div>
-                <div class="h-3 w-16 bg-neutral-200 rounded"></div>
+            <div
+              v-for="i in 4"
+              :key="i"
+              class="flex flex-col justify-between bg-white rounded-xl border border-neutral-200 overflow-hidden"
+            >
+              <div class="aspect-[4/3] bg-neutral-200"></div>
+              <div class="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
+                <div class="space-y-2">
+                  <div class="h-3 w-20 bg-neutral-200 rounded"></div>
+                  <div class="h-4.5 w-full bg-neutral-300 rounded"></div>
+                  <div class="h-4.5 w-4/5 bg-neutral-300 rounded"></div>
+                  <div class="h-3 w-full bg-neutral-200 rounded mt-1"></div>
+                  <div class="h-3 w-3/4 bg-neutral-200 rounded"></div>
+                </div>
+                <div class="pt-3 border-t border-neutral-100 flex items-center justify-between text-xs mt-auto">
+                  <div class="h-3 w-24 bg-neutral-200 rounded"></div>
+                  <div class="h-3 w-16 bg-neutral-200 rounded"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -277,7 +293,7 @@ watch(
       <section
         v-if="!currentSubkategori || ['regulasi', 'putusan', 'kasus'].includes(currentSubkategori)"
         aria-labelledby="headline-hukum"
-        class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden"
+        class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden"
       >
         <div class="border-b border-neutral-200">
           <SectionHeading
@@ -345,10 +361,10 @@ watch(
         </div>
 
         <!-- Pagination -->
-        <div v-if="meta.lastPage > 1" :class="['py-5 sm:py-6 flex justify-center border-t border-neutral-200', sectionPad]">
+        <div v-if="meta.total > 0" :class="['py-5 sm:py-6 flex justify-center border-t border-neutral-200', sectionPad]">
           <Pagination
             :current-page="meta.currentPage"
-            :total-pages="meta.lastPage"
+            :total-pages="Math.max(1, meta.lastPage)"
             @update:current-page="onPageChange"
           />
         </div>
@@ -485,13 +501,3 @@ watch(
     </main>
   </div>
 </template>
-
-<style scoped>
-.isf-no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.isf-no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-</style>
