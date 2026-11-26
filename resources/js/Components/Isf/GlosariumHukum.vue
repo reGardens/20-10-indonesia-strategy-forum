@@ -377,13 +377,3 @@ function handleRelatedClick(relatedTerm) {
     </div>
   </div>
 </template>
-
-<style scoped>
-.isf-no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.isf-no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-</style>

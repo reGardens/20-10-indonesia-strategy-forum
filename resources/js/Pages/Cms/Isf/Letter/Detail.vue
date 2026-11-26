@@ -34,6 +34,15 @@ const canApprove = computed(() => {
   return authRoles.value.includes('admin') || authRoles.value.includes('super-admin')
 })
 
+const isPending = computed(() => {
+  if (!item.value) return false
+  const mod = item.value.moderation_status
+  const st = item.value.status
+  if (mod === 'disetujui' || st === 'disetujui' || st === 'terbit') return false
+  if (mod === 'ditolak' || st === 'ditolak') return false
+  return true
+})
+
 const item = ref(null)
 const loading = ref(true)
 const loadError = ref('')
@@ -146,7 +155,7 @@ onMounted(fetchLetter)
       <!-- Action Buttons: Setujui, Tolak, Hapus -->
       <div v-if="item" class="flex items-center gap-2">
         <Button
-          v-if="canApprove && item.moderation_status !== 'disetujui'"
+          v-if="canApprove && isPending"
           type="button"
           size="sm"
           :disabled="actionLoading"
@@ -157,7 +166,7 @@ onMounted(fetchLetter)
           {{ actionLoading ? 'Memproses...' : 'Setujui & Terbitkan' }}
         </Button>
         <Button
-          v-if="item.moderation_status !== 'ditolak'"
+          v-if="isPending"
           type="button"
           variant="destructive"
           size="sm"
@@ -168,6 +177,20 @@ onMounted(fetchLetter)
           <IconComponent name="X" :size="14" />
           Tolak Naskah
         </Button>
+        <span
+          v-if="item.moderation_status === 'disetujui' || item.status === 'disetujui' || item.status === 'terbit'"
+          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 gap-1.5"
+        >
+          <IconComponent name="Check" :size="14" />
+          Telah Disetujui
+        </span>
+        <span
+          v-else-if="item.moderation_status === 'ditolak' || item.status === 'ditolak'"
+          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 gap-1.5"
+        >
+          <IconComponent name="X" :size="14" />
+          Telah Ditolak
+        </span>
         <Button
           type="button"
           variant="outline"
@@ -186,18 +209,23 @@ onMounted(fetchLetter)
     <ErrorMessage v-else-if="loadError" :message="loadError" @retry="fetchLetter" />
 
     <div v-else-if="item" class="space-y-6">
-      <!-- Status Notice jika ditolak dan ada catatan -->
+      <!-- Status Notice jika ditolak (Alasan Ditolak) -->
       <div
-        v-if="item.moderation_status === 'ditolak' && item.moderation_notes"
-        class="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs space-y-1"
+        v-if="item.moderation_status === 'ditolak' || item.status === 'ditolak' || (item.moderation_notes && item.moderation_status !== 'disetujui')"
+        class="p-4 sm:p-5 rounded-xl bg-red-500/10 border border-red-500/25 text-red-600 dark:text-red-400 text-xs space-y-2 shadow-xs"
       >
-        <div class="flex items-center gap-2 font-semibold">
-          <IconComponent name="X" :size="16" />
-          <span>Artikel ini telah ditolak oleh redaksi:</span>
+        <div class="flex items-center gap-2 font-bold text-sm">
+          <IconComponent name="X" :size="16" class="text-red-600 dark:text-red-400 shrink-0" />
+          <span>Artikel ini telah ditolak oleh dewan redaksi</span>
         </div>
-        <p class="text-xs italic pl-6">
-          "{{ item.moderation_notes }}"
-        </p>
+        <div class="pl-6 space-y-1.5">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-red-700 dark:text-red-300">
+            Alasan Penolakan / Catatan Evaluasi Redaksi:
+          </div>
+          <div class="p-3 rounded-lg bg-card border border-red-500/30 text-xs sm:text-sm font-medium text-foreground whitespace-pre-wrap leading-relaxed shadow-2xs">
+            {{ item.moderation_notes || item.catatan_redaksi || 'Tidak ada catatan evaluasi khusus dari redaksi.' }}
+          </div>
+        </div>
       </div>
 
       <!-- Main Overview Card (Desain & Struktur 100% Identik dengan Detail Artikel) -->
@@ -365,6 +393,7 @@ onMounted(fetchLetter)
             type="button"
             variant="outline"
             size="sm"
+            :disabled="actionLoading"
             @click="showRejectModal = false"
             class="h-8 text-xs"
           >
@@ -376,9 +405,13 @@ onMounted(fetchLetter)
             size="sm"
             :disabled="actionLoading"
             @click="submitReject"
-            class="h-8 text-xs font-semibold"
+            class="h-8 text-xs font-semibold inline-flex items-center gap-1.5"
           >
-            {{ actionLoading ? 'Menyimpan...' : 'Konfirmasi Tolak' }}
+            <svg v-if="actionLoading" class="animate-spin h-3.5 w-3.5 text-white shrink-0" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+            <span>{{ actionLoading ? 'Mengirim Catatan...' : 'Konfirmasi Tolak' }}</span>
           </Button>
         </div>
       </div>

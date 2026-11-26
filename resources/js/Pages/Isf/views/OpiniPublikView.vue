@@ -131,16 +131,19 @@ function generateAuthorSlug(name) {
     .replace(/^-+|-+$/g, '') || 'member-isf'
 }
 
-// 4 Card Sorotan Opini Publik Berisi Artikel yang Baru Dibuat Member
+// Sorotan Opini Publik Berisi Artikel Kontribusi Member (Grid 4x3 = 12 Cards per Page + Pagination)
+const sorotanCurrentPage = ref(1)
+const sorotanPerPage = 12
+
 const sorotanMemberCards = computed(() => {
   if (data.value?.sorotanMember && data.value.sorotanMember.length > 0) {
-    return data.value.sorotanMember.slice(0, 4)
+    return data.value.sorotanMember
   }
   const memberArts = (data.value?.articles || []).filter(a => a.is_by_member)
   if (memberArts.length > 0) {
-    return memberArts.slice(0, 4)
+    return memberArts
   }
-  const fromLetters = (data.value?.suratPembaca || []).slice(0, 4).map(l => ({
+  const fromLetters = (data.value?.suratPembaca || []).map(l => ({
     title: l.title,
     slug: l.slug,
     category: l.category || 'Opini',
@@ -160,8 +163,29 @@ const sorotanMemberCards = computed(() => {
   if (fromLetters.length > 0) {
     return fromLetters
   }
-  return (articles.value || []).slice(0, 4)
+  return articles.value || []
 })
+
+const paginatedSorotanCards = computed(() => {
+  const start = (sorotanCurrentPage.value - 1) * sorotanPerPage
+  return sorotanMemberCards.value.slice(start, start + sorotanPerPage)
+})
+
+const sorotanTotalPages = computed(() => {
+  return Math.max(1, Math.ceil(sorotanMemberCards.value.length / sorotanPerPage))
+})
+
+function onSorotanPageChange(page) {
+  sorotanCurrentPage.value = page
+  if (typeof window !== 'undefined') {
+    const el = document.getElementById('headline-opini')
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    } else {
+      window.scrollTo({ top: 380, behavior: 'smooth' })
+    }
+  }
+}
 
 const filteredQuotes = computed(() => {
   const list = kutipanPublik.value || []
@@ -183,8 +207,16 @@ const ctaList = [
   { label: 'CTA 5' },
 ]
 
+function handleBuatArtikelClick() {
+  if (isLoggedIn.value) {
+    window.location.href = '/cms/artikel'
+  } else {
+    window.location.href = '/register?redirect=/cms/artikel'
+  }
+}
+
 function handleDaftarBuatArtikel() {
-  window.location.href = '/register?redirect=/cms/artikel'
+  handleBuatArtikelClick()
 }
 
 onMounted(async () => {
@@ -309,15 +341,14 @@ watch(
               </button>
             </div>
 
-            <!-- CTA Daftar Buat Artikel (hanya untuk pengunjung belum login; jika login menulis langsung di CMS) -->
+            <!-- CTA Buat Artikel: Jika belum login: "Daftar untuk Buat Artikel" -> /register; Jika sudah login: "Buat Artikel" -> /cms/artikel -->
             <button
-              v-if="!isLoggedIn"
               type="button"
-              @click="handleDaftarBuatArtikel"
+              @click="handleBuatArtikelClick"
               class="inline-flex items-center gap-1.5 px-4 py-2 rounded text-xs font-space-grotesk font-bold bg-isf-red hover:bg-red-700 text-white transition-all shrink-0 shadow-xs cursor-pointer"
             >
               <IconFileText class="w-3.5 h-3.5" />
-              <span>Daftar untuk Buat Artikel</span>
+              <span>{{ isLoggedIn ? 'Buat Artikel' : 'Daftar untuk Buat Artikel' }}</span>
             </button>
           </div>
         </div>
@@ -329,17 +360,17 @@ watch(
       <!-- Section 1 Skeleton: Sorotan Utama (4 Cards Grid Berisi Artikel Member) -->
       <div class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden">
         <div class="border-b border-neutral-200 px-4 py-3 sm:px-6 sm:py-4">
-          <div class="space-y-1">
-            <div class="h-3 w-48 bg-neutral-200 rounded"></div>
+          <div class="space-y-1.5">
+            <div class="h-3 w-32 bg-neutral-200 rounded"></div>
             <div class="flex items-center gap-2">
               <div class="w-2.5 h-2.5 bg-isf-red rounded-xs"></div>
-              <div class="h-6 w-56 bg-neutral-300 rounded"></div>
+              <div class="h-5 sm:h-6 w-48 sm:w-56 bg-neutral-300 rounded"></div>
             </div>
           </div>
         </div>
 
-        <div class="p-4 sm:p-6 xl:p-8">
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div class="p-4 sm:p-6 lg:p-8">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div
               v-for="i in 4"
               :key="i"
@@ -568,9 +599,9 @@ watch(
 
     <!-- ═══ 3. LOADED CONTENT VIEW ═════════════════════════════════════════ -->
     <main v-else class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12 mt-8 sm:mt-12 space-y-8 sm:space-y-12">
-      <!-- ═══ SECTION 1: SOROTAN UTAMA (4 CARDS ARTIKEL BY MEMBER) ═════════════════════════ -->
+      <!-- ═══ SECTION 1: SOROTAN UTAMA (4x3 CARDS ARTIKEL BY MEMBER + PAGINATION) ═════════════════════ -->
       <section
-        v-if="currentPage === 1 && (!currentSubkategori || ['op-ed', 'editorial'].includes(currentSubkategori)) && sorotanMemberCards.length > 0"
+        v-if="(!currentSubkategori || ['op-ed', 'editorial'].includes(currentSubkategori)) && sorotanMemberCards.length > 0"
         aria-labelledby="headline-opini"
         class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden"
       >
@@ -588,7 +619,7 @@ watch(
         <div :class="[sectionPad, 'py-5 sm:py-6']">
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             <article
-              v-for="(card, cIdx) in sorotanMemberCards"
+              v-for="(card, cIdx) in paginatedSorotanCards"
               :key="card.slug || cIdx"
               class="group flex flex-col justify-between bg-neutral-50 hover:bg-neutral-100/90 rounded-xl border border-neutral-200/90 overflow-hidden transition-all duration-300 hover:shadow-md hover:border-isf-red/40"
             >
@@ -674,6 +705,18 @@ watch(
               </div>
             </article>
           </div>
+        </div>
+
+        <!-- Pagination Sorotan Opini Publik (4 Kolom x 3 Baris) -->
+        <div
+          v-if="sorotanMemberCards.length > 0"
+          :class="['py-5 sm:py-6 flex justify-center border-t border-neutral-200', sectionPad]"
+        >
+          <Pagination
+            :current-page="sorotanCurrentPage"
+            :total-pages="sorotanTotalPages"
+            @update:current-page="onSorotanPageChange"
+          />
         </div>
       </section>
 
@@ -799,13 +842,12 @@ watch(
           </div>
 
           <button
-            v-if="!isLoggedIn"
             type="button"
-            @click="handleDaftarBuatArtikel"
+            @click="handleBuatArtikelClick"
             class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white text-xs sm:text-sm font-bold font-space-grotesk transition-colors shrink-0 shadow-xs cursor-pointer self-start sm:self-auto"
           >
             <IconFileText class="w-4 h-4 text-isf-red" />
-            <span>Daftar untuk Buat Artikel</span>
+            <span>{{ isLoggedIn ? 'Buat Artikel' : 'Daftar untuk Buat Artikel' }}</span>
           </button>
         </div>
 
@@ -879,12 +921,11 @@ watch(
             Jadilah yang pertama mengirimkan analisis dan gagasan Anda untuk dipublikasikan di ISF.
           </p>
           <button
-            v-if="!isLoggedIn"
             type="button"
-            @click="handleDaftarBuatArtikel"
+            @click="handleBuatArtikelClick"
             class="mt-4 px-4 py-2 rounded-lg bg-isf-red text-white text-xs font-bold font-space-grotesk hover:bg-red-700 transition-colors cursor-pointer"
           >
-            Daftar untuk Buat Artikel
+            {{ isLoggedIn ? 'Buat Artikel' : 'Daftar untuk Buat Artikel' }}
           </button>
         </div>
       </section>
@@ -960,10 +1001,10 @@ watch(
         </div>
 
         <!-- Pagination -->
-        <div v-if="meta.lastPage > 1" :class="['py-5 sm:py-6 flex justify-center border-t border-neutral-200', sectionPad]">
+        <div v-if="meta.total > 0" :class="['py-5 sm:py-6 flex justify-center border-t border-neutral-200', sectionPad]">
           <Pagination
             :current-page="meta.currentPage"
-            :total-pages="meta.lastPage"
+            :total-pages="Math.max(1, meta.lastPage)"
             @update:current-page="onPageChange"
           />
         </div>
@@ -971,13 +1012,3 @@ watch(
     </main>
   </div>
 </template>
-
-<style scoped>
-.isf-no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.isf-no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-</style>

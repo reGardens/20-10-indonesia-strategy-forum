@@ -265,13 +265,51 @@ class LetterController extends CmsResourceController
             'moderated_by' => $request->user()?->id,
         ]);
 
-        // Hapus dari isf_articles jika sebelumnya sempat disetujui / masuk ke tabel artikel
-        Article::where(function ($q) use ($suratPembaca) {
+        // Tandai status 'ditolak' di isf_articles agar muncul di menu artikel semua role
+        $slug = $suratPembaca->slug ?: Str::slug($suratPembaca->title);
+        if (! $slug) {
+            $slug = 'artikel-member-'.$suratPembaca->id;
+        }
+        $category = $suratPembaca->category ?: 'opini';
+        $subcategory = $suratPembaca->subcategory ?: 'surat-pembaca';
+
+        $existingArt = Article::where(function ($q) use ($suratPembaca) {
             if ($suratPembaca->slug) {
                 $q->where('slug', $suratPembaca->slug);
             }
             $q->orWhere('title', $suratPembaca->title);
-        })->where('is_by_member', true)->delete();
+        })->where('is_by_member', true)->first();
+
+        if ($existingArt) {
+            $existingArt->update([
+                'status' => 'ditolak',
+                'is_hero' => false,
+                'show_in_terkini' => false,
+                'show_in_running_text' => false,
+                'show_in_top_rank' => false,
+            ]);
+        } else {
+            Article::create([
+                'user_id' => $suratPembaca->user_id,
+                'slug' => $slug,
+                'title' => $suratPembaca->title,
+                'category' => $category,
+                'subcategory' => $subcategory,
+                'published_at' => $suratPembaca->published_at ?? now(),
+                'summary' => $suratPembaca->summary ?: Str::limit(strip_tags($suratPembaca->body), 200),
+                'body' => $suratPembaca->body,
+                'author_name' => $suratPembaca->author_name ?: $suratPembaca->sender_name,
+                'author_role' => $suratPembaca->author_role,
+                'author_avatar' => $suratPembaca->author_avatar,
+                'reading_minutes' => $suratPembaca->reading_minutes ?: 5,
+                'image_url' => $suratPembaca->image_url,
+                'image_alt' => $suratPembaca->image_alt,
+                'link_url' => $suratPembaca->link_url ?: ('/artikel/' . $category . '/' . $slug),
+                'fact_blocks' => $suratPembaca->fact_blocks,
+                'status' => 'ditolak',
+                'is_by_member' => true,
+            ]);
+        }
 
         IsfCacheService::clearBeranda();
 

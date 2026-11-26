@@ -18,5 +18,5 @@ final class IsfOptions
     public const PRIORITIES = ['merah', 'kuning'];
 
     /** Publish status: only "terbit" content is served by the public API. */
-    public const STATUSES = ['draf', 'terbit'];
+    public const STATUSES = ['draf', 'terbit', 'ditolak'];
 }

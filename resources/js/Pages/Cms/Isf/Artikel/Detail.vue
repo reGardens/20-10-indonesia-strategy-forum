@@ -129,6 +129,25 @@ onMounted(fetchArticle)
     <ErrorMessage v-else-if="loadError" :message="loadError" @retry="fetchArticle" />
 
     <div v-else-if="item" class="space-y-6">
+      <!-- Status Notice jika ditolak -->
+      <div
+        v-if="item.status === 'ditolak' || item.moderation_notes || item.catatan_redaksi"
+        class="p-4 sm:p-5 rounded-xl bg-red-500/10 border border-red-500/25 text-red-600 dark:text-red-400 text-xs space-y-2 shadow-xs"
+      >
+        <div class="flex items-center gap-2 font-bold text-sm">
+          <IconComponent name="X" :size="16" class="text-red-600 dark:text-red-400 shrink-0" />
+          <span>Artikel ini telah ditolak oleh dewan redaksi</span>
+        </div>
+        <div class="pl-6 space-y-1.5">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-red-700 dark:text-red-300">
+            Alasan Penolakan / Catatan Evaluasi Redaksi:
+          </div>
+          <div class="p-3 rounded-lg bg-card border border-red-500/30 text-xs sm:text-sm font-medium text-foreground whitespace-pre-wrap leading-relaxed shadow-2xs">
+            {{ item.moderation_notes || item.catatan_redaksi || 'Tidak ada catatan evaluasi khusus dari redaksi.' }}
+          </div>
+        </div>
+      </div>
+
       <!-- Overview Card -->
       <Card class="border border-border/80 shadow-xs">
         <CardContent class="p-6 space-y-5">

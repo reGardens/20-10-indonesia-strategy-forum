@@ -74,7 +74,7 @@
     <div class="border-b border-neutral-800 bg-isf-navy" style="border-bottom: 1px solid #262626; background-color: #0B1220;">
         <div class="w-full flex items-center justify-between gap-3 px-4 sm:px-6 md:px-8 xl:px-12 py-1.5" style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding-top: 0.375rem; padding-bottom: 0.375rem; width: 100%;">
             <!-- Kelompok 1: Hamburger Menu (kiri) -->
-            <div class="flex items-center justify-start shrink-0 lg:min-w-[220px]" style="display: flex; align-items: center; justify-content: flex-start; flex-shrink: 0;">
+            <div class="flex items-center justify-start shrink-0 xl:min-w-[220px]" style="display: flex; align-items: center; justify-content: flex-start; flex-shrink: 0;">
                 <button type="button" aria-label="Buka menu" class="inline-flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-md border border-white/10 text-white" style="display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.1); background: transparent; color: #ffffff; cursor: pointer;">
                     <svg class="h-4 w-4 sm:h-5 sm:w-5 shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true" focusable="false">
                         <path d="M3 6h18M3 12h18M3 18h18" />
@@ -82,9 +82,9 @@
                 </button>
             </div>
 
-            <!-- Kelompok 2: Nav Menu Links (scrollable start di mobile, terpusat di desktop) -->
-            <nav aria-label="Navigasi utama" class="isf-no-scrollbar min-w-0 flex-1 overflow-x-auto overflow-y-hidden px-1 sm:px-2 flex items-center justify-start lg:justify-center" style="display: flex; align-items: center; flex: 1 1 0%; min-width: 0;">
-                <ul class="flex items-center gap-x-3 sm:gap-x-5 xl:gap-x-6 py-1 font-space-grotesk text-[12px] sm:text-[13px] font-semibold xl:text-[14px] whitespace-nowrap" style="display: flex; align-items: center; padding: 0.25rem 0; margin: 0; list-style: none; font-family: 'Space Grotesk', sans-serif; font-weight: 600; white-space: nowrap; color: #d4d4d4;">
+            <!-- Kelompok 2: Nav Menu Links (scrollable start di mobile agar Beranda tidak terpotong, terpusat di layar lebar) -->
+            <nav aria-label="Navigasi utama" class="isf-no-scrollbar min-w-0 flex-1 overflow-x-auto overflow-y-hidden px-1 sm:px-2 flex items-center justify-start xl:justify-center" style="display: flex; align-items: center; flex: 1 1 0%; min-width: 0;">
+                <ul class="flex items-center gap-x-3 sm:gap-x-5 xl:gap-x-6 py-1 font-space-grotesk text-[12px] sm:text-[13px] font-semibold xl:text-[14px] whitespace-nowrap shrink-0" style="display: flex; align-items: center; padding: 0.25rem 0; margin: 0; list-style: none; font-family: 'Space Grotesk', sans-serif; font-weight: 600; white-space: nowrap; color: #d4d4d4;">
                     {{-- = NAV_LINKS di IsfHeader.vue; link aktif mengikuti path (rute Vue datar, jadi cocok persis = router-link-active). --}}
                     @php
                         $isfPath = '/' . trim(request()->path(), '/');
@@ -110,7 +110,7 @@
             </nav>
 
             <!-- Kelompok 3: Login, Search (kanan) -->
-            <div class="flex items-center gap-2 sm:gap-3 shrink-0 justify-end lg:min-w-[220px]" style="display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0;">
+            <div class="flex items-center gap-2 sm:gap-3 shrink-0 justify-end xl:min-w-[220px]" style="display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0;">
                 @if ($isfShowMemberArea)
                 <button type="button" aria-label="Notifikasi" title="Notifikasi" class="inline-flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-md border border-white/10 text-white">
                     <svg class="h-4 w-4 sm:h-5 sm:w-5 shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true" focusable="false">

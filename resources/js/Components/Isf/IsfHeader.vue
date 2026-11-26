@@ -387,7 +387,7 @@ defineExpose({
             <div class="w-full flex items-center justify-between gap-3 px-4 sm:px-6 md:px-8 xl:px-12 py-1.5">
 
                 <!-- Hamburger (kiri) -->
-                <div class="flex items-center justify-start shrink-0 lg:min-w-[220px]">
+                <div class="flex items-center justify-start shrink-0 xl:min-w-[220px]">
                     <button
                         ref="menuToggle"
                         type="button"
@@ -405,9 +405,12 @@ defineExpose({
                     </button>
                 </div>
 
-                <!-- Nav links (tengah) - Scrollable start-aligned di mobile agar lengkap, terpusat di desktop -->
-                <nav aria-label="Navigasi utama" class="isf-no-scrollbar min-w-0 flex-1 overflow-x-auto overflow-y-hidden px-1 sm:px-2 flex items-center justify-start lg:justify-center scroll-smooth overscroll-x-contain">
-                    <ul class="flex items-center gap-x-3 sm:gap-x-5 xl:gap-x-6 py-1 font-space-grotesk text-[12px] sm:text-[13px] font-semibold xl:text-[14px] whitespace-nowrap">
+                <!-- Nav links (tengah) - Scrollable start-aligned saat overflow agar Beranda tidak terpotong, terpusat jika muat -->
+                <nav
+                    aria-label="Navigasi utama"
+                    class="isf-no-scrollbar min-w-0 flex-1 overflow-x-auto overflow-y-hidden px-1 sm:px-2 flex items-center justify-start xl:justify-center scroll-smooth overscroll-x-contain"
+                >
+                    <ul class="flex items-center gap-x-3 sm:gap-x-5 xl:gap-x-6 py-1 font-space-grotesk text-[12px] sm:text-[13px] font-semibold xl:text-[14px] whitespace-nowrap shrink-0">
                         <template v-for="(group, groupIndex) in NAV_GROUPS" :key="groupIndex">
                             <li v-if="groupIndex > 0 && group.length > 0" aria-hidden="true" class="mx-1 h-3.5 w-px bg-neutral-700 shrink-0"></li>
                             <li v-for="link in group" :key="link.label" class="shrink-0">
@@ -431,7 +434,7 @@ defineExpose({
                 </nav>
 
                 <!-- Portal Anggota / Login / Search / Member Profile (kanan) -->
-                <div class="flex items-center gap-2 sm:gap-3 shrink-0 justify-end lg:min-w-[220px]">
+                <div class="flex items-center gap-2 sm:gap-3 shrink-0 justify-end xl:min-w-[220px]">
                     <template v-if="isLoggedIn">
                         <!-- Menu Notifikasi Lonceng (Landing Page) -->
                         <IsfNotificationMenu />
@@ -696,14 +699,5 @@ defineExpose({
     opacity: 0;
     pointer-events: none;
     border-color: transparent;
-}
-
-/* ── Scrollbar hide helper ───────────────────────────────────────────────── */
-.isf-no-scrollbar {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-}
-.isf-no-scrollbar::-webkit-scrollbar {
-    display: none;
 }
 </style>
