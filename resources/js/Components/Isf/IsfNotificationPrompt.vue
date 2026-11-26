@@ -113,7 +113,10 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
-import { useIsfPushNotification, isNotificationPromptActive } from "@/Composables/useIsfPushNotification";
+import {
+    useIsfPushNotification,
+    isNotificationPromptActive,
+} from "@/Composables/useIsfPushNotification";
 
 const {
     isSupported,
@@ -145,9 +148,13 @@ const showBanner = computed(() => {
     return !isDismissedRecently();
 });
 
-watch(showBanner, (val) => {
-    isNotificationPromptActive.value = !!val;
-}, { immediate: true });
+watch(
+    showBanner,
+    (val) => {
+        isNotificationPromptActive.value = !!val;
+    },
+    { immediate: true },
+);
 
 const handleSubscribe = async () => {
     const result = await subscribe();

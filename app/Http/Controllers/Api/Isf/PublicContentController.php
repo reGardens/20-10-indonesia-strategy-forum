@@ -2138,6 +2138,19 @@ class PublicContentController extends Controller
             'status' => 'terbit',
         ]);
 
+        try {
+            $pushService = app(\App\Services\IsfPushNotificationService::class);
+            $pushService->sendToRoles(
+                ['super-admin', 'admin', 'editor'],
+                'Review Naskah Member',
+                'Naskah "' . Str::limit($letter->title, 40) . '" oleh ' . ($letter->sender_name ?: 'Member') . ' menunggu moderasi.',
+                url('/cms/surat-pembaca/' . $letter->id),
+                ['type' => 'moderation', 'slug' => $letter->slug, 'letter_id' => $letter->id]
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Gagal kirim push naskah member ke admin (public submit): ' . $e->getMessage());
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Artikel Anda berhasil dikirim dan masuk antrean moderasi redaksi. Artikel akan ditayangkan setelah disetujui.',

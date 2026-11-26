@@ -56,27 +56,35 @@ export function useIsfPushNotification() {
     permissionState.value = Notification.permission
 
     try {
-      if ('serviceWorker' in navigator) {
-        const reg = await navigator.serviceWorker.getRegistration()
-        if (reg?.pushManager) {
-          const sub = await reg.pushManager.getSubscription()
-          isSubscribed.value = !!sub
+      const reg = await getRegistration()
+      if (reg?.pushManager) {
+        let sub = await reg.pushManager.getSubscription()
 
-          if (sub) {
-            // Sinkronkan ke server agar endpoint otomatis terhubung ke akun user yang sedang aktif login
-            try {
-              const raw = sub.toJSON()
-              http.post('/isf/push/subscribe', {
-                endpoint: sub.endpoint,
-                keys: raw.keys,
-                content_encoding: (window.PushManager?.supportedContentEncodings || ['aes128gcm'])[0],
-              }).catch(() => {})
-            } catch (_) {}
+        // Jika browser/HP sudah mengizinkan notifikasi (granted) tapi belum punya subscription aktif di PushManager, daftarkan otomatis sekarang!
+        if (Notification.permission === 'granted' && !sub) {
+          const autoSubRes = await subscribe()
+          if (autoSubRes?.success) {
+            isSubscribed.value = true
+            return
           }
+        }
+
+        isSubscribed.value = !!sub
+
+        if (sub) {
+          // Sinkronkan ke server agar endpoint otomatis terhubung ke akun user yang sedang aktif login
+          try {
+            const raw = sub.toJSON()
+            await http.post('/isf/push/subscribe', {
+              endpoint: sub.endpoint,
+              keys: raw.keys,
+              content_encoding: (window.PushManager?.supportedContentEncodings || ['aes128gcm'])[0],
+            })
+          } catch (_) {}
         }
       }
     } catch (e) {
-      // Ignored in environments where SW doesn't boot (e.g. jsdom / test)
+      console.warn('[Push] Error in initPush:', e)
     }
   }
 
@@ -112,14 +120,26 @@ export function useIsfPushNotification() {
       let sub = await reg.pushManager.getSubscription()
 
       if (!sub) {
-        sub = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlB64ToUint8Array(vapidKey),
-        })
+        try {
+          sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlB64ToUint8Array(vapidKey),
+          })
+        } catch (subErr) {
+          console.warn('[Push] Subscribe with current key failed, resetting stale subscription:', subErr)
+          const existing = await reg.pushManager.getSubscription()
+          if (existing) {
+            await existing.unsubscribe().catch(() => {})
+          }
+          sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlB64ToUint8Array(vapidKey),
+          })
+        }
       }
 
       const raw = sub.toJSON()
-      await http.post('/isf/push/subscribe', {
+      const postRes = await http.post('/isf/push/subscribe', {
         endpoint: sub.endpoint,
         keys: raw.keys,
         content_encoding: (window.PushManager?.supportedContentEncodings || ['aes128gcm'])[0],
@@ -128,7 +148,7 @@ export function useIsfPushNotification() {
       isSubscribed.value = true
       localStorage.removeItem('isf_push_prompt_dismissed_at')
       isLoading.value = false
-      return { success: true }
+      return { success: true, data: postRes.data }
     } catch (err) {
       console.error('[Push] Subscription failed:', err)
       isLoading.value = false
