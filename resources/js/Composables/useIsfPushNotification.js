@@ -1,10 +1,10 @@
 import { ref } from 'vue'
 import http from '@/api/http'
 
-const isSupported = ref(false);
-const permissionState = ref("default");
-const isSubscribed = ref(false);
-const isLoading = ref(false);
+const isSupported = ref(false)
+const permissionState = ref('default')
+const isSubscribed = ref(false)
+const isLoading = ref(false)
 export const isNotificationPromptActive = ref(false)
 
 function urlB64ToUint8Array(base64String) {
@@ -41,26 +41,26 @@ export function useIsfPushNotification() {
     }
   }
 
-    const initPush = async () => {
-        if (typeof window === "undefined") return;
+  const initPush = async () => {
+    if (typeof window === 'undefined') return
 
-        isSupported.value =
-            "serviceWorker" in navigator &&
-            "PushManager" in window &&
-            "Notification" in window;
-        if (!isSupported.value) {
-            permissionState.value = "unsupported";
-            return;
-        }
+    isSupported.value =
+      'serviceWorker' in navigator &&
+      'PushManager' in window &&
+      'Notification' in window
+    if (!isSupported.value) {
+      permissionState.value = 'unsupported'
+      return
+    }
 
-        permissionState.value = Notification.permission;
+    permissionState.value = Notification.permission
 
-        try {
-            if ("serviceWorker" in navigator) {
-                const reg = await navigator.serviceWorker.getRegistration();
-                if (reg?.pushManager) {
-                    const sub = await reg.pushManager.getSubscription();
-                    isSubscribed.value = !!sub;
+    try {
+      if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.getRegistration()
+        if (reg?.pushManager) {
+          const sub = await reg.pushManager.getSubscription()
+          isSubscribed.value = !!sub
 
           if (sub) {
             // Sinkronkan ke server agar endpoint otomatis terhubung ke akun user yang sedang aktif login
@@ -74,48 +74,49 @@ export function useIsfPushNotification() {
             } catch (_) {}
           }
         }
-    };
+      }
+    } catch (e) {
+      // Ignored in environments where SW doesn't boot (e.g. jsdom / test)
+    }
+  }
 
-    const subscribe = async () => {
-        if (!isSupported.value)
-            return { success: false, reason: "unsupported" };
+  const subscribe = async () => {
+    if (!isSupported.value) return { success: false, reason: 'unsupported' }
 
-        isLoading.value = true;
-        try {
-            const permission = await Notification.requestPermission();
-            permissionState.value = permission;
+    isLoading.value = true
+    try {
+      const permission = await Notification.requestPermission()
+      permissionState.value = permission
 
-            if (permission !== "granted") {
-                isLoading.value = false;
-                return { success: false, reason: "denied" };
-            }
+      if (permission !== 'granted') {
+        isLoading.value = false
+        return { success: false, reason: 'denied' }
+      }
 
       // Fetch VAPID public key
       const keyRes = await http.get('/isf/push/vapid-key')
       const vapidKey = keyRes.data?.public_key
 
-            if (!vapidKey) {
-                isLoading.value = false;
-                return { success: false, reason: "no_key" };
-            }
+      if (!vapidKey) {
+        isLoading.value = false
+        return { success: false, reason: 'no_key' }
+      }
 
-            const reg = await getRegistration();
-            if (!reg || !reg.pushManager) {
-                console.warn(
-                    "[Push] ServiceWorker or pushManager not available",
-                );
-                isLoading.value = false;
-                return { success: false, reason: "no_sw" };
-            }
+      const reg = await getRegistration()
+      if (!reg || !reg.pushManager) {
+        console.warn('[Push] ServiceWorker or pushManager not available')
+        isLoading.value = false
+        return { success: false, reason: 'no_sw' }
+      }
 
-            let sub = await reg.pushManager.getSubscription();
+      let sub = await reg.pushManager.getSubscription()
 
-            if (!sub) {
-                sub = await reg.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: urlB64ToUint8Array(vapidKey),
-                });
-            }
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlB64ToUint8Array(vapidKey),
+        })
+      }
 
       const raw = sub.toJSON()
       await http.post('/isf/push/subscribe', {
@@ -124,19 +125,19 @@ export function useIsfPushNotification() {
         content_encoding: (window.PushManager?.supportedContentEncodings || ['aes128gcm'])[0],
       })
 
-            isSubscribed.value = true;
-            localStorage.removeItem("isf_push_prompt_dismissed_at");
-            isLoading.value = false;
-            return { success: true };
-        } catch (err) {
-            console.error("[Push] Subscription failed:", err);
-            isLoading.value = false;
-            return { success: false, error: err };
-        }
-    };
+      isSubscribed.value = true
+      localStorage.removeItem('isf_push_prompt_dismissed_at')
+      isLoading.value = false
+      return { success: true }
+    } catch (err) {
+      console.error('[Push] Subscription failed:', err)
+      isLoading.value = false
+      return { success: false, error: err }
+    }
+  }
 
-    const unsubscribe = async () => {
-        if (!isSupported.value) return false;
+  const unsubscribe = async () => {
+    if (!isSupported.value) return false
 
     isLoading.value = true
     try {
@@ -148,36 +149,43 @@ export function useIsfPushNotification() {
           await sub.unsubscribe()
           await http.post('/isf/push/unsubscribe', { endpoint })
         }
-    };
+      }
 
-    const dismissPrompt = () => {
-        if (typeof window !== "undefined") {
-            localStorage.setItem(
-                "isf_push_prompt_dismissed_at",
-                Date.now().toString(),
-            );
-        }
-    };
+      isSubscribed.value = false
+      isLoading.value = false
+      return true
+    } catch (err) {
+      console.error('[Push] Unsubscription failed:', err)
+      isLoading.value = false
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
 
-    const isDismissedRecently = () => {
-        if (typeof window === "undefined") return false;
-        const dismissedAt = localStorage.getItem(
-            "isf_push_prompt_dismissed_at",
-        );
-        if (!dismissedAt) return false;
-        // 7 days cooldown
-        return Date.now() - parseInt(dismissedAt, 10) < 7 * 24 * 60 * 60 * 1000;
-    };
+  const dismissPrompt = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('isf_push_prompt_dismissed_at', Date.now().toString())
+    }
+  }
 
-    return {
-        isSupported,
-        permissionState,
-        isSubscribed,
-        isLoading,
-        initPush,
-        subscribe,
-        unsubscribe,
-        dismissPrompt,
-        isDismissedRecently,
-    };
+  const isDismissedRecently = () => {
+    if (typeof window === 'undefined') return false
+    const dismissedAt = localStorage.getItem('isf_push_prompt_dismissed_at')
+    if (!dismissedAt) return false
+    // 7 days cooldown
+    return Date.now() - parseInt(dismissedAt, 10) < 7 * 24 * 60 * 60 * 1000
+  }
+
+  return {
+    isSupported,
+    permissionState,
+    isSubscribed,
+    isLoading,
+    initPush,
+    subscribe,
+    unsubscribe,
+    dismissPrompt,
+    isDismissedRecently,
+  }
 }
