@@ -122,7 +122,8 @@ Route::middleware(['web'])->prefix('isf')->group(function () {
         Route::get('/vapid-key', [PushNotificationController::class, 'vapidKey'])->name('api.isf.push.vapid-key');
         Route::post('/subscribe', [PushNotificationController::class, 'subscribe'])->name('api.isf.push.subscribe');
         Route::post('/unsubscribe', [PushNotificationController::class, 'unsubscribe'])->name('api.isf.push.unsubscribe');
-        Route::post('/test', [PushNotificationController::class, 'sendTest'])->name('api.isf.push.test');
+        Route::match(['GET', 'POST'], '/test', [PushNotificationController::class, 'sendTest'])->name('api.isf.push.test');
+        Route::get('/status', [PushNotificationController::class, 'status'])->name('api.isf.push.status');
         Route::get('/notifications', [PushNotificationController::class, 'notifications'])->name('api.isf.push.notifications');
         Route::post('/notifications/read', [PushNotificationController::class, 'markRead'])->name('api.isf.push.notifications.read');
     });

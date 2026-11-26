@@ -74,7 +74,7 @@ class PushNotificationController extends Controller
     }
 
     /**
-     * Test notification.
+     * Test notification (accessible via GET or POST for quick manual verification).
      */
     public function sendTest(Request $request): JsonResponse
     {
@@ -83,6 +83,7 @@ class PushNotificationController extends Controller
         $body = $request->input('body', 'Uji coba notifikasi web push berhasil terhubung!');
         $url = $request->input('url', url('/'));
 
+        $totalInDb = \NotificationChannels\WebPush\PushSubscription::count();
         if ($user && $user->pushSubscriptions()->exists()) {
             $result = $this->pushService->sendToUser($user, $title, $body, $url);
         } else {
@@ -91,7 +92,37 @@ class PushNotificationController extends Controller
 
         return response()->json([
             'success' => true,
+            'subscribers_in_db' => $totalInDb,
             'result' => $result,
+            'message' => $totalInDb === 0
+                ? 'Belum ada perangkat yang terdaftar di tabel push_subscriptions. Pastikan Anda telah mengizinkan notifikasi di browser/HP terlebih dahulu.'
+                : ($result['sent'] > 0
+                    ? 'Notifikasi berhasil dikirimkan ke ' . $result['sent'] . ' perangkat!'
+                    : 'Gagal mengirim ke ' . $result['failed'] . ' perangkat (kemungkinan token endpoint telah kedaluwarsa).'),
+        ]);
+    }
+
+    /**
+     * Diagnostic status of push notifications.
+     */
+    public function status(): JsonResponse
+    {
+        $total = \NotificationChannels\WebPush\PushSubscription::count();
+        $recent = \NotificationChannels\WebPush\PushSubscription::latest()->limit(5)->get()->map(function ($s) {
+            return [
+                'id' => $s->id,
+                'user_id' => $s->subscribable_id,
+                'user_type' => $s->subscribable_type,
+                'endpoint_host' => parse_url($s->endpoint, PHP_URL_HOST),
+                'created_at' => $s->created_at?->toIso8601String(),
+            ];
+        });
+
+        return response()->json([
+            'vapid_configured' => !empty($this->pushService->getVapidPublicKey()),
+            'public_key' => $this->pushService->getVapidPublicKey(),
+            'total_subscriptions' => $total,
+            'recent_subscriptions' => $recent,
         ]);
     }
 
