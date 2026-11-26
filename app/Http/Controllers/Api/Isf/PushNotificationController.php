@@ -226,7 +226,7 @@ class PushNotificationController extends Controller
                     $notifications[] = [
                         'id' => 'letter-' . $letter->id,
                         'type' => 'moderation',
-                        'title' => 'Naskah Member Menunggu Review',
+                        'title' => 'Review Naskah Member',
                         'message' => 'Naskah "' . Str::limit($letter->title, 45) . '" oleh ' . ($letter->sender_name ?? 'Member'),
                         'url' => '/cms/surat-pembaca/' . $letter->id,
                         'created_at' => $letter->created_at?->diffForHumans() ?? 'Baru saja',

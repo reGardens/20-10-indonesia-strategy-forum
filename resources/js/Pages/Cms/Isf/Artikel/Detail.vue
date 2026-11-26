@@ -64,6 +64,15 @@ async function handleDelete() {
   }
 }
 
+const renderedBody = computed(() => {
+  const content = item.value?.body || ''
+  if (!content) return ''
+  if (/<[a-z][\s\S]*>/i.test(content)) {
+    return content
+  }
+  return content.replace(/\n/g, '<br>')
+})
+
 function formatDate(val) {
   if (!val) return '-'
   return new Date(val).toLocaleDateString('id-ID', {
@@ -105,23 +114,40 @@ onMounted(fetchArticle)
         </div>
       </div>
 
+      <!-- Action Buttons / Status Badge -->
       <div v-if="item && !isMember" class="flex items-center gap-2">
-        <Link :href="`/cms/artikel/${item.id}/edit`">
-          <Button variant="outline" size="sm" class="h-9 text-xs gap-1.5">
-            <IconComponent name="Edit" :size="14" />
-            Edit Artikel
-          </Button>
-        </Link>
-        <Button
-          type="button"
-          variant="destructive"
-          size="sm"
-          @click="handleDelete"
-          class="h-9 text-xs gap-1.5"
+        <span
+          v-if="item.status === 'ditolak'"
+          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 gap-1.5"
         >
-          <IconComponent name="Trash" :size="14" />
-          Hapus
-        </Button>
+          <IconComponent name="X" :size="14" />
+          Telah Ditolak
+        </span>
+        <span
+          v-else-if="item.is_by_member && (item.status === 'terbit' || item.status === 'disetujui')"
+          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 gap-1.5"
+        >
+          <IconComponent name="Check" :size="14" />
+          Telah Disetujui
+        </span>
+        <template v-else-if="!item.is_by_member && item.status !== 'ditolak'">
+          <Link :href="`/cms/artikel/${item.id}/edit`">
+            <Button variant="outline" size="sm" class="h-9 text-xs gap-1.5">
+              <IconComponent name="Edit" :size="14" />
+              Edit Artikel
+            </Button>
+          </Link>
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            @click="handleDelete"
+            class="h-9 text-xs gap-1.5"
+          >
+            <IconComponent name="Trash" :size="14" />
+            Hapus
+          </Button>
+        </template>
       </div>
     </div>
 
@@ -264,9 +290,10 @@ onMounted(fetchArticle)
             <h3 class="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Naskah Lengkap Artikel
             </h3>
-            <div class="prose prose-sm dark:prose-invert max-w-none text-foreground leading-relaxed whitespace-pre-line bg-card/60 p-5 rounded-xl border border-border/60">
-              {{ item.body }}
-            </div>
+            <div
+              class="prose prose-sm dark:prose-invert max-w-none text-foreground leading-relaxed bg-card/60 p-5 rounded-xl border border-border/60"
+              v-html="renderedBody"
+            ></div>
           </div>
         </CardContent>
       </Card>

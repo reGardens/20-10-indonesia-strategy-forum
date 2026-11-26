@@ -462,10 +462,21 @@ class PublicContentController extends Controller
 
 
     /**
-     * Endpoint diagnostik & auto-heal Redis jika mengalami kendala disk snapshot.
+     * Endpoint diagnostik & auto-heal: membersihkan cache Laravel & auto-heal Redis.
+     * Dapat diakses langsung via browser tanpa terminal.
      */
     public function cacheHeal(): JsonResponse
     {
+        $artisanCleared = false;
+        $artisanOutput = '';
+        try {
+            \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+            $artisanCleared = true;
+            $artisanOutput = trim(\Illuminate\Support\Facades\Artisan::output());
+        } catch (\Throwable $e) {
+            $artisanOutput = $e->getMessage();
+        }
+
         $driver = (string) config('cache.default', 'file');
         $healed = IsfCacheService::healRedisMisconf();
 
@@ -481,12 +492,13 @@ class PublicContentController extends Controller
         }
 
         return response()->json([
+            'success' => true,
+            'optimize_clear' => $artisanCleared,
+            'optimize_output' => $artisanOutput,
             'driver' => $driver,
             'auto_heal_executed' => $healed,
             'cache_write_test' => $testResult,
-            'message' => $healed
-                ? 'Redis stop-writes-on-bgsave-error berhasil diset ke no.'
-                : 'Driver bukan redis atau perintah CONFIG tidak didukung.',
+            'message' => 'Cache aplikasi, config, route, dan view berhasil dibersihkan.',
         ]);
     }
 

@@ -1,14 +1,16 @@
 import { ref } from 'vue'
-import axios from 'axios'
+import http from '@/api/http'
 
 const isSupported = ref(false)
 const permissionState = ref('default')
 const isSubscribed = ref(false)
 const isLoading = ref(false)
+export const isNotificationPromptActive = ref(false)
 
 function urlB64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const clean = String(base64String || '').trim().replace(/^["']|["']$/g, '')
+  const padding = '='.repeat((4 - (clean.length % 4)) % 4)
+  const base64 = (clean + padding).replace(/-/g, '+').replace(/_/g, '/')
   const rawData = window.atob(base64)
   const outputArray = new Uint8Array(rawData.length)
   for (let i = 0; i < rawData.length; ++i) {
@@ -25,11 +27,12 @@ export function useIsfPushNotification() {
       if (!reg) {
         reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
       }
-      if (reg && !reg.active) {
-        await Promise.race([
+      if (navigator.serviceWorker.ready) {
+        const readyReg = await Promise.race([
           navigator.serviceWorker.ready,
           new Promise((resolve) => setTimeout(resolve, 3000)),
         ])
+        if (readyReg) return readyReg
       }
       return reg || (await navigator.serviceWorker.getRegistration())
     } catch (e) {
@@ -41,7 +44,10 @@ export function useIsfPushNotification() {
   const initPush = async () => {
     if (typeof window === 'undefined') return
 
-    isSupported.value = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
+    isSupported.value =
+      'serviceWorker' in navigator &&
+      'PushManager' in window &&
+      'Notification' in window
     if (!isSupported.value) {
       permissionState.value = 'unsupported'
       return
@@ -60,7 +66,7 @@ export function useIsfPushNotification() {
             // Sinkronkan ke server agar endpoint otomatis terhubung ke akun user yang sedang aktif login
             try {
               const raw = sub.toJSON()
-              axios.post('/api/isf/push/subscribe', {
+              http.post('/isf/push/subscribe', {
                 endpoint: sub.endpoint,
                 keys: raw.keys,
                 content_encoding: (window.PushManager?.supportedContentEncodings || ['aes128gcm'])[0],
@@ -88,7 +94,7 @@ export function useIsfPushNotification() {
       }
 
       // Fetch VAPID public key
-      const keyRes = await axios.get('/api/isf/push/vapid-key')
+      const keyRes = await http.get('/isf/push/vapid-key')
       const vapidKey = keyRes.data?.public_key
 
       if (!vapidKey) {
@@ -113,7 +119,7 @@ export function useIsfPushNotification() {
       }
 
       const raw = sub.toJSON()
-      await axios.post('/api/isf/push/subscribe', {
+      await http.post('/isf/push/subscribe', {
         endpoint: sub.endpoint,
         keys: raw.keys,
         content_encoding: (window.PushManager?.supportedContentEncodings || ['aes128gcm'])[0],
@@ -141,7 +147,7 @@ export function useIsfPushNotification() {
         if (sub) {
           const endpoint = sub.endpoint
           await sub.unsubscribe()
-          await axios.post('/api/isf/push/unsubscribe', { endpoint })
+          await http.post('/isf/push/unsubscribe', { endpoint })
         }
       }
 
@@ -152,6 +158,8 @@ export function useIsfPushNotification() {
       console.error('[Push] Unsubscription failed:', err)
       isLoading.value = false
       return false
+    } finally {
+      isLoading.value = false
     }
   }
 

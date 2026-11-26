@@ -112,8 +112,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
-import { useIsfPushNotification } from "@/Composables/useIsfPushNotification";
+import { ref, computed, onMounted, watch } from "vue";
+import { useIsfPushNotification, isNotificationPromptActive } from "@/Composables/useIsfPushNotification";
 
 const {
     isSupported,
@@ -136,20 +136,35 @@ onMounted(async () => {
 const showBanner = computed(() => {
     if (!isSupported.value) return false;
     if (isSubscribed.value) return false;
-    if (permissionState.value === "denied") return false;
+    if (
+        permissionState.value === "denied" ||
+        permissionState.value === "granted"
+    )
+        return false;
     if (dismissed.value) return false;
     return !isDismissedRecently();
 });
 
+watch(showBanner, (val) => {
+    isNotificationPromptActive.value = !!val;
+}, { immediate: true });
+
 const handleSubscribe = async () => {
     const result = await subscribe();
-    if (result.success) {
+    if (
+        result.success ||
+        (typeof Notification !== "undefined" &&
+            Notification.permission === "granted")
+    ) {
         dismissed.value = true;
+        dismissPrompt();
+        isNotificationPromptActive.value = false;
     }
 };
 
 const handleDismiss = () => {
     dismissed.value = true;
     dismissPrompt();
+    isNotificationPromptActive.value = false;
 };
 </script>
