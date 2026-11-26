@@ -568,7 +568,7 @@ function logout() {
                                                 >{{ item.title }}</span
                                             >
                                             <span
-                                                class="text-[10px] text-muted-foreground whitespace-nowrap"
+                                                class="text-[10px] text-muted-foreground whitespace-nowrap shrink-0"
                                                 >{{ item.created_at }}</span
                                             >
                                         </div>

@@ -43,6 +43,15 @@ const isPending = computed(() => {
   return true
 })
 
+const renderedBody = computed(() => {
+  const content = item.value?.body || ''
+  if (!content) return ''
+  if (/<[a-z][\s\S]*>/i.test(content)) {
+    return content
+  }
+  return content.replace(/\n/g, '<br>')
+})
+
 const item = ref(null)
 const loading = ref(true)
 const loadError = ref('')
@@ -70,6 +79,10 @@ async function handleApprove() {
   actionLoading.value = true
   try {
     const res = await cmsResources.suratPembaca.approve(item.value.id)
+    if (item.value) {
+      item.value.moderation_status = 'disetujui'
+      item.value.status = 'disetujui'
+    }
     alertSuccess(res.message || 'Artikel by member berhasil disetujui dan ditayangkan.')
     await fetchLetter()
   } catch (err) {
@@ -91,6 +104,11 @@ async function submitReject() {
   rejectError.value = ''
   try {
     const res = await cmsResources.suratPembaca.reject(item.value.id, rejectNotes.value)
+    if (item.value) {
+      item.value.moderation_status = 'ditolak'
+      item.value.status = 'ditolak'
+      item.value.moderation_notes = rejectNotes.value
+    }
     alertSuccess(res.message || 'Artikel by member telah ditolak.')
     showRejectModal.value = false
     await fetchLetter()
@@ -154,31 +172,43 @@ onMounted(fetchLetter)
 
       <!-- Action Buttons: Setujui, Tolak, Hapus -->
       <div v-if="item" class="flex items-center gap-2">
-        <Button
-          v-if="canApprove && isPending"
-          type="button"
-          size="sm"
-          :disabled="actionLoading"
-          @click="handleApprove"
-          class="h-9 text-xs font-semibold px-4 bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 shadow-xs"
-        >
-          <IconComponent name="Check" :size="14" />
-          {{ actionLoading ? 'Memproses...' : 'Setujui & Terbitkan' }}
-        </Button>
-        <Button
-          v-if="isPending"
-          type="button"
-          variant="destructive"
-          size="sm"
-          :disabled="actionLoading"
-          @click="openRejectModal"
-          class="h-9 text-xs font-semibold px-4 gap-1.5"
-        >
-          <IconComponent name="X" :size="14" />
-          Tolak Naskah
-        </Button>
+        <template v-if="isPending">
+          <Button
+            v-if="canApprove"
+            type="button"
+            size="sm"
+            :disabled="actionLoading"
+            @click="handleApprove"
+            class="h-9 text-xs font-semibold px-4 bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 shadow-xs"
+          >
+            <IconComponent name="Check" :size="14" />
+            {{ actionLoading ? 'Memproses...' : 'Setujui & Terbitkan' }}
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            :disabled="actionLoading"
+            @click="openRejectModal"
+            class="h-9 text-xs font-semibold px-4 gap-1.5"
+          >
+            <IconComponent name="X" :size="14" />
+            Tolak Naskah
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            :disabled="actionLoading"
+            @click="handleDelete"
+            class="h-9 text-xs gap-1.5 text-red-500 hover:text-red-600 hover:bg-red-500/10 hover:border-red-500"
+          >
+            <IconComponent name="Trash" :size="14" />
+            Hapus
+          </Button>
+        </template>
         <span
-          v-if="item.moderation_status === 'disetujui' || item.status === 'disetujui' || item.status === 'terbit'"
+          v-else-if="item.moderation_status === 'disetujui' || item.status === 'disetujui' || item.status === 'terbit'"
           class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 gap-1.5"
         >
           <IconComponent name="Check" :size="14" />
@@ -191,17 +221,6 @@ onMounted(fetchLetter)
           <IconComponent name="X" :size="14" />
           Telah Ditolak
         </span>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          :disabled="actionLoading"
-          @click="handleDelete"
-          class="h-9 text-xs gap-1.5 text-red-500 hover:text-red-600 hover:bg-red-500/10 hover:border-red-500"
-        >
-          <IconComponent name="Trash" :size="14" />
-          Hapus
-        </Button>
       </div>
     </div>
 
@@ -361,9 +380,10 @@ onMounted(fetchLetter)
             <h3 class="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Naskah Lengkap Artikel
             </h3>
-            <div class="prose prose-sm dark:prose-invert max-w-none text-foreground leading-relaxed whitespace-pre-line bg-card/60 p-5 rounded-xl border border-border/60">
-              {{ item.body }}
-            </div>
+            <div
+              class="prose prose-sm dark:prose-invert max-w-none text-foreground leading-relaxed bg-card/60 p-5 rounded-xl border border-border/60"
+              v-html="renderedBody"
+            ></div>
           </div>
         </CardContent>
       </Card>
