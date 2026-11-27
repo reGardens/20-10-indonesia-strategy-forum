@@ -438,7 +438,7 @@ describe("ISF alur E2E (frontend)", () => {
     });
 
     it("(5) /anggota: tabel alert → menu Prioritas Tinggi (merah) → filter Perlu Dipantau (kuning)", async () => {
-        await mountAt("/anggota");
+        await mountAt("/anggota?prioritas=semua");
         expect(router.currentRoute.value.name).toBe("isf-anggota");
         await waitFor(
             () => text().includes("Menampilkan"),

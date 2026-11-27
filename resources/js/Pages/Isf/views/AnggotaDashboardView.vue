@@ -114,7 +114,7 @@ const initials = computed(() =>
 );
 
 const activeTab = computed(() =>
-    route.query.prioritas === "semua" || route.query.prioritas === "merah"
+    VALID.includes(route.query.prioritas)
         ? "alerts"
         : "aktifitas",
 );
