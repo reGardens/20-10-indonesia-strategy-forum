@@ -19,6 +19,17 @@ function urlB64ToUint8Array(base64String) {
   return outputArray
 }
 
+function sameServerKey(existingKeyBuffer, vapidBase64) {
+  if (!existingKeyBuffer || !vapidBase64) return false
+  const expected = urlB64ToUint8Array(vapidBase64)
+  const actual = new Uint8Array(existingKeyBuffer)
+  if (actual.length !== expected.length) return false
+  for (let i = 0; i < expected.length; i++) {
+    if (actual[i] !== expected[i]) return false
+  }
+  return true
+}
+
 export function useIsfPushNotification() {
   const getRegistration = async () => {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return null
@@ -118,6 +129,11 @@ export function useIsfPushNotification() {
       }
 
       let sub = await reg.pushManager.getSubscription()
+
+      if (sub && !sameServerKey(sub.options?.applicationServerKey, vapidKey)) {
+        await sub.unsubscribe().catch(() => {})
+        sub = null
+      }
 
       if (!sub) {
         try {

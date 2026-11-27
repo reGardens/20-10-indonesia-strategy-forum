@@ -77,7 +77,7 @@ class IsfPushNotificationService
         $subscriptions = PushSubscription::all();
 
         if ($subscriptions->isEmpty()) {
-            return ['total' => 0, 'sent' => 0, 'failed' => 0];
+            return ['total' => 0, 'sent' => 0, 'failed' => 0, 'errors' => []];
         }
 
         $payload = json_encode([
@@ -93,6 +93,7 @@ class IsfPushNotificationService
 
         $sent = 0;
         $failed = 0;
+        $errors = [];
 
         foreach ($subscriptions as $sub) {
             try {
@@ -113,15 +114,18 @@ class IsfPushNotificationService
                     $sent++;
                 } else {
                     $failed++;
+                    $reason = $report->getReason() ?: 'Unknown WebPush error';
+                    $errors[] = $reason;
                     if ($report->isSubscriptionExpired()) {
                         PushSubscription::where('endpoint', $report->getEndpoint())->delete();
                     }
-                    Log::warning('WebPush failed for endpoint: ' . $report->getReason(), [
+                    Log::warning('WebPush failed for endpoint: ' . $reason, [
                         'endpoint' => $report->getEndpoint(),
                     ]);
                 }
             } catch (\Throwable $e) {
                 $failed++;
+                $errors[] = $e->getMessage();
                 Log::warning('WebPush sendOneNotification error: ' . $e->getMessage(), [
                     'endpoint' => $sub->endpoint,
                 ]);
@@ -139,6 +143,7 @@ class IsfPushNotificationService
             'total' => $subscriptions->count(),
             'sent' => $sent,
             'failed' => $failed,
+            'errors' => array_values(array_unique($errors)),
         ];
     }
 
@@ -150,7 +155,7 @@ class IsfPushNotificationService
         $subscriptions = $user->pushSubscriptions;
 
         if ($subscriptions->isEmpty()) {
-            return ['total' => 0, 'sent' => 0, 'failed' => 0];
+            return ['total' => 0, 'sent' => 0, 'failed' => 0, 'errors' => []];
         }
 
         $payload = json_encode([
@@ -166,6 +171,7 @@ class IsfPushNotificationService
 
         $sent = 0;
         $failed = 0;
+        $errors = [];
 
         foreach ($subscriptions as $sub) {
             try {
@@ -186,12 +192,16 @@ class IsfPushNotificationService
                     $sent++;
                 } else {
                     $failed++;
+                    $reason = $report->getReason() ?: 'Unknown WebPush error';
+                    $errors[] = $reason;
                     if ($report->isSubscriptionExpired()) {
                         PushSubscription::where('endpoint', $report->getEndpoint())->delete();
                     }
+                    Log::warning('WebPush failed for user ' . $user->id . ': ' . $reason);
                 }
             } catch (\Throwable $e) {
                 $failed++;
+                $errors[] = $e->getMessage();
                 Log::warning('WebPush sendOneNotification error for user ' . $user->id . ': ' . $e->getMessage());
                 if (
                     str_contains($e->getMessage(), 'Invalid data provided')
@@ -202,7 +212,12 @@ class IsfPushNotificationService
             }
         }
 
-        return ['total' => $subscriptions->count(), 'sent' => $sent, 'failed' => $failed];
+        return [
+            'total' => $subscriptions->count(),
+            'sent' => $sent,
+            'failed' => $failed,
+            'errors' => array_values(array_unique($errors)),
+        ];
     }
 
     /**
