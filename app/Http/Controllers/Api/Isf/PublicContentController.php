@@ -3314,6 +3314,38 @@ HTML;
             ->forPage($page, $limit)
             ->get();
 
+        // Status partisipasi member jika user login
+        $user = $request->user();
+        $allSurveyIds = $surveys->pluck('id')->all();
+        if ($featuredSurvey) {
+            $allSurveyIds[] = $featuredSurvey->id;
+        }
+
+        $responsesByUser = $user
+            ? \App\Models\Isf\SurveyResponse::where('user_id', $user->id)
+                ->whereIn('survey_id', array_unique($allSurveyIds))
+                ->get()
+                ->keyBy('survey_id')
+            : collect();
+
+        if ($featuredSurvey) {
+            if ($featuredSurvey->is_member_active) {
+                $resp = $responsesByUser->get($featuredSurvey->id);
+                $featuredSurvey->member_status = $resp ? ($resp->status === 'completed' ? 'selesai' : 'draft') : 'belum_diisi';
+            } else {
+                $featuredSurvey->member_status = null;
+            }
+        }
+
+        foreach ($surveys as $s) {
+            if ($s->is_member_active) {
+                $resp = $responsesByUser->get($s->id);
+                $s->member_status = $resp ? ($resp->status === 'completed' ? 'selesai' : 'draft') : 'belum_diisi';
+            } else {
+                $s->member_status = null;
+            }
+        }
+
         $lastPage = max(1, (int) ceil($total / $limit));
 
         return response()->json([
@@ -3378,9 +3410,43 @@ HTML;
                 ->get();
         }
 
+        $user = request()->user();
+        $userResponse = null;
+        $isCompleted = false;
+        $isDraft = false;
+
+        if ($user && $survey->is_member_active) {
+            $userResponse = \App\Models\Isf\SurveyResponse::where('survey_id', $survey->id)
+                ->where('user_id', $user->id)
+                ->first();
+            $isCompleted = $userResponse?->status === 'completed';
+            $isDraft = $userResponse?->status === 'draft';
+        }
+
+        $totalMemberRespondents = \App\Models\Isf\SurveyResponse::where('survey_id', $survey->id)
+            ->where('status', 'completed')
+            ->count();
+
         return response()->json([
             'survey' => $survey,
             'relatedSurveys' => $relatedSurveys,
+            'user_response' => $userResponse ? [
+                'id' => $userResponse->id,
+                'status' => $userResponse->status,
+                'answers' => $userResponse->answers ?? (object)[],
+                'demographics' => $userResponse->demographics ?? [
+                    'age' => '',
+                    'domicile' => '',
+                    'profession' => '',
+                ],
+                'current_step' => $userResponse->current_step ?? 1,
+                'completed_at' => $userResponse->completed_at?->format('d M Y H:i'),
+            ] : null,
+            'is_completed' => $isCompleted,
+            'is_draft' => $isDraft,
+            'stats' => [
+                'total_member_respondents' => $totalMemberRespondents,
+            ],
         ]);
     }
 

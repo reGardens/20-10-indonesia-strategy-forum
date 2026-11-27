@@ -110,6 +110,10 @@ const form = ref({
   order: 0,
   is_featured: false,
   status: 'terbit',
+  editorial_intro: '',
+  estimated_minutes: 5,
+  is_member_active: false,
+  questions: [],
 })
 
 const rawChartJson = ref(JSON.stringify(defaultChartData, null, 2))
@@ -194,6 +198,10 @@ async function loadData() {
       order: Number(data.order) || 0,
       is_featured: Boolean(data.is_featured),
       status: data.status || 'terbit',
+      editorial_intro: data.editorial_intro || '',
+      estimated_minutes: data.estimated_minutes !== null && data.estimated_minutes !== undefined ? Number(data.estimated_minutes) : 5,
+      is_member_active: Boolean(data.is_member_active),
+      questions: Array.isArray(data.questions) ? JSON.parse(JSON.stringify(data.questions)) : [],
     }
 
     if (data.chart_data && typeof data.chart_data === 'object') {
@@ -210,6 +218,99 @@ async function loadData() {
   } finally {
     loading.value = false
   }
+}
+
+function addQuestion(type = 'scale') {
+  if (!Array.isArray(form.value.questions)) {
+    form.value.questions = []
+  }
+  const id = 'q_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4)
+  const newQ = {
+    id,
+    type,
+    text: '',
+    intro: '',
+    required: true,
+    min_label: 'Sangat Tidak Setuju',
+    max_label: 'Sangat Setuju',
+    options: type === 'radio' || type === 'checkbox' ? ['Pilihan 1', 'Pilihan 2'] : [],
+  }
+  form.value.questions.push(newQ)
+}
+
+function removeQuestion(index) {
+  form.value.questions.splice(index, 1)
+}
+
+function moveQuestion(index, direction) {
+  const target = index + direction
+  if (target < 0 || target >= form.value.questions.length) return
+  const temp = form.value.questions[index]
+  form.value.questions[index] = form.value.questions[target]
+  form.value.questions[target] = temp
+}
+
+function addOption(q) {
+  if (!Array.isArray(q.options)) q.options = []
+  q.options.push(`Pilihan ${q.options.length + 1}`)
+}
+
+function removeOption(q, optIndex) {
+  q.options.splice(optIndex, 1)
+}
+
+function loadSampleQuestions() {
+  form.value.editorial_intro = 'Berdasarkan hasil survei ISF sebelumnya, dinamika kepemimpinan nasional menuju 2029 menjadi perhatian utama publik. Kami mengundang partisipasi Anda untuk memberikan penilaian objektif dan berbasis fakta.'
+  form.value.estimated_minutes = 5
+  form.value.is_member_active = true
+  form.value.questions = [
+    {
+      id: 'q1',
+      type: 'scale',
+      text: 'Bagaimana penilaian Anda terhadap kesiapan dan kepemimpinan figur muda dalam memimpin kebijakan strategis nasional menuju 2029?',
+      intro: 'Gunakan skala 1 (Sangat Tidak Setuju / Kurang Siap) hingga 10 (Sangat Setuju / Sangat Siap).',
+      required: true,
+      min_label: 'Sangat Tidak Setuju',
+      max_label: 'Sangat Setuju',
+      options: [],
+    },
+    {
+      id: 'q2',
+      type: 'radio',
+      text: 'Menurut Anda, sektor manakah yang paling mendesak membutuhkan reformasi kebijakan dalam 5 tahun mendatang?',
+      intro: 'Pilih satu fokus sektor utama yang paling krusial menurut Anda.',
+      required: true,
+      options: [
+        'Ekonomi & Lapangan Kerja',
+        'Penegakan Hukum & Pemberantasan Korupsi',
+        'Pendidikan & Kualitas SDM',
+        'Kedaulatan Energi & Lingkungan Hidup',
+        'Kesehatan & Kesejahteraan Sosial',
+      ],
+    },
+    {
+      id: 'q3',
+      type: 'checkbox',
+      text: 'Karakter atau kriteria apa yang paling Anda harapkan dari calon pemimpin nasional mendatang? (Bisa pilih lebih dari satu)',
+      intro: 'Pilih seluruh kriteria yang relevan bagi Anda.',
+      required: true,
+      options: [
+        'Integritas & Bebas Korupsi',
+        'Pemahaman Geopolitik & Diplomasi Global',
+        'Kemampuan Eksekusi Kebijakan Cepat',
+        'Kedekatan & Empati terhadap Rakyat Kecil',
+        'Visi Teknologi & Ekonomi Digital',
+      ],
+    },
+    {
+      id: 'q4',
+      type: 'text',
+      text: 'Apa saran atau aspirasi strategis yang ingin Anda sampaikan kepada para perumus kebijakan publik nasional?',
+      intro: 'Tuliskan pandangan objektif Anda secara ringkas dan konstruktif.',
+      required: false,
+      options: [],
+    },
+  ]
 }
 
 async function handleSubmit() {
@@ -639,6 +740,291 @@ onMounted(() => {
               class="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
               placeholder="Ulasan kritis, implikasi strategis kebijakan, dan dinamika opini masyarakat..."
             ></textarea>
+          </div>
+        </CardContent>
+      </Card>
+
+      <!-- Section: Kuisioner Partisipatif Dinamis (Member & Publik) -->
+      <Card>
+        <CardHeader class="pb-3 border-b border-border">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div>
+              <CardTitle class="text-base flex items-center gap-2">
+                <IconComponent name="HelpCircle" :size="18" class="text-red-700" />
+                Kuisioner Partisipatif Dinamis (Survei Pengunjung & Member)
+              </CardTitle>
+              <CardDescription>
+                Konfigurasikan kuisioner survei interaktif yang dapat diisi oleh pembaca atau member di Landing Page & Portal Anggota.
+              </CardDescription>
+            </div>
+            <div class="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                class="text-xs border-dashed text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
+                @click="loadSampleQuestions"
+              >
+                <IconComponent name="Sparkles" :size="14" class="mr-1.5 text-red-600" />
+                Muat Contoh Kuisioner ISF
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent class="space-y-5 pt-4">
+          <!-- Toggle Active & Estimasi Waktu -->
+          <div class="p-4 rounded-lg bg-muted/40 border border-border/80 space-y-4">
+            <div class="flex items-start gap-3">
+              <input
+                id="is_member_active"
+                v-model="form.is_member_active"
+                type="checkbox"
+                class="mt-1 h-4 w-4 rounded border-gray-300 text-red-700 focus:ring-red-600"
+              />
+              <div class="flex-1">
+                <Label for="is_member_active" class="text-sm font-semibold cursor-pointer select-none">
+                  Aktifkan Formulir Pengisian untuk Member & Pembaca
+                </Label>
+                <p class="text-xs text-muted-foreground mt-0.5">
+                  Jika dicentang, survei ini akan memunculkan tab/halaman pengisian interaktif di Landing Page (/survei/{slug}) dan katalog survei member.
+                </p>
+              </div>
+            </div>
+
+            <div v-if="form.is_member_active" class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t border-border/60">
+              <div>
+                <Label for="estimated_minutes" class="text-xs font-semibold">Estimasi Waktu Pengisian (Menit)</Label>
+                <Input
+                  id="estimated_minutes"
+                  v-model.number="form.estimated_minutes"
+                  type="number"
+                  min="1"
+                  max="60"
+                  class="mt-1"
+                  placeholder="5"
+                />
+              </div>
+              <div class="md:col-span-2">
+                <Label for="editorial_intro" class="text-xs font-semibold">Paragraf Konteks Editorial (Intro)</Label>
+                <textarea
+                  id="editorial_intro"
+                  v-model="form.editorial_intro"
+                  rows="2"
+                  class="mt-1 w-full rounded-md border border-input bg-background px-3 py-1.5 text-xs shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                  placeholder="Contoh: Berdasarkan survei ISF sebelumnya, 60% publik... Bagaimana pandangan Anda?"
+                ></textarea>
+                <p class="text-[11px] text-muted-foreground mt-0.5">
+                  Konteks objektif dari dewan redaksi sebelum responden menjawab kuisioner.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Question Builder List -->
+          <div v-if="form.is_member_active" class="space-y-4">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Daftar Pertanyaan ({{ form.questions?.length || 0 }})
+              </h4>
+              <div class="flex items-center gap-1.5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  class="h-7 text-[11px]"
+                  @click="addQuestion('scale')"
+                >
+                  + Skala Linier (1-10)
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  class="h-7 text-[11px]"
+                  @click="addQuestion('radio')"
+                >
+                  + Pilihan Ganda
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  class="h-7 text-[11px]"
+                  @click="addQuestion('checkbox')"
+                >
+                  + Ceklis (Multi)
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  class="h-7 text-[11px]"
+                  @click="addQuestion('text')"
+                >
+                  + Isian Singkat
+                </Button>
+              </div>
+            </div>
+
+            <div v-if="!form.questions || form.questions.length === 0" class="p-8 text-center border-2 border-dashed border-border rounded-lg">
+              <IconComponent name="HelpCircle" :size="32" class="mx-auto text-muted-foreground mb-2" />
+              <p class="text-sm font-medium text-foreground">Belum ada pertanyaan pada survei ini</p>
+              <p class="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+                Tambahkan pertanyaan baru di atas atau klik tombol "Muat Contoh Kuisioner ISF" untuk memulai dari template standar redaksi.
+              </p>
+            </div>
+
+            <div v-else class="space-y-3">
+              <div
+                v-for="(q, qIndex) in form.questions"
+                :key="q.id || qIndex"
+                class="p-4 rounded-lg border border-border bg-card shadow-sm space-y-3"
+              >
+                <!-- Question Top Bar -->
+                <div class="flex items-center justify-between gap-2 pb-2 border-b border-border/60">
+                  <div class="flex items-center gap-2">
+                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-700 text-white text-xs font-bold">
+                      {{ qIndex + 1 }}
+                    </span>
+                    <select
+                      v-model="q.type"
+                      class="h-8 rounded-md border border-input bg-background px-2 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-ring"
+                    >
+                      <option value="scale">Skala Linier (1-10)</option>
+                      <option value="radio">Pilihan Ganda (Satu Pilihan)</option>
+                      <option value="checkbox">Ceklis (Banyak Pilihan)</option>
+                      <option value="text">Jawaban Singkat / Esai</option>
+                    </select>
+                    <label class="flex items-center gap-1 text-xs text-muted-foreground cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        v-model="q.required"
+                        class="h-3.5 w-3.5 rounded border-gray-300 text-red-700"
+                      />
+                      Wajib diisi
+                    </label>
+                  </div>
+
+                  <div class="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      class="h-7 w-7 p-0"
+                      :disabled="qIndex === 0"
+                      @click="moveQuestion(qIndex, -1)"
+                      title="Geser ke atas"
+                    >
+                      <IconComponent name="ChevronUp" :size="14" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      class="h-7 w-7 p-0"
+                      :disabled="qIndex === form.questions.length - 1"
+                      @click="moveQuestion(qIndex, 1)"
+                      title="Geser ke bawah"
+                    >
+                      <IconComponent name="ChevronDown" :size="14" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      class="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
+                      @click="removeQuestion(qIndex)"
+                      title="Hapus pertanyaan"
+                    >
+                      <IconComponent name="Trash2" :size="14" />
+                    </Button>
+                  </div>
+                </div>
+
+                <!-- Question Text & Intro -->
+                <div class="space-y-2">
+                  <div>
+                    <Label class="text-[11px] font-semibold">Teks Pertanyaan <span class="text-red-500">*</span></Label>
+                    <Input
+                      v-model="q.text"
+                      placeholder="e.g. Seberapa setuju Anda dengan arah kebijakan hilirisasi saat ini?"
+                      class="mt-0.5 text-xs"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label class="text-[11px] font-semibold text-muted-foreground">Catatan / Petunjuk Konteks (Opsional)</Label>
+                    <Input
+                      v-model="q.intro"
+                      placeholder="e.g. Nilai 1 berarti Sangat Tidak Setuju, 10 berarti Sangat Setuju"
+                      class="mt-0.5 text-xs"
+                    />
+                  </div>
+                </div>
+
+                <!-- Question Config based on Type -->
+                <!-- Type: Scale (1-10) -->
+                <div v-if="q.type === 'scale'" class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 bg-muted/20 p-2.5 rounded border border-border/40">
+                  <div>
+                    <Label class="text-[11px] font-medium text-muted-foreground">Label Nilai Minimum (Skala 1)</Label>
+                    <Input
+                      v-model="q.min_label"
+                      placeholder="Sangat Tidak Setuju"
+                      class="mt-0.5 text-xs h-8"
+                    />
+                  </div>
+                  <div>
+                    <Label class="text-[11px] font-medium text-muted-foreground">Label Nilai Maksimum (Skala 10)</Label>
+                    <Input
+                      v-model="q.max_label"
+                      placeholder="Sangat Setuju"
+                      class="mt-0.5 text-xs h-8"
+                    />
+                  </div>
+                </div>
+
+                <!-- Type: Radio or Checkbox Options -->
+                <div v-else-if="q.type === 'radio' || q.type === 'checkbox'" class="space-y-2 pt-2 bg-muted/20 p-2.5 rounded border border-border/40">
+                  <div class="flex items-center justify-between">
+                    <Label class="text-[11px] font-semibold">Daftar Pilihan Jawaban</Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      class="h-6 text-[11px] text-red-700 hover:text-red-800"
+                      @click="addOption(q)"
+                    >
+                      + Tambah Pilihan
+                    </Button>
+                  </div>
+
+                  <div class="space-y-1.5">
+                    <div
+                      v-for="(opt, optIdx) in q.options"
+                      :key="optIdx"
+                      class="flex items-center gap-2"
+                    >
+                      <span class="text-xs text-muted-foreground font-mono w-4">{{ optIdx + 1 }}.</span>
+                      <Input
+                        v-model="q.options[optIdx]"
+                        placeholder="Ketik teks opsi jawaban..."
+                        class="h-8 text-xs flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        class="h-8 w-8 p-0 text-muted-foreground hover:text-red-600"
+                        :disabled="q.options.length <= 1"
+                        @click="removeOption(q, optIdx)"
+                      >
+                        <IconComponent name="X" :size="14" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

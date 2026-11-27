@@ -42,6 +42,9 @@ class IsfPageController extends Controller
         'kutipan-publik' => 'PublicQuote',
         'surat-pembaca' => 'Letter',
         'survei' => 'Survey',
+        'laporan-member' => 'MemberReport',
+        'aktifitas' => 'Activity',
+        'test-notifikasi' => 'TestNotifikasi',
         'kemitraan' => 'PartnershipRfp',
         'footer' => 'Footer',
     ];

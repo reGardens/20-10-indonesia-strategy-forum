@@ -253,7 +253,7 @@ function logout() {
 </script>
 
 <template>
-    <div class="h-screen flex flex-col bg-background overflow-hidden">
+    <div class="min-h-screen flex flex-col bg-background">
         <!-- Mobile overlay -->
         <div
             v-if="sidebarOpen"
@@ -299,10 +299,10 @@ function logout() {
         </aside>
 
         <!-- Main content wrapper -->
-        <div class="lg:pl-[260px] flex flex-col flex-1 min-h-0">
-            <!-- Top navbar -->
+        <div class="lg:pl-[260px] flex flex-col flex-1 min-w-0">
+            <!-- Top navbar (Fixed at top so it never disappears on scroll) -->
             <header
-                class="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-md px-4 lg:px-6 overflow-visible"
+                class="fixed top-0 right-0 left-0 lg:left-[260px] z-40 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-md px-4 lg:px-6 overflow-visible"
             >
                 <!-- Mobile hamburger -->
                 <button
@@ -713,7 +713,7 @@ function logout() {
                 </div>
             </header>
 
-            <main class="flex-1 min-h-0 overflow-auto overflow-x-hidden">
+            <main class="flex-1 pt-16 min-w-0 overflow-x-hidden">
                 <slot />
             </main>
 

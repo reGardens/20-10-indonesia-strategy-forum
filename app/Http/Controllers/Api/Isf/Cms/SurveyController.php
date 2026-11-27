@@ -17,7 +17,7 @@ class SurveyController extends CmsResourceController
     protected array $listColumns = [
         'id', 'title', 'slug', 'institution', 'is_isf', 'topic', 'region',
         'survey_period', 'release_date', 'sample_size', 'margin_of_error',
-        'headline_stat_value', 'headline_stat_label', 'is_featured', 'order', 'status', 'created_at', 'updated_at',
+        'headline_stat_value', 'headline_stat_label', 'is_featured', 'is_member_active', 'estimated_minutes', 'order', 'status', 'created_at', 'updated_at',
     ];
 
     protected array $searchColumns = ['title', 'institution', 'summary', 'expert_analysis', 'headline_stat_label'];

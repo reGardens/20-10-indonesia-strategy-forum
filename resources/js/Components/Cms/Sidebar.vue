@@ -69,6 +69,25 @@ const menuGroups = computed(() => {
                 ],
             },
             {
+                key: "aktifitas-monitoring",
+                label: locale.value === "id" ? "Aktifitas & Monitoring" : "Activity & Monitoring",
+                collapsible: false,
+                items: [
+                    {
+                        label: "Aktifitas",
+                        href: "/cms/aktifitas",
+                        icon: "Clock",
+                        visible: true,
+                    },
+                    {
+                        label: "Report",
+                        href: "/cms/laporan-member",
+                        icon: "AlertTriangle",
+                        visible: true,
+                    },
+                ],
+            },
+            {
                 key: "situs-publik",
                 label: locale.value === "id" ? "Situs Publik" : "Public Sites",
                 collapsible: false,
@@ -340,11 +359,31 @@ const menuGroups = computed(() => {
                 icon: "AlertTriangle",
                 visible: hasFeature("alert"),
             },
+        ],
+    },
+    {
+        key: "aktifitas-monitoring",
+        label: locale.value === "id" ? "Aktifitas & Monitoring" : "Activity & Monitoring",
+        icon: "Clock",
+        collapsible: false,
+        items: [
             {
-                label: "Email Briefing",
-                href: "/cms/email-briefing",
-                icon: "Mail",
-                visible: hasFeature("email_briefing"),
+                label: locale.value === "id" ? "Aktifitas" : "Activity",
+                href: "/cms/aktifitas",
+                icon: "Clock",
+                visible: true,
+            },
+            {
+                label: locale.value === "id" ? "Report" : "Report",
+                href: "/cms/laporan-member",
+                icon: "AlertTriangle",
+                visible: hasRole("member") || hasRole("admin") || hasRole("super-admin"),
+            },
+            {
+                label: locale.value === "id" ? "Test Notifikasi" : "Test Notification",
+                href: "/cms/test-notifikasi",
+                icon: "Send",
+                visible: !isOnlyMember.value,
             },
         ],
     },

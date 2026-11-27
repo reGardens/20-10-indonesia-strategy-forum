@@ -79,6 +79,97 @@ class SessionController extends Controller
     }
 
     /**
+     * GET /api/isf/member/activities — Riwayat kegiatan komprehensif member (artikel/naskah, rating tokoh, survei, dan laporan).
+     */
+    public function activities(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        // 1. Artikel / Naskah yang ditulis member
+        $letters = \App\Models\Isf\Letter::where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->take(100)
+            ->get()
+            ->map(function ($l) {
+                return [
+                    'id' => $l->id,
+                    'title' => $l->title,
+                    'category' => $l->category ?: 'Opini',
+                    'moderation_status' => $l->moderation_status ?: 'pending',
+                    'moderation_notes' => $l->moderation_notes,
+                    'created_at' => $l->created_at ? $l->created_at->format('d M Y, H:i') : null,
+                    'timestamp' => $l->created_at ? $l->created_at->timestamp : 0,
+                    'url' => $l->link_url ?: ($l->moderation_status === 'disetujui' ? '/artikel/' . ($l->category ?: 'opini') . '/' . $l->slug : '/cms/artikel'),
+                ];
+            });
+
+        // 2. Rating & Ulasan Tokoh oleh member
+        $reviews = \App\Models\Isf\TokohReview::where('user_id', $user->id)
+            ->with('tokoh:id,name,slug,title,photo')
+            ->orderByDesc('created_at')
+            ->take(100)
+            ->get()
+            ->map(function ($r) {
+                return [
+                    'id' => $r->id,
+                    'tokoh_name' => $r->tokoh?->name ?: 'Tokoh ISF',
+                    'tokoh_slug' => $r->tokoh?->slug,
+                    'tokoh_title' => $r->tokoh?->title,
+                    'rating' => $r->rating,
+                    'body' => $r->body,
+                    'created_at' => $r->created_at ? $r->created_at->format('d M Y') : null,
+                    'timestamp' => $r->created_at ? $r->created_at->timestamp : 0,
+                ];
+            });
+
+        // 3. Partisipasi dan draf survei member
+        $surveys = \App\Models\Isf\SurveyResponse::where('user_id', $user->id)
+            ->with('survey:id,title,slug,topic,estimated_minutes')
+            ->orderByDesc('updated_at')
+            ->take(100)
+            ->get()
+            ->map(function ($s) {
+                return [
+                    'id' => $s->id,
+                    'survey_id' => $s->survey_id,
+                    'survey_title' => $s->survey?->title ?: 'Survei Opini Publik',
+                    'survey_slug' => $s->survey?->slug,
+                    'topic' => $s->survey?->topic,
+                    'status' => $s->status,
+                    'updated_at' => $s->updated_at ? $s->updated_at->format('d M Y, H:i') : null,
+                    'timestamp' => $s->updated_at ? $s->updated_at->timestamp : 0,
+                ];
+            });
+
+        // 4. Laporan / Pengaduan yang dikirim member
+        $reports = \App\Models\Isf\MemberReport::where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->take(100)
+            ->get()
+            ->map(function ($rep) {
+                return [
+                    'id' => $rep->id,
+                    'category' => $rep->category,
+                    'category_label' => $rep->category_label,
+                    'subject' => $rep->subject,
+                    'status' => $rep->status,
+                    'created_at' => $rep->created_at ? $rep->created_at->format('d M Y, H:i') : null,
+                    'timestamp' => $rep->created_at ? $rep->created_at->timestamp : 0,
+                ];
+            });
+
+        return response()->json([
+            'letters' => $letters,
+            'reviews' => $reviews,
+            'surveys' => $surveys,
+            'reports' => $reports,
+        ])->header('Cache-Control', 'no-store, private');
+    }
+
+    /**
      * PUT /api/isf/profile — Perbarui nama dan kontak pengguna dari landing page.
      */
     public function updateProfile(Request $request): JsonResponse

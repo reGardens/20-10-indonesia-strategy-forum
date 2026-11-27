@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { getBeranda, getAnggota, getInfografik, getTokoh, getMediaDetail, getArtikel, getInfografikDetail, getKategori, getPolitik, getSosok, getSosokDetail, getMediaKit, getPenulisDetail } from '@/api/services/isfPublicService'
+import { useIsfSession } from '@/Composables/useIsfSession'
 
 const IsfPublicLayout = () => import('../Layouts/IsfPublicLayout.vue')
 const IsfMemberLayout = () => import('../Layouts/IsfMemberLayout.vue')
@@ -221,6 +222,18 @@ const routes = [
         name: 'isf-survei-detail',
         component: () => import('../Pages/Isf/views/SurveiDetailView.vue'),
         meta: { title: 'Detail Survei · Indonesia Strategy Forum' }
+      },
+      {
+        path: ':slug/isi',
+        name: 'isf-survei-isi',
+        component: () => import('../Pages/Isf/views/SurveiDetailView.vue'),
+        meta: { title: 'Pengisian Kuisioner Survei · Indonesia Strategy Forum' }
+      },
+      {
+        path: ':slug/selesai',
+        name: 'isf-survei-selesai',
+        component: () => import('../Pages/Isf/views/SurveiDetailView.vue'),
+        meta: { title: 'Hasil & Reward Survei · Indonesia Strategy Forum' }
       }
     ]
   },
@@ -412,6 +425,45 @@ const routes = [
         name: 'isf-anggota',
         component: () => import('../Pages/Isf/views/AnggotaDashboardView.vue'),
         meta: { title: 'Dasbor Peringatan Dini · Portal Anggota ISF' }
+      },
+      {
+        path: 'survei',
+        redirect: '/member/survei'
+      }
+    ]
+  },
+  {
+    path: '/member',
+    component: IsfMemberLayout,
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        redirect: '/member/dashboard'
+      },
+      {
+        path: 'dashboard',
+        name: 'isf-member-dashboard',
+        component: () => import('../Pages/Isf/views/AnggotaDashboardView.vue'),
+        meta: { title: 'Dasbor Member · Indonesia Strategy Forum', requiresAuth: true }
+      },
+      {
+        path: 'survei',
+        name: 'isf-member-survei-katalog',
+        component: () => import('../Pages/Isf/views/MemberSurveiKatalogView.vue'),
+        meta: { title: 'Katalog Survei Member · Indonesia Strategy Forum', requiresAuth: true }
+      },
+      {
+        path: 'survei/:id',
+        name: 'isf-member-survei-form',
+        component: () => import('../Pages/Isf/views/MemberSurveiFormView.vue'),
+        meta: { title: 'Pengisian Survei Member · Indonesia Strategy Forum', requiresAuth: true }
+      },
+      {
+        path: 'survei/:id/selesai',
+        name: 'isf-member-survei-selesai',
+        component: () => import('../Pages/Isf/views/MemberSurveiSelesaiView.vue'),
+        meta: { title: 'Hasil & Terima Kasih Survei · Indonesia Strategy Forum', requiresAuth: true }
       }
     ]
   }
@@ -433,6 +485,20 @@ const router = createRouter({
     }
     return { top: 0, left: 0 }
   }
+})
+
+// Auth Guard: Proteksi rute khusus member (Wajib Login)
+router.beforeEach(async (to, from, next) => {
+  if (to.matched.some((record) => record.meta?.requiresAuth)) {
+    const { isLoggedIn, ensureLoaded } = useIsfSession()
+    await ensureLoaded()
+    if (!isLoggedIn.value) {
+      const redirect = encodeURIComponent(to.fullPath)
+      window.location.href = `/login?redirect=${redirect}`
+      return
+    }
+  }
+  next()
 })
 
 // Prefetch ISF public content in parallel with chunk downloads

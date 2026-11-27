@@ -56,6 +56,15 @@ Route::get('/search', [SpaController::class, 'index'])->name('isf.search');
 Route::get('/anggota', [SpaController::class, 'index'])->name('isf.anggota.dashboard');
 Route::get('/anggota/briefing/preview', [BriefingPreviewController::class, 'show'])->name('isf.anggota.briefing.preview');
 
+// ISF Member Area & Survei (Auth Guard: Wajib Login)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/member', [SpaController::class, 'index'])->name('isf.member');
+    Route::get('/member/dashboard', [SpaController::class, 'index'])->name('isf.member.dashboard');
+    Route::get('/member/survei', [SpaController::class, 'index'])->name('isf.member.survei');
+    Route::get('/member/survei/{id}', [SpaController::class, 'index'])->name('isf.member.survei.show');
+    Route::get('/member/survei/{id}/selesai', [SpaController::class, 'index'])->name('isf.member.survei.selesai');
+});
+
 // Guest Authentication Routes (using the template's Inertia authentication system)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
@@ -166,6 +175,26 @@ Route::middleware('auth')->group(function () {
         Route::get('/create', [IsfPageController::class, 'create'])->defaults('module', 'hot-news')->name('cms.isf.hot-news.create');
         Route::get('/{id}/edit', [IsfPageController::class, 'edit'])->defaults('module', 'hot-news')->whereNumber('id')->name('cms.isf.hot-news.edit');
     });
+
+    // Menu Aktifitas di CMS (Role-scoped: member=sendiri, admin=sendiri+member, super-admin=semua)
+    Route::get('cms/aktifitas', [IsfPageController::class, 'index'])
+        ->defaults('module', 'aktifitas')
+        ->name('cms.isf.aktifitas.index');
+
+    // Menu Report / Laporan Member (Bisa diisi oleh member, dikelola oleh admin/editor/super-admin)
+    Route::prefix('cms/laporan-member')->group(function () {
+        Route::get('/', [IsfPageController::class, 'index'])->defaults('module', 'laporan-member')->name('cms.isf.laporan-member.index');
+        Route::get('/create', [IsfPageController::class, 'create'])->defaults('module', 'laporan-member')->name('cms.isf.laporan-member.create');
+        Route::get('/{id}', [IsfPageController::class, 'show'])->defaults('module', 'laporan-member')->whereNumber('id')->name('cms.isf.laporan-member.show');
+        Route::get('/{id}/edit', [IsfPageController::class, 'edit'])->defaults('module', 'laporan-member')->whereNumber('id')->name('cms.isf.laporan-member.edit');
+    });
+    Route::redirect('/cms/reports', '/cms/laporan-member');
+    Route::redirect('/cms/reports/create', '/cms/laporan-member/create');
+
+    // Menu Test Push Notification di CMS
+    Route::get('/cms/test-notifikasi', [IsfPageController::class, 'index'])
+        ->defaults('module', 'test-notifikasi')
+        ->name('cms.isf.test-notifikasi.index');
 
     Route::get('/cms/top-rank', fn () => redirect()->route('cms.isf.artikel.index'))->name('cms.isf.top-rank.index');
 
