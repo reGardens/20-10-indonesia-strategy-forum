@@ -161,16 +161,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/cms/email-briefing/{briefing}/preview', [BriefingPreviewController::class, 'cmsPreview'])
         ->middleware('feature:email_briefing')->whereNumber('briefing')->name('cms.isf.email-briefing.preview');
 
-    Route::get('/cms/running-text', fn () => redirect()->route('cms.isf.artikel.index'))->name('cms.isf.running-text.index');
-    Route::get('/cms/artikel-member', fn () => redirect()->route('cms.isf.surat-pembaca.index'))->name('cms.isf.artikel-member.index');
-
-    Route::prefix('cms/media-sorotan')->group(function () {
+    Route::prefix('cms/media-sorotan')->middleware('feature:pengaturan_halaman')->group(function () {
         Route::get('/', [IsfPageController::class, 'index'])->defaults('module', 'media-sorotan')->name('cms.isf.media-sorotan.index');
         Route::get('/create', [IsfPageController::class, 'create'])->defaults('module', 'media-sorotan')->name('cms.isf.media-sorotan.create');
         Route::get('/{id}/edit', [IsfPageController::class, 'edit'])->defaults('module', 'media-sorotan')->whereNumber('id')->name('cms.isf.media-sorotan.edit');
     });
 
-    Route::prefix('cms/hot-news')->group(function () {
+    Route::prefix('cms/hot-news')->middleware('feature:pengaturan_halaman')->group(function () {
         Route::get('/', [IsfPageController::class, 'index'])->defaults('module', 'hot-news')->name('cms.isf.hot-news.index');
         Route::get('/create', [IsfPageController::class, 'create'])->defaults('module', 'hot-news')->name('cms.isf.hot-news.create');
         Route::get('/{id}/edit', [IsfPageController::class, 'edit'])->defaults('module', 'hot-news')->whereNumber('id')->name('cms.isf.hot-news.edit');
@@ -196,9 +193,7 @@ Route::middleware('auth')->group(function () {
         ->defaults('module', 'test-notifikasi')
         ->name('cms.isf.test-notifikasi.index');
 
-    Route::get('/cms/top-rank', fn () => redirect()->route('cms.isf.artikel.index'))->name('cms.isf.top-rank.index');
-
-    Route::prefix('cms/iklan')->group(function () {
+    Route::prefix('cms/iklan')->middleware('feature:pengaturan_halaman')->group(function () {
         Route::get('/', [IsfPageController::class, 'index'])->defaults('module', 'iklan')->name('cms.isf.iklan.index');
         Route::get('/create', [IsfPageController::class, 'create'])->defaults('module', 'iklan')->name('cms.isf.iklan.create');
         Route::get('/{id}/edit', [IsfPageController::class, 'edit'])->defaults('module', 'iklan')->whereNumber('id')->name('cms.isf.iklan.edit');
@@ -207,9 +202,6 @@ Route::middleware('auth')->group(function () {
     Route::prefix('cms/footer')->middleware('feature:pengaturan_halaman')->group(function () {
         Route::get('/', [IsfPageController::class, 'footer'])->name('cms.isf.footer.index');
     });
-
-    Route::get('/cms/pengaturan-halaman', fn () => redirect()->route('cms.isf.artikel.index'))
-        ->name('cms.isf.pengaturan-halaman');
 
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 });
