@@ -181,7 +181,7 @@ Route::middleware(['web', 'auth'])->prefix('cms')->name('api.cms.')->group(funct
     Route::apiResource('email-briefing', BriefingController::class)
         ->parameters(['email-briefing' => 'briefing'])->middleware('feature:email_briefing');
     Route::apiResource('kategori', CategoryController::class)
-        ->parameters(['kategori' => 'category']);
+        ->parameters(['kategori' => 'category'])->middleware('feature:kategori');
     Route::post('kursi-parlemen/reorder', [ParliamentSeatController::class, 'reorder'])
         ->middleware('feature:kursi_parlemen')->name('kursi-parlemen.reorder');
     Route::apiResource('kursi-parlemen', ParliamentSeatController::class)
@@ -235,40 +235,44 @@ Route::middleware(['web', 'auth'])->prefix('cms')->name('api.cms.')->group(funct
     Route::put('/footer', [FooterSettingController::class, 'update'])
         ->middleware('feature:pengaturan_halaman')->name('footer.update');
 
-    Route::get('/running-text', [SettingController::class, 'getRunningText'])->name('running-text.index');
-    Route::post('/running-text', [SettingController::class, 'createRunningText'])->name('running-text.store');
-    Route::get('/running-text/{id}', [SettingController::class, 'showRunningText'])->whereNumber('id')->name('running-text.show');
-    Route::put('/running-text/{id}', [SettingController::class, 'updateRunningTextItem'])->whereNumber('id')->name('running-text.update-item');
-    Route::delete('/running-text/{id}', [SettingController::class, 'deleteRunningTextItem'])->whereNumber('id')->name('running-text.destroy');
-    Route::put('/running-text', [SettingController::class, 'updateRunningText'])->name('running-text.update');
+    Route::middleware('feature:pengaturan_halaman')->group(function () {
+        Route::get('/running-text', [SettingController::class, 'getRunningText'])->name('running-text.index');
+        Route::post('/running-text', [SettingController::class, 'createRunningText'])->name('running-text.store');
+        Route::get('/running-text/{id}', [SettingController::class, 'showRunningText'])->whereNumber('id')->name('running-text.show');
+        Route::put('/running-text/{id}', [SettingController::class, 'updateRunningTextItem'])->whereNumber('id')->name('running-text.update-item');
+        Route::delete('/running-text/{id}', [SettingController::class, 'deleteRunningTextItem'])->whereNumber('id')->name('running-text.destroy');
+        Route::put('/running-text', [SettingController::class, 'updateRunningText'])->name('running-text.update');
 
-    Route::get('/media-sorotan', [SettingController::class, 'getMediaSorotan'])->name('media-sorotan.index');
-    Route::post('/media-sorotan', [SettingController::class, 'createMediaSorotan'])->name('media-sorotan.store');
-    Route::get('/media-sorotan/{id}', [SettingController::class, 'showMediaSorotan'])->whereNumber('id')->name('media-sorotan.show');
-    Route::put('/media-sorotan/{id}', [SettingController::class, 'updateMediaSorotanItem'])->whereNumber('id')->name('media-sorotan.update-item');
-    Route::delete('/media-sorotan/{id}', [SettingController::class, 'deleteMediaSorotanItem'])->whereNumber('id')->name('media-sorotan.destroy');
-    Route::put('/media-sorotan', [SettingController::class, 'updateMediaSorotan'])->name('media-sorotan.update');
+        Route::get('/media-sorotan', [SettingController::class, 'getMediaSorotan'])->name('media-sorotan.index');
+        Route::post('/media-sorotan', [SettingController::class, 'createMediaSorotan'])->name('media-sorotan.store');
+        Route::get('/media-sorotan/{id}', [SettingController::class, 'showMediaSorotan'])->whereNumber('id')->name('media-sorotan.show');
+        Route::put('/media-sorotan/{id}', [SettingController::class, 'updateMediaSorotanItem'])->whereNumber('id')->name('media-sorotan.update-item');
+        Route::delete('/media-sorotan/{id}', [SettingController::class, 'deleteMediaSorotanItem'])->whereNumber('id')->name('media-sorotan.destroy');
+        Route::put('/media-sorotan', [SettingController::class, 'updateMediaSorotan'])->name('media-sorotan.update');
 
-    Route::get('/hot-news/article-options', [SettingController::class, 'getHotNewsArticleOptions'])->name('hot-news.article-options');
-    Route::post('/hot-news/sync-articles', [SettingController::class, 'syncHotNewsArticles'])->name('hot-news.sync-articles');
-    Route::get('/hot-news', [SettingController::class, 'getHotNews'])->name('hot-news.index');
-    Route::post('/hot-news', [SettingController::class, 'createHotNews'])->name('hot-news.store');
-    Route::get('/hot-news/{id}', [SettingController::class, 'showHotNews'])->whereNumber('id')->name('hot-news.show');
-    Route::put('/hot-news/{id}', [SettingController::class, 'updateHotNewsItem'])->whereNumber('id')->name('hot-news.update-item');
-    Route::delete('/hot-news/{id}', [SettingController::class, 'deleteHotNewsItem'])->whereNumber('id')->name('hot-news.destroy');
-    Route::put('/hot-news', [SettingController::class, 'updateHotNews'])->name('hot-news.update');
+        Route::get('/hot-news/article-options', [SettingController::class, 'getHotNewsArticleOptions'])->name('hot-news.article-options');
+        Route::post('/hot-news/sync-articles', [SettingController::class, 'syncHotNewsArticles'])->name('hot-news.sync-articles');
+        Route::get('/hot-news', [SettingController::class, 'getHotNews'])->name('hot-news.index');
+        Route::post('/hot-news', [SettingController::class, 'createHotNews'])->name('hot-news.store');
+        Route::get('/hot-news/{id}', [SettingController::class, 'showHotNews'])->whereNumber('id')->name('hot-news.show');
+        Route::put('/hot-news/{id}', [SettingController::class, 'updateHotNewsItem'])->whereNumber('id')->name('hot-news.update-item');
+        Route::delete('/hot-news/{id}', [SettingController::class, 'deleteHotNewsItem'])->whereNumber('id')->name('hot-news.destroy');
+        Route::put('/hot-news', [SettingController::class, 'updateHotNews'])->name('hot-news.update');
 
-    Route::get('/top-rank/article-options', [SettingController::class, 'getTopRankArticleOptions'])->name('top-rank.article-options');
-    Route::get('/top-rank', [SettingController::class, 'getTopRank'])->name('top-rank.index');
-    Route::put('/top-rank', [SettingController::class, 'updateTopRank'])->name('top-rank.update');
+        Route::get('/iklan', [AdController::class, 'index'])->name('iklan.index');
+        Route::post('/iklan', [AdController::class, 'store'])->name('iklan.store');
+        Route::post('/iklan/reorder', [AdController::class, 'reorder'])->name('iklan.reorder');
+        Route::post('/iklan/{id}/toggle', [AdController::class, 'toggle'])->whereNumber('id')->name('iklan.toggle');
+        Route::get('/iklan/{id}', [AdController::class, 'show'])->whereNumber('id')->name('iklan.show');
+        Route::put('/iklan/{id}', [AdController::class, 'update'])->whereNumber('id')->name('iklan.update-item');
+        Route::delete('/iklan/{id}', [AdController::class, 'destroy'])->whereNumber('id')->name('iklan.destroy');
+    });
 
-    Route::get('/iklan', [AdController::class, 'index'])->name('iklan.index');
-    Route::post('/iklan', [AdController::class, 'store'])->name('iklan.store');
-    Route::post('/iklan/reorder', [AdController::class, 'reorder'])->name('iklan.reorder');
-    Route::post('/iklan/{id}/toggle', [AdController::class, 'toggle'])->whereNumber('id')->name('iklan.toggle');
-    Route::get('/iklan/{id}', [AdController::class, 'show'])->whereNumber('id')->name('iklan.show');
-    Route::put('/iklan/{id}', [AdController::class, 'update'])->whereNumber('id')->name('iklan.update-item');
-    Route::delete('/iklan/{id}', [AdController::class, 'destroy'])->whereNumber('id')->name('iklan.destroy');
+    Route::middleware('feature:artikel')->group(function () {
+        Route::get('/top-rank/article-options', [SettingController::class, 'getTopRankArticleOptions'])->name('top-rank.article-options');
+        Route::get('/top-rank', [SettingController::class, 'getTopRank'])->name('top-rank.index');
+        Route::put('/top-rank', [SettingController::class, 'updateTopRank'])->name('top-rank.update');
+    });
 
     // Media image upload for CMS modules
     Route::post('/media/upload', [MediaUploadController::class, 'upload'])->name('media.upload');

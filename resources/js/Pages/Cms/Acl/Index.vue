@@ -37,7 +37,7 @@ const features = [
     { key: "data_grafik", label: "Data Grafik", desc: "Polling, survei, data visual beranda, dan grafik visual isu" },
     { key: "alert", label: "Alert Peringatan Dini", desc: "Feed peringatan dini regulasi, tingkat urgensi, dan status kepatuhan B2B" },
     { key: "email_briefing", label: "Email Briefing", desc: "Briefing eksklusif anggota, ringkasan eksekutif, dan pratinjau newsletter" },
-    { key: "pengaturan_halaman", label: "Pengaturan Halaman", desc: "Baris sorotan (topBar), teks pengumuman, dan rentang tanggal pekan ini" },
+    { key: "pengaturan_halaman", label: "Pengaturan Halaman", desc: "Footer, Media Sorotan, Hot News, Kelola Iklan, Running Text, dan pengaturan beranda" },
     { key: "kategori", label: "Kategori & Sub-Kategori", desc: "Kelola struktur kategori dan sub-kategori konten (Politik, Hukum, Kebijakan, Pemilu, Parlemen, dll.)" },
     { key: "kursi_parlemen", label: "Peta Kursi Parlemen", desc: "Kelola data komposisi kursi parlemen DPR/DPD/MPR per partai, warna, dan status publikasi" },
     { key: "glosarium_hukum", label: "Glosarium Hukum", desc: "Kamus istilah hukum interaktif, definisi, dasar hukum, istilah terkait, dan status" },
@@ -47,7 +47,8 @@ const features = [
     { key: "reader_poll", label: "Reader Poll (Jajak Pendapat)", desc: "Kelola pertanyaan jajak pendapat publik, opsi dinamis, periode aktif, dan pantau rekapitulasi suara" },
     { key: "survei", label: "Survei Opini Publik", desc: "Kelola survei opini publik lembaga riset/ISF, metodologi, segmen grafik interaktif, dan PDF laporan" },
     { key: "kutipan_publik", label: "Kutipan Publik", desc: "Kumpulan kutipan tokoh dan warga netizen terkait isu strategis nasional, sumber, dan tautan profil" },
-    { key: "surat_pembaca", label: "Moderasi Surat Pembaca", desc: "Kelola dan moderasi antrean surat pembaca publik (setujui, tolak, penyuntingan editorial)" }
+    { key: "surat_pembaca", label: "Moderasi Surat Pembaca", desc: "Kelola dan moderasi antrean surat pembaca publik (setujui, tolak, penyuntingan editorial)" },
+    { key: "media_kit", label: "Kemitraan & Media Kit", desc: "Kelola permintaan kemitraan (RFP), pitch audiens, saluran, alur kerjasama, dan FAQ" }
 ];
 
 function toggleFeature(featureKey) {
