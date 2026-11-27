@@ -37,7 +37,14 @@ class AppServiceProvider extends ServiceProvider
             return (new \Minishlink\WebPush\WebPush(
                 $auth,
                 [],
-                new \GuzzleHttp\Client(['timeout' => 30, ...($config['client_options'] ?? [])]),
+                new \GuzzleHttp\Client([
+                    'timeout' => 15,
+                    'connect_timeout' => 10,
+                    'curl' => [
+                        CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+                    ],
+                    ...($config['client_options'] ?? []),
+                ]),
                 new \GuzzleHttp\Psr7\HttpFactory(),
                 new \GuzzleHttp\Psr7\HttpFactory()
             ))

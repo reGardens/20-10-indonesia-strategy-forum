@@ -286,6 +286,9 @@ async function handleLocalBrowserTest() {
               <div class="font-mono text-[11px] opacity-85">
                 Total di DB: {{ lastResult.subscribers_in_db }} | Terkirim: {{ lastResult.result?.sent ?? 0 }} | Gagal: {{ lastResult.result?.failed ?? 0 }}
               </div>
+              <ul v-if="lastResult.result?.errors?.length" class="mt-1.5 list-disc list-inside font-mono text-[11px] opacity-90 space-y-0.5">
+                <li v-for="(errMsg, idx) in lastResult.result.errors" :key="idx">{{ errMsg }}</li>
+              </ul>
             </div>
           </CardContent>
         </Card>
