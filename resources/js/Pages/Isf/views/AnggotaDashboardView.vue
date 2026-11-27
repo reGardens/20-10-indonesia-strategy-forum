@@ -6,8 +6,18 @@
  * UI preview: client-side filtering, NO auth gating yet.
  * Priority filter is synced to the URL query (?prioritas=semua|merah|kuning).
  */
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import {
+    IconHistory,
+    IconArticle,
+    IconStar,
+    IconChartBar,
+    IconFlag,
+    IconArrowRight,
+} from "@tabler/icons-vue";
+import http from "@/api/http";
+import { getMemberActivities } from "@/api/services/isfMemberActivityService";
 import Button from "@/Components/UI/Button.vue";
 import Card from "@/Components/UI/Card.vue";
 import CardContent from "@/Components/UI/CardContent.vue";
@@ -27,17 +37,18 @@ import TableRow from "@/Components/UI/TableRow.vue";
 import TableHead from "@/Components/UI/TableHead.vue";
 import TableCell from "@/Components/UI/TableCell.vue";
 import { AnggotaSkeleton, IsfLink, PriorityBadge } from "@/Components/Isf";
+import Pagination from "@/Components/UI/Pagination.vue";
 import ErrorMessage from "@/Pages/Cms/components/shared/ErrorMessage.vue";
 import { formatDate } from "@/Utils/formatters";
 import { getAnggota } from "@/api/services/isfPublicService";
 import { useIsfSession } from "@/Composables/useIsfSession";
-import { useIsfContent } from "@/Composables/useIsfContent";
 
 const route = useRoute();
 const router = useRouter();
 
-const { data, status, load } = useIsfContent(getAnggota);
-onMounted(load);
+const loading = ref(true);
+const loadError = ref(false);
+const data = ref(null);
 
 const alerts = computed(() => data.value?.alerts || []);
 const tautanLangsung = computed(() => data.value?.tautanLangsung || []);
@@ -92,8 +103,7 @@ const user = computed(
 );
 // Identitas kartu profil = akun yang login (bukan nama contoh dari Pengaturan Halaman).
 const { session, isLoggedIn, ensureLoaded: loadSession } = useIsfSession();
-onMounted(loadSession);
-const loginHref = `/login?redirect=${encodeURIComponent("/anggota")}`;
+const loginHref = computed(() => `/login?redirect=${encodeURIComponent(route.fullPath || "/anggota")}`);
 const initials = computed(() =>
     (session.value.name || "")
         .split(" ")
@@ -102,6 +112,164 @@ const initials = computed(() =>
         .map((part) => part[0].toUpperCase())
         .join(""),
 );
+
+const activeTab = computed(() =>
+    route.query.prioritas === "semua" || route.query.prioritas === "merah"
+        ? "alerts"
+        : "aktifitas",
+);
+const userRoles = ref([]);
+const isOnlyMember = computed(() => {
+    const roles = userRoles.value || [];
+    return roles.includes("member") && !roles.includes("super-admin") && !roles.includes("admin");
+});
+
+const activities = ref({
+    letters: [],
+    reviews: [],
+    surveys: [],
+    reports: [],
+});
+const activitiesLoading = ref(false);
+const historyFilter = ref("semua"); // semua | letters | reviews | surveys | reports
+const activityPage = ref(1);
+const activityPerPage = 10;
+
+watch(historyFilter, () => {
+    activityPage.value = 1;
+});
+
+const unifiedActivities = computed(() => {
+    const list = [];
+    (activities.value.letters || []).forEach((l) => {
+        list.push({
+            uid: `letter-${l.id}`,
+            kind: "letters",
+            kindLabel: "Artikel / Naskah",
+            actorLabel: "Anda",
+            actionLabel: "membuat artikel terbaru",
+            targetLabel: l.title,
+            subtitle: `Kategori: ${l.category} · ${l.created_at || ""}`,
+            statusLabel: l.moderation_status || "pending",
+            statusTone:
+                l.moderation_status === "disetujui"
+                    ? "bg-emerald-100 text-emerald-800"
+                    : l.moderation_status === "ditolak"
+                      ? "bg-red-100 text-red-800"
+                      : "bg-amber-100 text-amber-800",
+            url: l.url,
+            timestamp: l.timestamp || 0,
+        });
+    });
+    (activities.value.reviews || []).forEach((r) => {
+        list.push({
+            uid: `review-${r.id}`,
+            kind: "reviews",
+            kindLabel: "Rating Sosok",
+            actorLabel: "Anda",
+            actionLabel: `memberi rating ★ ${r.rating}/5 untuk`,
+            targetLabel: r.tokoh_name,
+            subtitle: `${r.body ? '"' + r.body + '" · ' : ""}${r.created_at || ""}`,
+            statusLabel: `★ ${r.rating}/5`,
+            statusTone: "bg-amber-100 text-amber-800",
+            url: r.tokoh_slug ? `/sosok/${r.tokoh_slug}` : "/sosok",
+            timestamp: r.timestamp || 0,
+        });
+    });
+    (activities.value.surveys || []).forEach((s) => {
+        list.push({
+            uid: `survey-${s.id}`,
+            kind: "surveys",
+            kindLabel: "Survei",
+            actorLabel: "Anda",
+            actionLabel: s.status === "completed" ? "telah mengisi survei" : "menyimpan draft survei",
+            targetLabel: s.survey_title,
+            subtitle: s.updated_at || "",
+            statusLabel: s.status === "completed" ? "Selesai" : "Draft",
+            statusTone:
+                s.status === "completed"
+                    ? "bg-emerald-100 text-emerald-800"
+                    : "bg-amber-100 text-amber-800",
+            url: s.survey_slug ? `/survei/${s.survey_slug}` : "/survei",
+            timestamp: s.timestamp || 0,
+        });
+    });
+    (activities.value.reports || []).forEach((rep) => {
+        list.push({
+            uid: `report-${rep.id}`,
+            kind: "reports",
+            kindLabel: "Report",
+            actorLabel: "Anda",
+            actionLabel: "mengirim report",
+            targetLabel: rep.subject,
+            subtitle: `${rep.category_label || rep.category} · ${rep.created_at || ""}`,
+            statusLabel: rep.status,
+            statusTone: "bg-neutral-100 text-neutral-800",
+            url: null,
+            timestamp: rep.timestamp || 0,
+        });
+    });
+    return list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+});
+
+const filteredActivitiesList = computed(() => {
+    if (historyFilter.value === "semua") return unifiedActivities.value;
+    return unifiedActivities.value.filter((item) => item.kind === historyFilter.value);
+});
+
+const totalActivityPages = computed(() =>
+    Math.max(1, Math.ceil(filteredActivitiesList.value.length / activityPerPage)),
+);
+
+const paginatedActivities = computed(() => {
+    const start = (activityPage.value - 1) * activityPerPage;
+    return filteredActivitiesList.value.slice(start, start + activityPerPage);
+});
+
+async function load() {
+    loading.value = !data.value;
+    loadError.value = false;
+    try {
+        const [anggotaRes] = await Promise.all([
+            getAnggota(),
+            loadSession(),
+        ]);
+        data.value = anggotaRes;
+
+        if (isLoggedIn.value) {
+            const [profileRes, actRes] = await Promise.allSettled([
+                http.get("/isf/profile"),
+                getMemberActivities(),
+            ]);
+            if (profileRes.status === "fulfilled") {
+                userRoles.value = profileRes.value.data?.data?.roles || [];
+            }
+            if (actRes.status === "fulfilled") {
+                activities.value = {
+                    letters: actRes.value.letters || [],
+                    reviews: actRes.value.reviews || [],
+                    surveys: actRes.value.surveys || [],
+                    reports: actRes.value.reports || [],
+                };
+            }
+        }
+    } catch {
+        loadError.value = true;
+    } finally {
+        loading.value = false;
+    }
+}
+
+onMounted(load);
+
+const totalActivitiesCount = computed(() => {
+    return (
+        (activities.value.letters?.length || 0) +
+        (activities.value.reviews?.length || 0) +
+        (activities.value.surveys?.length || 0) +
+        (activities.value.reports?.length || 0)
+    );
+});
 
 const linkClass =
     "rounded-sm font-semibold text-isf-red-dark underline underline-offset-2 hover:text-isf-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red focus-visible:ring-offset-2";
@@ -144,27 +312,16 @@ function dismissVerificationBanner() {
 
 <template>
     <div class="space-y-6">
-        <AnggotaSkeleton v-if="status === 'loading'" />
+        <AnggotaSkeleton v-if="loading && !data" />
 
         <ErrorMessage
-            v-else-if="status !== 'ready'"
+            v-else-if="loadError && !data"
             message="Umpan peringatan gagal dimuat. Periksa koneksi Anda lalu coba lagi."
             retryable
             @retry="load"
         />
 
         <template v-else>
-            <header>
-                <div class="isf-col-head">
-                    <p class="isf-label">Feed Peringatan Dini</p>
-                </div>
-                <h1
-                    class="isf-headline mt-4 font-headline text-[30px] leading-[1.1] sm:text-[40px]"
-                >
-                    Dasbor Umpan Peringatan
-                </h1>
-            </header>
-
             <!-- Notification Banner: Email Verification Status (Issue #74) -->
             <div
                 v-if="verificationStatus && showVerificationBanner"
@@ -219,9 +376,182 @@ function dismissVerificationBanner() {
             </div>
 
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+            <!-- TAB AKTIFITAS PENGGUNA -->
             <section
+                v-if="activeTab === 'aktifitas'"
+                aria-labelledby="aktifitas-member"
+                class="space-y-5 lg:col-span-12"
+            >
+                <div class="isf-hairline-bottom flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4">
+                    <div>
+                        <h2 id="aktifitas-member" class="isf-headline font-headline text-2xl font-bold text-neutral-900 flex items-center gap-2">
+                            <IconHistory class="h-6 w-6 text-isf-red" />
+                            <span>Aktifitas</span>
+                        </h2>
+                        <p class="text-sm text-neutral-600 mt-1">
+                            Seluruh riwayat aktifitas akun Anda: artikel/naskah yang ditulis, rating tokoh/sosok, survei, dan laporan.
+                        </p>
+                    </div>
+                    <a
+                        v-if="isLoggedIn && isOnlyMember"
+                        href="/cms/laporan-member"
+                        class="inline-flex items-center justify-center gap-1.5 rounded-sm bg-isf-red px-4 py-2 font-ui text-xs font-bold uppercase tracking-wider text-white hover:bg-isf-red-dark transition-colors shrink-0"
+                    >
+                        <IconFlag class="h-4 w-4" />
+                        <span>Report</span>
+                    </a>
+                </div>
+
+                <!-- Jika Belum Login -->
+                <div v-if="!isLoggedIn" class="border border-neutral-200 bg-neutral-50 p-8 text-center space-y-3">
+                    <p class="font-headline text-lg font-bold text-neutral-900">Masuk untuk Melihat Aktifitas</p>
+                    <p class="text-sm text-neutral-600 max-w-md mx-auto">
+                        Silakan login terlebih dahulu untuk melihat seluruh riwayat artikel, rating sosok, partisipasi survei, dan laporan akun Anda.
+                    </p>
+                    <a
+                        :href="loginHref"
+                        class="inline-flex h-9 items-center rounded-sm bg-isf-red px-5 font-ui text-xs font-bold uppercase tracking-wider text-white hover:bg-isf-red-dark"
+                    >
+                        Login
+                    </a>
+                </div>
+
+                <!-- Konten Aktifitas saat Login -->
+                <template v-else>
+                    <!-- Filter Kategori Aktifitas -->
+                    <div class="flex flex-wrap gap-2">
+                        <button
+                            type="button"
+                            @click="historyFilter = 'semua'"
+                            :class="[
+                                'px-3 py-1.5 text-xs font-semibold rounded-sm border transition-colors cursor-pointer',
+                                historyFilter === 'semua'
+                                    ? 'bg-neutral-900 text-white border-neutral-900'
+                                    : 'bg-white text-neutral-700 border-neutral-300 hover:bg-neutral-50'
+                            ]"
+                        >
+                            Semua ({{ totalActivitiesCount }})
+                        </button>
+                        <button
+                            type="button"
+                            @click="historyFilter = 'letters'"
+                            :class="[
+                                'px-3 py-1.5 text-xs font-semibold rounded-sm border transition-colors cursor-pointer',
+                                historyFilter === 'letters'
+                                    ? 'bg-isf-red text-white border-isf-red'
+                                    : 'bg-white text-neutral-700 border-neutral-300 hover:bg-neutral-50'
+                            ]"
+                        >
+                            Artikel / Naskah ({{ activities.letters.length }})
+                        </button>
+                        <button
+                            type="button"
+                            @click="historyFilter = 'reviews'"
+                            :class="[
+                                'px-3 py-1.5 text-xs font-semibold rounded-sm border transition-colors cursor-pointer',
+                                historyFilter === 'reviews'
+                                    ? 'bg-isf-red text-white border-isf-red'
+                                    : 'bg-white text-neutral-700 border-neutral-300 hover:bg-neutral-50'
+                            ]"
+                        >
+                            Rating Sosok ({{ activities.reviews.length }})
+                        </button>
+                        <button
+                            type="button"
+                            @click="historyFilter = 'surveys'"
+                            :class="[
+                                'px-3 py-1.5 text-xs font-semibold rounded-sm border transition-colors cursor-pointer',
+                                historyFilter === 'surveys'
+                                    ? 'bg-isf-red text-white border-isf-red'
+                                    : 'bg-white text-neutral-700 border-neutral-300 hover:bg-neutral-50'
+                            ]"
+                        >
+                            Survei ({{ activities.surveys.length }})
+                        </button>
+                        <button
+                            type="button"
+                            @click="historyFilter = 'reports'"
+                            :class="[
+                                'px-3 py-1.5 text-xs font-semibold rounded-sm border transition-colors cursor-pointer',
+                                historyFilter === 'reports'
+                                    ? 'bg-isf-red text-white border-isf-red'
+                                    : 'bg-white text-neutral-700 border-neutral-300 hover:bg-neutral-50'
+                            ]"
+                        >
+                            Report ({{ activities.reports.length }})
+                        </button>
+                    </div>
+
+                    <div v-if="filteredActivitiesList.length === 0" class="border border-neutral-200 bg-neutral-50 p-8 text-center text-sm text-neutral-600">
+                        Belum ada aktifitas tercatat pada kategori ini.
+                    </div>
+
+                    <div v-else class="space-y-4">
+                        <div class="divide-y divide-neutral-200 border-y border-neutral-200 bg-white">
+                            <div
+                                v-for="item in paginatedActivities"
+                                :key="item.uid"
+                                class="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                            >
+                                <div class="min-w-0">
+                                    <span
+                                        class="inline-block text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm mb-1"
+                                        :class="{
+                                            'bg-blue-50 text-blue-700': item.kind === 'letters',
+                                            'bg-amber-50 text-amber-700': item.kind === 'reviews',
+                                            'bg-emerald-50 text-emerald-700': item.kind === 'surveys',
+                                            'bg-red-50 text-red-700': item.kind === 'reports',
+                                        }"
+                                    >
+                                        {{ item.kindLabel }}
+                                    </span>
+                                    <div class="text-sm sm:text-base leading-snug">
+                                        <span class="font-bold text-neutral-950">{{ item.actorLabel }}</span>
+                                        <span class="text-neutral-500 mx-1">{{ item.actionLabel }}</span>
+                                        <IsfLink
+                                            v-if="item.url"
+                                            :to="item.url"
+                                            class="font-headline font-bold text-isf-red hover:underline"
+                                        >
+                                            "{{ item.targetLabel }}"
+                                        </IsfLink>
+                                        <span v-else class="font-headline font-bold text-neutral-900">
+                                            "{{ item.targetLabel }}"
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-neutral-500/80 mt-0.5 line-clamp-1">
+                                        {{ item.subtitle }}
+                                    </p>
+                                </div>
+                                <span
+                                    class="inline-flex items-center px-2.5 py-0.5 text-[11px] font-bold uppercase rounded-sm shrink-0 self-start sm:self-center"
+                                    :class="item.statusTone"
+                                >
+                                    {{ item.statusLabel }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Pagination (10 per halaman) -->
+                        <div v-if="totalActivityPages > 1" class="pt-2 flex items-center justify-between">
+                            <p class="text-xs text-neutral-500">
+                                Menampilkan {{ paginatedActivities.length }} dari {{ filteredActivitiesList.length }} aktifitas
+                            </p>
+                            <Pagination
+                                :current-page="activityPage"
+                                :total-pages="totalActivityPages"
+                                @update:current-page="activityPage = $event"
+                            />
+                        </div>
+                    </div>
+                </template>
+            </section>
+
+            <!-- TAB ALERTS & PRIORITAS TINGGI (Existing) -->
+            <section
+                v-else
                 aria-labelledby="daftar-alert"
-                class="space-y-4 lg:col-span-8"
+                class="space-y-4 lg:col-span-12"
             >
                 <h2 id="daftar-alert" class="sr-only">Daftar alert</h2>
 
@@ -337,121 +667,6 @@ function dismissVerificationBanner() {
                 </div>
             </section>
 
-            <aside class="space-y-6 lg:col-span-4">
-                <!-- User / organization card -->
-                <Card class="isf-editorial-card isf-editorial-compact">
-                    <!-- Tamu: tidak ada nama contoh, tampilkan ajakan Login -->
-                    <CardContent
-                        v-if="!isLoggedIn"
-                        class="space-y-3 pt-5 text-sm"
-                        data-testid="anggota-login-prompt"
-                    >
-                        <p class="isf-headline font-headline text-lg">
-                            Profil Anggota
-                        </p>
-                        <p class="text-neutral-600">
-                            Masuk dengan akun ISF untuk melihat profil keanggotaan
-                            Anda.
-                        </p>
-                        <a
-                            :href="loginHref"
-                            :class="[
-                                'inline-flex h-9 items-center rounded-sm bg-isf-red px-4 font-ui text-[12px] font-bold uppercase tracking-[0.12em] text-white hover:bg-isf-red-dark',
-                                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-isf-red focus-visible:ring-offset-2',
-                            ]"
-                            >Login</a
-                        >
-                    </CardContent>
-                    <template v-else>
-                    <CardHeader
-                        class="isf-hairline-bottom flex-row items-center gap-4 space-y-0"
-                    >
-                        <span
-                            class="inline-flex h-12 w-12 shrink-0 items-center justify-center bg-isf-red text-lg font-bold text-white"
-                            aria-hidden="true"
-                        >
-                            {{ initials }}
-                        </span>
-                        <div>
-                            <CardTitle
-                                class="isf-headline font-headline text-lg"
-                                >{{ session.name }}</CardTitle
-                            >
-                        </div>
-                    </CardHeader>
-                    <CardContent class="space-y-3 pt-4 text-sm">
-                        <dl class="space-y-2">
-                            <div>
-                                <dt class="text-xs text-neutral-600">
-                                    Organisasi
-                                </dt>
-                                <dd class="font-semibold">
-                                    {{ user.organization }}
-                                </dd>
-                            </div>
-                            <div>
-                                <dt class="text-xs text-neutral-600">Paket</dt>
-                                <dd class="font-semibold">{{ user.plan }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-xs text-neutral-600">
-                                    Sektor dipantau
-                                </dt>
-                                <dd class="mt-1 flex flex-wrap gap-2">
-                                    <span
-                                        v-for="sektor in user.sektor"
-                                        :key="sektor"
-                                        class="border border-neutral-300 bg-white px-2.5 py-0.5 text-xs font-semibold text-neutral-800"
-                                    >
-                                        {{ sektor }}
-                                    </span>
-                                </dd>
-                            </div>
-                        </dl>
-                        <div class="flex flex-wrap items-center gap-2 pt-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                disabled
-                                aria-describedby="kelola-info"
-                            >
-                                Kelola Profil
-                            </Button>
-                            <span
-                                id="kelola-info"
-                                class="text-xs text-neutral-600"
-                                >segera</span
-                            >
-                        </div>
-                    </CardContent>
-                    </template>
-                </Card>
-
-                <!-- Tautan Langsung -->
-                <Card class="isf-editorial-card isf-editorial-compact">
-                    <CardHeader class="isf-hairline-bottom">
-                        <CardTitle class="isf-headline font-headline text-lg"
-                            >Tautan Langsung</CardTitle
-                        >
-                    </CardHeader>
-                    <CardContent class="pt-4">
-                        <ul class="space-y-2 text-sm">
-                            <li
-                                v-for="link in tautanLangsung"
-                                :key="link.label"
-                            >
-                                <!-- IsfLink: SPA path → router-link, Blade preview → full page load, http(s) → new tab -->
-                                <IsfLink
-                                    :to="link.href || link.to"
-                                    :class="linkClass"
-                                >
-                                    {{ link.label }}
-                                </IsfLink>
-                            </li>
-                        </ul>
-                    </CardContent>
-                </Card>
-            </aside>
         </div>
         </template>
     </div>

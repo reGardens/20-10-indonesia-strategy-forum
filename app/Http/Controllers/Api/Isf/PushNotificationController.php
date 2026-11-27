@@ -246,6 +246,29 @@ class PushNotificationController extends Controller
             } catch (\Throwable) {}
         } else {
             // Redaksi / Admin / Super Admin
+            // 0. Pending member reports (HANYA untuk super-admin & admin)
+            if ($user && $user->hasAnyRole(['super-admin', 'admin'])) {
+                try {
+                    $pendingReports = \App\Models\Isf\MemberReport::with('user:id,name')
+                        ->where('status', 'pending')
+                        ->orderByDesc('created_at')
+                        ->take(5)
+                        ->get();
+
+                    foreach ($pendingReports as $rep) {
+                        $notifications[] = [
+                            'id' => 'member-report-' . $rep->id,
+                            'type' => 'report',
+                            'title' => 'Laporan Baru dari Member',
+                            'message' => ($rep->user?->name ?: 'Member') . ': ' . Str::limit($rep->subject, 45),
+                            'url' => '/cms/laporan-member',
+                            'created_at' => $rep->created_at?->diffForHumans() ?? 'Baru saja',
+                            'timestamp' => $rep->created_at?->timestamp ?? time(),
+                        ];
+                    }
+                } catch (\Throwable) {}
+            }
+
             // 1. Pending member articles / letters needing moderation
             try {
                 $pendingLetters = Letter::where('moderation_status', 'pending')

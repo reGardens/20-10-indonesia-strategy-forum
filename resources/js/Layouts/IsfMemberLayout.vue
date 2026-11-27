@@ -9,18 +9,10 @@ const route = useRoute();
 const prioritasQuery = computed(() => route.query.prioritas);
 const MENU = [
     {
-        key: "dashboard",
-        label: "Dashboard",
+        key: "aktifitas",
+        label: "Aktifitas",
         to: { path: "/anggota" },
-        isActive: () => prioritasQuery.value === undefined,
-    },
-    { key: "pemantauan", label: "Pemantauan", disabled: true },
-    { key: "anggota", label: "Anggota", disabled: true },
-    {
-        key: "alerts",
-        label: "Alerts",
-        to: { path: "/anggota", query: { prioritas: "semua" } },
-        isActive: () => prioritasQuery.value === "semua",
+        isActive: () => prioritasQuery.value !== "semua" && prioritasQuery.value !== "merah",
     },
     {
         key: "prioritas-tinggi",
@@ -28,6 +20,12 @@ const MENU = [
         to: { path: "/anggota", query: { prioritas: "merah" } },
         isActive: () => prioritasQuery.value === "merah",
         highlight: true,
+    },
+    {
+        key: "alerts",
+        label: "Alerts",
+        to: { path: "/anggota", query: { prioritas: "semua" } },
+        isActive: () => prioritasQuery.value === "semua",
     },
 ];
 function itemClasses(item) {

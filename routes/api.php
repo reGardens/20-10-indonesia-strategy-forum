@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Isf\Cms\ActivityController;
 use App\Http\Controllers\Api\Isf\Cms\AdController;
 use App\Http\Controllers\Api\Isf\Cms\AlertController;
 use App\Http\Controllers\Api\Isf\Cms\ArticleController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Api\Isf\Cms\InfographicController;
 use App\Http\Controllers\Api\Isf\Cms\LegalGlossaryController;
 use App\Http\Controllers\Api\Isf\Cms\LegalTermController;
 use App\Http\Controllers\Api\Isf\Cms\MediaUploadController;
+use App\Http\Controllers\Api\Isf\Cms\MemberReportController;
 use App\Http\Controllers\Api\Isf\Cms\ParliamentSeatController;
 use App\Http\Controllers\Api\Isf\Cms\PolicyBriefController;
 use App\Http\Controllers\Api\Isf\Cms\KategoriLembagaController;
@@ -26,6 +28,7 @@ use App\Http\Controllers\Api\Isf\Cms\PartnershipProposalController;
 use App\Http\Controllers\Api\Isf\Cms\SurveyController;
 use App\Http\Controllers\Api\Isf\Cms\SettingController;
 use App\Http\Controllers\Api\Isf\Cms\TokohController;
+use App\Http\Controllers\Api\Isf\MemberSurveyController;
 use App\Http\Controllers\Api\Isf\PublicAdController;
 use App\Http\Controllers\Api\Isf\PublicContentController;
 use App\Http\Controllers\Api\Isf\PushNotificationController;
@@ -52,12 +55,28 @@ Route::middleware(['web'])->prefix('isf')->group(function () {
         Route::get('/', [SessionController::class, 'profile'])->name('api.isf.profile');
         Route::put('/', [SessionController::class, 'updateProfile'])->name('api.isf.profile.update');
     });
+    // Riwayat Kegiatan Member (Artikel/Naskah, Rating Tokoh, Survei, Laporan)
+    Route::middleware(['auth'])->get('/member/activities', [SessionController::class, 'activities'])->name('api.isf.member.activities');
     // Nomor WhatsApp Aktif milik user login + verifikasi OTP (Issue #42).
     Route::middleware(['auth', 'throttle:10,1'])->prefix('/me/whatsapp')->group(function () {
         Route::put('/', [WhatsAppVerificationController::class, 'update'])->name('api.isf.me.whatsapp.update');
         Route::post('/kirim-kode', [WhatsAppVerificationController::class, 'resend'])->name('api.isf.me.whatsapp.resend');
         Route::post('/verifikasi', [WhatsAppVerificationController::class, 'verify'])->name('api.isf.me.whatsapp.verify');
     });
+
+    // Area Survei Member ISF (Katalog, Widget, Form Pengisian, Draf, dan Hasil)
+    Route::prefix('member/survei')->group(function () {
+        Route::get('/', [MemberSurveyController::class, 'index'])->name('api.isf.member.survei.index');
+        Route::get('/widget', [MemberSurveyController::class, 'widget'])->name('api.isf.member.survei.widget');
+        Route::get('/{id}', [MemberSurveyController::class, 'show'])->name('api.isf.member.survei.show');
+        Route::get('/{id}/results', [MemberSurveyController::class, 'results'])->name('api.isf.member.survei.results');
+
+        Route::middleware(['auth'])->group(function () {
+            Route::post('/{id}/draft', [MemberSurveyController::class, 'saveDraft'])->name('api.isf.member.survei.draft');
+            Route::post('/{id}/submit', [MemberSurveyController::class, 'submit'])->middleware('throttle:15,1')->name('api.isf.member.survei.submit');
+        });
+    });
+
     Route::get('/search', [PublicContentController::class, 'search'])->name('api.isf.search');
     Route::get('/tokoh/{slug}', [PublicContentController::class, 'tokoh'])->name('api.isf.tokoh');
     // Indeks Tokoh (rating & ulasan): baca publik, kirim wajib login akun ISF.
@@ -254,6 +273,16 @@ Route::middleware(['web', 'auth'])->prefix('cms')->name('api.cms.')->group(funct
     // Media image upload for CMS modules
     Route::post('/media/upload', [MediaUploadController::class, 'upload'])->name('media.upload');
 
+    // Aktifitas Pengguna (Role-scoped: member=own, admin=own+members, super-admin=all)
+    Route::get('/aktifitas', [ActivityController::class, 'index'])->name('cms.aktifitas.index');
+
+    // Laporan / Pengaduan Member ISF
+    Route::prefix('laporan-member')->group(function () {
+        Route::get('/', [MemberReportController::class, 'index'])->name('cms.laporan-member.index');
+        Route::post('/', [MemberReportController::class, 'store'])->name('cms.laporan-member.store');
+        Route::get('/{id}', [MemberReportController::class, 'show'])->whereNumber('id')->name('cms.laporan-member.show');
+        Route::put('/{id}', [MemberReportController::class, 'update'])->whereNumber('id')->name('cms.laporan-member.update');
+    });
 
     // Category options for dropdown pickers across CMS modules
     Route::get('/options/categories', [CategoryController::class, 'options'])->name('options.categories');

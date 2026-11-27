@@ -96,6 +96,7 @@ export const cmsResources = {
             http.post(`/cms/surat-pembaca/${id}/reject`, { notes }).then((r) => r.data),
     },
     survei: createCmsResource("survei"),
+    laporanMember: createCmsResource("laporan-member"),
     kemitraan: {
         ...createCmsResource("kemitraan"),
         markContacted: (id, notes = "") =>

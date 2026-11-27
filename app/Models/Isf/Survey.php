@@ -33,6 +33,9 @@ class Survey extends Model
         'headline_stat_value',
         'headline_stat_label',
         'headline_stat_comparison',
+        'editorial_intro',
+        'estimated_minutes',
+        'questions',
         'summary',
         'expert_analysis',
         'chart_data',
@@ -40,6 +43,7 @@ class Survey extends Model
         'pdf_size',
         'order',
         'is_featured',
+        'is_member_active',
         'status',
     ];
 
@@ -48,10 +52,13 @@ class Survey extends Model
         return [
             'is_isf' => 'boolean',
             'is_featured' => 'boolean',
+            'is_member_active' => 'boolean',
             'release_date' => 'date',
             'sample_size' => 'integer',
+            'estimated_minutes' => 'integer',
             'order' => 'integer',
             'chart_data' => 'array',
+            'questions' => 'array',
         ];
     }
 
@@ -78,6 +85,16 @@ class Survey extends Model
         }
 
         return $query;
+    }
+
+    public function responses(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(SurveyResponse::class, 'survey_id');
+    }
+
+    public function scopeMemberActive(Builder $query): Builder
+    {
+        return $query->where('is_member_active', true);
     }
 
     public function scopeRegion(Builder $query, ?string $region): Builder

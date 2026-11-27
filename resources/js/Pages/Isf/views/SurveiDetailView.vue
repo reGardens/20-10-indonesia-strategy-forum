@@ -1,32 +1,24 @@
 <script setup>
 /**
- * SurveiDetailView.vue — Halaman Detail Analisis Survei Opini Publik Interaktif (/survei/:slug)
- *
- * Mengimplementasikan:
- * - Header Hero bergaya editorial navy konsisten dengan rubrik Politik:
- *   Breadcrumb responsif (whitespace-nowrap & truncate), red kicker badge, serif headline, institusi, dan action button.
- * - Seksi 1: Headline Statistic Temuan Kunci dengan border-t-4 border-t-isf-red.
- * - Seksi 2: Visualisasi Data Interaktif (SurveiChart) dengan pemilahan segmen dan tabel alternatif aksesibel.
- * - Seksi 3: Linimasa Alur & Metodologi Riset Ilmiah bergaya shadcn UI (TimelineMetodologi: 5 tahap terstruktur, hairline vertical track, node dot indicator).
- * - Seksi 4: Analisis Pakar & Implikasi Kebijakan Strategis dalam frame Navy khas ISF.
- * - Seksi 5: Callout Unduh Dokumen Laporan Lengkap (PDF).
- * - Seksi 6: Survei Terkait Lainnya dalam grid SurveiCard.
- * - Tata letak 100% responsif di mobile, tablet, dan desktop tanpa clipping.
+ * SurveiDetailView.vue — Halaman Pengisian Survei & Hasil Sementara (/survei/:slug)
+ * Didesain sederhana, jelas, dan ramah pengguna segala usia dengan identitas visual ISF.
  */
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import {
   IconChevronRight,
-  IconBuilding,
-  IconCalendar,
   IconDownload,
   IconFileText,
-  IconMapPin,
-  IconAward,
   IconCheck,
-  IconShare,
   IconArrowLeft,
   IconArrowRight,
+  IconClock,
+  IconCircleCheck,
+  IconLock,
+  IconDeviceFloppy,
+  IconSend,
+  IconAlertCircle,
+  IconChartBar,
 } from '@tabler/icons-vue'
 import {
   SectionHeading,
@@ -34,60 +26,239 @@ import {
   SurveiChart,
   TimelineMetodologi,
 } from '@/Components/Isf'
+import SurveyProgressBar from '@/Components/Isf/Survey/SurveyProgressBar.vue'
+import SurveyQuestionScale from '@/Components/Isf/Survey/SurveyQuestionScale.vue'
+import SurveyQuestionRadio from '@/Components/Isf/Survey/SurveyQuestionRadio.vue'
+import SurveyQuestionCheckbox from '@/Components/Isf/Survey/SurveyQuestionCheckbox.vue'
+import SurveyQuestionText from '@/Components/Isf/Survey/SurveyQuestionText.vue'
+import SurveyDemographicsForm from '@/Components/Isf/Survey/SurveyDemographicsForm.vue'
 import ErrorMessage from '@/Pages/Cms/components/shared/ErrorMessage.vue'
 import { getSurveiDetail } from '@/api/services/isfPublicService'
+import { saveSurveiDraft, submitSurvei } from '@/api/services/isfMemberSurveyService'
 import { useIsfContent } from '@/Composables/useIsfContent'
+import { useIsfSession } from '@/Composables/useIsfSession'
 
 const route = useRoute()
 const router = useRouter()
+const { isLoggedIn } = useIsfSession()
 
 const sectionPad = 'px-3 lg:px-4 xl:px-[30px]'
-
 const slug = computed(() => route.params.slug)
 
-// Fetch detail survei
-const { data, status, load } = useIsfContent(() => {
-  return getSurveiDetail(slug.value)
-})
+const { data, status, load } = useIsfContent(() => getSurveiDetail(slug.value))
 
 const survey = computed(() => data.value?.survey || null)
 const relatedSurveys = computed(() => data.value?.relatedSurveys || [])
+const stats = computed(() => data.value?.stats || { total_member_respondents: 0 })
 
-const topicLabel = computed(() => {
-  const map = {
-    politik: 'Politik',
-    ekonomi: 'Ekonomi',
-    sosial: 'Sosial',
-    hukum: 'Hukum',
+// State Formulir Survei
+const answers = ref({})
+const demographics = ref({
+  age: '',
+  domicile: '',
+  profession: '',
+})
+const isCompleted = ref(false)
+const isSaving = ref(false)
+const isSubmitting = ref(false)
+const lastSavedAt = ref('')
+const submitError = ref('')
+const validationErrors = ref({})
+
+const questions = computed(() => survey.value?.questions || [])
+const totalQuestions = computed(() => questions.value.length)
+
+const progressPercentage = computed(() => {
+  if (isCompleted.value) return 100
+  if (totalQuestions.value === 0) return 0
+
+  let answered = 0
+  for (const q of questions.value) {
+    const val = answers.value[q.id]
+    if (val !== undefined && val !== null && val !== '') {
+      if (Array.isArray(val)) {
+        if (val.length > 0) answered++
+      } else {
+        answered++
+      }
+    }
   }
-  return map[survey.value?.topic?.toLowerCase()] || survey.value?.topic || 'Isu Nasional'
+
+  let demoPoints = 0
+  if (demographics.value.age) demoPoints += 0.33
+  if (demographics.value.domicile) demoPoints += 0.33
+  if (demographics.value.profession) demoPoints += 0.34
+
+  return Math.min(100, Math.round(((answered + demoPoints) / (totalQuestions.value + 1)) * 100))
 })
 
-const regionLabel = computed(() => {
-  const map = {
-    nasional: 'Nasional',
-    jawa: 'Pulau Jawa',
-    sumatera: 'Sumatera',
-    kalimantan: 'Kalimantan',
-    sulawesi: 'Sulawesi',
-    bali_nusra: 'Bali & Nusra',
-    maluku_papua: 'Maluku & Papua',
-  }
-  return map[survey.value?.region?.toLowerCase()] || survey.value?.region || 'Nasional'
-})
+function saveToLocalStorage() {
+  if (typeof localStorage === 'undefined' || !survey.value?.id) return
+  try {
+    localStorage.setItem(
+      `isf_survey_draft_${survey.value.id}`,
+      JSON.stringify({ answers: answers.value, demographics: demographics.value })
+    )
+  } catch {}
+}
 
-function shareUrl() {
-  if (typeof navigator !== 'undefined' && navigator.share) {
-    navigator.share({
-      title: survey.value?.title,
-      text: survey.value?.summary,
-      url: window.location.href,
-    }).catch(() => {})
-  } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
-    navigator.clipboard.writeText(window.location.href)
-    alert('Tautan survei berhasil disalin ke papan klip!')
+function loadFromLocalStorage() {
+  if (typeof localStorage === 'undefined' || !survey.value?.id) return
+  try {
+    const raw = localStorage.getItem(`isf_survey_draft_${survey.value.id}`)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (parsed.answers && Object.keys(answers.value).length === 0) {
+        answers.value = parsed.answers
+      }
+      if (parsed.demographics && !demographics.value.age) {
+        demographics.value = parsed.demographics
+      }
+    }
+  } catch {}
+}
+
+let autoSaveTimeout = null
+function triggerAutoSave() {
+  if (isCompleted.value) return
+  saveToLocalStorage()
+  if (autoSaveTimeout) clearTimeout(autoSaveTimeout)
+  autoSaveTimeout = setTimeout(() => {
+    saveDraftSilent()
+  }, 1500)
+}
+
+watch(
+  () => [answers.value, demographics.value],
+  () => {
+    if (status.value === 'success' && !isCompleted.value && survey.value?.is_member_active) {
+      triggerAutoSave()
+    }
+  },
+  { deep: true }
+)
+
+async function saveDraftSilent() {
+  if (isCompleted.value || !survey.value?.id || !isLoggedIn.value) return
+  isSaving.value = true
+  try {
+    await saveSurveiDraft(survey.value.id, {
+      answers: answers.value,
+      demographics: demographics.value,
+    })
+    lastSavedAt.value = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+  } catch {} finally {
+    isSaving.value = false
   }
 }
+
+async function saveDraftManual() {
+  if (isCompleted.value || !survey.value?.id || !isLoggedIn.value) return
+  isSaving.value = true
+  submitError.value = ''
+  try {
+    await saveSurveiDraft(survey.value.id, {
+      answers: answers.value,
+      demographics: demographics.value,
+    })
+    lastSavedAt.value = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+    saveToLocalStorage()
+  } catch (err) {
+    submitError.value = err.response?.data?.message || 'Gagal menyimpan draft.'
+  } finally {
+    isSaving.value = false
+  }
+}
+
+async function handleSubmit() {
+  submitError.value = ''
+  validationErrors.value = {}
+
+  if (!isLoggedIn.value) {
+    submitError.value = 'Silakan masuk terlebih dahulu.'
+    return
+  }
+
+  let hasError = false
+  for (const q of questions.value) {
+    if (q.required) {
+      const val = answers.value[q.id]
+      if (val === undefined || val === null || val === '' || (Array.isArray(val) && val.length === 0)) {
+        validationErrors.value[q.id] = 'Pertanyaan ini wajib diisi.'
+        hasError = true
+      }
+    }
+  }
+
+  if (!demographics.value.age) {
+    validationErrors.value['demographics.age'] = 'Silakan pilih usia Anda.'
+    hasError = true
+  }
+  if (!demographics.value.domicile) {
+    validationErrors.value['demographics.domicile'] = 'Silakan pilih domisili Anda.'
+    hasError = true
+  }
+  if (!demographics.value.profession) {
+    validationErrors.value['demographics.profession'] = 'Silakan pilih pekerjaan Anda.'
+    hasError = true
+  }
+
+  if (hasError) {
+    submitError.value = 'Mohon lengkapi pertanyaan wajib yang masih kosong di atas.'
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 300, behavior: 'smooth' })
+    }
+    return
+  }
+
+  isSubmitting.value = true
+  try {
+    await submitSurvei(survey.value.id, {
+      answers: answers.value,
+      demographics: demographics.value,
+    })
+    isCompleted.value = true
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(`isf_survey_draft_${survey.value.id}`)
+    }
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  } catch (err) {
+    if (err.response?.status === 409 || err.response?.data?.message?.includes('sudah pernah mengisi')) {
+      isCompleted.value = true
+    } else {
+      submitError.value = err.response?.data?.message || 'Gagal mengirim jawaban. Silakan coba lagi.'
+    }
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+watch(
+  () => data.value,
+  (val) => {
+    if (val) {
+      isCompleted.value = Boolean(val.is_completed)
+      if (val.user_response) {
+        answers.value = { ...(val.user_response.answers || {}) }
+        demographics.value = {
+          age: val.user_response.demographics?.age || '',
+          domicile: val.user_response.demographics?.domicile || '',
+          profession: val.user_response.demographics?.profession || '',
+        }
+      } else {
+        loadFromLocalStorage()
+      }
+    }
+  },
+  { immediate: true }
+)
+
+const topicLabel = computed(() => {
+  const map = { politik: 'Politik', ekonomi: 'Ekonomi', sosial: 'Sosial', hukum: 'Hukum' }
+  return map[survey.value?.topic?.toLowerCase()] || survey.value?.topic || 'Umum'
+})
 
 watch(
   () => route.params.slug,
@@ -100,14 +271,11 @@ watch(
   { immediate: true }
 )
 
-// Update document title
 watch(
   () => survey.value?.title,
   (title) => {
     if (typeof document !== 'undefined') {
-      document.title = title
-        ? `${title} · Survei · Indonesia Strategy Forum`
-        : 'Detail Survei · Indonesia Strategy Forum'
+      document.title = title ? `${title} · Survei · Indonesia Strategy Forum` : 'Survei · Indonesia Strategy Forum'
     }
   },
   { immediate: true }
@@ -116,349 +284,323 @@ watch(
 
 <template>
   <div class="isf-theme font-space-grotesk min-h-screen bg-white text-neutral-900 antialiased pb-20">
-    <!-- ═══ 1. HEADER HERO DETAIL SURVEI (Gaya Editorial Navy identik dengan Politik) ═══ -->
-    <header class="bg-isf-navy text-white border-b border-neutral-800 pt-8 sm:pt-12 pb-8 sm:pb-10">
+    <!-- ═══ HEADER HERO ═══ -->
+    <header class="bg-isf-navy text-white border-b border-neutral-800 pt-8 sm:pt-10 pb-8">
       <div class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12">
-        <!-- Breadcrumb Nav -->
-        <nav aria-label="Breadcrumb" class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-neutral-400 mb-4 sm:mb-6 select-none min-w-0">
-          <RouterLink to="/beranda" class="whitespace-nowrap shrink-0 hover:text-white transition-colors">Beranda</RouterLink>
-          <IconChevronRight class="w-3.5 h-3.5 opacity-60 shrink-0" />
-          <RouterLink to="/survei" class="whitespace-nowrap shrink-0 hover:text-white transition-colors">Survei Opini Publik</RouterLink>
-          <IconChevronRight class="w-3.5 h-3.5 opacity-60 shrink-0" />
-          <span class="text-white font-bold truncate max-w-[180px] sm:max-w-md">{{ survey?.title || 'Detail Analisis Survei' }}</span>
+        <nav aria-label="Breadcrumb" class="flex flex-wrap items-center gap-2 text-xs text-neutral-400 mb-4">
+          <RouterLink to="/beranda" class="hover:text-white transition-colors">Beranda</RouterLink>
+          <IconChevronRight class="w-3.5 h-3.5 opacity-60" />
+          <RouterLink to="/survei" class="hover:text-white transition-colors">Survei</RouterLink>
+          <IconChevronRight class="w-3.5 h-3.5 opacity-60" />
+          <span class="text-white font-bold truncate max-w-[220px] sm:max-w-md">{{ survey?.title || 'Survei' }}</span>
         </nav>
 
         <div v-if="survey">
-          <!-- Kicker Badge -->
-          <div class="flex items-center gap-2 text-xs font-mono font-bold tracking-widest text-isf-red uppercase mb-3">
-            <span class="inline-block w-2.5 h-2.5 bg-isf-red rounded-xs"></span>
-            <span>LAPORAN ANALISIS RISET EMPIRIS</span>
-          </div>
-
-          <!-- Badges Bar -->
           <div class="flex flex-wrap items-center gap-2 mb-3">
-            <span
-              v-if="survey.is_isf"
-              class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-isf-red text-white shadow-xs"
-            >
-              <IconAward class="w-3.5 h-3.5 shrink-0" />
-              Riset In-House ISF
-            </span>
-            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider bg-white/10 text-neutral-200 border border-white/15">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold uppercase bg-isf-red text-white">
               {{ topicLabel }}
             </span>
-            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/10 text-neutral-300 border border-white/15">
-              <IconMapPin class="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-              {{ regionLabel }}
+            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-xs font-medium bg-white/10 text-neutral-200">
+              <IconClock class="w-3.5 h-3.5" />
+              {{ survey.estimated_minutes || 5 }} Menit
             </span>
           </div>
 
-          <!-- Institution & Release Period -->
-          <div class="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-neutral-400 mb-4 font-space-grotesk">
-            <span class="flex items-center gap-1.5 font-bold text-white">
-              <IconBuilding class="w-4 h-4 text-isf-red shrink-0" />
-              {{ survey.institution }}
-            </span>
-            <span>•</span>
-            <span class="flex items-center gap-1.5">
-              <IconCalendar class="w-4 h-4 text-neutral-400 shrink-0" />
-              Periode Lapangan: {{ survey.survey_period }}
-            </span>
-            <span>•</span>
-            <span>Rilis: {{ survey.release_date }}</span>
-          </div>
-
-          <!-- Survey Title -->
-          <h1 class="font-headline text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight max-w-4xl mb-4 sm:mb-6">
+          <h1 class="font-headline text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white leading-tight max-w-4xl">
             {{ survey.title }}
           </h1>
 
-          <!-- Summary Intro -->
-          <p class="text-neutral-300 text-sm sm:text-base md:text-lg font-serif leading-relaxed max-w-3xl">
+          <p v-if="survey.summary" class="text-neutral-300 text-sm sm:text-base mt-3 max-w-3xl leading-relaxed">
             {{ survey.summary }}
           </p>
-
-          <!-- Top CTAs (Share & PDF Download) -->
-          <div class="mt-6 sm:mt-8 flex flex-wrap items-center gap-3 pt-6 border-t border-neutral-800/80">
-            <a
-              v-if="survey.pdf_path"
-              :href="survey.pdf_path"
-              target="_blank"
-              download
-              class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-isf-red hover:bg-red-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer"
-            >
-              <IconDownload class="w-4 h-4 shrink-0" />
-              <span>Unduh Laporan Lengkap ({{ survey.pdf_size || 'PDF' }})</span>
-            </a>
-
-            <button
-              type="button"
-              @click="shareUrl"
-              class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-neutral-200 text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
-            >
-              <IconShare class="w-4 h-4 shrink-0" />
-              <span>Bagikan Survei</span>
-            </button>
-          </div>
         </div>
       </div>
     </header>
 
-    <!-- ═══ 2. SKELETON LOADER (Presisi mencerminkan struktur detail konten) ═══ -->
+    <!-- ═══ SKELETON LOADER ═══ -->
     <main
       v-if="status === 'loading' && !data"
-      class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12 mt-8 sm:mt-12 space-y-8 sm:space-y-12 animate-pulse"
-      aria-busy="true"
-      aria-label="Memuat laporan detail survei"
+      class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12 mt-8 space-y-6 animate-pulse max-w-4xl mx-auto"
     >
-      <!-- Section 1 Skeleton: Headline Stat Callout -->
-      <div class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red p-6 sm:p-8 space-y-4">
-        <div class="h-4 w-40 bg-neutral-200 rounded"></div>
-        <div class="h-10 w-3/4 bg-neutral-300 rounded"></div>
-        <div class="h-4 w-1/2 bg-neutral-200 rounded"></div>
-      </div>
-
-      <!-- Section 2 Skeleton: Chart -->
-      <div class="bg-white rounded-lg border border-neutral-300 p-6 sm:p-8 space-y-4">
-        <div class="h-5 w-48 bg-neutral-300 rounded"></div>
-        <div class="h-64 bg-neutral-100 rounded-lg"></div>
-      </div>
-
-      <!-- Section 3 Skeleton: Timeline -->
-      <div class="bg-white rounded-lg border border-neutral-300 p-6 sm:p-8 space-y-6">
-        <div class="h-5 w-52 bg-neutral-300 rounded"></div>
-        <div class="space-y-4">
-          <div v-for="n in 3" :key="n" class="h-20 bg-neutral-100 rounded-lg"></div>
-        </div>
-      </div>
+      <div class="h-24 bg-neutral-100 rounded-lg border border-neutral-200"></div>
+      <div class="h-64 bg-neutral-100 rounded-lg border border-neutral-200"></div>
     </main>
 
-    <!-- Error State -->
+    <!-- ═══ ERROR STATE ═══ -->
     <div v-else-if="status === 'error' && !data" class="mx-auto max-w-3xl py-16 px-4">
       <ErrorMessage
-        title="Laporan Survei Tidak Ditemukan"
-        message="Laporan hasil survei yang Anda cari tidak tersedia atau belum dipublikasikan."
+        title="Survei Tidak Ditemukan"
+        message="Survei yang Anda cari tidak tersedia."
         action-label="Kembali ke Daftar Survei"
         @retry="router.push('/survei')"
       />
     </div>
 
-    <!-- ═══ 3. LOADED CONTENT VIEW ═════════════════════════════════════════ -->
-    <main v-else-if="survey" class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12 mt-8 sm:mt-12 space-y-8 sm:space-y-12">
-      <!-- ═══ SECTION 1: HEADLINE STATISTIC TEMUAN KUNCI ═════════════════════ -->
-      <section
-        aria-labelledby="headline-stat-heading"
-        class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden"
-      >
-        <div class="border-b border-neutral-200">
-          <SectionHeading
-            id="headline-stat-heading"
-            title="Temuan Utama Survei"
-            size="lg"
-            :class="sectionPad"
+    <!-- ═══ KONTEN UTAMA ═══ -->
+    <main v-else-if="survey" class="isf-mobile-gutter w-full px-4 sm:px-6 md:px-8 xl:px-12 mt-8">
+      <!-- 1. JIKA SURVEI PARTISIPATIF AKTIF -->
+      <div v-if="survey.is_member_active" class="max-w-3xl mx-auto space-y-6">
+        <!-- Tombol Kembali -->
+        <div>
+          <RouterLink
+            to="/survei"
+            class="inline-flex items-center gap-1.5 text-sm font-semibold text-neutral-600 hover:text-isf-red transition-colors"
           >
-            <template #eyebrow>Headline Statistic & Toleransi Kesalahan</template>
-          </SectionHeading>
+            <IconArrowLeft class="w-4 h-4" />
+            <span>Kembali ke Daftar Survei</span>
+          </RouterLink>
         </div>
 
-        <div :class="[sectionPad, 'py-5 sm:py-6 lg:py-8']">
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div class="max-w-2xl">
-              <span class="text-xs font-mono font-bold tracking-widest text-isf-red uppercase block mb-1.5">
-                Indikator Persepsi Publik
-              </span>
-              <h2 class="font-headline text-2xl sm:text-3xl font-bold text-neutral-950 leading-snug">
-                {{ survey.headline_stat_label }}
-              </h2>
-              <p
-                v-if="survey.headline_stat_comparison"
-                class="text-xs sm:text-sm text-emerald-700 font-mono font-medium mt-2 flex items-center gap-1.5"
-              >
-                <IconCheck class="w-4 h-4 shrink-0" />
-                <span>{{ survey.headline_stat_comparison }}</span>
-              </p>
-              <div class="mt-4 pt-3 border-t border-neutral-200 flex flex-wrap items-center gap-4 text-xs font-mono text-neutral-500">
-                <span>Ukuran Sampel: <strong class="text-neutral-900">{{ survey.sample_size?.toLocaleString('id-ID') }} Responden</strong></span>
-                <span>•</span>
-                <span>Margin of Error: <strong class="text-neutral-900">{{ survey.margin_of_error }}</strong></span>
-                <span>•</span>
-                <span>Tingkat Kepercayaan: <strong class="text-neutral-900">{{ survey.confidence_level || '95%' }}</strong></span>
-              </div>
+        <!-- A. AUTH GUARD: JIKA BELUM LOGIN -->
+        <div
+          v-if="!isLoggedIn"
+          class="rounded-lg border border-neutral-300 bg-white p-8 text-center shadow-xs space-y-4"
+        >
+          <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-isf-red/10 text-isf-red">
+            <IconLock class="h-7 w-7" />
+          </div>
+          <h2 class="font-headline text-2xl font-bold text-neutral-900">
+            Silakan Masuk Terlebih Dahulu
+          </h2>
+          <p class="text-sm sm:text-base text-neutral-600 max-w-md mx-auto leading-relaxed">
+            Untuk mengisi survei ini, silakan masuk ke akun Anda terlebih dahulu agar jawaban tersimpan dengan aman.
+          </p>
+          <div class="pt-2 flex flex-wrap items-center justify-center gap-3">
+            <a
+              :href="`/login?redirect=${encodeURIComponent(route.fullPath)}`"
+              class="inline-flex items-center gap-2 px-6 py-3 rounded-md bg-isf-red hover:bg-red-700 text-white font-bold text-sm transition-colors"
+            >
+              <span>Masuk</span>
+              <IconArrowRight class="w-4 h-4" />
+            </a>
+            <a
+              href="/register"
+              class="inline-flex items-center px-6 py-3 rounded-md border border-neutral-300 bg-neutral-50 hover:bg-neutral-100 text-neutral-800 font-semibold text-sm transition-colors"
+            >
+              Daftar Akun
+            </a>
+          </div>
+        </div>
+
+        <!-- B. HALAMAN TERIMA KASIH & HASIL SEMENTARA (JIKA SUDAH SELESAI) -->
+        <div v-else-if="isCompleted" class="space-y-6">
+          <div class="rounded-lg border border-neutral-300 bg-white p-8 text-center shadow-xs space-y-4">
+            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+              <IconCircleCheck class="h-8 w-8" />
             </div>
-
-            <!-- Big Stat Figure Box -->
-            <div class="bg-neutral-950 text-white rounded-xl p-5 sm:p-7 text-center shrink-0 min-w-[200px] border border-neutral-800 shadow-sm">
-              <span class="text-[11px] font-mono text-neutral-400 block mb-1 uppercase tracking-wider">
-                Angka Persentase
-              </span>
-              <div class="font-headline font-black text-5xl sm:text-6xl text-isf-red tracking-tight leading-none my-1">
-                {{ survey.headline_stat_value }}
-              </div>
-              <span class="text-[11px] text-neutral-400 font-mono block mt-1">
-                Margin of Error {{ survey.margin_of_error }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ═══ SECTION 2: VISUALISASI DATA INTERAKTIF ═════════════════════════ -->
-      <section
-        aria-labelledby="visualisasi-data-heading"
-        class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden"
-      >
-        <div class="border-b border-neutral-200">
-          <SectionHeading
-            id="visualisasi-data-heading"
-            title="Visualisasi Data Interaktif"
-            size="lg"
-            :class="sectionPad"
-          >
-            <template #eyebrow>Eksplorasi Jawaban Per Segmen</template>
-          </SectionHeading>
-        </div>
-
-        <div :class="[sectionPad, 'py-5 sm:py-6 lg:py-8']">
-          <SurveiChart
-            :chart-data="survey.chart_data"
-            :survey-title="survey.title"
-            :institution="survey.institution"
-          />
-        </div>
-      </section>
-
-      <!-- ═══ SECTION 3: LINIMASA ALUR & METODOLOGI RISET (SHADCN TIMELINE - HITAM IDENTITAS ISF) ══ -->
-      <section
-        aria-labelledby="metodologi-heading"
-        class="bg-isf-navy text-white rounded-lg border border-neutral-800 shadow-sm overflow-hidden"
-      >
-        <div class="border-b border-neutral-800 px-4 py-3 sm:px-6 sm:py-4 flex flex-wrap items-center justify-between gap-2">
-          <div class="flex items-center gap-2">
-            <span class="inline-block w-2.5 h-2.5 bg-isf-red rounded-xs"></span>
-            <span class="text-xs font-mono font-bold tracking-widest uppercase text-isf-red">
-              Transparansi Ilmiah & Kontrol Mutu
-            </span>
-            <span class="text-neutral-600">•</span>
-            <h2 id="metodologi-heading" class="font-space-grotesk text-sm sm:text-base font-bold text-white uppercase tracking-wider">
-              Spesifikasi & Metodologi Survei
+            <h2 class="font-headline text-2xl sm:text-3xl font-bold text-neutral-900">
+              Terima Kasih Atas Partisipasi Anda!
             </h2>
-          </div>
-          <span class="text-[11px] font-mono text-neutral-400">
-            Standar Penjaminan Mutu Riset ISF
-          </span>
-        </div>
-
-        <div :class="[sectionPad, 'py-5 sm:py-6 lg:py-8']">
-          <!-- Komponen Timeline Metodologi Shadcn Modern & Minimalis (Hitam Identitas ISF) -->
-          <TimelineMetodologi
-            :survey="survey"
-            :is-dark="true"
-          />
-        </div>
-      </section>
-
-      <!-- ═══ SECTION 4: ANALISIS PAKAR & IMPLIKASI STRATEGIS (NAVY) ══════════ -->
-      <section
-        v-if="survey.expert_analysis"
-        aria-labelledby="analisis-pakar-heading"
-        class="bg-isf-navy text-white rounded-lg border border-neutral-800 shadow-sm overflow-hidden"
-      >
-        <div class="border-b border-neutral-800 px-4 py-3 sm:px-6 sm:py-4 flex flex-wrap items-center justify-between gap-2">
-          <div class="flex items-center gap-2">
-            <span class="inline-block w-2.5 h-2.5 bg-isf-red rounded-xs"></span>
-            <span class="text-xs font-mono font-bold tracking-widest uppercase text-isf-red">
-              Telaah Peneliti ISF
-            </span>
-            <span class="text-neutral-600">•</span>
-            <h2 id="analisis-pakar-heading" class="font-space-grotesk text-sm sm:text-base font-bold text-white uppercase tracking-wider">
-              Analisis Pakar & Implikasi Strategis Kebijakan
-            </h2>
-          </div>
-          <span class="text-[11px] font-mono text-neutral-400">
-            Kajian Strategis Nasional
-          </span>
-        </div>
-
-        <div :class="[sectionPad, 'py-5 sm:py-7 lg:py-8 space-y-6']">
-          <div class="font-serif italic text-neutral-200 text-base sm:text-lg lg:text-xl leading-relaxed max-w-4xl">
-            <p class="whitespace-pre-line">
-              "{{ survey.expert_analysis }}"
+            <p class="text-sm sm:text-base text-neutral-600 max-w-lg mx-auto leading-relaxed">
+              Jawaban Anda untuk survei <strong>"{{ survey.title }}"</strong> sudah kami terima dan simpan.
             </p>
-          </div>
-
-          <div class="pt-6 border-t border-neutral-800 flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-isf-red/20 text-isf-red border border-isf-red/30 flex items-center justify-center font-bold text-xs font-space-grotesk">
-              ISF
-            </div>
-            <div>
-              <div class="text-xs sm:text-sm font-bold text-white font-space-grotesk">
-                Divisi Riset Kebijakan Publik & Opini Publik
-              </div>
-              <div class="text-[11px] text-neutral-400 font-space-grotesk">
-                Indonesia Strategy Forum (ISF)
-              </div>
+            <div class="pt-2">
+              <RouterLink
+                to="/survei"
+                class="inline-flex items-center gap-2 px-6 py-2.5 rounded-md bg-isf-red hover:bg-red-700 text-white font-bold text-sm transition-colors"
+              >
+                <IconArrowLeft class="w-4 h-4" />
+                <span>Kembali ke Daftar Survei</span>
+              </RouterLink>
             </div>
           </div>
-        </div>
-      </section>
 
-      <!-- ═══ SECTION 5: UNDUH DOKUMEN LAPORAN LENGKAP (PDF CALLOUT) ══════════ -->
-      <section v-if="survey.pdf_path" aria-label="Unduh Dokumen Laporan Lengkap">
-        <div class="bg-white rounded-lg border-2 border-dashed border-neutral-300 p-5 sm:p-7 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-isf-red/10 text-isf-red flex items-center justify-center shrink-0 border border-isf-red/20">
-              <IconFileText class="w-6 h-6 sm:w-8 sm:h-8" />
+          <!-- Hasil Sementara (Reward Member) -->
+          <div v-if="survey.chart_data?.segments?.length > 0 || survey.headline_stat_value" class="rounded-lg border border-neutral-300 bg-white p-6 shadow-xs space-y-5">
+            <div class="flex items-center justify-between border-b border-neutral-200 pb-3">
+              <h3 class="font-headline text-lg font-bold text-neutral-900 flex items-center gap-2">
+                <IconChartBar class="w-5 h-5 text-isf-red" />
+                <span>Hasil Sementara</span>
+              </h3>
+              <span v-if="stats.total_member_respondents" class="text-xs text-neutral-500">
+                {{ stats.total_member_respondents }} Responden
+              </span>
             </div>
-            <div>
-              <h4 class="font-headline font-bold text-base sm:text-lg text-neutral-950">
-                Unduh Dokumen Laporan Lengkap Survei
-              </h4>
-              <p class="text-xs sm:text-sm text-neutral-600 mt-0.5">
-                Berisi tabulasi silang (crosstabs), kuesioner lengkap, dan rincian per provinsi (Format: {{ survey.pdf_size || 'PDF' }}).
+
+            <div v-if="survey.headline_stat_value" class="rounded-md bg-neutral-50 border border-neutral-200 p-4 flex items-center gap-4">
+              <span class="font-headline text-3xl sm:text-4xl font-black text-isf-red shrink-0">
+                {{ survey.headline_stat_value }}
+              </span>
+              <p class="text-sm font-medium text-neutral-800">
+                {{ survey.headline_stat_label }}
               </p>
             </div>
-          </div>
 
-          <a
-            :href="survey.pdf_path"
-            target="_blank"
-            download
-            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-isf-red hover:bg-red-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all shrink-0 cursor-pointer"
-          >
-            <IconDownload class="w-4 h-4 shrink-0" />
-            <span>Unduh Berkas PDF</span>
-          </a>
-        </div>
-      </section>
-
-      <!-- ═══ SECTION 6: SURVEI TERKAIT LAINNYA ══════════════════════════════ -->
-      <section
-        v-if="relatedSurveys && relatedSurveys.length > 0"
-        aria-labelledby="related-surveys-heading"
-        class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden"
-      >
-        <div class="border-b border-neutral-200">
-          <SectionHeading
-            id="related-surveys-heading"
-            title="Survei Terkait Lainnya"
-            size="lg"
-            :class="sectionPad"
-          >
-            <template #eyebrow>Riset Sejenis</template>
-          </SectionHeading>
-        </div>
-
-        <div :class="[sectionPad, 'py-5 sm:py-6 lg:py-8']">
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <SurveiCard
-              v-for="rel in relatedSurveys"
-              :key="rel.id"
-              :survey="rel"
-              theme="light"
+            <SurveiChart
+              v-if="survey.chart_data?.segments?.length > 0"
+              :chart-data="survey.chart_data"
+              :survey-title="survey.title"
+              :institution="survey.institution"
             />
           </div>
         </div>
-      </section>
+
+        <!-- C. FORMULIR PENGISIAN SURVEI -->
+        <div v-else class="space-y-6">
+          <SurveyProgressBar
+            :estimated-minutes="survey.estimated_minutes || 5"
+            :progress="progressPercentage"
+            :is-saving="isSaving"
+            :last-saved-at="lastSavedAt"
+            :current-step="1"
+            :total-steps="2"
+          />
+
+          <!-- Pengantar / Intro Singkat -->
+          <div
+            v-if="survey.editorial_intro"
+            class="rounded-lg border-l-4 border-isf-red bg-[#FBF9F4] p-5 border border-neutral-200"
+          >
+            <p class="text-xs font-bold uppercase tracking-wider text-isf-red mb-1">Pengantar</p>
+            <p class="text-sm sm:text-base text-neutral-800 leading-relaxed">
+              {{ survey.editorial_intro }}
+            </p>
+          </div>
+
+          <!-- Pesan Error Validasi -->
+          <div
+            v-if="submitError"
+            class="rounded-lg border border-red-300 bg-red-50 p-4 text-red-900 flex items-start gap-3"
+          >
+            <IconAlertCircle class="h-5 w-5 shrink-0 text-isf-red mt-0.5" />
+            <p class="text-sm font-semibold">{{ submitError }}</p>
+          </div>
+
+          <!-- Daftar Pertanyaan -->
+          <div v-if="questions.length > 0" class="space-y-5">
+            <template v-for="(q, idx) in questions" :key="q.id">
+              <SurveyQuestionScale
+                v-if="q.type === 'scale'"
+                :question="q"
+                :number="idx + 1"
+                :error="validationErrors[q.id]"
+                v-model="answers[q.id]"
+              />
+              <SurveyQuestionRadio
+                v-else-if="q.type === 'radio'"
+                :question="q"
+                :number="idx + 1"
+                :error="validationErrors[q.id]"
+                v-model="answers[q.id]"
+              />
+              <SurveyQuestionCheckbox
+                v-else-if="q.type === 'checkbox'"
+                :question="q"
+                :number="idx + 1"
+                :error="validationErrors[q.id]"
+                v-model="answers[q.id]"
+              />
+              <SurveyQuestionText
+                v-else
+                :question="q"
+                :number="idx + 1"
+                :error="validationErrors[q.id]"
+                v-model="answers[q.id]"
+              />
+            </template>
+          </div>
+
+          <!-- Data Diri / Demografi -->
+          <SurveyDemographicsForm
+            v-model="demographics"
+            :errors="validationErrors"
+          />
+
+          <!-- Tombol Simpan Draft & Kirim Jawaban -->
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t border-neutral-200">
+            <button
+              type="button"
+              @click="saveDraftManual"
+              :disabled="isSaving || isSubmitting"
+              class="inline-flex items-center justify-center gap-2 rounded-md border border-neutral-300 bg-white px-5 py-3 text-sm font-semibold text-neutral-800 hover:bg-neutral-50 transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              <IconDeviceFloppy class="h-4 w-4 text-neutral-500" />
+              <span>{{ isSaving ? 'Menyimpan...' : 'Simpan Draft' }}</span>
+            </button>
+
+            <button
+              type="button"
+              @click="handleSubmit"
+              :disabled="isSubmitting || isSaving"
+              class="inline-flex items-center justify-center gap-2 rounded-md bg-isf-red px-8 py-3 text-sm font-bold text-white shadow-sm hover:bg-red-700 transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              <IconSend class="h-4 w-4" />
+              <span>{{ isSubmitting ? 'Mengirim...' : 'Kirim Jawaban' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. FALLBACK LAPORAN RISET (Jika bukan kuisioner partisipatif) -->
+      <div v-else class="space-y-8 sm:space-y-12">
+        <section class="bg-white rounded-lg border border-neutral-300 border-t-4 border-t-isf-red shadow-xs overflow-hidden">
+          <div class="border-b border-neutral-200">
+            <SectionHeading title="Temuan Utama Survei" size="lg" :class="sectionPad" />
+          </div>
+          <div :class="[sectionPad, 'py-6 flex flex-col md:flex-row md:items-center justify-between gap-6']">
+            <div>
+              <h2 class="font-headline text-2xl font-bold text-neutral-950">{{ survey.headline_stat_label }}</h2>
+              <p v-if="survey.headline_stat_comparison" class="text-sm text-emerald-700 mt-1 flex items-center gap-1">
+                <IconCheck class="w-4 h-4" />
+                {{ survey.headline_stat_comparison }}
+              </p>
+            </div>
+            <div class="bg-neutral-950 text-white rounded-xl p-6 text-center shrink-0 min-w-[180px]">
+              <div class="font-headline font-black text-5xl text-isf-red">{{ survey.headline_stat_value }}</div>
+              <span class="text-xs text-neutral-400">MoE {{ survey.margin_of_error }}</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden">
+          <div class="border-b border-neutral-200">
+            <SectionHeading title="Visualisasi Data Interaktif" size="lg" :class="sectionPad" />
+          </div>
+          <div :class="[sectionPad, 'py-6']">
+            <SurveiChart :chart-data="survey.chart_data" :survey-title="survey.title" :institution="survey.institution" />
+          </div>
+        </section>
+
+        <section class="bg-isf-navy text-white rounded-lg border border-neutral-800 shadow-sm overflow-hidden">
+          <div class="border-b border-neutral-800 px-6 py-4">
+            <h2 class="font-space-grotesk text-base font-bold text-white uppercase">Spesifikasi &amp; Metodologi Survei</h2>
+          </div>
+          <div :class="[sectionPad, 'py-6']">
+            <TimelineMetodologi :survey="survey" :is-dark="true" />
+          </div>
+        </section>
+
+        <section v-if="survey.expert_analysis" class="bg-isf-navy text-white rounded-lg border border-neutral-800 shadow-sm overflow-hidden">
+          <div class="border-b border-neutral-800 px-6 py-4">
+            <h2 class="font-space-grotesk text-base font-bold text-white uppercase">Analisis Pakar &amp; Implikasi Strategis Kebijakan</h2>
+          </div>
+          <div :class="[sectionPad, 'py-6 font-serif italic text-neutral-200 text-lg leading-relaxed']">
+            "{{ survey.expert_analysis }}"
+          </div>
+        </section>
+
+        <section v-if="survey.pdf_path" class="bg-white rounded-lg border border-neutral-300 p-6 flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <IconFileText class="w-8 h-8 text-isf-red" />
+            <div>
+              <h4 class="font-headline font-bold text-base">Unduh Dokumen Laporan ({{ survey.pdf_size || 'PDF' }})</h4>
+            </div>
+          </div>
+          <a :href="survey.pdf_path" target="_blank" download class="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-isf-red text-white font-bold text-sm">
+            <IconDownload class="w-4 h-4" />
+            <span>Unduh PDF</span>
+          </a>
+        </section>
+
+        <section v-if="relatedSurveys && relatedSurveys.length > 0" class="bg-white rounded-lg border border-neutral-300 shadow-xs overflow-hidden">
+          <div class="border-b border-neutral-200">
+            <SectionHeading title="Survei Terkait Lainnya" size="lg" :class="sectionPad" />
+          </div>
+          <div :class="[sectionPad, 'py-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6']">
+            <SurveiCard v-for="rel in relatedSurveys" :key="rel.id" :survey="rel" theme="light" />
+          </div>
+        </section>
+      </div>
     </main>
   </div>
 </template>
